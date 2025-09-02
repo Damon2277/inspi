@@ -1,0 +1,82 @@
+# OWASP ZAP安全扫描规则配置
+# 格式: IGNORE/WARN/FAIL	CONFIDENCE	RISK	RULE_ID	URL_REGEX	PARAMETER	CWE_ID	WASC_ID	DESCRIPTION
+
+# 忽略的规则（开发环境特有）
+IGNORE	Medium	Medium	10021	.*	.*	.*	.*	X-Content-Type-Options Header Missing
+IGNORE	Medium	Medium	10020	.*	.*	.*	.*	X-Frame-Options Header Not Set
+IGNORE	Low	Low	10010	.*	.*	.*	.*	Cookie No HttpOnly Flag
+IGNORE	Low	Low	10011	.*	.*	.*	.*	Cookie Without Secure Flag
+
+# 警告级别的规则
+WARN	High	High	40018	.*	.*	.*	.*	SQL Injection
+WARN	High	High	40019	.*	.*	.*	.*	SQL Injection - MySQL
+WARN	High	High	40020	.*	.*	.*	.*	SQL Injection - Hypersonic SQL
+WARN	High	High	40021	.*	.*	.*	.*	SQL Injection - Oracle
+WARN	High	High	40022	.*	.*	.*	.*	SQL Injection - PostgreSQL
+WARN	Medium	High	40012	.*	.*	.*	.*	Cross Site Scripting (Reflected)
+WARN	Medium	High	40014	.*	.*	.*	.*	Cross Site Scripting (Persistent)
+WARN	Medium	High	40016	.*	.*	.*	.*	Cross Site Scripting (Persistent) - Prime
+WARN	Medium	High	40017	.*	.*	.*	.*	Cross Site Scripting (Persistent) - Spider
+
+# 必须失败的规则（高危漏洞）
+FAIL	High	High	90001	.*	.*	.*	.*	Insecure HTTP Method
+FAIL	High	High	90002	.*	.*	.*	.*	Private IP Disclosure
+FAIL	High	High	90003	.*	.*	.*	.*	Session ID in URL Rewrite
+FAIL	High	High	90019	.*	.*	.*	.*	Server Side Code Injection
+FAIL	High	High	90020	.*	.*	.*	.*	Remote OS Command Injection
+FAIL	High	High	40023	.*	.*	.*	.*	Possible Username Enumeration
+FAIL	High	High	40024	.*	.*	.*	.*	SQL Injection - SQLite
+FAIL	High	High	40025	.*	.*	.*	.*	SQL Injection - MsSQL
+FAIL	High	High	40026	.*	.*	.*	.*	SQL Injection - Generic
+FAIL	High	High	40027	.*	.*	.*	.*	SQL Injection - Informix
+FAIL	High	High	40028	.*	.*	.*	.*	SQL Injection - DB2
+
+# 特定URL的规则
+IGNORE	.*	.*	.*	.*/api/health.*	.*	.*	.*	Health check endpoint
+IGNORE	.*	.*	.*	.*/_next/static/.*	.*	.*	.*	Static assets
+IGNORE	.*	.*	.*	.*/favicon.ico	.*	.*	.*	Favicon
+IGNORE	.*	.*	.*	.*/robots.txt	.*	.*	.*	Robots file
+IGNORE	.*	.*	.*	.*/sitemap.xml	.*	.*	.*	Sitemap
+
+# 测试环境特殊规则
+IGNORE	.*	.*	.*	.*localhost.*	.*	.*	.*	Local development
+IGNORE	.*	.*	.*	.*127.0.0.1.*	.*	.*	.*	Local development
+IGNORE	.*	.*	.*	.*test.*	.*	.*	.*	Test environment
+
+# API端点特殊规则
+WARN	Medium	Medium	10049	.*/api/.*	.*	.*	.*	Non-Storable Content
+WARN	Medium	Medium	10050	.*/api/.*	.*	.*	.*	Retrieved from Cache
+WARN	Low	Low	10015	.*/api/.*	.*	.*	.*	Incomplete or No Cache-control and Pragma HTTP Header Set
+
+# 认证相关规则
+FAIL	High	High	10040	.*/api/auth/.*	.*	.*	.*	Secure Pages Include Mixed Content
+FAIL	High	High	10041	.*/api/auth/.*	.*	.*	.*	HTTP to HTTPS Insecure Transition in Form Post
+FAIL	High	High	10042	.*/api/auth/.*	.*	.*	.*	HTTPS to HTTP Insecure Transition in Form Post
+FAIL	High	High	10043	.*/api/auth/.*	.*	.*	.*	User Controllable JavaScript Event (XSS)
+
+# 管理端点规则
+FAIL	.*	.*	.*	.*/admin/.*	.*	.*	.*	Admin endpoints should be secured
+FAIL	.*	.*	.*	.*/api/admin/.*	.*	.*	.*	Admin API endpoints should be secured
+
+# 文件上传相关规则
+FAIL	High	High	30001	.*upload.*	.*	.*	.*	Buffer Overflow
+FAIL	High	High	30002	.*upload.*	.*	.*	.*	Format String Error
+FAIL	High	High	30003	.*upload.*	.*	.*	.*	Integer Overflow Error
+
+# 会话管理规则
+FAIL	High	High	10054	.*	.*	.*	.*	Cookie without SameSite Attribute
+FAIL	Medium	Medium	10055	.*	.*	.*	.*	CSP Scanner
+FAIL	Medium	Medium	10056	.*	.*	.*	.*	X-Debug-Token Information Leak
+
+# 信息泄露规则
+FAIL	Medium	Medium	10057	.*	.*	.*	.*	Username Hash Found
+FAIL	Medium	Medium	10058	.*	.*	.*	.*	GET for POST
+FAIL	Low	Medium	10059	.*	.*	.*	.*	X-AspNet-Version Response Header
+
+# 业务逻辑规则
+FAIL	High	High	20000	.*	.*	.*	.*	Cold Fusion default file
+FAIL	High	High	20001	.*	.*	.*	.*	Lotus Domino default files
+FAIL	High	High	20002	.*	.*	.*	.*	IIS default file
+FAIL	High	High	20003	.*	.*	.*	.*	Macromedia JRun default files
+FAIL	High	High	20004	.*	.*	.*	.*	Tomcat default file
+FAIL	High	High	20005	.*	.*	.*	.*	BEA WebLogic default files

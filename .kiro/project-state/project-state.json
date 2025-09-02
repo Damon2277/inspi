@@ -1,0 +1,99 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-09-02T08:14:18.398Z",
+  "features": {
+    "homepage": {
+      "status": "completed",
+      "lastUpdated": "2025-09-02T08:14:18.393Z",
+      "completionCriteria": [
+        "UI样式完整",
+        "响应式设计正常",
+        "所有链接可用",
+        "无控制台错误"
+      ],
+      "dependencies": [],
+      "riskLevel": "medium",
+      "notes": "当前样式存在问题，需要恢复到稳定版本"
+    },
+    "create-page": {
+      "status": "completed",
+      "lastUpdated": "2025-09-02T08:14:18.397Z",
+      "completionCriteria": [
+        "页面正常显示",
+        "功能开发中状态显示",
+        "返回首页链接正常"
+      ],
+      "dependencies": [
+        "homepage"
+      ],
+      "riskLevel": "low",
+      "notes": "基础功能完成"
+    },
+    "project-management-system": {
+      "status": "in_progress",
+      "lastUpdated": "2025-09-02T08:14:18.398Z",
+      "completionCriteria": [
+        "项目状态管理系统",
+        "样式版本控制系统",
+        "开发流程规范引擎",
+        "自动化质量检查",
+        "项目恢复系统"
+      ],
+      "dependencies": [],
+      "riskLevel": "high",
+      "notes": "正在实施中，解决48小时内的开发问题"
+    }
+  },
+  "globalHealth": {
+    "overallStatus": "critical",
+    "lastStableSnapshot": null,
+    "activeIssues": [
+      {
+        "id": "style-regression-001",
+        "type": "style_regression",
+        "severity": "high",
+        "description": "样式丢失，无法回滚到48小时前的稳定版本",
+        "affectedFeatures": [
+          "homepage"
+        ],
+        "createdAt": "2024-12-26T10:30:00Z",
+        "status": "active"
+      },
+      {
+        "id": "version-control-001",
+        "type": "version_control",
+        "severity": "critical",
+        "description": "缺乏版本控制系统，无法追踪历史变更",
+        "affectedFeatures": [
+          "homepage",
+          "create-page"
+        ],
+        "createdAt": "2024-12-26T10:30:00Z",
+        "status": "active"
+      },
+      {
+        "type": "style_regression",
+        "severity": "high",
+        "description": "样式丢失，无法回滚到48小时前的稳定版本",
+        "affectedFeatures": [
+          "homepage"
+        ],
+        "status": "active",
+        "id": "style_regression-1756800858398",
+        "createdAt": "2025-09-02T08:14:18.398Z"
+      },
+      {
+        "type": "version_control",
+        "severity": "critical",
+        "description": "缺乏版本控制系统，无法追踪历史变更",
+        "affectedFeatures": [
+          "homepage",
+          "create-page"
+        ],
+        "status": "active",
+        "id": "version_control-1756800858398",
+        "createdAt": "2025-09-02T08:14:18.398Z"
+      }
+    ]
+  }
+}

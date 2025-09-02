@@ -1,0 +1,21 @@
+{
+  "status": "error",
+  "checks": [
+    {
+      "name": "Sitemap文件存在性",
+      "status": "fail",
+      "message": "Sitemap文件不存在"
+    },
+    {
+      "name": "Robots.txt文件存在性",
+      "status": "fail",
+      "message": "Robots.txt文件不存在"
+    },
+    {
+      "name": "OG图片存在性",
+      "status": "pass",
+      "message": "OG图片文件存在"
+    }
+  ],
+  "timestamp": "2025-08-28T06:13:47.086Z"
+}

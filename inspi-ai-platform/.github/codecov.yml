@@ -1,0 +1,153 @@
+# Codecov配置文件
+# 用于代码覆盖率监控和质量门禁
+
+# 覆盖率配置
+coverage:
+  # 精度设置
+  precision: 2
+  # 舍入规则
+  round: down
+  # 范围设置
+  range: "70...100"
+  
+  # 状态检查
+  status:
+    # 项目整体覆盖率
+    project:
+      default:
+        # 目标覆盖率
+        target: 90%
+        # 允许的下降幅度
+        threshold: 1%
+        # 基准分支
+        base: auto
+        # 如果覆盖率下降超过阈值则失败
+        if_ci_failed: error
+        # 只在有覆盖率变化时通知
+        only_pulls: false
+        
+    # 补丁覆盖率（新增代码）
+    patch:
+      default:
+        # 新增代码的目标覆盖率
+        target: 95%
+        # 允许的下降幅度
+        threshold: 5%
+        # 基准设置
+        base: auto
+        # 如果CI失败则跳过
+        if_ci_failed: success
+        # 只在PR中检查
+        only_pulls: true
+
+  # 覆盖率变化检查
+  changes:
+    default:
+      # 最小覆盖率变化才显示
+      threshold: 0.5%
+      # 基准分支
+      base: auto
+      # 如果没有覆盖率数据则跳过
+      if_no_uploads: success
+      # 如果CI失败则跳过
+      if_ci_failed: success
+
+# 解析器配置
+parsers:
+  gcov:
+    branch_detection:
+      conditional: yes
+      loop: yes
+      method: no
+      macro: no
+
+# 忽略文件和目录
+ignore:
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/*.spec.ts"
+  - "**/*.spec.tsx"
+  - "**/test/**"
+  - "**/tests/**"
+  - "**/__tests__/**"
+  - "**/coverage/**"
+  - "**/node_modules/**"
+  - "**/dist/**"
+  - "**/build/**"
+  - "**/.next/**"
+  - "**/public/**"
+  - "**/*.config.js"
+  - "**/*.config.ts"
+  - "**/jest.setup.js"
+  - "**/jest.setup.ts"
+  - "**/playwright.config.ts"
+  - "**/next.config.js"
+  - "**/tailwind.config.js"
+
+# 修复路径
+fixes:
+  - "before/::after/"
+
+# 标志配置
+flags:
+  # 单元测试覆盖率
+  unit:
+    paths:
+      - src/
+    carryforward: true
+    
+  # 集成测试覆盖率
+  integration:
+    paths:
+      - src/
+    carryforward: true
+    
+  # E2E测试覆盖率
+  e2e:
+    paths:
+      - src/
+    carryforward: true
+
+# 注释配置
+comment:
+  # 启用PR注释
+  require_changes: true
+  # 注释布局
+  layout: "reach,diff,flags,tree,reach"
+  # 注释行为
+  behavior: default
+  # 隐藏项目覆盖率如果没有变化
+  hide_project_coverage: false
+  # 显示覆盖率变化
+  show_carryforward_flags: true
+
+# GitHub检查
+github_checks:
+  annotations: true
+
+# 通知配置
+notify:
+  # 等待构建完成的时间
+  wait_for_ci: true
+  # 通知延迟
+  after_n_builds: 3
+  # 通知条件
+  require_ci_to_pass: true
+
+# Slack通知（可选）
+slack:
+  default:
+    url: "secret:SLACK_WEBHOOK_URL"
+    threshold: 1%
+    message: |
+      Coverage for {{owner}}/{{repo}} changed by {{change}}% 
+      {{#if coverage}}to {{coverage}}%{{/if}} on {{branch}}.
+      {{url}}
+
+# 企业功能（如果使用Codecov Pro）
+profiling:
+  critical_files_paths:
+    - src/lib/**
+    - src/components/**
+    - src/services/**
+    - src/utils/**

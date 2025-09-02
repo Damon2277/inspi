@@ -1,0 +1,195 @@
+# 质量门禁配置文件
+# Quality Gate Configuration
+
+# 基本配置
+name: "inspi-ai-platform Quality Gate"
+version: "1.0"
+enabled: true
+
+# 质量门禁规则
+rules:
+  # 代码覆盖率
+  coverage:
+    enabled: true
+    threshold: 90
+    type: "lines"
+    description: "代码覆盖率必须达到90%以上"
+    
+  # 测试通过率
+  test_pass_rate:
+    enabled: true
+    threshold: 100
+    description: "所有测试必须通过"
+    
+  # 性能指标
+  performance:
+    enabled: true
+    rules:
+      - metric: "page_load_time"
+        threshold: 3000
+        unit: "ms"
+        description: "页面加载时间不超过3秒"
+      - metric: "api_response_time"
+        threshold: 1000
+        unit: "ms"
+        description: "API响应时间不超过1秒"
+      - metric: "memory_usage"
+        threshold: 100
+        unit: "MB"
+        description: "内存使用不超过100MB"
+        
+  # 安全检查
+  security:
+    enabled: true
+    rules:
+      - type: "high_vulnerabilities"
+        threshold: 0
+        description: "不允许存在高危漏洞"
+      - type: "critical_vulnerabilities"
+        threshold: 0
+        description: "不允许存在严重漏洞"
+      - type: "owasp_compliance"
+        threshold: 100
+        unit: "percent"
+        description: "OWASP Top 10合规性必须100%"
+        
+  # 代码质量
+  code_quality:
+    enabled: true
+    rules:
+      - type: "eslint_errors"
+        threshold: 0
+        description: "不允许存在ESLint错误"
+      - type: "typescript_errors"
+        threshold: 0
+        description: "不允许存在TypeScript错误"
+      - type: "complexity"
+        threshold: 10
+        description: "圈复杂度不超过10"
+
+# 必需的测试套件
+required_test_suites:
+  - name: "unit-tests"
+    description: "单元测试"
+    required: true
+  - name: "integration-tests"
+    description: "集成测试"
+    required: true
+  - name: "e2e-tests"
+    description: "端到端测试"
+    required: true
+  - name: "security-tests"
+    description: "安全测试"
+    required: false
+    condition: "main_branch"
+  - name: "performance-tests"
+    description: "性能测试"
+    required: false
+    condition: "main_branch"
+
+# 分支策略
+branch_policies:
+  main:
+    quality_gate: "strict"
+    required_reviews: 2
+    dismiss_stale_reviews: true
+    require_code_owner_reviews: true
+    
+  develop:
+    quality_gate: "standard"
+    required_reviews: 1
+    dismiss_stale_reviews: false
+    
+  feature/*:
+    quality_gate: "basic"
+    required_reviews: 1
+
+# 通知配置
+notifications:
+  enabled: true
+  channels:
+    - type: "github_comment"
+      enabled: true
+      template: "quality_gate_comment"
+    - type: "slack"
+      enabled: false
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+      channel: "#quality-alerts"
+    - type: "email"
+      enabled: false
+      recipients: ["team@example.com"]
+
+# 报告配置
+reports:
+  enabled: true
+  formats:
+    - "json"
+    - "html"
+    - "markdown"
+  retention_days: 30
+  
+# 豁免配置
+exemptions:
+  enabled: true
+  rules:
+    - type: "emergency_hotfix"
+      description: "紧急热修复可以豁免部分检查"
+      conditions:
+        - "branch_name_contains: hotfix/"
+        - "has_label: emergency"
+      exempt_checks:
+        - "performance"
+        - "security"
+    - type: "documentation_only"
+      description: "仅文档更改可以豁免测试"
+      conditions:
+        - "files_changed_pattern: *.md"
+        - "no_code_changes: true"
+      exempt_checks:
+        - "unit-tests"
+        - "integration-tests"
+        - "e2e-tests"
+
+# 自动修复配置
+auto_fix:
+  enabled: true
+  rules:
+    - type: "format_code"
+      description: "自动格式化代码"
+      command: "npm run format"
+      conditions:
+        - "has_format_errors: true"
+    - type: "fix_lint"
+      description: "自动修复ESLint错误"
+      command: "npm run lint:fix"
+      conditions:
+        - "has_lint_errors: true"
+
+# 质量趋势监控
+quality_trends:
+  enabled: true
+  metrics:
+    - "coverage_percentage"
+    - "test_pass_rate"
+    - "performance_score"
+    - "security_score"
+    - "code_quality_score"
+  alert_thresholds:
+    coverage_drop: 5  # 覆盖率下降超过5%时告警
+    performance_regression: 20  # 性能回退超过20%时告警
+    security_degradation: 1  # 安全评分下降时告警
+
+# 集成配置
+integrations:
+  sonarqube:
+    enabled: false
+    server_url: "${SONARQUBE_URL}"
+    project_key: "inspi-ai-platform"
+    
+  codecov:
+    enabled: true
+    token: "${CODECOV_TOKEN}"
+    
+  snyk:
+    enabled: false
+    token: "${SNYK_TOKEN}"

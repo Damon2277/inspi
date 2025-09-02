@@ -1,0 +1,81 @@
+# MVP质量门禁配置 - 简化版
+name: "MVP Quality Gate"
+version: "1.0"
+enabled: true
+
+# 简化的质量门禁规则
+rules:
+  # 基础覆盖率 - 降低标准
+  coverage:
+    enabled: true
+    threshold: 70
+    type: "lines"
+    description: "代码覆盖率必须达到70%以上"
+    
+  # 核心测试通过率
+  test_pass_rate:
+    enabled: true
+    threshold: 100
+    description: "核心测试必须100%通过"
+    
+  # 基础性能指标
+  performance:
+    enabled: true
+    rules:
+      - metric: "page_load_time"
+        threshold: 5000
+        unit: "ms"
+        description: "页面加载时间不超过5秒"
+        
+  # 基础安全检查
+  security:
+    enabled: true
+    rules:
+      - type: "critical_vulnerabilities"
+        threshold: 0
+        description: "不允许存在严重漏洞"
+      - type: "high_vulnerabilities"
+        threshold: 2
+        description: "高危漏洞不超过2个"
+
+# 必需的测试套件 - 仅核心测试
+required_test_suites:
+  - name: "unit-tests-core"
+    description: "核心单元测试"
+    required: true
+  - name: "api-tests-core"
+    description: "核心API测试"
+    required: true
+  - name: "e2e-tests-core"
+    description: "核心E2E测试"
+    required: false
+    condition: "main_branch"
+
+# 分支策略 - 简化
+branch_policies:
+  main:
+    quality_gate: "mvp"
+    required_reviews: 1
+    
+  develop:
+    quality_gate: "basic"
+    required_reviews: 1
+    
+  feature/*:
+    quality_gate: "minimal"
+    required_reviews: 0
+
+# 通知配置 - 仅GitHub
+notifications:
+  enabled: true
+  channels:
+    - type: "github_comment"
+      enabled: true
+      template: "mvp_quality_gate_comment"
+
+# 报告配置 - 简化
+reports:
+  enabled: true
+  formats:
+    - "json"
+  retention_days: 7

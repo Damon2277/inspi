@@ -1,0 +1,50 @@
+{
+  "name": "Inspi.AI - AI教师智慧与IP孵化平台",
+  "short_name": "Inspi.AI",
+  "description": "让教学创意飞起来 - AI驱动的教师智慧与IP孵化平台",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "zh-CN",
+  "categories": ["education", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/next.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "AI教学魔法师",
+      "short_name": "创作",
+      "description": "快速创建教学内容",
+      "url": "/create"
+    },
+    {
+      "name": "智慧广场",
+      "short_name": "广场",
+      "description": "浏览教学作品",
+      "url": "/square"
+    },
+    {
+      "name": "个人中心",
+      "short_name": "我的",
+      "description": "管理个人作品和设置",
+      "url": "/profile"
+    }
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
+}

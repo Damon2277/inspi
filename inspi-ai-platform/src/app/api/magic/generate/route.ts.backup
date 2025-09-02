@@ -1,0 +1,109 @@
+/**
+ * AI教学魔法师 - 生成教学卡片API
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyToken } from '@/lib/auth/jwt';
+import { GeminiService } from '@/lib/ai/geminiService';
+import { usageLimitMiddleware, recordUsage } from '@/lib/middleware/usageLimit';
+import connectDB from '@/lib/mongodb';
+import type { GenerateCardsRequest, GenerateCardsResponse } from '@/types/teaching';
+
+export async function POST(request: NextRequest) {
+  try {
+    await connectDB();
+
+    // 1. 检查使用限制
+    const limitResponse = await usageLimitMiddleware(request, 'generation');
+    if (limitResponse) {
+      return limitResponse;
+    }
+
+    // 2. 验证用户身份
+    const token = request.cookies.get('token')?.value || 
+                  request.headers.get('authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    const payload = verifyToken(token) as any;
+    if (!payload || !payload.userId) {
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      );
+    }
+
+    // 3. 解析请求体
+    const body: GenerateCardsRequest = await request.json();
+    const { knowledgePoint, subject, gradeLevel } = body;
+
+    // 4. 验证输入
+    if (!knowledgePoint || knowledgePoint.trim().length === 0) {
+      return NextResponse.json(
+        { error: '请输入知识点' },
+        { status: 400 }
+      );
+    }
+
+    if (knowledgePoint.length > 100) {
+      return NextResponse.json(
+        { error: '知识点长度不能超过100个字符' },
+        { status: 400 }
+      );
+    }
+
+    // 5. 检查AI服务配置
+    if (!GeminiService.isConfigured()) {
+      return NextResponse.json(
+        { error: 'AI服务暂时不可用，请稍后重试' },
+        { status: 503 }
+      );
+    }
+
+    // 6. 调用AI生成服务
+    const cards = await GeminiService.generateTeachingCards({
+      knowledgePoint: knowledgePoint.trim(),
+      subject,
+      gradeLevel
+    });
+
+    // 7. 记录使用次数
+    await recordUsage(request, 'generation');
+
+    // 8. 生成会话ID
+    const sessionId = `session_${Date.now()}_${payload.userId}`;
+
+    // 9. 构建响应
+    const response: GenerateCardsResponse = {
+      cards,
+      sessionId,
+      usage: {
+        current: 0, // 这里应该从实际使用统计中获取
+        limit: 0,   // 这里应该从用户订阅中获取
+        remaining: 0
+      }
+    };
+
+    return NextResponse.json(response);
+
+  } catch (error) {
+    console.error('Generate cards error:', error);
+    
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'AI生成服务暂时不可用，请稍后重试' },
+      { status: 500 }
+    );
+  }
+}

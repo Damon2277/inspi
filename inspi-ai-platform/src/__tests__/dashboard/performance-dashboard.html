@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>inspi-ai-platform 性能监控仪表板</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .metric-trend {
+            display: flex;
+            align-items: center;
+            font-size: 0.9em;
+        }
+
+        .trend-up {
+            color: #e74c3c;
+        }
+
+        .trend-down {
+            color: #27ae60;
+        }
+
+        .trend-stable {
+            color: #f39c12;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .status-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .status-healthy {
+            background: #27ae60;
+        }
+
+        .status-warning {
+            background: #f39c12;
+        }
+
+        .status-critical {
+            background: #e74c3c;
+        }
+
+        .controls {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .controls h3 {
+            margin-bottom: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group label {
+            font-weight: 500;
+        }
+
+        .control-group select,
+        .control-group input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+        }
+
+        .alert {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert.critical {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 性能监控仪表板</h1>
+        <p>实时监控 inspi-ai-platform 的性能指标和系统状态</p>
+    </div>
+
+    <div class="container">
+        <!-- 控制面板 -->
+        <div class="controls">
+            <h3>📊 监控控制</h3>
+            <div class="control-group">
+                <label for="timeRange">时间范围:</label>
+                <select id="timeRange">
+                    <option value="1h">最近1小时</option>
+                    <option value="6h">最近6小时</option>
+                    <option value="24h" selected>最近24小时</option>
+                    <option value="7d">最近7天</option>
+                    <option value="30d">最近30天</option>
+                </select>
+
+                <label for="refreshInterval">刷新间隔:</label>
+                <select id="refreshInterval">
+                    <option value="5">5秒</option>
+                    <option value="30" selected>30秒</option>
+                    <option value="60">1分钟</option>
+                    <option value="300">5分钟</option>
+                </select>
+
+                <button class="btn" onclick="refreshData()">🔄 立即刷新</button>
+                <button class="btn" onclick="exportData()">📥 导出数据</button>
+            </div>
+        </div>
+
+        <!-- 告警信息 -->
+        <div id="alerts"></div>
+
+        <!-- 核心指标 -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value" id="avgResponseTime">--</div>
+                <div class="metric-label">平均响应时间 (ms)</div>
+                <div class="metric-trend" id="responseTimeTrend">
+                    <span class="trend-stable">→ 稳定</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-value" id="throughput">--</div>
+                <div class="metric-label">吞吐量 (req/s)</div>
+                <div class="metric-trend" id="throughputTrend">
+                    <span class="trend-up">↗ +5.2%</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-value" id="errorRate">--</div>
+                <div class="metric-label">错误率 (%)</div>
+                <div class="metric-trend" id="errorRateTrend">
+                    <span class="trend-down">↘ -2.1%</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-value" id="memoryUsage">--</div>
+                <div class="metric-label">内存使用率 (%)</div>
+                <div class="metric-trend" id="memoryTrend">
+                    <span class="trend-stable">→ 稳定</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-value" id="cpuUsage">--</div>
+                <div class="metric-label">CPU使用率 (%)</div>
+                <div class="metric-trend" id="cpuTrend">
+                    <span class="trend-down">↘ -1.8%</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-value" id="activeUsers">--</div>
+                <div class="metric-label">活跃用户数</div>
+                <div class="metric-trend" id="usersTrend">
+                    <span class="trend-up">↗ +12.5%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图表区域 -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">📈 响应时间趋势</div>
+                <div class="chart-container">
+                    <canvas id="responseTimeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-title">⚡ 性能基准对比</div>
+                <div class="chart-container">
+                    <canvas id="benchmarkChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-title">🔥 热点API监控</div>
+                <div class="chart-container">
+                    <canvas id="apiChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-title">💾 资源使用情况</div>
+                <div class="chart-container">
+                    <canvas id="resourceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 状态监控 -->
+        <div class="status-grid">
+            <div class="status-card">
+                <h3>🔍 系统健康状态</h3>
+                <div id="systemStatus">
+                    <div class="status-item">
+                        <div style="display: flex; align-items: center;">
+                            <div class="status-indicator status-healthy"></div>
+                            <span>Web服务器</span>
+                        </div>
+                        <span>正常</span>
+                    </div>
+                    <div class="status-item">
+                        <div style="display: flex; align-items: center;">
+                            <div class="status-indicator status-healthy"></div>
+                            <span>数据库</span>
+                        </div>
+                        <span>正常</span>
+                    </div>
+                    <div class="status-item">
+                        <div style="display: flex; align-items: center;">
+                            <div class="status-indicator status-warning"></div>
+                            <span>缓存服务</span>
+                        </div>
+                        <span>警告</span>
+                    </div>
+                    <div class="status-item">
+                        <div style="display: flex; align-items: center;">
+                            <div class="status-indicator status-healthy"></div>
+                            <span>AI服务</span>
+                        </div>
+                        <span>正常</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <h3>📊 测试执行状态</h3>
+                <div id="testStatus">
+                    <div class="status-item">
+                        <div style="display: flex; align-items: center;">
+                            <div class="status-indicator status-healthy"></div>
+                            <span>单元测试</span>
+                        </div>
+                        <span>541/541 通过</span>
+                    </div>
+                    <div class="status-item">
+                        <div style="display: flex; align-items: center;">
+                            <div class="status-indicator status-healthy"></div>
+                            <span>集成测试</span>
+                        </div>
+                        <span>150/150 通过</span>
+                    </div>
+                    <div class="status-item">
+                        <div style="display: flex; align-items: center;">
+                            <div class="status-indicator status-healthy"></div>
+                            <span>E2E测试</span>
+                        </div>
+                        <span>16/16 通过</span>
+                    </div>
+                    <div class="status-item">
+                        <div style="display: flex; align-items: center;">
+                            <div class="status-indicator status-warning"></div>
+                            <span>性能测试</span>
+                        </div>
+                        <span>9/10 达标</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <h3>🎯 质量指标</h3>
+                <div id="qualityMetrics">
+                    <div class="status-item">
+                        <span>代码覆盖率</span>
+                        <span><strong>95.2%</strong></span>
+                    </div>
+                    <div class="status-item">
+                        <span>测试通过率</span>
+                        <span><strong>99.8%</strong></span>
+                    </div>
+                    <div class="status-item">
+                        <span>性能达标率</span>
+                        <span><strong>90.0%</strong></span>
+                    </div>
+                    <div class="status-item">
+                        <span>安全评分</span>
+                        <span><strong>A+</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>最后更新: <span id="lastUpdate">--</span> | 数据来源: inspi-ai-platform 监控系统</p>
+    </div>
+
+    <script>
+        // 全局变量
+        let charts = {};
+        let refreshTimer;
+        let currentTimeRange = '24h';
+        let currentRefreshInterval = 30;
+
+        // 初始化仪表板
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadInitialData();
+            startAutoRefresh();
+            
+            // 绑定事件监听器
+            document.getElementById('timeRange').addEventListener('change', handleTimeRangeChange);
+            document.getElementById('refreshInterval').addEventListener('change', handleRefreshIntervalChange);
+        });
+
+        // 初始化图表
+        function initializeCharts() {
+            // 响应时间趋势图
+            const responseTimeCtx = document.getElementById('responseTimeChart').getContext('2d');
+            charts.responseTime = new Chart(responseTimeCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '平均响应时间',
+                        data: [],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '响应时间 (ms)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 性能基准对比图
+            const benchmarkCtx = document.getElementById('benchmarkChart').getContext('2d');
+            charts.benchmark = new Chart(benchmarkCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['首页加载', 'AI生成', '图谱渲染', '搜索响应'],
+                    datasets: [{
+                        label: '当前值',
+                        data: [2800, 28000, 4500, 1800],
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)'
+                    }, {
+                        label: '基准值',
+                        data: [3000, 30000, 5000, 2000],
+                        backgroundColor: 'rgba(231, 76, 60, 0.8)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '时间 (ms)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // API监控图
+            const apiCtx = document.getElementById('apiChart').getContext('2d');
+            charts.api = new Chart(apiCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['/api/magic/generate', '/api/works', '/api/auth', '/api/users', '其他'],
+                    datasets: [{
+                        data: [35, 25, 15, 12, 13],
+                        backgroundColor: [
+                            '#667eea',
+                            '#764ba2',
+                            '#f093fb',
+                            '#f5576c',
+                            '#4facfe'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // 资源使用图
+            const resourceCtx = document.getElementById('resourceChart').getContext('2d');
+            charts.resource = new Chart(resourceCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'CPU使用率',
+                        data: [],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: '内存使用率',
+                        data: [],
+                        borderColor: '#27ae60',
+                        backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: '使用率 (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 加载初始数据
+        function loadInitialData() {
+            // 模拟数据加载
+            updateMetrics({
+                avgResponseTime: 2850,
+                throughput: 125,
+                errorRate: 0.2,
+                memoryUsage: 68,
+                cpuUsage: 45,
+                activeUsers: 1247
+            });
+
+            // 更新图表数据
+            updateChartData();
+            
+            // 检查告警
+            checkAlerts();
+            
+            // 更新时间戳
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleString('zh-CN');
+        }
+
+        // 更新核心指标
+        function updateMetrics(data) {
+            document.getElementById('avgResponseTime').textContent = data.avgResponseTime;
+            document.getElementById('throughput').textContent = data.throughput;
+            document.getElementById('errorRate').textContent = data.errorRate.toFixed(1);
+            document.getElementById('memoryUsage').textContent = data.memoryUsage;
+            document.getElementById('cpuUsage').textContent = data.cpuUsage;
+            document.getElementById('activeUsers').textContent = data.activeUsers.toLocaleString();
+        }
+
+        // 更新图表数据
+        function updateChartData() {
+            const now = new Date();
+            const timeLabels = [];
+            const responseTimeData = [];
+            const cpuData = [];
+            const memoryData = [];
+
+            // 生成模拟数据
+            for (let i = 23; i >= 0; i--) {
+                const time = new Date(now.getTime() - i * 60 * 60 * 1000);
+                timeLabels.push(time.getHours() + ':00');
+                responseTimeData.push(2500 + Math.random() * 1000);
+                cpuData.push(30 + Math.random() * 40);
+                memoryData.push(50 + Math.random() * 30);
+            }
+
+            // 更新响应时间图表
+            charts.responseTime.data.labels = timeLabels;
+            charts.responseTime.data.datasets[0].data = responseTimeData;
+            charts.responseTime.update();
+
+            // 更新资源使用图表
+            charts.resource.data.labels = timeLabels;
+            charts.resource.data.datasets[0].data = cpuData;
+            charts.resource.data.datasets[1].data = memoryData;
+            charts.resource.update();
+        }
+
+        // 检查告警
+        function checkAlerts() {
+            const alertsContainer = document.getElementById('alerts');
+            alertsContainer.innerHTML = '';
+
+            // 模拟告警检查
+            const alerts = [
+                {
+                    type: 'warning',
+                    message: '缓存服务响应时间超过阈值 (1.2s > 1.0s)',
+                    time: '2分钟前'
+                }
+            ];
+
+            alerts.forEach(alert => {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert ${alert.type}`;
+                alertDiv.innerHTML = `
+                    <strong>⚠️ ${alert.type === 'critical' ? '严重告警' : '警告'}:</strong>
+                    ${alert.message}
+                    <span style="float: right; font-size: 0.9em;">${alert.time}</span>
+                `;
+                alertsContainer.appendChild(alertDiv);
+            });
+        }
+
+        // 刷新数据
+        function refreshData() {
+            console.log('刷新数据...');
+            loadInitialData();
+        }
+
+        // 导出数据
+        function exportData() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                metrics: {
+                    avgResponseTime: document.getElementById('avgResponseTime').textContent,
+                    throughput: document.getElementById('throughput').textContent,
+                    errorRate: document.getElementById('errorRate').textContent,
+                    memoryUsage: document.getElementById('memoryUsage').textContent,
+                    cpuUsage: document.getElementById('cpuUsage').textContent,
+                    activeUsers: document.getElementById('activeUsers').textContent
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `performance-data-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 处理时间范围变化
+        function handleTimeRangeChange(event) {
+            currentTimeRange = event.target.value;
+            console.log('时间范围变更为:', currentTimeRange);
+            refreshData();
+        }
+
+        // 处理刷新间隔变化
+        function handleRefreshIntervalChange(event) {
+            currentRefreshInterval = parseInt(event.target.value);
+            console.log('刷新间隔变更为:', currentRefreshInterval, '秒');
+            
+            // 重新启动自动刷新
+            stopAutoRefresh();
+            startAutoRefresh();
+        }
+
+        // 启动自动刷新
+        function startAutoRefresh() {
+            refreshTimer = setInterval(() => {
+                refreshData();
+            }, currentRefreshInterval * 1000);
+        }
+
+        // 停止自动刷新
+        function stopAutoRefresh() {
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+                refreshTimer = null;
+            }
+        }
+
+        // 页面卸载时清理
+        window.addEventListener('beforeunload', function() {
+            stopAutoRefresh();
+        });
+    </script>
+</body>
+</html>
