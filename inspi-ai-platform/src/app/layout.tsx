@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Navigation from "@/components/layout/Navigation";
 import "./globals.css";
 
 const inter = Inter({ 
@@ -27,7 +28,10 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className="dot-grid-background circuit-lines" suppressHydrationWarning={true}>
-        {children}
+        <Navigation />
+        <main>
+          {children}
+        </main>
       </body>
     </html>
   );
