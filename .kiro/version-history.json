@@ -1,0 +1,922 @@
+{
+  "snapshots": [
+    {
+      "id": "snapshot_1756801490892_v7zi7onuu",
+      "timestamp": "2025-09-02T08:24:50.892Z",
+      "version": "v2025.09.02.1624",
+      "description": "Initial comprehensive snapshot - baseline for all project assets",
+      "files": [],
+      "dependencies": {
+        "@auth/mongodb-adapter": "^3.10.0",
+        "@google/generative-ai": "^0.24.1",
+        "@tanstack/react-query": "^5.85.5",
+        "@tanstack/react-query-devtools": "^5.85.5",
+        "@types/bcryptjs": "^2.4.6",
+        "@types/d3": "^7.4.3",
+        "@types/ioredis": "^4.28.10",
+        "@types/jsonwebtoken": "^9.0.10",
+        "@types/mongoose": "^5.11.96",
+        "@types/nodemailer": "^7.0.1",
+        "axios": "^1.11.0",
+        "bcryptjs": "^3.0.2",
+        "clsx": "^2.1.1",
+        "d3": "^7.9.0",
+        "date-fns": "^4.1.0",
+        "framer-motion": "^12.23.12",
+        "google-auth-library": "^10.3.0",
+        "ioredis": "^5.7.0",
+        "jsonwebtoken": "^9.0.2",
+        "mongoose": "^8.18.0",
+        "next": "15.5.0",
+        "next-auth": "^4.24.11",
+        "nodemailer": "^6.10.1",
+        "react": "19.1.0",
+        "react-dom": "19.1.0",
+        "redis": "^5.8.2",
+        "tailwind-merge": "^3.3.1",
+        "uuid": "^11.0.3",
+        "winston": "^3.17.0",
+        "winston-daily-rotate-file": "^5.0.0",
+        "zustand": "^5.0.8",
+        "@eslint/eslintrc": "^3",
+        "@tailwindcss/postcss": "^4",
+        "@testing-library/jest-dom": "^6.8.0",
+        "@testing-library/react": "^16.3.0",
+        "@testing-library/user-event": "^14.5.2",
+        "@types/jest": "^29.5.12",
+        "@types/node": "^20",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "@types/redis": "^4.0.10",
+        "@types/supertest": "^6.0.2",
+        "@types/uuid": "^10.0.0",
+        "eslint": "^9",
+        "eslint-config-next": "15.5.0",
+        "jest": "^30.0.5",
+        "jest-environment-jsdom": "^30.0.5",
+        "jest-environment-node": "^30.0.5",
+        "mongodb-memory-server": "^10.1.2",
+        "msw": "^2.6.8",
+        "supertest": "^7.0.0",
+        "tailwindcss": "^4",
+        "ts-jest": "^29.2.5",
+        "ts-node": "^10.9.2",
+        "typescript": "^5"
+      },
+      "projectState": {
+        "version": "1.0.0",
+        "lastUpdated": "2025-09-02T08:18:55.559Z",
+        "features": {
+          "homepage": {
+            "status": "completed",
+            "lastUpdated": "2025-09-02T08:14:18.393Z",
+            "completionCriteria": [
+              "UI样式完整",
+              "响应式设计正常",
+              "所有链接可用",
+              "无控制台错误"
+            ],
+            "dependencies": [],
+            "riskLevel": "medium",
+            "notes": "当前样式存在问题，需要恢复到稳定版本"
+          },
+          "create-page": {
+            "status": "completed",
+            "lastUpdated": "2025-09-02T08:14:18.397Z",
+            "completionCriteria": [
+              "页面正常显示",
+              "功能开发中状态显示",
+              "返回首页链接正常"
+            ],
+            "dependencies": [
+              "homepage"
+            ],
+            "riskLevel": "low",
+            "notes": "基础功能完成"
+          },
+          "project-management-system": {
+            "status": "in_progress",
+            "lastUpdated": "2025-09-02T08:18:55.559Z",
+            "completionCriteria": [
+              "项目状态管理系统",
+              "样式版本控制系统",
+              "开发流程规范引擎",
+              "自动化质量检查",
+              "项目恢复系统"
+            ],
+            "dependencies": [],
+            "riskLevel": "high",
+            "notes": "✅ 第一阶段完成：状态管理和版本控制已建立"
+          }
+        },
+        "globalHealth": {
+          "overallStatus": "critical",
+          "lastStableSnapshot": "git-commit-7d8da0a",
+          "activeIssues": [
+            {
+              "id": "style-regression-001",
+              "type": "style_regression",
+              "severity": "high",
+              "description": "样式丢失，无法回滚到48小时前的稳定版本",
+              "affectedFeatures": [
+                "homepage"
+              ],
+              "createdAt": "2024-12-26T10:30:00Z",
+              "status": "active"
+            },
+            {
+              "id": "version-control-001",
+              "type": "version_control",
+              "severity": "critical",
+              "description": "缺乏版本控制系统，无法追踪历史变更",
+              "affectedFeatures": [
+                "homepage",
+                "create-page"
+              ],
+              "createdAt": "2024-12-26T10:30:00Z",
+              "status": "resolved",
+              "resolvedAt": "2025-09-02T08:18:55.557Z",
+              "resolution": "Git版本控制系统已建立，创建了初始提交作为基准点"
+            },
+            {
+              "type": "style_regression",
+              "severity": "high",
+              "description": "样式丢失，无法回滚到48小时前的稳定版本",
+              "affectedFeatures": [
+                "homepage"
+              ],
+              "status": "active",
+              "id": "style_regression-1756800858398",
+              "createdAt": "2025-09-02T08:14:18.398Z"
+            },
+            {
+              "type": "version_control",
+              "severity": "critical",
+              "description": "缺乏版本控制系统，无法追踪历史变更",
+              "affectedFeatures": [
+                "homepage",
+                "create-page"
+              ],
+              "status": "resolved",
+              "id": "version_control-1756800858398",
+              "createdAt": "2025-09-02T08:14:18.398Z",
+              "resolvedAt": "2025-09-02T08:18:55.559Z",
+              "resolution": "Git版本控制系统已建立，创建了初始提交作为基准点"
+            },
+            {
+              "id": "achievement-1756801135559",
+              "type": "functional_error",
+              "severity": "low",
+              "description": "✅ 成功建立Git版本控制系统和项目状态管理",
+              "affectedFeatures": [
+                "project-management-system"
+              ],
+              "createdAt": "2025-09-02T08:18:55.559Z",
+              "status": "resolved",
+              "resolvedAt": "2025-09-02T08:18:55.559Z",
+              "resolution": "项目管理规则第一个任务完成"
+            }
+          ]
+        }
+      },
+      "gitCommit": "7d8da0a312c3d531511bfa2814a867fe11a4a9cb",
+      "tags": [
+        "initial",
+        "baseline"
+      ],
+      "isStable": true,
+      "metadata": {
+        "totalFiles": 0,
+        "totalSize": 0,
+        "changedFiles": [],
+        "addedFiles": [],
+        "deletedFiles": []
+      }
+    },
+    {
+      "id": "snapshot_1756801581450_glqkoyw6w",
+      "timestamp": "2025-09-02T08:26:21.450Z",
+      "version": "v2025.09.02.1626",
+      "description": "Current project state - all assets baseline",
+      "files": [
+        {
+          "path": "inspi-ai-platform/package.json",
+          "content": "{\n  \"name\": \"inspi-ai-platform\",\n  \"version\": \"0.1.0\",\n  \"private\": true,\n  \"scripts\": {\n    \"dev\": \"next dev --turbopack\",\n    \"build\": \"next build --turbopack\",\n    \"start\": \"next start\",\n    \"lint\": \"eslint\",\n    \"format\": \"prettier --write .\",\n    \"format:check\": \"prettier --check .\",\n    \"type-check\": \"tsc --noEmit\",\n    \"test\": \"jest --config jest.config.js\",\n    \"test:unit\": \"jest --config jest.config.unit.js\",\n    \"test:integration\": \"jest --config jest.config.integration.js\",\n    \"test:e2e\": \"playwright test\",\n    \"test:performance\": \"playwright test src/__tests__/performance\",\n    \"test:mobile\": \"playwright test src/__tests__/mobile\",\n    \"test:security\": \"jest src/__tests__/security\",\n    \"test:services\": \"node -e \\\"console.log('Services health check passed')\\\"\",\n    \"test:smoke\": \"playwright test src/__tests__/smoke\",\n    \"test:smoke:production\": \"playwright test src/__tests__/smoke --config=playwright.config.production.js\",\n    \"test:all\": \"npm run test:unit && npm run test:integration && npm run test:e2e\",\n    \"test:watch\": \"jest --config jest.config.unit.js --watch\",\n    \"test:watch:integration\": \"jest --config jest.config.integration.js --watch\",\n    \"test:watch:e2e\": \"jest --config jest.config.e2e.js --watch\",\n    \"test:coverage\": \"jest --config jest.config.unit.js --coverage\",\n    \"test:coverage:integration\": \"jest --config jest.config.integration.js --coverage\",\n    \"test:coverage:e2e\": \"jest --config jest.config.e2e.js --coverage\",\n    \"test:coverage:all\": \"npm run test:coverage && npm run test:coverage:integration && npm run test:coverage:e2e\",\n    \"test:ci\": \"npm run test:all --ci --coverage --watchAll=false\",\n    \"test:debug\": \"node --inspect-brk node_modules/.bin/jest --config jest.config.unit.js --runInBand\",\n    \"test:debug:integration\": \"node --inspect-brk node_modules/.bin/jest --config jest.config.integration.js --runInBand\",\n    \"test:parallel\": \"concurrently \\\"npm run test:unit\\\" \\\"npm run test:integration\\\"\",\n    \"test:runner\": \"ts-node src/__tests__/runners/test-runner.ts\",\n    \"test:report\": \"ts-node src/__tests__/runners/test-runner.ts\",\n    \"test:performance:jest\": \"jest --config jest.config.js --testPathPatterns=performance\",\n    \"test:security:jest\": \"jest --config jest.config.js --testPathPatterns=security\",\n    \"test:mobile:jest\": \"jest --config jest.config.js --testPathPatterns=mobile\",\n    \"test:api\": \"ts-node src/__tests__/api/run-api-tests.ts\",\n    \"test:api:auth\": \"ts-node src/__tests__/api/run-api-tests.ts suite auth\",\n    \"test:api:works\": \"ts-node src/__tests__/api/run-api-tests.ts suite works\",\n    \"test:api:users\": \"ts-node src/__tests__/api/run-api-tests.ts suite users\",\n    \"test:api:subscription\": \"ts-node src/__tests__/api/run-api-tests.ts suite subscription\",\n    \"test:api:contact\": \"ts-node src/__tests__/api/run-api-tests.ts suite contact\",\n    \"test:api:leaderboard\": \"ts-node src/__tests__/api/run-api-tests.ts suite leaderboard\",\n    \"test:api:knowledge-graph\": \"ts-node src/__tests__/api/run-api-tests.ts suite knowledge-graph\",\n    \"test:api:magic\": \"ts-node src/__tests__/api/run-api-tests.ts suite magic\",\n    \"test:api:contribution\": \"ts-node src/__tests__/api/run-api-tests.ts suite contribution\",\n    \"test:api:integration\": \"ts-node src/__tests__/api/run-api-tests.ts suite integration\",\n    \"test:mvp\": \"npm run test:unit:core && npm run test:api:core\",\n    \"test:unit:core\": \"jest --config jest.config.unit.js --testPathPatterns='(utils|hooks|components)' --coverage\",\n    \"test:api:core\": \"ts-node src/__tests__/api/run-api-tests.ts suite auth && ts-node src/__tests__/api/run-api-tests.ts suite works\",\n    \"test:e2e:core\": \"playwright test src/__tests__/e2e/user-journey.test.ts --project=chromium\",\n    \"test:performance:basic\": \"playwright test src/__tests__/performance/performance.test.ts --project=chromium\",\n    \"test:report:comprehensive\": \"npx ts-node src/__tests__/utils/report-generator.ts\",\n    \"test:load\": \"cd src/__tests__/load && node load-test.js run\",\n    \"test:security:advanced\": \"npx playwright test src/__tests__/security/security-scan-advanced.test.ts\",\n    \"test:performance:advanced\": \"npx playwright test src/__tests__/performance/performance-advanced.test.ts\",\n    \"quality:gate\": \"node scripts/quality-gate-checker.js\",\n    \"quality:gate:mvp\": \"node scripts/quality-gate-checker.js MVP\",\n    \"quality:gate:standard\": \"node scripts/quality-gate-checker.js STANDARD\",\n    \"quality:gate:enterprise\": \"node scripts/quality-gate-checker.js ENTERPRISE\",\n    \"task:check-blocking\": \"node scripts/task-blocker.js\",\n    \"quality:gate:legacy\": \"npm run test:report:comprehensive && npm run test:load && npm run test:security:advanced\",\n    \"test:api:list\": \"ts-node src/__tests__/api/run-api-tests.ts list\",\n    \"seo:monitor\": \"node scripts/seo-monitor.js\",\n    \"seo:test\": \"npm test -- --testPathPatterns=seo\",\n    \"check-task\": \"node scripts/task-checker.js\",\n    \"test:logging\": \"node scripts/simple-logging-test.js\",\n    \"pre-commit\": \"npm run lint && npm run test:unit && npm run build\",\n    \"team:notify\": \"node scripts/team-notification.js\",\n    \"improvement:collect\": \"node scripts/improvement-tracker.js collect\",\n    \"improvement:analyze\": \"node scripts/improvement-tracker.js analyze\",\n    \"improvement:report\": \"node scripts/improvement-tracker.js report\",\n    \"install:test-deps\": \"npm install --save-dev mongodb-memory-server @types/jest @types/supertest supertest msw ts-jest jest-environment-node @testing-library/user-event concurrently\",\n    \"test-env:start\": \"node scripts/simple-start.js\",\n    \"test-env:start-full\": \"node scripts/start-test-env.js\",\n    \"test-env:stop\": \"pkill -f 'next dev'\",\n    \"test-env:status\": \"curl -s http://localhost:3000/api/test-status | jq .\",\n    \"test-env:health\": \"curl -s http://localhost:3000/api/health\",\n    \"test-env:dashboard\": \"open http://localhost:3000/test-dashboard\"\n  },\n  \"dependencies\": {\n    \"@auth/mongodb-adapter\": \"^3.10.0\",\n    \"@google/generative-ai\": \"^0.24.1\",\n    \"@tanstack/react-query\": \"^5.85.5\",\n    \"@tanstack/react-query-devtools\": \"^5.85.5\",\n    \"@types/bcryptjs\": \"^2.4.6\",\n    \"@types/d3\": \"^7.4.3\",\n    \"@types/ioredis\": \"^4.28.10\",\n    \"@types/jsonwebtoken\": \"^9.0.10\",\n    \"@types/mongoose\": \"^5.11.96\",\n    \"@types/nodemailer\": \"^7.0.1\",\n    \"axios\": \"^1.11.0\",\n    \"bcryptjs\": \"^3.0.2\",\n    \"clsx\": \"^2.1.1\",\n    \"d3\": \"^7.9.0\",\n    \"date-fns\": \"^4.1.0\",\n    \"framer-motion\": \"^12.23.12\",\n    \"google-auth-library\": \"^10.3.0\",\n    \"ioredis\": \"^5.7.0\",\n    \"jsonwebtoken\": \"^9.0.2\",\n    \"mongoose\": \"^8.18.0\",\n    \"next\": \"15.5.0\",\n    \"next-auth\": \"^4.24.11\",\n    \"nodemailer\": \"^6.10.1\",\n    \"react\": \"19.1.0\",\n    \"react-dom\": \"19.1.0\",\n    \"redis\": \"^5.8.2\",\n    \"tailwind-merge\": \"^3.3.1\",\n    \"uuid\": \"^11.0.3\",\n    \"winston\": \"^3.17.0\",\n    \"winston-daily-rotate-file\": \"^5.0.0\",\n    \"zustand\": \"^5.0.8\"\n  },\n  \"devDependencies\": {\n    \"@eslint/eslintrc\": \"^3\",\n    \"@tailwindcss/postcss\": \"^4\",\n    \"@testing-library/jest-dom\": \"^6.8.0\",\n    \"@testing-library/react\": \"^16.3.0\",\n    \"@testing-library/user-event\": \"^14.5.2\",\n    \"@types/jest\": \"^29.5.12\",\n    \"@types/node\": \"^20\",\n    \"@types/react\": \"^19\",\n    \"@types/react-dom\": \"^19\",\n    \"@types/redis\": \"^4.0.10\",\n    \"@types/supertest\": \"^6.0.2\",\n    \"@types/uuid\": \"^10.0.0\",\n    \"eslint\": \"^9\",\n    \"eslint-config-next\": \"15.5.0\",\n    \"jest\": \"^30.0.5\",\n    \"jest-environment-jsdom\": \"^30.0.5\",\n    \"jest-environment-node\": \"^30.0.5\",\n    \"mongodb-memory-server\": \"^10.1.2\",\n    \"msw\": \"^2.6.8\",\n    \"supertest\": \"^7.0.0\",\n    \"tailwindcss\": \"^4\",\n    \"ts-jest\": \"^29.2.5\",\n    \"ts-node\": \"^10.9.2\",\n    \"typescript\": \"^5\"\n  }\n}\n",
+          "hash": "ca643762546861f96fab5a5f508cef2c4c17394bcb8c58b6845f16be7db44d75",
+          "size": 7625,
+          "lastModified": "2025-08-31T05:21:29.549Z",
+          "type": "config"
+        },
+        {
+          "path": "inspi-ai-platform/next.config.ts",
+          "content": "import type { NextConfig } from \"next\";\n\nconst nextConfig: NextConfig = {\n  // 基础配置\n  reactStrictMode: true,\n  serverExternalPackages: ['mongoose', 'ioredis'],\n  \n  // 简化的图片配置\n  images: {\n    domains: ['lh3.googleusercontent.com', 'ui-avatars.com'],\n    formats: ['image/webp'],\n  },\n\n};\n\nexport default nextConfig;\n",
+          "hash": "0a9777e419da56da58f10953c132359bc08846fd01d44c3998d3ec5d955b3f2a",
+          "size": 338,
+          "lastModified": "2025-09-01T03:49:56.182Z",
+          "type": "code"
+        },
+        {
+          "path": "inspi-ai-platform/tailwind.config.ts",
+          "content": "import type { Config } from 'tailwindcss'\n\nconst config: Config = {\n  content: [\n    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',\n    './src/components/**/*.{js,ts,jsx,tsx,mdx}',\n    './src/app/**/*.{js,ts,jsx,tsx,mdx}',\n    './src/hooks/**/*.{js,ts,jsx,tsx,mdx}',\n    './src/lib/**/*.{js,ts,jsx,tsx,mdx}',\n  ],\n  theme: {\n    extend: {\n      // 响应式断点配置\n      screens: {\n        'xs': '320px',   // 超小屏幕\n        'sm': '640px',   // 小屏幕\n        'md': '768px',   // 中等屏幕（平板）\n        'lg': '1024px',  // 大屏幕（桌面）\n        'xl': '1280px',  // 超大屏幕\n        '2xl': '1536px', // 超宽屏幕\n        \n        // 自定义断点\n        'mobile': { 'max': '767px' },\n        'tablet': { 'min': '768px', 'max': '1023px' },\n        'desktop': { 'min': '1024px', 'max': '1439px' },\n        'wide': { 'min': '1440px' },\n        \n        // 高度断点\n        'h-sm': { 'raw': '(max-height: 600px)' },\n        'h-md': { 'raw': '(min-height: 601px) and (max-height: 900px)' },\n        'h-lg': { 'raw': '(min-height: 901px)' },\n      },\n      \n      // 移动端优化的字体大小\n      fontSize: {\n        'xs': ['0.75rem', { lineHeight: '1rem' }],\n        'sm': ['0.875rem', { lineHeight: '1.25rem' }],\n        'base': ['1rem', { lineHeight: '1.5rem' }],\n        'lg': ['1.125rem', { lineHeight: '1.75rem' }],\n        'xl': ['1.25rem', { lineHeight: '1.75rem' }],\n        '2xl': ['1.5rem', { lineHeight: '2rem' }],\n        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],\n        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],\n        '5xl': ['3rem', { lineHeight: '1' }],\n        '6xl': ['3.75rem', { lineHeight: '1' }],\n        \n        // 移动端专用字体大小\n        'mobile-xs': ['0.75rem', { lineHeight: '1rem' }],\n        'mobile-sm': ['0.875rem', { lineHeight: '1.25rem' }],\n        'mobile-base': ['1rem', { lineHeight: '1.5rem' }],\n        'mobile-lg': ['1.125rem', { lineHeight: '1.75rem' }],\n        'mobile-xl': ['1.25rem', { lineHeight: '1.75rem' }],\n        'mobile-2xl': ['1.5rem', { lineHeight: '2rem' }],\n      },\n      \n      // 触摸友好的间距\n      spacing: {\n        '0.5': '0.125rem',\n        '1.5': '0.375rem',\n        '2.5': '0.625rem',\n        '3.5': '0.875rem',\n        '4.5': '1.125rem',\n        '5.5': '1.375rem',\n        '6.5': '1.625rem',\n        '7.5': '1.875rem',\n        '8.5': '2.125rem',\n        '9.5': '2.375rem',\n        '11': '2.75rem',\n        '13': '3.25rem',\n        '15': '3.75rem',\n        '17': '4.25rem',\n        '18': '4.5rem',\n        '19': '4.75rem',\n        '21': '5.25rem',\n        '22': '5.5rem',\n        '23': '5.75rem',\n        '25': '6.25rem',\n        \n        // 触摸目标最小尺寸\n        'touch': '44px',\n        'touch-sm': '40px',\n        'touch-lg': '48px',\n      },\n      \n      // 移动端优化的圆角\n      borderRadius: {\n        'xs': '0.125rem',\n        'sm': '0.25rem',\n        'md': '0.375rem',\n        'lg': '0.5rem',\n        'xl': '0.75rem',\n        '2xl': '1rem',\n        '3xl': '1.5rem',\n        \n        // 移动端友好的圆角\n        'mobile': '8px',\n        'mobile-lg': '12px',\n        'mobile-xl': '16px',\n      },\n      \n      // 移动端优化的阴影\n      boxShadow: {\n        'mobile': '0 2px 8px rgba(0, 0, 0, 0.1)',\n        'mobile-lg': '0 4px 12px rgba(0, 0, 0, 0.15)',\n        'mobile-xl': '0 8px 24px rgba(0, 0, 0, 0.2)',\n        'touch': '0 2px 4px rgba(0, 0, 0, 0.1)',\n        'touch-active': '0 1px 2px rgba(0, 0, 0, 0.1)',\n      },\n      \n      // 动画和过渡\n      transitionDuration: {\n        '150': '150ms',\n        '250': '250ms',\n        '350': '350ms',\n      },\n      \n      // Z-index 层级\n      zIndex: {\n        '1': '1',\n        '2': '2',\n        '3': '3',\n        '4': '4',\n        '5': '5',\n        'modal': '100',\n        'dropdown': '50',\n        'header': '40',\n        'overlay': '30',\n      },\n      \n      // 颜色系统\n      colors: {\n        // 主色调\n        primary: {\n          50: '#eff6ff',\n          100: '#dbeafe',\n          200: '#bfdbfe',\n          300: '#93c5fd',\n          400: '#60a5fa',\n          500: '#3b82f6',\n          600: '#2563eb',\n          700: '#1d4ed8',\n          800: '#1e40af',\n          900: '#1e3a8a',\n        },\n        \n        // 灰色系统\n        gray: {\n          50: '#f9fafb',\n          100: '#f3f4f6',\n          200: '#e5e7eb',\n          300: '#d1d5db',\n          400: '#9ca3af',\n          500: '#6b7280',\n          600: '#4b5563',\n          700: '#374151',\n          800: '#1f2937',\n          900: '#111827',\n        },\n        \n        // 语义化颜色\n        success: {\n          50: '#f0fdf4',\n          500: '#22c55e',\n          600: '#16a34a',\n        },\n        warning: {\n          50: '#fffbeb',\n          500: '#f59e0b',\n          600: '#d97706',\n        },\n        error: {\n          50: '#fef2f2',\n          500: '#ef4444',\n          600: '#dc2626',\n        },\n      },\n      \n      // 移动端优化的最大宽度\n      maxWidth: {\n        'mobile': '100vw',\n        'tablet': '768px',\n        'desktop': '1024px',\n        'wide': '1200px',\n        'container': '1200px',\n      },\n      \n      // 移动端优化的最小高度\n      minHeight: {\n        'screen-mobile': '100vh',\n        'screen-safe': 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom))',\n        'touch': '44px',\n      },\n    },\n  },\n  plugins: [\n    // 自定义插件：移动端工具类\n    function({ addUtilities, theme }) {\n      const newUtilities = {\n        // 触摸目标\n        '.touch-target': {\n          minHeight: theme('spacing.touch'),\n          minWidth: theme('spacing.touch'),\n          display: 'flex',\n          alignItems: 'center',\n          justifyContent: 'center',\n        },\n        \n        // 安全区域\n        '.safe-area-top': {\n          paddingTop: 'env(safe-area-inset-top)',\n        },\n        '.safe-area-bottom': {\n          paddingBottom: 'env(safe-area-inset-bottom)',\n        },\n        '.safe-area-left': {\n          paddingLeft: 'env(safe-area-inset-left)',\n        },\n        '.safe-area-right': {\n          paddingRight: 'env(safe-area-inset-right)',\n        },\n        '.safe-area-inset': {\n          paddingTop: 'env(safe-area-inset-top)',\n          paddingBottom: 'env(safe-area-inset-bottom)',\n          paddingLeft: 'env(safe-area-inset-left)',\n          paddingRight: 'env(safe-area-inset-right)',\n        },\n        \n        // 移动端滚动优化\n        '.scroll-smooth': {\n          scrollBehavior: 'smooth',\n          '-webkit-overflow-scrolling': 'touch',\n        },\n        \n        // 隐藏滚动条\n        '.hide-scrollbar': {\n          '-ms-overflow-style': 'none',\n          'scrollbar-width': 'none',\n          '&::-webkit-scrollbar': {\n            display: 'none',\n          },\n        },\n        \n        // 移动端输入框优化\n        '.mobile-input': {\n          fontSize: '16px', // 防止iOS缩放\n          lineHeight: '1.5',\n          padding: '12px 16px',\n          borderRadius: theme('borderRadius.mobile'),\n          border: `2px solid ${theme('colors.gray.200')}`,\n          transition: 'border-color 0.2s ease',\n          '&:focus': {\n            outline: 'none',\n            borderColor: theme('colors.primary.500'),\n            boxShadow: `0 0 0 3px ${theme('colors.primary.100')}`,\n          },\n        },\n        \n        // 移动端按钮\n        '.mobile-button': {\n          minHeight: theme('spacing.touch'),\n          padding: '0 16px',\n          borderRadius: theme('borderRadius.mobile'),\n          fontSize: theme('fontSize.base[0]'),\n          fontWeight: '500',\n          display: 'flex',\n          alignItems: 'center',\n          justifyContent: 'center',\n          transition: 'all 0.2s ease',\n          userSelect: 'none',\n          '-webkit-user-select': 'none',\n          '&:active': {\n            transform: 'scale(0.98)',\n          },\n        },\n        \n        // 移动端卡片\n        '.mobile-card': {\n          backgroundColor: theme('colors.white'),\n          borderRadius: theme('borderRadius.mobile-lg'),\n          padding: '16px',\n          boxShadow: theme('boxShadow.mobile'),\n          border: `1px solid ${theme('colors.gray.100')}`,\n          transition: 'transform 0.2s ease, box-shadow 0.2s ease',\n          '&:active': {\n            transform: 'scale(0.98)',\n            boxShadow: theme('boxShadow.touch-active'),\n          },\n        },\n      }\n      \n      addUtilities(newUtilities)\n    },\n  ],\n}\n\nexport default config",
+          "hash": "c1701b064cd816dbf1ebc444579f7e57bc05e40bed631f1d8799fcdd0a7db67a",
+          "size": 8504,
+          "lastModified": "2025-08-29T02:40:26.995Z",
+          "type": "code"
+        },
+        {
+          "path": "inspi-ai-platform/tsconfig.json",
+          "content": "{\n  \"compilerOptions\": {\n    \"target\": \"ES2017\",\n    \"lib\": [\"dom\", \"dom.iterable\", \"esnext\"],\n    \"allowJs\": true,\n    \"skipLibCheck\": true,\n    \"strict\": true,\n    \"noEmit\": true,\n    \"esModuleInterop\": true,\n    \"module\": \"esnext\",\n    \"moduleResolution\": \"bundler\",\n    \"resolveJsonModule\": true,\n    \"isolatedModules\": true,\n    \"jsx\": \"preserve\",\n    \"incremental\": true,\n    \"plugins\": [\n      {\n        \"name\": \"next\"\n      }\n    ],\n    \"paths\": {\n      \"@/*\": [\"./src/*\"]\n    }\n  },\n  \"include\": [\"next-env.d.ts\", \"**/*.ts\", \"**/*.tsx\", \".next/types/**/*.ts\"],\n  \"exclude\": [\"node_modules\"]\n}\n",
+          "hash": "83d292a6930a317ea31ef48e220097d2ca10c6c505f41d5954795acef48ca3b9",
+          "size": 602,
+          "lastModified": "2025-08-26T07:22:08.886Z",
+          "type": "config"
+        },
+        {
+          "path": ".gitignore",
+          "content": "# Dependencies\nnode_modules/\n.pnp\n.pnp.js\n\n# Testing\n/coverage\n\n# Next.js\n/.next/\n/out/\n\n# Production\n/build\n\n# Misc\n.DS_Store\n*.pem\n\n# Debug\nnpm-debug.log*\nyarn-debug.log*\nyarn-error.log*\n\n# Local env files\n.env*.local\n\n# Vercel\n.vercel\n\n# TypeScript\n*.tsbuildinfo\nnext-env.d.ts\n\n# IDE\n.vscode/\n.idea/\n\n# Logs\nlogs\n*.log\n\n# Runtime data\npids\n*.pid\n*.seed\n*.pid.lock\n\n# Optional npm cache directory\n.npm\n\n# Optional eslint cache\n.eslintcache\n\n# Temporary folders\ntmp/\ntemp/\n\n# Project state snapshots (keep metadata but not large snapshots)\n.kiro/style-snapshots/*.png\n.kiro/style-snapshots/*.jpg\n.kiro/recovery-points/snapshots/",
+          "hash": "e6ede827a68da0b96d7e0c4a51008cb950c12554f2cd99f278a218b4053f72fc",
+          "size": 629,
+          "lastModified": "2025-09-02T08:15:16.679Z",
+          "type": "config"
+        }
+      ],
+      "dependencies": {
+        "@auth/mongodb-adapter": "^3.10.0",
+        "@google/generative-ai": "^0.24.1",
+        "@tanstack/react-query": "^5.85.5",
+        "@tanstack/react-query-devtools": "^5.85.5",
+        "@types/bcryptjs": "^2.4.6",
+        "@types/d3": "^7.4.3",
+        "@types/ioredis": "^4.28.10",
+        "@types/jsonwebtoken": "^9.0.10",
+        "@types/mongoose": "^5.11.96",
+        "@types/nodemailer": "^7.0.1",
+        "axios": "^1.11.0",
+        "bcryptjs": "^3.0.2",
+        "clsx": "^2.1.1",
+        "d3": "^7.9.0",
+        "date-fns": "^4.1.0",
+        "framer-motion": "^12.23.12",
+        "google-auth-library": "^10.3.0",
+        "ioredis": "^5.7.0",
+        "jsonwebtoken": "^9.0.2",
+        "mongoose": "^8.18.0",
+        "next": "15.5.0",
+        "next-auth": "^4.24.11",
+        "nodemailer": "^6.10.1",
+        "react": "19.1.0",
+        "react-dom": "19.1.0",
+        "redis": "^5.8.2",
+        "tailwind-merge": "^3.3.1",
+        "uuid": "^11.0.3",
+        "winston": "^3.17.0",
+        "winston-daily-rotate-file": "^5.0.0",
+        "zustand": "^5.0.8",
+        "@eslint/eslintrc": "^3",
+        "@tailwindcss/postcss": "^4",
+        "@testing-library/jest-dom": "^6.8.0",
+        "@testing-library/react": "^16.3.0",
+        "@testing-library/user-event": "^14.5.2",
+        "@types/jest": "^29.5.12",
+        "@types/node": "^20",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "@types/redis": "^4.0.10",
+        "@types/supertest": "^6.0.2",
+        "@types/uuid": "^10.0.0",
+        "eslint": "^9",
+        "eslint-config-next": "15.5.0",
+        "jest": "^30.0.5",
+        "jest-environment-jsdom": "^30.0.5",
+        "jest-environment-node": "^30.0.5",
+        "mongodb-memory-server": "^10.1.2",
+        "msw": "^2.6.8",
+        "supertest": "^7.0.0",
+        "tailwindcss": "^4",
+        "ts-jest": "^29.2.5",
+        "ts-node": "^10.9.2",
+        "typescript": "^5"
+      },
+      "projectState": {
+        "version": "1.0.0",
+        "lastUpdated": "2025-09-02T08:18:55.559Z",
+        "features": {
+          "homepage": {
+            "status": "completed",
+            "lastUpdated": "2025-09-02T08:14:18.393Z",
+            "completionCriteria": [
+              "UI样式完整",
+              "响应式设计正常",
+              "所有链接可用",
+              "无控制台错误"
+            ],
+            "dependencies": [],
+            "riskLevel": "medium",
+            "notes": "当前样式存在问题，需要恢复到稳定版本"
+          },
+          "create-page": {
+            "status": "completed",
+            "lastUpdated": "2025-09-02T08:14:18.397Z",
+            "completionCriteria": [
+              "页面正常显示",
+              "功能开发中状态显示",
+              "返回首页链接正常"
+            ],
+            "dependencies": [
+              "homepage"
+            ],
+            "riskLevel": "low",
+            "notes": "基础功能完成"
+          },
+          "project-management-system": {
+            "status": "in_progress",
+            "lastUpdated": "2025-09-02T08:18:55.559Z",
+            "completionCriteria": [
+              "项目状态管理系统",
+              "样式版本控制系统",
+              "开发流程规范引擎",
+              "自动化质量检查",
+              "项目恢复系统"
+            ],
+            "dependencies": [],
+            "riskLevel": "high",
+            "notes": "✅ 第一阶段完成：状态管理和版本控制已建立"
+          }
+        },
+        "globalHealth": {
+          "overallStatus": "critical",
+          "lastStableSnapshot": "git-commit-7d8da0a",
+          "activeIssues": [
+            {
+              "id": "style-regression-001",
+              "type": "style_regression",
+              "severity": "high",
+              "description": "样式丢失，无法回滚到48小时前的稳定版本",
+              "affectedFeatures": [
+                "homepage"
+              ],
+              "createdAt": "2024-12-26T10:30:00Z",
+              "status": "active"
+            },
+            {
+              "id": "version-control-001",
+              "type": "version_control",
+              "severity": "critical",
+              "description": "缺乏版本控制系统，无法追踪历史变更",
+              "affectedFeatures": [
+                "homepage",
+                "create-page"
+              ],
+              "createdAt": "2024-12-26T10:30:00Z",
+              "status": "resolved",
+              "resolvedAt": "2025-09-02T08:18:55.557Z",
+              "resolution": "Git版本控制系统已建立，创建了初始提交作为基准点"
+            },
+            {
+              "type": "style_regression",
+              "severity": "high",
+              "description": "样式丢失，无法回滚到48小时前的稳定版本",
+              "affectedFeatures": [
+                "homepage"
+              ],
+              "status": "active",
+              "id": "style_regression-1756800858398",
+              "createdAt": "2025-09-02T08:14:18.398Z"
+            },
+            {
+              "type": "version_control",
+              "severity": "critical",
+              "description": "缺乏版本控制系统，无法追踪历史变更",
+              "affectedFeatures": [
+                "homepage",
+                "create-page"
+              ],
+              "status": "resolved",
+              "id": "version_control-1756800858398",
+              "createdAt": "2025-09-02T08:14:18.398Z",
+              "resolvedAt": "2025-09-02T08:18:55.559Z",
+              "resolution": "Git版本控制系统已建立，创建了初始提交作为基准点"
+            },
+            {
+              "id": "achievement-1756801135559",
+              "type": "functional_error",
+              "severity": "low",
+              "description": "✅ 成功建立Git版本控制系统和项目状态管理",
+              "affectedFeatures": [
+                "project-management-system"
+              ],
+              "createdAt": "2025-09-02T08:18:55.559Z",
+              "status": "resolved",
+              "resolvedAt": "2025-09-02T08:18:55.559Z",
+              "resolution": "项目管理规则第一个任务完成"
+            }
+          ]
+        }
+      },
+      "gitCommit": "7d8da0a312c3d531511bfa2814a867fe11a4a9cb",
+      "tags": [],
+      "isStable": true,
+      "metadata": {
+        "totalFiles": 5,
+        "totalSize": 17698,
+        "changedFiles": [],
+        "addedFiles": [
+          "inspi-ai-platform/package.json",
+          "inspi-ai-platform/next.config.ts",
+          "inspi-ai-platform/tailwind.config.ts",
+          "inspi-ai-platform/tsconfig.json",
+          ".gitignore"
+        ],
+        "deletedFiles": []
+      }
+    },
+    {
+      "id": "snapshot_1756801632682_xxkobnzqf",
+      "timestamp": "2025-09-02T08:27:12.682Z",
+      "version": "v2025.09.02.1627",
+      "description": "Complete project snapshot - all critical assets",
+      "files": [
+        {
+          "path": "inspi-ai-platform/package.json",
+          "content": "{\n  \"name\": \"inspi-ai-platform\",\n  \"version\": \"0.1.0\",\n  \"private\": true,\n  \"scripts\": {\n    \"dev\": \"next dev --turbopack\",\n    \"build\": \"next build --turbopack\",\n    \"start\": \"next start\",\n    \"lint\": \"eslint\",\n    \"format\": \"prettier --write .\",\n    \"format:check\": \"prettier --check .\",\n    \"type-check\": \"tsc --noEmit\",\n    \"test\": \"jest --config jest.config.js\",\n    \"test:unit\": \"jest --config jest.config.unit.js\",\n    \"test:integration\": \"jest --config jest.config.integration.js\",\n    \"test:e2e\": \"playwright test\",\n    \"test:performance\": \"playwright test src/__tests__/performance\",\n    \"test:mobile\": \"playwright test src/__tests__/mobile\",\n    \"test:security\": \"jest src/__tests__/security\",\n    \"test:services\": \"node -e \\\"console.log('Services health check passed')\\\"\",\n    \"test:smoke\": \"playwright test src/__tests__/smoke\",\n    \"test:smoke:production\": \"playwright test src/__tests__/smoke --config=playwright.config.production.js\",\n    \"test:all\": \"npm run test:unit && npm run test:integration && npm run test:e2e\",\n    \"test:watch\": \"jest --config jest.config.unit.js --watch\",\n    \"test:watch:integration\": \"jest --config jest.config.integration.js --watch\",\n    \"test:watch:e2e\": \"jest --config jest.config.e2e.js --watch\",\n    \"test:coverage\": \"jest --config jest.config.unit.js --coverage\",\n    \"test:coverage:integration\": \"jest --config jest.config.integration.js --coverage\",\n    \"test:coverage:e2e\": \"jest --config jest.config.e2e.js --coverage\",\n    \"test:coverage:all\": \"npm run test:coverage && npm run test:coverage:integration && npm run test:coverage:e2e\",\n    \"test:ci\": \"npm run test:all --ci --coverage --watchAll=false\",\n    \"test:debug\": \"node --inspect-brk node_modules/.bin/jest --config jest.config.unit.js --runInBand\",\n    \"test:debug:integration\": \"node --inspect-brk node_modules/.bin/jest --config jest.config.integration.js --runInBand\",\n    \"test:parallel\": \"concurrently \\\"npm run test:unit\\\" \\\"npm run test:integration\\\"\",\n    \"test:runner\": \"ts-node src/__tests__/runners/test-runner.ts\",\n    \"test:report\": \"ts-node src/__tests__/runners/test-runner.ts\",\n    \"test:performance:jest\": \"jest --config jest.config.js --testPathPatterns=performance\",\n    \"test:security:jest\": \"jest --config jest.config.js --testPathPatterns=security\",\n    \"test:mobile:jest\": \"jest --config jest.config.js --testPathPatterns=mobile\",\n    \"test:api\": \"ts-node src/__tests__/api/run-api-tests.ts\",\n    \"test:api:auth\": \"ts-node src/__tests__/api/run-api-tests.ts suite auth\",\n    \"test:api:works\": \"ts-node src/__tests__/api/run-api-tests.ts suite works\",\n    \"test:api:users\": \"ts-node src/__tests__/api/run-api-tests.ts suite users\",\n    \"test:api:subscription\": \"ts-node src/__tests__/api/run-api-tests.ts suite subscription\",\n    \"test:api:contact\": \"ts-node src/__tests__/api/run-api-tests.ts suite contact\",\n    \"test:api:leaderboard\": \"ts-node src/__tests__/api/run-api-tests.ts suite leaderboard\",\n    \"test:api:knowledge-graph\": \"ts-node src/__tests__/api/run-api-tests.ts suite knowledge-graph\",\n    \"test:api:magic\": \"ts-node src/__tests__/api/run-api-tests.ts suite magic\",\n    \"test:api:contribution\": \"ts-node src/__tests__/api/run-api-tests.ts suite contribution\",\n    \"test:api:integration\": \"ts-node src/__tests__/api/run-api-tests.ts suite integration\",\n    \"test:mvp\": \"npm run test:unit:core && npm run test:api:core\",\n    \"test:unit:core\": \"jest --config jest.config.unit.js --testPathPatterns='(utils|hooks|components)' --coverage\",\n    \"test:api:core\": \"ts-node src/__tests__/api/run-api-tests.ts suite auth && ts-node src/__tests__/api/run-api-tests.ts suite works\",\n    \"test:e2e:core\": \"playwright test src/__tests__/e2e/user-journey.test.ts --project=chromium\",\n    \"test:performance:basic\": \"playwright test src/__tests__/performance/performance.test.ts --project=chromium\",\n    \"test:report:comprehensive\": \"npx ts-node src/__tests__/utils/report-generator.ts\",\n    \"test:load\": \"cd src/__tests__/load && node load-test.js run\",\n    \"test:security:advanced\": \"npx playwright test src/__tests__/security/security-scan-advanced.test.ts\",\n    \"test:performance:advanced\": \"npx playwright test src/__tests__/performance/performance-advanced.test.ts\",\n    \"quality:gate\": \"node scripts/quality-gate-checker.js\",\n    \"quality:gate:mvp\": \"node scripts/quality-gate-checker.js MVP\",\n    \"quality:gate:standard\": \"node scripts/quality-gate-checker.js STANDARD\",\n    \"quality:gate:enterprise\": \"node scripts/quality-gate-checker.js ENTERPRISE\",\n    \"task:check-blocking\": \"node scripts/task-blocker.js\",\n    \"quality:gate:legacy\": \"npm run test:report:comprehensive && npm run test:load && npm run test:security:advanced\",\n    \"test:api:list\": \"ts-node src/__tests__/api/run-api-tests.ts list\",\n    \"seo:monitor\": \"node scripts/seo-monitor.js\",\n    \"seo:test\": \"npm test -- --testPathPatterns=seo\",\n    \"check-task\": \"node scripts/task-checker.js\",\n    \"test:logging\": \"node scripts/simple-logging-test.js\",\n    \"pre-commit\": \"npm run lint && npm run test:unit && npm run build\",\n    \"team:notify\": \"node scripts/team-notification.js\",\n    \"improvement:collect\": \"node scripts/improvement-tracker.js collect\",\n    \"improvement:analyze\": \"node scripts/improvement-tracker.js analyze\",\n    \"improvement:report\": \"node scripts/improvement-tracker.js report\",\n    \"install:test-deps\": \"npm install --save-dev mongodb-memory-server @types/jest @types/supertest supertest msw ts-jest jest-environment-node @testing-library/user-event concurrently\",\n    \"test-env:start\": \"node scripts/simple-start.js\",\n    \"test-env:start-full\": \"node scripts/start-test-env.js\",\n    \"test-env:stop\": \"pkill -f 'next dev'\",\n    \"test-env:status\": \"curl -s http://localhost:3000/api/test-status | jq .\",\n    \"test-env:health\": \"curl -s http://localhost:3000/api/health\",\n    \"test-env:dashboard\": \"open http://localhost:3000/test-dashboard\"\n  },\n  \"dependencies\": {\n    \"@auth/mongodb-adapter\": \"^3.10.0\",\n    \"@google/generative-ai\": \"^0.24.1\",\n    \"@tanstack/react-query\": \"^5.85.5\",\n    \"@tanstack/react-query-devtools\": \"^5.85.5\",\n    \"@types/bcryptjs\": \"^2.4.6\",\n    \"@types/d3\": \"^7.4.3\",\n    \"@types/ioredis\": \"^4.28.10\",\n    \"@types/jsonwebtoken\": \"^9.0.10\",\n    \"@types/mongoose\": \"^5.11.96\",\n    \"@types/nodemailer\": \"^7.0.1\",\n    \"axios\": \"^1.11.0\",\n    \"bcryptjs\": \"^3.0.2\",\n    \"clsx\": \"^2.1.1\",\n    \"d3\": \"^7.9.0\",\n    \"date-fns\": \"^4.1.0\",\n    \"framer-motion\": \"^12.23.12\",\n    \"google-auth-library\": \"^10.3.0\",\n    \"ioredis\": \"^5.7.0\",\n    \"jsonwebtoken\": \"^9.0.2\",\n    \"mongoose\": \"^8.18.0\",\n    \"next\": \"15.5.0\",\n    \"next-auth\": \"^4.24.11\",\n    \"nodemailer\": \"^6.10.1\",\n    \"react\": \"19.1.0\",\n    \"react-dom\": \"19.1.0\",\n    \"redis\": \"^5.8.2\",\n    \"tailwind-merge\": \"^3.3.1\",\n    \"uuid\": \"^11.0.3\",\n    \"winston\": \"^3.17.0\",\n    \"winston-daily-rotate-file\": \"^5.0.0\",\n    \"zustand\": \"^5.0.8\"\n  },\n  \"devDependencies\": {\n    \"@eslint/eslintrc\": \"^3\",\n    \"@tailwindcss/postcss\": \"^4\",\n    \"@testing-library/jest-dom\": \"^6.8.0\",\n    \"@testing-library/react\": \"^16.3.0\",\n    \"@testing-library/user-event\": \"^14.5.2\",\n    \"@types/jest\": \"^29.5.12\",\n    \"@types/node\": \"^20\",\n    \"@types/react\": \"^19\",\n    \"@types/react-dom\": \"^19\",\n    \"@types/redis\": \"^4.0.10\",\n    \"@types/supertest\": \"^6.0.2\",\n    \"@types/uuid\": \"^10.0.0\",\n    \"eslint\": \"^9\",\n    \"eslint-config-next\": \"15.5.0\",\n    \"jest\": \"^30.0.5\",\n    \"jest-environment-jsdom\": \"^30.0.5\",\n    \"jest-environment-node\": \"^30.0.5\",\n    \"mongodb-memory-server\": \"^10.1.2\",\n    \"msw\": \"^2.6.8\",\n    \"supertest\": \"^7.0.0\",\n    \"tailwindcss\": \"^4\",\n    \"ts-jest\": \"^29.2.5\",\n    \"ts-node\": \"^10.9.2\",\n    \"typescript\": \"^5\"\n  }\n}\n",
+          "hash": "ca643762546861f96fab5a5f508cef2c4c17394bcb8c58b6845f16be7db44d75",
+          "size": 7625,
+          "lastModified": "2025-08-31T05:21:29.549Z",
+          "type": "config"
+        },
+        {
+          "path": "inspi-ai-platform/next.config.ts",
+          "content": "import type { NextConfig } from \"next\";\n\nconst nextConfig: NextConfig = {\n  // 基础配置\n  reactStrictMode: true,\n  serverExternalPackages: ['mongoose', 'ioredis'],\n  \n  // 简化的图片配置\n  images: {\n    domains: ['lh3.googleusercontent.com', 'ui-avatars.com'],\n    formats: ['image/webp'],\n  },\n\n};\n\nexport default nextConfig;\n",
+          "hash": "0a9777e419da56da58f10953c132359bc08846fd01d44c3998d3ec5d955b3f2a",
+          "size": 338,
+          "lastModified": "2025-09-01T03:49:56.182Z",
+          "type": "code"
+        },
+        {
+          "path": "inspi-ai-platform/tailwind.config.ts",
+          "content": "import type { Config } from 'tailwindcss'\n\nconst config: Config = {\n  content: [\n    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',\n    './src/components/**/*.{js,ts,jsx,tsx,mdx}',\n    './src/app/**/*.{js,ts,jsx,tsx,mdx}',\n    './src/hooks/**/*.{js,ts,jsx,tsx,mdx}',\n    './src/lib/**/*.{js,ts,jsx,tsx,mdx}',\n  ],\n  theme: {\n    extend: {\n      // 响应式断点配置\n      screens: {\n        'xs': '320px',   // 超小屏幕\n        'sm': '640px',   // 小屏幕\n        'md': '768px',   // 中等屏幕（平板）\n        'lg': '1024px',  // 大屏幕（桌面）\n        'xl': '1280px',  // 超大屏幕\n        '2xl': '1536px', // 超宽屏幕\n        \n        // 自定义断点\n        'mobile': { 'max': '767px' },\n        'tablet': { 'min': '768px', 'max': '1023px' },\n        'desktop': { 'min': '1024px', 'max': '1439px' },\n        'wide': { 'min': '1440px' },\n        \n        // 高度断点\n        'h-sm': { 'raw': '(max-height: 600px)' },\n        'h-md': { 'raw': '(min-height: 601px) and (max-height: 900px)' },\n        'h-lg': { 'raw': '(min-height: 901px)' },\n      },\n      \n      // 移动端优化的字体大小\n      fontSize: {\n        'xs': ['0.75rem', { lineHeight: '1rem' }],\n        'sm': ['0.875rem', { lineHeight: '1.25rem' }],\n        'base': ['1rem', { lineHeight: '1.5rem' }],\n        'lg': ['1.125rem', { lineHeight: '1.75rem' }],\n        'xl': ['1.25rem', { lineHeight: '1.75rem' }],\n        '2xl': ['1.5rem', { lineHeight: '2rem' }],\n        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],\n        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],\n        '5xl': ['3rem', { lineHeight: '1' }],\n        '6xl': ['3.75rem', { lineHeight: '1' }],\n        \n        // 移动端专用字体大小\n        'mobile-xs': ['0.75rem', { lineHeight: '1rem' }],\n        'mobile-sm': ['0.875rem', { lineHeight: '1.25rem' }],\n        'mobile-base': ['1rem', { lineHeight: '1.5rem' }],\n        'mobile-lg': ['1.125rem', { lineHeight: '1.75rem' }],\n        'mobile-xl': ['1.25rem', { lineHeight: '1.75rem' }],\n        'mobile-2xl': ['1.5rem', { lineHeight: '2rem' }],\n      },\n      \n      // 触摸友好的间距\n      spacing: {\n        '0.5': '0.125rem',\n        '1.5': '0.375rem',\n        '2.5': '0.625rem',\n        '3.5': '0.875rem',\n        '4.5': '1.125rem',\n        '5.5': '1.375rem',\n        '6.5': '1.625rem',\n        '7.5': '1.875rem',\n        '8.5': '2.125rem',\n        '9.5': '2.375rem',\n        '11': '2.75rem',\n        '13': '3.25rem',\n        '15': '3.75rem',\n        '17': '4.25rem',\n        '18': '4.5rem',\n        '19': '4.75rem',\n        '21': '5.25rem',\n        '22': '5.5rem',\n        '23': '5.75rem',\n        '25': '6.25rem',\n        \n        // 触摸目标最小尺寸\n        'touch': '44px',\n        'touch-sm': '40px',\n        'touch-lg': '48px',\n      },\n      \n      // 移动端优化的圆角\n      borderRadius: {\n        'xs': '0.125rem',\n        'sm': '0.25rem',\n        'md': '0.375rem',\n        'lg': '0.5rem',\n        'xl': '0.75rem',\n        '2xl': '1rem',\n        '3xl': '1.5rem',\n        \n        // 移动端友好的圆角\n        'mobile': '8px',\n        'mobile-lg': '12px',\n        'mobile-xl': '16px',\n      },\n      \n      // 移动端优化的阴影\n      boxShadow: {\n        'mobile': '0 2px 8px rgba(0, 0, 0, 0.1)',\n        'mobile-lg': '0 4px 12px rgba(0, 0, 0, 0.15)',\n        'mobile-xl': '0 8px 24px rgba(0, 0, 0, 0.2)',\n        'touch': '0 2px 4px rgba(0, 0, 0, 0.1)',\n        'touch-active': '0 1px 2px rgba(0, 0, 0, 0.1)',\n      },\n      \n      // 动画和过渡\n      transitionDuration: {\n        '150': '150ms',\n        '250': '250ms',\n        '350': '350ms',\n      },\n      \n      // Z-index 层级\n      zIndex: {\n        '1': '1',\n        '2': '2',\n        '3': '3',\n        '4': '4',\n        '5': '5',\n        'modal': '100',\n        'dropdown': '50',\n        'header': '40',\n        'overlay': '30',\n      },\n      \n      // 颜色系统\n      colors: {\n        // 主色调\n        primary: {\n          50: '#eff6ff',\n          100: '#dbeafe',\n          200: '#bfdbfe',\n          300: '#93c5fd',\n          400: '#60a5fa',\n          500: '#3b82f6',\n          600: '#2563eb',\n          700: '#1d4ed8',\n          800: '#1e40af',\n          900: '#1e3a8a',\n        },\n        \n        // 灰色系统\n        gray: {\n          50: '#f9fafb',\n          100: '#f3f4f6',\n          200: '#e5e7eb',\n          300: '#d1d5db',\n          400: '#9ca3af',\n          500: '#6b7280',\n          600: '#4b5563',\n          700: '#374151',\n          800: '#1f2937',\n          900: '#111827',\n        },\n        \n        // 语义化颜色\n        success: {\n          50: '#f0fdf4',\n          500: '#22c55e',\n          600: '#16a34a',\n        },\n        warning: {\n          50: '#fffbeb',\n          500: '#f59e0b',\n          600: '#d97706',\n        },\n        error: {\n          50: '#fef2f2',\n          500: '#ef4444',\n          600: '#dc2626',\n        },\n      },\n      \n      // 移动端优化的最大宽度\n      maxWidth: {\n        'mobile': '100vw',\n        'tablet': '768px',\n        'desktop': '1024px',\n        'wide': '1200px',\n        'container': '1200px',\n      },\n      \n      // 移动端优化的最小高度\n      minHeight: {\n        'screen-mobile': '100vh',\n        'screen-safe': 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom))',\n        'touch': '44px',\n      },\n    },\n  },\n  plugins: [\n    // 自定义插件：移动端工具类\n    function({ addUtilities, theme }) {\n      const newUtilities = {\n        // 触摸目标\n        '.touch-target': {\n          minHeight: theme('spacing.touch'),\n          minWidth: theme('spacing.touch'),\n          display: 'flex',\n          alignItems: 'center',\n          justifyContent: 'center',\n        },\n        \n        // 安全区域\n        '.safe-area-top': {\n          paddingTop: 'env(safe-area-inset-top)',\n        },\n        '.safe-area-bottom': {\n          paddingBottom: 'env(safe-area-inset-bottom)',\n        },\n        '.safe-area-left': {\n          paddingLeft: 'env(safe-area-inset-left)',\n        },\n        '.safe-area-right': {\n          paddingRight: 'env(safe-area-inset-right)',\n        },\n        '.safe-area-inset': {\n          paddingTop: 'env(safe-area-inset-top)',\n          paddingBottom: 'env(safe-area-inset-bottom)',\n          paddingLeft: 'env(safe-area-inset-left)',\n          paddingRight: 'env(safe-area-inset-right)',\n        },\n        \n        // 移动端滚动优化\n        '.scroll-smooth': {\n          scrollBehavior: 'smooth',\n          '-webkit-overflow-scrolling': 'touch',\n        },\n        \n        // 隐藏滚动条\n        '.hide-scrollbar': {\n          '-ms-overflow-style': 'none',\n          'scrollbar-width': 'none',\n          '&::-webkit-scrollbar': {\n            display: 'none',\n          },\n        },\n        \n        // 移动端输入框优化\n        '.mobile-input': {\n          fontSize: '16px', // 防止iOS缩放\n          lineHeight: '1.5',\n          padding: '12px 16px',\n          borderRadius: theme('borderRadius.mobile'),\n          border: `2px solid ${theme('colors.gray.200')}`,\n          transition: 'border-color 0.2s ease',\n          '&:focus': {\n            outline: 'none',\n            borderColor: theme('colors.primary.500'),\n            boxShadow: `0 0 0 3px ${theme('colors.primary.100')}`,\n          },\n        },\n        \n        // 移动端按钮\n        '.mobile-button': {\n          minHeight: theme('spacing.touch'),\n          padding: '0 16px',\n          borderRadius: theme('borderRadius.mobile'),\n          fontSize: theme('fontSize.base[0]'),\n          fontWeight: '500',\n          display: 'flex',\n          alignItems: 'center',\n          justifyContent: 'center',\n          transition: 'all 0.2s ease',\n          userSelect: 'none',\n          '-webkit-user-select': 'none',\n          '&:active': {\n            transform: 'scale(0.98)',\n          },\n        },\n        \n        // 移动端卡片\n        '.mobile-card': {\n          backgroundColor: theme('colors.white'),\n          borderRadius: theme('borderRadius.mobile-lg'),\n          padding: '16px',\n          boxShadow: theme('boxShadow.mobile'),\n          border: `1px solid ${theme('colors.gray.100')}`,\n          transition: 'transform 0.2s ease, box-shadow 0.2s ease',\n          '&:active': {\n            transform: 'scale(0.98)',\n            boxShadow: theme('boxShadow.touch-active'),\n          },\n        },\n      }\n      \n      addUtilities(newUtilities)\n    },\n  ],\n}\n\nexport default config",
+          "hash": "c1701b064cd816dbf1ebc444579f7e57bc05e40bed631f1d8799fcdd0a7db67a",
+          "size": 8504,
+          "lastModified": "2025-08-29T02:40:26.995Z",
+          "type": "code"
+        },
+        {
+          "path": "inspi-ai-platform/tsconfig.json",
+          "content": "{\n  \"compilerOptions\": {\n    \"target\": \"ES2017\",\n    \"lib\": [\"dom\", \"dom.iterable\", \"esnext\"],\n    \"allowJs\": true,\n    \"skipLibCheck\": true,\n    \"strict\": true,\n    \"noEmit\": true,\n    \"esModuleInterop\": true,\n    \"module\": \"esnext\",\n    \"moduleResolution\": \"bundler\",\n    \"resolveJsonModule\": true,\n    \"isolatedModules\": true,\n    \"jsx\": \"preserve\",\n    \"incremental\": true,\n    \"plugins\": [\n      {\n        \"name\": \"next\"\n      }\n    ],\n    \"paths\": {\n      \"@/*\": [\"./src/*\"]\n    }\n  },\n  \"include\": [\"next-env.d.ts\", \"**/*.ts\", \"**/*.tsx\", \".next/types/**/*.ts\"],\n  \"exclude\": [\"node_modules\"]\n}\n",
+          "hash": "83d292a6930a317ea31ef48e220097d2ca10c6c505f41d5954795acef48ca3b9",
+          "size": 602,
+          "lastModified": "2025-08-26T07:22:08.886Z",
+          "type": "config"
+        },
+        {
+          "path": ".gitignore",
+          "content": "# Dependencies\nnode_modules/\n.pnp\n.pnp.js\n\n# Testing\n/coverage\n\n# Next.js\n/.next/\n/out/\n\n# Production\n/build\n\n# Misc\n.DS_Store\n*.pem\n\n# Debug\nnpm-debug.log*\nyarn-debug.log*\nyarn-error.log*\n\n# Local env files\n.env*.local\n\n# Vercel\n.vercel\n\n# TypeScript\n*.tsbuildinfo\nnext-env.d.ts\n\n# IDE\n.vscode/\n.idea/\n\n# Logs\nlogs\n*.log\n\n# Runtime data\npids\n*.pid\n*.seed\n*.pid.lock\n\n# Optional npm cache directory\n.npm\n\n# Optional eslint cache\n.eslintcache\n\n# Temporary folders\ntmp/\ntemp/\n\n# Project state snapshots (keep metadata but not large snapshots)\n.kiro/style-snapshots/*.png\n.kiro/style-snapshots/*.jpg\n.kiro/recovery-points/snapshots/",
+          "hash": "e6ede827a68da0b96d7e0c4a51008cb950c12554f2cd99f278a218b4053f72fc",
+          "size": 629,
+          "lastModified": "2025-09-02T08:15:16.679Z",
+          "type": "config"
+        }
+      ],
+      "dependencies": {
+        "@auth/mongodb-adapter": "^3.10.0",
+        "@google/generative-ai": "^0.24.1",
+        "@tanstack/react-query": "^5.85.5",
+        "@tanstack/react-query-devtools": "^5.85.5",
+        "@types/bcryptjs": "^2.4.6",
+        "@types/d3": "^7.4.3",
+        "@types/ioredis": "^4.28.10",
+        "@types/jsonwebtoken": "^9.0.10",
+        "@types/mongoose": "^5.11.96",
+        "@types/nodemailer": "^7.0.1",
+        "axios": "^1.11.0",
+        "bcryptjs": "^3.0.2",
+        "clsx": "^2.1.1",
+        "d3": "^7.9.0",
+        "date-fns": "^4.1.0",
+        "framer-motion": "^12.23.12",
+        "google-auth-library": "^10.3.0",
+        "ioredis": "^5.7.0",
+        "jsonwebtoken": "^9.0.2",
+        "mongoose": "^8.18.0",
+        "next": "15.5.0",
+        "next-auth": "^4.24.11",
+        "nodemailer": "^6.10.1",
+        "react": "19.1.0",
+        "react-dom": "19.1.0",
+        "redis": "^5.8.2",
+        "tailwind-merge": "^3.3.1",
+        "uuid": "^11.0.3",
+        "winston": "^3.17.0",
+        "winston-daily-rotate-file": "^5.0.0",
+        "zustand": "^5.0.8",
+        "@eslint/eslintrc": "^3",
+        "@tailwindcss/postcss": "^4",
+        "@testing-library/jest-dom": "^6.8.0",
+        "@testing-library/react": "^16.3.0",
+        "@testing-library/user-event": "^14.5.2",
+        "@types/jest": "^29.5.12",
+        "@types/node": "^20",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "@types/redis": "^4.0.10",
+        "@types/supertest": "^6.0.2",
+        "@types/uuid": "^10.0.0",
+        "eslint": "^9",
+        "eslint-config-next": "15.5.0",
+        "jest": "^30.0.5",
+        "jest-environment-jsdom": "^30.0.5",
+        "jest-environment-node": "^30.0.5",
+        "mongodb-memory-server": "^10.1.2",
+        "msw": "^2.6.8",
+        "supertest": "^7.0.0",
+        "tailwindcss": "^4",
+        "ts-jest": "^29.2.5",
+        "ts-node": "^10.9.2",
+        "typescript": "^5"
+      },
+      "projectState": {
+        "version": "1.0.0",
+        "lastUpdated": "2025-09-02T08:18:55.559Z",
+        "features": {
+          "homepage": {
+            "status": "completed",
+            "lastUpdated": "2025-09-02T08:14:18.393Z",
+            "completionCriteria": [
+              "UI样式完整",
+              "响应式设计正常",
+              "所有链接可用",
+              "无控制台错误"
+            ],
+            "dependencies": [],
+            "riskLevel": "medium",
+            "notes": "当前样式存在问题，需要恢复到稳定版本"
+          },
+          "create-page": {
+            "status": "completed",
+            "lastUpdated": "2025-09-02T08:14:18.397Z",
+            "completionCriteria": [
+              "页面正常显示",
+              "功能开发中状态显示",
+              "返回首页链接正常"
+            ],
+            "dependencies": [
+              "homepage"
+            ],
+            "riskLevel": "low",
+            "notes": "基础功能完成"
+          },
+          "project-management-system": {
+            "status": "in_progress",
+            "lastUpdated": "2025-09-02T08:18:55.559Z",
+            "completionCriteria": [
+              "项目状态管理系统",
+              "样式版本控制系统",
+              "开发流程规范引擎",
+              "自动化质量检查",
+              "项目恢复系统"
+            ],
+            "dependencies": [],
+            "riskLevel": "high",
+            "notes": "✅ 第一阶段完成：状态管理和版本控制已建立"
+          }
+        },
+        "globalHealth": {
+          "overallStatus": "critical",
+          "lastStableSnapshot": "git-commit-7d8da0a",
+          "activeIssues": [
+            {
+              "id": "style-regression-001",
+              "type": "style_regression",
+              "severity": "high",
+              "description": "样式丢失，无法回滚到48小时前的稳定版本",
+              "affectedFeatures": [
+                "homepage"
+              ],
+              "createdAt": "2024-12-26T10:30:00Z",
+              "status": "active"
+            },
+            {
+              "id": "version-control-001",
+              "type": "version_control",
+              "severity": "critical",
+              "description": "缺乏版本控制系统，无法追踪历史变更",
+              "affectedFeatures": [
+                "homepage",
+                "create-page"
+              ],
+              "createdAt": "2024-12-26T10:30:00Z",
+              "status": "resolved",
+              "resolvedAt": "2025-09-02T08:18:55.557Z",
+              "resolution": "Git版本控制系统已建立，创建了初始提交作为基准点"
+            },
+            {
+              "type": "style_regression",
+              "severity": "high",
+              "description": "样式丢失，无法回滚到48小时前的稳定版本",
+              "affectedFeatures": [
+                "homepage"
+              ],
+              "status": "active",
+              "id": "style_regression-1756800858398",
+              "createdAt": "2025-09-02T08:14:18.398Z"
+            },
+            {
+              "type": "version_control",
+              "severity": "critical",
+              "description": "缺乏版本控制系统，无法追踪历史变更",
+              "affectedFeatures": [
+                "homepage",
+                "create-page"
+              ],
+              "status": "resolved",
+              "id": "version_control-1756800858398",
+              "createdAt": "2025-09-02T08:14:18.398Z",
+              "resolvedAt": "2025-09-02T08:18:55.559Z",
+              "resolution": "Git版本控制系统已建立，创建了初始提交作为基准点"
+            },
+            {
+              "id": "achievement-1756801135559",
+              "type": "functional_error",
+              "severity": "low",
+              "description": "✅ 成功建立Git版本控制系统和项目状态管理",
+              "affectedFeatures": [
+                "project-management-system"
+              ],
+              "createdAt": "2025-09-02T08:18:55.559Z",
+              "status": "resolved",
+              "resolvedAt": "2025-09-02T08:18:55.559Z",
+              "resolution": "项目管理规则第一个任务完成"
+            }
+          ]
+        }
+      },
+      "gitCommit": "7d8da0a312c3d531511bfa2814a867fe11a4a9cb",
+      "tags": [
+        "comprehensive"
+      ],
+      "isStable": true,
+      "metadata": {
+        "totalFiles": 5,
+        "totalSize": 17698,
+        "changedFiles": [],
+        "addedFiles": [],
+        "deletedFiles": []
+      }
+    },
+    {
+      "id": "snapshot_1756801718275_ja99ctr3d",
+      "timestamp": "2025-09-02T08:28:38.275Z",
+      "version": "v2025.09.02.1628",
+      "description": "Full project snapshot - fixed file scanning",
+      "files": [
+        {
+          "path": "inspi-ai-platform/package.json",
+          "content": "{\n  \"name\": \"inspi-ai-platform\",\n  \"version\": \"0.1.0\",\n  \"private\": true,\n  \"scripts\": {\n    \"dev\": \"next dev --turbopack\",\n    \"build\": \"next build --turbopack\",\n    \"start\": \"next start\",\n    \"lint\": \"eslint\",\n    \"format\": \"prettier --write .\",\n    \"format:check\": \"prettier --check .\",\n    \"type-check\": \"tsc --noEmit\",\n    \"test\": \"jest --config jest.config.js\",\n    \"test:unit\": \"jest --config jest.config.unit.js\",\n    \"test:integration\": \"jest --config jest.config.integration.js\",\n    \"test:e2e\": \"playwright test\",\n    \"test:performance\": \"playwright test src/__tests__/performance\",\n    \"test:mobile\": \"playwright test src/__tests__/mobile\",\n    \"test:security\": \"jest src/__tests__/security\",\n    \"test:services\": \"node -e \\\"console.log('Services health check passed')\\\"\",\n    \"test:smoke\": \"playwright test src/__tests__/smoke\",\n    \"test:smoke:production\": \"playwright test src/__tests__/smoke --config=playwright.config.production.js\",\n    \"test:all\": \"npm run test:unit && npm run test:integration && npm run test:e2e\",\n    \"test:watch\": \"jest --config jest.config.unit.js --watch\",\n    \"test:watch:integration\": \"jest --config jest.config.integration.js --watch\",\n    \"test:watch:e2e\": \"jest --config jest.config.e2e.js --watch\",\n    \"test:coverage\": \"jest --config jest.config.unit.js --coverage\",\n    \"test:coverage:integration\": \"jest --config jest.config.integration.js --coverage\",\n    \"test:coverage:e2e\": \"jest --config jest.config.e2e.js --coverage\",\n    \"test:coverage:all\": \"npm run test:coverage && npm run test:coverage:integration && npm run test:coverage:e2e\",\n    \"test:ci\": \"npm run test:all --ci --coverage --watchAll=false\",\n    \"test:debug\": \"node --inspect-brk node_modules/.bin/jest --config jest.config.unit.js --runInBand\",\n    \"test:debug:integration\": \"node --inspect-brk node_modules/.bin/jest --config jest.config.integration.js --runInBand\",\n    \"test:parallel\": \"concurrently \\\"npm run test:unit\\\" \\\"npm run test:integration\\\"\",\n    \"test:runner\": \"ts-node src/__tests__/runners/test-runner.ts\",\n    \"test:report\": \"ts-node src/__tests__/runners/test-runner.ts\",\n    \"test:performance:jest\": \"jest --config jest.config.js --testPathPatterns=performance\",\n    \"test:security:jest\": \"jest --config jest.config.js --testPathPatterns=security\",\n    \"test:mobile:jest\": \"jest --config jest.config.js --testPathPatterns=mobile\",\n    \"test:api\": \"ts-node src/__tests__/api/run-api-tests.ts\",\n    \"test:api:auth\": \"ts-node src/__tests__/api/run-api-tests.ts suite auth\",\n    \"test:api:works\": \"ts-node src/__tests__/api/run-api-tests.ts suite works\",\n    \"test:api:users\": \"ts-node src/__tests__/api/run-api-tests.ts suite users\",\n    \"test:api:subscription\": \"ts-node src/__tests__/api/run-api-tests.ts suite subscription\",\n    \"test:api:contact\": \"ts-node src/__tests__/api/run-api-tests.ts suite contact\",\n    \"test:api:leaderboard\": \"ts-node src/__tests__/api/run-api-tests.ts suite leaderboard\",\n    \"test:api:knowledge-graph\": \"ts-node src/__tests__/api/run-api-tests.ts suite knowledge-graph\",\n    \"test:api:magic\": \"ts-node src/__tests__/api/run-api-tests.ts suite magic\",\n    \"test:api:contribution\": \"ts-node src/__tests__/api/run-api-tests.ts suite contribution\",\n    \"test:api:integration\": \"ts-node src/__tests__/api/run-api-tests.ts suite integration\",\n    \"test:mvp\": \"npm run test:unit:core && npm run test:api:core\",\n    \"test:unit:core\": \"jest --config jest.config.unit.js --testPathPatterns='(utils|hooks|components)' --coverage\",\n    \"test:api:core\": \"ts-node src/__tests__/api/run-api-tests.ts suite auth && ts-node src/__tests__/api/run-api-tests.ts suite works\",\n    \"test:e2e:core\": \"playwright test src/__tests__/e2e/user-journey.test.ts --project=chromium\",\n    \"test:performance:basic\": \"playwright test src/__tests__/performance/performance.test.ts --project=chromium\",\n    \"test:report:comprehensive\": \"npx ts-node src/__tests__/utils/report-generator.ts\",\n    \"test:load\": \"cd src/__tests__/load && node load-test.js run\",\n    \"test:security:advanced\": \"npx playwright test src/__tests__/security/security-scan-advanced.test.ts\",\n    \"test:performance:advanced\": \"npx playwright test src/__tests__/performance/performance-advanced.test.ts\",\n    \"quality:gate\": \"node scripts/quality-gate-checker.js\",\n    \"quality:gate:mvp\": \"node scripts/quality-gate-checker.js MVP\",\n    \"quality:gate:standard\": \"node scripts/quality-gate-checker.js STANDARD\",\n    \"quality:gate:enterprise\": \"node scripts/quality-gate-checker.js ENTERPRISE\",\n    \"task:check-blocking\": \"node scripts/task-blocker.js\",\n    \"quality:gate:legacy\": \"npm run test:report:comprehensive && npm run test:load && npm run test:security:advanced\",\n    \"test:api:list\": \"ts-node src/__tests__/api/run-api-tests.ts list\",\n    \"seo:monitor\": \"node scripts/seo-monitor.js\",\n    \"seo:test\": \"npm test -- --testPathPatterns=seo\",\n    \"check-task\": \"node scripts/task-checker.js\",\n    \"test:logging\": \"node scripts/simple-logging-test.js\",\n    \"pre-commit\": \"npm run lint && npm run test:unit && npm run build\",\n    \"team:notify\": \"node scripts/team-notification.js\",\n    \"improvement:collect\": \"node scripts/improvement-tracker.js collect\",\n    \"improvement:analyze\": \"node scripts/improvement-tracker.js analyze\",\n    \"improvement:report\": \"node scripts/improvement-tracker.js report\",\n    \"install:test-deps\": \"npm install --save-dev mongodb-memory-server @types/jest @types/supertest supertest msw ts-jest jest-environment-node @testing-library/user-event concurrently\",\n    \"test-env:start\": \"node scripts/simple-start.js\",\n    \"test-env:start-full\": \"node scripts/start-test-env.js\",\n    \"test-env:stop\": \"pkill -f 'next dev'\",\n    \"test-env:status\": \"curl -s http://localhost:3000/api/test-status | jq .\",\n    \"test-env:health\": \"curl -s http://localhost:3000/api/health\",\n    \"test-env:dashboard\": \"open http://localhost:3000/test-dashboard\"\n  },\n  \"dependencies\": {\n    \"@auth/mongodb-adapter\": \"^3.10.0\",\n    \"@google/generative-ai\": \"^0.24.1\",\n    \"@tanstack/react-query\": \"^5.85.5\",\n    \"@tanstack/react-query-devtools\": \"^5.85.5\",\n    \"@types/bcryptjs\": \"^2.4.6\",\n    \"@types/d3\": \"^7.4.3\",\n    \"@types/ioredis\": \"^4.28.10\",\n    \"@types/jsonwebtoken\": \"^9.0.10\",\n    \"@types/mongoose\": \"^5.11.96\",\n    \"@types/nodemailer\": \"^7.0.1\",\n    \"axios\": \"^1.11.0\",\n    \"bcryptjs\": \"^3.0.2\",\n    \"clsx\": \"^2.1.1\",\n    \"d3\": \"^7.9.0\",\n    \"date-fns\": \"^4.1.0\",\n    \"framer-motion\": \"^12.23.12\",\n    \"google-auth-library\": \"^10.3.0\",\n    \"ioredis\": \"^5.7.0\",\n    \"jsonwebtoken\": \"^9.0.2\",\n    \"mongoose\": \"^8.18.0\",\n    \"next\": \"15.5.0\",\n    \"next-auth\": \"^4.24.11\",\n    \"nodemailer\": \"^6.10.1\",\n    \"react\": \"19.1.0\",\n    \"react-dom\": \"19.1.0\",\n    \"redis\": \"^5.8.2\",\n    \"tailwind-merge\": \"^3.3.1\",\n    \"uuid\": \"^11.0.3\",\n    \"winston\": \"^3.17.0\",\n    \"winston-daily-rotate-file\": \"^5.0.0\",\n    \"zustand\": \"^5.0.8\"\n  },\n  \"devDependencies\": {\n    \"@eslint/eslintrc\": \"^3\",\n    \"@tailwindcss/postcss\": \"^4\",\n    \"@testing-library/jest-dom\": \"^6.8.0\",\n    \"@testing-library/react\": \"^16.3.0\",\n    \"@testing-library/user-event\": \"^14.5.2\",\n    \"@types/jest\": \"^29.5.12\",\n    \"@types/node\": \"^20\",\n    \"@types/react\": \"^19\",\n    \"@types/react-dom\": \"^19\",\n    \"@types/redis\": \"^4.0.10\",\n    \"@types/supertest\": \"^6.0.2\",\n    \"@types/uuid\": \"^10.0.0\",\n    \"eslint\": \"^9\",\n    \"eslint-config-next\": \"15.5.0\",\n    \"jest\": \"^30.0.5\",\n    \"jest-environment-jsdom\": \"^30.0.5\",\n    \"jest-environment-node\": \"^30.0.5\",\n    \"mongodb-memory-server\": \"^10.1.2\",\n    \"msw\": \"^2.6.8\",\n    \"supertest\": \"^7.0.0\",\n    \"tailwindcss\": \"^4\",\n    \"ts-jest\": \"^29.2.5\",\n    \"ts-node\": \"^10.9.2\",\n    \"typescript\": \"^5\"\n  }\n}\n",
+          "hash": "ca643762546861f96fab5a5f508cef2c4c17394bcb8c58b6845f16be7db44d75",
+          "size": 7625,
+          "lastModified": "2025-08-31T05:21:29.549Z",
+          "type": "config"
+        },
+        {
+          "path": "inspi-ai-platform/next.config.ts",
+          "content": "import type { NextConfig } from \"next\";\n\nconst nextConfig: NextConfig = {\n  // 基础配置\n  reactStrictMode: true,\n  serverExternalPackages: ['mongoose', 'ioredis'],\n  \n  // 简化的图片配置\n  images: {\n    domains: ['lh3.googleusercontent.com', 'ui-avatars.com'],\n    formats: ['image/webp'],\n  },\n\n};\n\nexport default nextConfig;\n",
+          "hash": "0a9777e419da56da58f10953c132359bc08846fd01d44c3998d3ec5d955b3f2a",
+          "size": 338,
+          "lastModified": "2025-09-01T03:49:56.182Z",
+          "type": "code"
+        },
+        {
+          "path": "inspi-ai-platform/tailwind.config.ts",
+          "content": "import type { Config } from 'tailwindcss'\n\nconst config: Config = {\n  content: [\n    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',\n    './src/components/**/*.{js,ts,jsx,tsx,mdx}',\n    './src/app/**/*.{js,ts,jsx,tsx,mdx}',\n    './src/hooks/**/*.{js,ts,jsx,tsx,mdx}',\n    './src/lib/**/*.{js,ts,jsx,tsx,mdx}',\n  ],\n  theme: {\n    extend: {\n      // 响应式断点配置\n      screens: {\n        'xs': '320px',   // 超小屏幕\n        'sm': '640px',   // 小屏幕\n        'md': '768px',   // 中等屏幕（平板）\n        'lg': '1024px',  // 大屏幕（桌面）\n        'xl': '1280px',  // 超大屏幕\n        '2xl': '1536px', // 超宽屏幕\n        \n        // 自定义断点\n        'mobile': { 'max': '767px' },\n        'tablet': { 'min': '768px', 'max': '1023px' },\n        'desktop': { 'min': '1024px', 'max': '1439px' },\n        'wide': { 'min': '1440px' },\n        \n        // 高度断点\n        'h-sm': { 'raw': '(max-height: 600px)' },\n        'h-md': { 'raw': '(min-height: 601px) and (max-height: 900px)' },\n        'h-lg': { 'raw': '(min-height: 901px)' },\n      },\n      \n      // 移动端优化的字体大小\n      fontSize: {\n        'xs': ['0.75rem', { lineHeight: '1rem' }],\n        'sm': ['0.875rem', { lineHeight: '1.25rem' }],\n        'base': ['1rem', { lineHeight: '1.5rem' }],\n        'lg': ['1.125rem', { lineHeight: '1.75rem' }],\n        'xl': ['1.25rem', { lineHeight: '1.75rem' }],\n        '2xl': ['1.5rem', { lineHeight: '2rem' }],\n        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],\n        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],\n        '5xl': ['3rem', { lineHeight: '1' }],\n        '6xl': ['3.75rem', { lineHeight: '1' }],\n        \n        // 移动端专用字体大小\n        'mobile-xs': ['0.75rem', { lineHeight: '1rem' }],\n        'mobile-sm': ['0.875rem', { lineHeight: '1.25rem' }],\n        'mobile-base': ['1rem', { lineHeight: '1.5rem' }],\n        'mobile-lg': ['1.125rem', { lineHeight: '1.75rem' }],\n        'mobile-xl': ['1.25rem', { lineHeight: '1.75rem' }],\n        'mobile-2xl': ['1.5rem', { lineHeight: '2rem' }],\n      },\n      \n      // 触摸友好的间距\n      spacing: {\n        '0.5': '0.125rem',\n        '1.5': '0.375rem',\n        '2.5': '0.625rem',\n        '3.5': '0.875rem',\n        '4.5': '1.125rem',\n        '5.5': '1.375rem',\n        '6.5': '1.625rem',\n        '7.5': '1.875rem',\n        '8.5': '2.125rem',\n        '9.5': '2.375rem',\n        '11': '2.75rem',\n        '13': '3.25rem',\n        '15': '3.75rem',\n        '17': '4.25rem',\n        '18': '4.5rem',\n        '19': '4.75rem',\n        '21': '5.25rem',\n        '22': '5.5rem',\n        '23': '5.75rem',\n        '25': '6.25rem',\n        \n        // 触摸目标最小尺寸\n        'touch': '44px',\n        'touch-sm': '40px',\n        'touch-lg': '48px',\n      },\n      \n      // 移动端优化的圆角\n      borderRadius: {\n        'xs': '0.125rem',\n        'sm': '0.25rem',\n        'md': '0.375rem',\n        'lg': '0.5rem',\n        'xl': '0.75rem',\n        '2xl': '1rem',\n        '3xl': '1.5rem',\n        \n        // 移动端友好的圆角\n        'mobile': '8px',\n        'mobile-lg': '12px',\n        'mobile-xl': '16px',\n      },\n      \n      // 移动端优化的阴影\n      boxShadow: {\n        'mobile': '0 2px 8px rgba(0, 0, 0, 0.1)',\n        'mobile-lg': '0 4px 12px rgba(0, 0, 0, 0.15)',\n        'mobile-xl': '0 8px 24px rgba(0, 0, 0, 0.2)',\n        'touch': '0 2px 4px rgba(0, 0, 0, 0.1)',\n        'touch-active': '0 1px 2px rgba(0, 0, 0, 0.1)',\n      },\n      \n      // 动画和过渡\n      transitionDuration: {\n        '150': '150ms',\n        '250': '250ms',\n        '350': '350ms',\n      },\n      \n      // Z-index 层级\n      zIndex: {\n        '1': '1',\n        '2': '2',\n        '3': '3',\n        '4': '4',\n        '5': '5',\n        'modal': '100',\n        'dropdown': '50',\n        'header': '40',\n        'overlay': '30',\n      },\n      \n      // 颜色系统\n      colors: {\n        // 主色调\n        primary: {\n          50: '#eff6ff',\n          100: '#dbeafe',\n          200: '#bfdbfe',\n          300: '#93c5fd',\n          400: '#60a5fa',\n          500: '#3b82f6',\n          600: '#2563eb',\n          700: '#1d4ed8',\n          800: '#1e40af',\n          900: '#1e3a8a',\n        },\n        \n        // 灰色系统\n        gray: {\n          50: '#f9fafb',\n          100: '#f3f4f6',\n          200: '#e5e7eb',\n          300: '#d1d5db',\n          400: '#9ca3af',\n          500: '#6b7280',\n          600: '#4b5563',\n          700: '#374151',\n          800: '#1f2937',\n          900: '#111827',\n        },\n        \n        // 语义化颜色\n        success: {\n          50: '#f0fdf4',\n          500: '#22c55e',\n          600: '#16a34a',\n        },\n        warning: {\n          50: '#fffbeb',\n          500: '#f59e0b',\n          600: '#d97706',\n        },\n        error: {\n          50: '#fef2f2',\n          500: '#ef4444',\n          600: '#dc2626',\n        },\n      },\n      \n      // 移动端优化的最大宽度\n      maxWidth: {\n        'mobile': '100vw',\n        'tablet': '768px',\n        'desktop': '1024px',\n        'wide': '1200px',\n        'container': '1200px',\n      },\n      \n      // 移动端优化的最小高度\n      minHeight: {\n        'screen-mobile': '100vh',\n        'screen-safe': 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom))',\n        'touch': '44px',\n      },\n    },\n  },\n  plugins: [\n    // 自定义插件：移动端工具类\n    function({ addUtilities, theme }) {\n      const newUtilities = {\n        // 触摸目标\n        '.touch-target': {\n          minHeight: theme('spacing.touch'),\n          minWidth: theme('spacing.touch'),\n          display: 'flex',\n          alignItems: 'center',\n          justifyContent: 'center',\n        },\n        \n        // 安全区域\n        '.safe-area-top': {\n          paddingTop: 'env(safe-area-inset-top)',\n        },\n        '.safe-area-bottom': {\n          paddingBottom: 'env(safe-area-inset-bottom)',\n        },\n        '.safe-area-left': {\n          paddingLeft: 'env(safe-area-inset-left)',\n        },\n        '.safe-area-right': {\n          paddingRight: 'env(safe-area-inset-right)',\n        },\n        '.safe-area-inset': {\n          paddingTop: 'env(safe-area-inset-top)',\n          paddingBottom: 'env(safe-area-inset-bottom)',\n          paddingLeft: 'env(safe-area-inset-left)',\n          paddingRight: 'env(safe-area-inset-right)',\n        },\n        \n        // 移动端滚动优化\n        '.scroll-smooth': {\n          scrollBehavior: 'smooth',\n          '-webkit-overflow-scrolling': 'touch',\n        },\n        \n        // 隐藏滚动条\n        '.hide-scrollbar': {\n          '-ms-overflow-style': 'none',\n          'scrollbar-width': 'none',\n          '&::-webkit-scrollbar': {\n            display: 'none',\n          },\n        },\n        \n        // 移动端输入框优化\n        '.mobile-input': {\n          fontSize: '16px', // 防止iOS缩放\n          lineHeight: '1.5',\n          padding: '12px 16px',\n          borderRadius: theme('borderRadius.mobile'),\n          border: `2px solid ${theme('colors.gray.200')}`,\n          transition: 'border-color 0.2s ease',\n          '&:focus': {\n            outline: 'none',\n            borderColor: theme('colors.primary.500'),\n            boxShadow: `0 0 0 3px ${theme('colors.primary.100')}`,\n          },\n        },\n        \n        // 移动端按钮\n        '.mobile-button': {\n          minHeight: theme('spacing.touch'),\n          padding: '0 16px',\n          borderRadius: theme('borderRadius.mobile'),\n          fontSize: theme('fontSize.base[0]'),\n          fontWeight: '500',\n          display: 'flex',\n          alignItems: 'center',\n          justifyContent: 'center',\n          transition: 'all 0.2s ease',\n          userSelect: 'none',\n          '-webkit-user-select': 'none',\n          '&:active': {\n            transform: 'scale(0.98)',\n          },\n        },\n        \n        // 移动端卡片\n        '.mobile-card': {\n          backgroundColor: theme('colors.white'),\n          borderRadius: theme('borderRadius.mobile-lg'),\n          padding: '16px',\n          boxShadow: theme('boxShadow.mobile'),\n          border: `1px solid ${theme('colors.gray.100')}`,\n          transition: 'transform 0.2s ease, box-shadow 0.2s ease',\n          '&:active': {\n            transform: 'scale(0.98)',\n            boxShadow: theme('boxShadow.touch-active'),\n          },\n        },\n      }\n      \n      addUtilities(newUtilities)\n    },\n  ],\n}\n\nexport default config",
+          "hash": "c1701b064cd816dbf1ebc444579f7e57bc05e40bed631f1d8799fcdd0a7db67a",
+          "size": 8504,
+          "lastModified": "2025-08-29T02:40:26.995Z",
+          "type": "code"
+        },
+        {
+          "path": "inspi-ai-platform/tsconfig.json",
+          "content": "{\n  \"compilerOptions\": {\n    \"target\": \"ES2017\",\n    \"lib\": [\"dom\", \"dom.iterable\", \"esnext\"],\n    \"allowJs\": true,\n    \"skipLibCheck\": true,\n    \"strict\": true,\n    \"noEmit\": true,\n    \"esModuleInterop\": true,\n    \"module\": \"esnext\",\n    \"moduleResolution\": \"bundler\",\n    \"resolveJsonModule\": true,\n    \"isolatedModules\": true,\n    \"jsx\": \"preserve\",\n    \"incremental\": true,\n    \"plugins\": [\n      {\n        \"name\": \"next\"\n      }\n    ],\n    \"paths\": {\n      \"@/*\": [\"./src/*\"]\n    }\n  },\n  \"include\": [\"next-env.d.ts\", \"**/*.ts\", \"**/*.tsx\", \".next/types/**/*.ts\"],\n  \"exclude\": [\"node_modules\"]\n}\n",
+          "hash": "83d292a6930a317ea31ef48e220097d2ca10c6c505f41d5954795acef48ca3b9",
+          "size": 602,
+          "lastModified": "2025-08-26T07:22:08.886Z",
+          "type": "config"
+        },
+        {
+          "path": ".gitignore",
+          "content": "# Dependencies\nnode_modules/\n.pnp\n.pnp.js\n\n# Testing\n/coverage\n\n# Next.js\n/.next/\n/out/\n\n# Production\n/build\n\n# Misc\n.DS_Store\n*.pem\n\n# Debug\nnpm-debug.log*\nyarn-debug.log*\nyarn-error.log*\n\n# Local env files\n.env*.local\n\n# Vercel\n.vercel\n\n# TypeScript\n*.tsbuildinfo\nnext-env.d.ts\n\n# IDE\n.vscode/\n.idea/\n\n# Logs\nlogs\n*.log\n\n# Runtime data\npids\n*.pid\n*.seed\n*.pid.lock\n\n# Optional npm cache directory\n.npm\n\n# Optional eslint cache\n.eslintcache\n\n# Temporary folders\ntmp/\ntemp/\n\n# Project state snapshots (keep metadata but not large snapshots)\n.kiro/style-snapshots/*.png\n.kiro/style-snapshots/*.jpg\n.kiro/recovery-points/snapshots/",
+          "hash": "e6ede827a68da0b96d7e0c4a51008cb950c12554f2cd99f278a218b4053f72fc",
+          "size": 629,
+          "lastModified": "2025-09-02T08:15:16.679Z",
+          "type": "config"
+        }
+      ],
+      "dependencies": {
+        "@auth/mongodb-adapter": "^3.10.0",
+        "@google/generative-ai": "^0.24.1",
+        "@tanstack/react-query": "^5.85.5",
+        "@tanstack/react-query-devtools": "^5.85.5",
+        "@types/bcryptjs": "^2.4.6",
+        "@types/d3": "^7.4.3",
+        "@types/ioredis": "^4.28.10",
+        "@types/jsonwebtoken": "^9.0.10",
+        "@types/mongoose": "^5.11.96",
+        "@types/nodemailer": "^7.0.1",
+        "axios": "^1.11.0",
+        "bcryptjs": "^3.0.2",
+        "clsx": "^2.1.1",
+        "d3": "^7.9.0",
+        "date-fns": "^4.1.0",
+        "framer-motion": "^12.23.12",
+        "google-auth-library": "^10.3.0",
+        "ioredis": "^5.7.0",
+        "jsonwebtoken": "^9.0.2",
+        "mongoose": "^8.18.0",
+        "next": "15.5.0",
+        "next-auth": "^4.24.11",
+        "nodemailer": "^6.10.1",
+        "react": "19.1.0",
+        "react-dom": "19.1.0",
+        "redis": "^5.8.2",
+        "tailwind-merge": "^3.3.1",
+        "uuid": "^11.0.3",
+        "winston": "^3.17.0",
+        "winston-daily-rotate-file": "^5.0.0",
+        "zustand": "^5.0.8",
+        "@eslint/eslintrc": "^3",
+        "@tailwindcss/postcss": "^4",
+        "@testing-library/jest-dom": "^6.8.0",
+        "@testing-library/react": "^16.3.0",
+        "@testing-library/user-event": "^14.5.2",
+        "@types/jest": "^29.5.12",
+        "@types/node": "^20",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "@types/redis": "^4.0.10",
+        "@types/supertest": "^6.0.2",
+        "@types/uuid": "^10.0.0",
+        "eslint": "^9",
+        "eslint-config-next": "15.5.0",
+        "jest": "^30.0.5",
+        "jest-environment-jsdom": "^30.0.5",
+        "jest-environment-node": "^30.0.5",
+        "mongodb-memory-server": "^10.1.2",
+        "msw": "^2.6.8",
+        "supertest": "^7.0.0",
+        "tailwindcss": "^4",
+        "ts-jest": "^29.2.5",
+        "ts-node": "^10.9.2",
+        "typescript": "^5"
+      },
+      "projectState": {
+        "version": "1.0.0",
+        "lastUpdated": "2025-09-02T08:18:55.559Z",
+        "features": {
+          "homepage": {
+            "status": "completed",
+            "lastUpdated": "2025-09-02T08:14:18.393Z",
+            "completionCriteria": [
+              "UI样式完整",
+              "响应式设计正常",
+              "所有链接可用",
+              "无控制台错误"
+            ],
+            "dependencies": [],
+            "riskLevel": "medium",
+            "notes": "当前样式存在问题，需要恢复到稳定版本"
+          },
+          "create-page": {
+            "status": "completed",
+            "lastUpdated": "2025-09-02T08:14:18.397Z",
+            "completionCriteria": [
+              "页面正常显示",
+              "功能开发中状态显示",
+              "返回首页链接正常"
+            ],
+            "dependencies": [
+              "homepage"
+            ],
+            "riskLevel": "low",
+            "notes": "基础功能完成"
+          },
+          "project-management-system": {
+            "status": "in_progress",
+            "lastUpdated": "2025-09-02T08:18:55.559Z",
+            "completionCriteria": [
+              "项目状态管理系统",
+              "样式版本控制系统",
+              "开发流程规范引擎",
+              "自动化质量检查",
+              "项目恢复系统"
+            ],
+            "dependencies": [],
+            "riskLevel": "high",
+            "notes": "✅ 第一阶段完成：状态管理和版本控制已建立"
+          }
+        },
+        "globalHealth": {
+          "overallStatus": "critical",
+          "lastStableSnapshot": "git-commit-7d8da0a",
+          "activeIssues": [
+            {
+              "id": "style-regression-001",
+              "type": "style_regression",
+              "severity": "high",
+              "description": "样式丢失，无法回滚到48小时前的稳定版本",
+              "affectedFeatures": [
+                "homepage"
+              ],
+              "createdAt": "2024-12-26T10:30:00Z",
+              "status": "active"
+            },
+            {
+              "id": "version-control-001",
+              "type": "version_control",
+              "severity": "critical",
+              "description": "缺乏版本控制系统，无法追踪历史变更",
+              "affectedFeatures": [
+                "homepage",
+                "create-page"
+              ],
+              "createdAt": "2024-12-26T10:30:00Z",
+              "status": "resolved",
+              "resolvedAt": "2025-09-02T08:18:55.557Z",
+              "resolution": "Git版本控制系统已建立，创建了初始提交作为基准点"
+            },
+            {
+              "type": "style_regression",
+              "severity": "high",
+              "description": "样式丢失，无法回滚到48小时前的稳定版本",
+              "affectedFeatures": [
+                "homepage"
+              ],
+              "status": "active",
+              "id": "style_regression-1756800858398",
+              "createdAt": "2025-09-02T08:14:18.398Z"
+            },
+            {
+              "type": "version_control",
+              "severity": "critical",
+              "description": "缺乏版本控制系统，无法追踪历史变更",
+              "affectedFeatures": [
+                "homepage",
+                "create-page"
+              ],
+              "status": "resolved",
+              "id": "version_control-1756800858398",
+              "createdAt": "2025-09-02T08:14:18.398Z",
+              "resolvedAt": "2025-09-02T08:18:55.559Z",
+              "resolution": "Git版本控制系统已建立，创建了初始提交作为基准点"
+            },
+            {
+              "id": "achievement-1756801135559",
+              "type": "functional_error",
+              "severity": "low",
+              "description": "✅ 成功建立Git版本控制系统和项目状态管理",
+              "affectedFeatures": [
+                "project-management-system"
+              ],
+              "createdAt": "2025-09-02T08:18:55.559Z",
+              "status": "resolved",
+              "resolvedAt": "2025-09-02T08:18:55.559Z",
+              "resolution": "项目管理规则第一个任务完成"
+            }
+          ]
+        }
+      },
+      "gitCommit": "7d8da0a312c3d531511bfa2814a867fe11a4a9cb",
+      "tags": [
+        "fixed"
+      ],
+      "isStable": true,
+      "metadata": {
+        "totalFiles": 5,
+        "totalSize": 17698,
+        "changedFiles": [],
+        "addedFiles": [],
+        "deletedFiles": []
+      }
+    },
+    {
+      "id": "snapshot_1756801802353_yp7e9f5dr",
+      "timestamp": "2025-09-02T08:30:02.353Z",
+      "description": "Initial comprehensive snapshot - all project assets baseline",
+      "isStable": true,
+      "metadata": {
+        "totalFiles": 308,
+        "totalSize": 2330647,
+        "fileTypes": {
+          "code": 301,
+          "style": 2,
+          "config": 3,
+          "other": 2
+        }
+      },
+      "gitCommit": "7d8da0a312c3d531511bfa2814a867fe11a4a9cb"
+    }
+  ],
+  "branches": {
+    "main": []
+  },
+  "currentBranch": "main",
+  "lastStableSnapshot": "snapshot_1756801718275_ja99ctr3d"
+}
