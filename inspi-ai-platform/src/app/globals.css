@@ -40,3 +40,14 @@ a {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+/* 确保导航栏不会重复显示 */
+nav:not(:first-of-type) {
+  display: none !important;
+}
+
+/* 清除可能的伪元素导航 */
+nav::before,
+nav::after {
+  display: none !important;
+}
