@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Navigation from "@/components/layout/Navigation";
+import { MockAuthProvider } from "@/lib/auth/MockAuthProvider";
 import "./globals.css";
 
 const inter = Inter({ 
@@ -28,10 +29,12 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className="dot-grid-background circuit-lines" suppressHydrationWarning={true}>
-        <Navigation />
-        <main>
-          {children}
-        </main>
+        <MockAuthProvider>
+          <Navigation />
+          <main>
+            {children}
+          </main>
+        </MockAuthProvider>
       </body>
     </html>
   );

@@ -1,10 +1,20 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/auth/context';
-import WorkPreview from '@/components/works/WorkPreview';
-import { WorkDocument } from '@/lib/models/Work';
+import { useAuth } from '@/lib/auth/MockAuthProvider';
+import { GlassCard, Button } from '@/components/ui';
 import Link from 'next/link';
+
+interface Work {
+  id: string;
+  title: string;
+  knowledgePoint: string;
+  subject: string;
+  gradeLevel: string;
+  status: 'draft' | 'published';
+  createdAt: string;
+  updatedAt: string;
+}
 
 type TabType = 'published' | 'drafts' | 'all';
 
@@ -20,9 +30,9 @@ const GRADE_LEVELS = [
 ];
 
 export default function WorksPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('published');
-  const [works, setWorks] = useState<WorkDocument[]>([]);
+  const [works, setWorks] = useState<Work[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
@@ -30,82 +40,80 @@ export default function WorksPage() {
     gradeLevel: '',
     search: ''
   });
-  const [pagination, setPagination] = useState({
-    page: 1,
-    totalPages: 1,
-    total: 0
-  });
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!authLoading) {
       fetchWorks();
     }
-  }, [isAuthenticated, activeTab, filters, pagination.page]);
+  }, [authLoading, activeTab, filters]);
 
   const fetchWorks = async () => {
-    if (!isAuthenticated) return;
-
     try {
       setLoading(true);
       setError(null);
 
-      const params = new URLSearchParams({
-        author: user?.id || '',
-        status: activeTab === 'all' ? '' : activeTab === 'drafts' ? 'draft' : 'published',
-        page: pagination.page.toString(),
-        limit: '10'
-      });
+      // 模拟API调用延迟
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (filters.subject) params.append('subject', filters.subject);
-      if (filters.gradeLevel) params.append('gradeLevel', filters.gradeLevel);
+      // 模拟作品数据
+      const mockWorks: Work[] = [
+        {
+          id: '1',
+          title: '数学 - 两位数加法',
+          knowledgePoint: '两位数加法',
+          subject: '数学',
+          gradeLevel: '小学二年级',
+          status: 'published',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: '2',
+          title: '语文 - 古诗词鉴赏',
+          knowledgePoint: '古诗词鉴赏',
+          subject: '语文',
+          gradeLevel: '小学三年级',
+          status: 'draft',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: '3',
+          title: '英语 - 基础对话',
+          knowledgePoint: '日常对话',
+          subject: '英语',
+          gradeLevel: '小学四年级',
+          status: 'published',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+      ];
 
-      const response = await fetch(`/api/works?${params}`);
-      const data = await response.json();
-
-      if (data.success) {
-        setWorks(data.data.works);
-        setPagination({
-          page: data.data.page,
-          totalPages: data.data.totalPages,
-          total: data.data.total
-        });
-      } else {
-        setError(data.message || '获取作品失败');
+      // 根据activeTab筛选
+      let filteredWorks = mockWorks;
+      if (activeTab === 'published') {
+        filteredWorks = mockWorks.filter(w => w.status === 'published');
+      } else if (activeTab === 'drafts') {
+        filteredWorks = mockWorks.filter(w => w.status === 'draft');
       }
-    } catch (err) {
-      setError('网络错误，请稍后重试');
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleSearch = async () => {
-    if (!filters.search.trim()) {
-      fetchWorks();
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const params = new URLSearchParams({
-        q: filters.search,
-        limit: '20'
-      });
-
-      if (filters.subject) params.append('subject', filters.subject);
-      if (filters.gradeLevel) params.append('gradeLevel', filters.gradeLevel);
-
-      const response = await fetch(`/api/works/search?${params}`);
-      const data = await response.json();
-
-      if (data.success) {
-        setWorks(data.data);
-        setPagination({ page: 1, totalPages: 1, total: data.total });
-      } else {
-        setError(data.message || '搜索失败');
+      // 根据筛选条件进一步筛选
+      if (filters.subject) {
+        filteredWorks = filteredWorks.filter(w => w.subject === filters.subject);
       }
+      if (filters.gradeLevel) {
+        filteredWorks = filteredWorks.filter(w => w.gradeLevel === filters.gradeLevel);
+      }
+      if (filters.search) {
+        filteredWorks = filteredWorks.filter(w => 
+          w.title.includes(filters.search) || 
+          w.knowledgePoint.includes(filters.search)
+        );
+      }
+
+      setWorks(filteredWorks);
     } catch (err) {
-      setError('搜索失败，请稍后重试');
+      setError('获取作品失败，请稍后重试');
     } finally {
       setLoading(false);
     }
@@ -117,248 +125,214 @@ export default function WorksPage() {
     }
 
     try {
-      const response = await fetch(`/api/works/${workId}`, {
-        method: 'DELETE'
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        setWorks(prev => prev.filter(work => work._id !== workId));
-      } else {
-        alert(data.message || '删除失败');
-      }
+      setWorks(prev => prev.filter(work => work.id !== workId));
     } catch (err) {
       alert('删除失败，请稍后重试');
     }
   };
 
-  const handleReuse = async (work: WorkDocument) => {
-    // 复用逻辑：创建基于现有作品的新草稿
-    try {
-      const response = await fetch('/api/works', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          title: `${work.title} (复用)`,
-          knowledgePoint: work.knowledgePoint,
-          subject: work.subject,
-          gradeLevel: work.gradeLevel,
-          cards: work.cards,
-          tags: work.tags,
-          status: 'draft',
-          originalWork: work._id
-        })
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        // 跳转到编辑页面
-        window.location.href = `/create?edit=${data.data._id}`;
-      } else {
-        alert(data.message || '复用失败');
-      }
-    } catch (err) {
-      alert('复用失败，请稍后重试');
-    }
+  const handleStatusChange = (workId: string, newStatus: 'draft' | 'published') => {
+    setWorks(prev => prev.map(work => 
+      work.id === workId ? { ...work, status: newStatus } : work
+    ));
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <GlassCard className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h2 className="heading-2 mb-2">加载中...</h2>
+          <p className="body-text">正在初始化系统</p>
+        </GlassCard>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">请先登录</h1>
-          <p className="text-gray-600 mb-6">登录后即可查看和管理您的作品</p>
-          <Link 
-            href="/"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            返回首页
+      <div className="min-h-screen flex items-center justify-center">
+        <GlassCard className="text-center py-12 max-w-md mx-auto">
+          <h2 className="heading-2 mb-4">需要登录</h2>
+          <p className="body-text mb-6">请登录后访问此页面</p>
+          <Link href="/">
+            <Button variant="primary">返回首页</Button>
           </Link>
-        </div>
+        </GlassCard>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 头部 */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <h1 className="text-xl font-semibold text-gray-900">我的作品</h1>
-            <Link
-              href="/create"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              创建新作品
+    <div className="min-h-screen">
+      <section className="container section-padding">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8 fade-in-up">
+            <div>
+              <h1 className="heading-1 gradient-text mb-2">我的作品</h1>
+              <p className="body-text">管理您创建的教学作品</p>
+            </div>
+            <Link href="/create">
+              <Button variant="primary">✨ 创建新作品</Button>
             </Link>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* 标签页和筛选器 */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          {/* 标签页 */}
-          <div className="flex space-x-1 mb-6">
-            {[
-              { key: 'published', label: '已发布', count: works.filter(w => w.status === 'published').length },
-              { key: 'drafts', label: '草稿', count: works.filter(w => w.status === 'draft').length },
-              { key: 'all', label: '全部', count: works.length }
-            ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => {
-                  setActiveTab(tab.key as TabType);
-                  setPagination(prev => ({ ...prev, page: 1 }));
-                }}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === tab.key
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {tab.label}
-                {tab.count > 0 && (
-                  <span className="ml-2 px-2 py-0.5 bg-gray-200 text-gray-600 rounded-full text-xs">
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* 搜索和筛选 */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-2">
-              <div className="flex">
-                <input
-                  type="text"
-                  placeholder="搜索作品标题、知识点或标签..."
-                  value={filters.search}
-                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+          {/* Filters */}
+          <GlassCard className="mb-8 fade-in-up stagger-1">
+            {/* 标签页 */}
+            <div className="flex space-x-1 mb-6">
+              {[
+                { key: 'published', label: '已发布' },
+                { key: 'drafts', label: '草稿' },
+                { key: 'all', label: '全部' }
+              ].map(tab => (
                 <button
-                  onClick={handleSearch}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700"
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key as TabType)}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === tab.key
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                  }`}
                 >
-                  搜索
+                  {tab.label}
                 </button>
-              </div>
+              ))}
             </div>
-            
-            <select
-              value={filters.subject}
-              onChange={(e) => setFilters(prev => ({ ...prev, subject: e.target.value }))}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">全部学科</option>
-              {SUBJECTS.map(subject => (
-                <option key={subject} value={subject}>{subject}</option>
-              ))}
-            </select>
-            
-            <select
-              value={filters.gradeLevel}
-              onChange={(e) => setFilters(prev => ({ ...prev, gradeLevel: e.target.value }))}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">全部学段</option>
-              {GRADE_LEVELS.map(grade => (
-                <option key={grade} value={grade}>{grade}</option>
-              ))}
-            </select>
-          </div>
+
+            {/* 搜索和筛选 */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="md:col-span-2">
+                <div className="flex">
+                  <input
+                    type="text"
+                    placeholder="搜索作品标题、知识点..."
+                    value={filters.search}
+                    onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={fetchWorks}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700"
+                  >
+                    搜索
+                  </button>
+                </div>
+              </div>
+              
+              <select
+                value={filters.subject}
+                onChange={(e) => setFilters(prev => ({ ...prev, subject: e.target.value }))}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">全部学科</option>
+                {SUBJECTS.map(subject => (
+                  <option key={subject} value={subject}>{subject}</option>
+                ))}
+              </select>
+              
+              <select
+                value={filters.gradeLevel}
+                onChange={(e) => setFilters(prev => ({ ...prev, gradeLevel: e.target.value }))}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">全部学段</option>
+                {GRADE_LEVELS.map(grade => (
+                  <option key={grade} value={grade}>{grade}</option>
+                ))}
+              </select>
+            </div>
+          </GlassCard>
+
+          {/* Loading State */}
+          {loading && (
+            <GlassCard className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="body-text">加载作品中...</p>
+            </GlassCard>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <GlassCard className="text-center py-12">
+              <div className="text-red-600 mb-4">{error}</div>
+              <Button onClick={fetchWorks} variant="primary">重新加载</Button>
+            </GlassCard>
+          )}
+
+          {/* Works Grid */}
+          {!loading && !error && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {works.length === 0 ? (
+                <div className="col-span-full">
+                  <GlassCard className="text-center py-12">
+                    <h3 className="heading-3 mb-4">
+                      {activeTab === 'drafts' ? '还没有草稿' : '暂无作品'}
+                    </h3>
+                    <p className="body-text mb-6">开始创建您的第一个教学作品吧！</p>
+                    <Link href="/create">
+                      <Button variant="primary">创建作品</Button>
+                    </Link>
+                  </GlassCard>
+                </div>
+              ) : (
+                works.map((work, index) => (
+                  <GlassCard key={work.id} className={`fade-in-up stagger-${index + 1}`}>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-start">
+                        <h3 className="heading-3">{work.title}</h3>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          work.status === 'published' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {work.status === 'published' ? '已发布' : '草稿'}
+                        </span>
+                      </div>
+                      
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <p><strong>知识点:</strong> {work.knowledgePoint}</p>
+                        <p><strong>学科:</strong> {work.subject}</p>
+                        <p><strong>年级:</strong> {work.gradeLevel}</p>
+                        <p><strong>创建时间:</strong> {new Date(work.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      
+                      <div className="flex space-x-2 pt-4 border-t border-gray-200">
+                        <Button 
+                          variant="secondary" 
+                          size="small"
+                          onClick={() => window.location.href = `/works/${work.id}`}
+                        >
+                          查看
+                        </Button>
+                        <Button 
+                          variant="secondary" 
+                          size="small"
+                          onClick={() => handleStatusChange(
+                            work.id, 
+                            work.status === 'published' ? 'draft' : 'published'
+                          )}
+                        >
+                          {work.status === 'published' ? '取消发布' : '发布'}
+                        </Button>
+                        <Button 
+                          variant="secondary" 
+                          size="small"
+                          onClick={() => handleDelete(work.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          删除
+                        </Button>
+                      </div>
+                    </div>
+                  </GlassCard>
+                ))
+              )}
+            </div>
+          )}
         </div>
-
-        {/* 作品列表 */}
-        {loading ? (
-          <div className="space-y-6">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-lg shadow-sm border p-6 animate-pulse">
-                <div className="h-6 bg-gray-200 rounded mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-              </div>
-            ))}
-          </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <div className="text-red-600 mb-4">{error}</div>
-            <button
-              onClick={fetchWorks}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              重新加载
-            </button>
-          </div>
-        ) : works.length === 0 ? (
-          <div className="text-center py-12">
-            <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">暂无作品</h3>
-            <p className="text-gray-600 mb-6">
-              {activeTab === 'drafts' ? '还没有草稿' : '还没有发布的作品'}
-            </p>
-            <Link
-              href="/create"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              创建第一个作品
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {works.map(work => (
-              <WorkPreview
-                key={work._id?.toString() || Math.random().toString()}
-                work={work}
-                showActions={true}
-                onEdit={() => window.location.href = `/create?edit=${work._id}`}
-                onDelete={() => handleDelete(work._id?.toString() || '')}
-                onReuse={() => handleReuse(work)}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* 分页 */}
-        {pagination.totalPages > 1 && (
-          <div className="flex justify-center mt-8">
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                disabled={pagination.page <= 1}
-                className="px-3 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-              >
-                上一页
-              </button>
-              
-              <span className="px-3 py-2 text-sm text-gray-700">
-                第 {pagination.page} 页，共 {pagination.totalPages} 页
-              </span>
-              
-              <button
-                onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                disabled={pagination.page >= pagination.totalPages}
-                className="px-3 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-              >
-                下一页
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      </section>
     </div>
   );
 }
