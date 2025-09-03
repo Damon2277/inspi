@@ -55,3 +55,17 @@ nav[class*="sticky"][class*="top-0"]:not(#main-navigation) {
 #main-navigation {
   display: flex !important;
 }
+
+/* 强制隐藏移动端导航在桌面端 */
+@media (min-width: 768px) {
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+}
+
+/* 强制隐藏桌面导航在移动端 */
+@media (max-width: 767px) {
+  #main-navigation .desktop-nav-links {
+    display: none !important;
+  }
+}

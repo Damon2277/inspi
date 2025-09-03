@@ -30,7 +30,7 @@ const Navigation = () => {
             </Link>
 
             {/* Desktop Navigation Links */}
-            <div className="hidden md:flex items-center space-x-2">
+            <div className="hidden md:flex items-center space-x-2 desktop-nav-links">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
@@ -56,7 +56,7 @@ const Navigation = () => {
       </nav>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200/50 z-50 safe-area-pb">
+      <div className="md:hidden mobile-bottom-nav fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200/50 z-50 safe-area-pb">
         <div className="grid grid-cols-5 gap-1 py-2 px-2">
           {navItems.map((item) => (
             <Link
