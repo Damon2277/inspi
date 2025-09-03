@@ -41,13 +41,17 @@ a {
   }
 }
 
-/* 确保导航栏不会重复显示 */
-nav:not(:first-of-type) {
+/* 只针对可能重复的主导航栏 - 使用更精确的选择器 */
+nav[class*="bg-white"][class*="backdrop-blur"]:not(#main-navigation) {
   display: none !important;
 }
 
-/* 清除可能的伪元素导航 */
-nav::before,
-nav::after {
+/* 防止重复的顶部粘性导航栏 */
+nav[class*="sticky"][class*="top-0"]:not(#main-navigation) {
   display: none !important;
+}
+
+/* 确保主导航正常显示 */
+#main-navigation {
+  display: flex !important;
 }

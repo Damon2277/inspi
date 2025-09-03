@@ -6,6 +6,9 @@ import { usePathname } from 'next/navigation';
 
 const Navigation = () => {
   const pathname = usePathname();
+  
+  // Debug: Log when Navigation renders
+  console.log('Navigation component rendered at:', new Date().toISOString());
 
   const navItems = [
     { href: '/', label: '首页', icon: '🏠' },
@@ -18,7 +21,7 @@ const Navigation = () => {
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 sticky top-0 z-50">
+      <nav id="main-navigation" data-nav="primary" className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
