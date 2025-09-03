@@ -6,9 +6,6 @@ import { usePathname } from 'next/navigation';
 
 const Navigation = () => {
   const pathname = usePathname();
-  
-  // Debug: Log when Navigation renders
-  console.log('Navigation component rendered at:', new Date().toISOString());
 
   const navItems = [
     { href: '/', label: '首页', icon: '🏠' },
