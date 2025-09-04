@@ -78,7 +78,14 @@
     "test-env:stop": "pkill -f 'next dev'",
     "test-env:status": "curl -s http://localhost:3000/api/test-status | jq .",
     "test-env:health": "curl -s http://localhost:3000/api/health",
-    "test-env:dashboard": "open http://localhost:3000/test-dashboard"
+    "test-env:dashboard": "open http://localhost:3000/test-dashboard",
+    "version:bump": "node scripts/bump-version.js",
+    "version:major": "node scripts/bump-version.js major",
+    "version:minor": "node scripts/bump-version.js minor", 
+    "version:patch": "node scripts/bump-version.js patch",
+    "version:prerelease": "node scripts/bump-version.js prerelease",
+    "version:current": "node scripts/bump-version.js --version",
+    "release": "npm run version:bump && echo 'Release completed! Push with: git push origin main --tags'"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.10.0",

@@ -1,0 +1,39 @@
+{
+  "version": {
+    "strategy": "semantic",
+    "tagPrefix": "v",
+    "prereleaseIdentifier": "beta",
+    "autoTag": true,
+    "autoRelease": false
+  },
+  "git": {
+    "mainBranch": "main",
+    "requireCleanWorkingDirectory": true
+  },
+  "commit": {
+    "types": [
+      {"type": "feat", "bump": "minor", "changelog": true, "description": "新功能"},
+      {"type": "fix", "bump": "patch", "changelog": true, "description": "问题修复"},
+      {"type": "docs", "bump": "patch", "changelog": false, "description": "文档更新"},
+      {"type": "style", "bump": "patch", "changelog": false, "description": "代码格式"},
+      {"type": "refactor", "bump": "patch", "changelog": true, "description": "代码重构"},
+      {"type": "test", "bump": "patch", "changelog": false, "description": "测试相关"},
+      {"type": "chore", "bump": "patch", "changelog": false, "description": "构建过程或辅助工具的变动"},
+      {"type": "perf", "bump": "patch", "changelog": true, "description": "性能优化"}
+    ],
+    "scopes": ["ui", "api", "core", "test", "docs", "build"],
+    "requireScope": false
+  },
+  "release": {
+    "generateNotes": true,
+    "includeCommitHash": false,
+    "groupByType": true,
+    "template": {
+      "header": "# Release Notes {{version}}\n\n**发布日期:** {{date}}\n\n## 版本概述\n\n本版本包含 {{commitCount}} 个提交。\n\n",
+      "features": "## 🚀 新功能\n\n{{#each features}}{{> commit}}{{/each}}\n",
+      "fixes": "## 🐛 问题修复\n\n{{#each fixes}}{{> commit}}{{/each}}\n",
+      "others": "## 🔧 其他变更\n\n{{#each others}}{{> commit}}{{/each}}\n",
+      "footer": "## 📦 安装和升级\n\n```bash\nnpm install\nnpm run build\n```\n\n## 🔗 相关链接\n\n- [完整变更日志]({{compareUrl}})\n- [问题反馈]({{issuesUrl}})\n"
+    }
+  }
+}
