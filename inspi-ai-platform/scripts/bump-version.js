@@ -348,17 +348,8 @@ function main() {
   const versionManager = new VersionManager();
 
   if (args.length === 0) {
-    console.log('📋 版本管理脚本使用说明:\n');
-    console.log('自动检测版本类型:');
-    console.log('  node scripts/bump-version.js\n');
-    console.log('指定版本类型:');
-    console.log('  node scripts/bump-version.js major   # 主版本升级 (破坏性变更)');
-    console.log('  node scripts/bump-version.js minor   # 次版本升级 (新功能)');
-    console.log('  node scripts/bump-version.js patch   # 修订版本升级 (问题修复)');
-    console.log('  node scripts/bump-version.js prerelease # 预发布版本\n');
-    console.log('其他命令:');
-    console.log('  node scripts/bump-version.js --version  # 显示当前版本');
-    console.log('  node scripts/bump-version.js --help     # 显示帮助信息');
+    // 自动检测版本类型
+    versionManager.release();
     return;
   }
 
@@ -369,6 +360,7 @@ function main() {
       console.log(`当前版本: ${versionManager.getCurrentVersion()}`);
       break;
     case '--help':
+    case 'help':
       console.log('📋 版本管理脚本使用说明:\n');
       console.log('自动检测版本类型:');
       console.log('  node scripts/bump-version.js\n');
@@ -388,7 +380,7 @@ function main() {
       versionManager.release(command);
       break;
     default:
-      if (command.startsWith('-')) {
+      if (command && command.startsWith('-')) {
         console.error(`未知选项: ${command}`);
         process.exit(1);
       } else {
