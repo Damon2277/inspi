@@ -1,0 +1,220 @@
+/* 键盘导航和焦点指示器样式 */
+
+/* 基础焦点样式 */
+:focus {
+  outline: none;
+}
+
+/* 默认焦点环 */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+}
+
+/* 焦点环变体 */
+.focus-ring-primary {
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+}
+
+.focus-ring-secondary {
+  @apply focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2;
+}
+
+.focus-ring-success {
+  @apply focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2;
+}
+
+.focus-ring-warning {
+  @apply focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2;
+}
+
+.focus-ring-error {
+  @apply focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+}
+
+/* 焦点环大小 */
+.focus-ring-sm {
+  @apply focus:ring-1 focus:ring-offset-1;
+}
+
+.focus-ring-lg {
+  @apply focus:ring-4 focus:ring-offset-4;
+}
+
+/* 内部焦点环（用于深色背景） */
+.focus-ring-inset {
+  @apply focus:ring-inset;
+}
+
+/* 无偏移焦点环 */
+.focus-ring-no-offset {
+  @apply focus:ring-offset-0;
+}
+
+/* 按钮焦点样式 */
+button:focus-visible,
+.btn:focus-visible {
+  @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+}
+
+/* 输入框焦点样式 */
+input:focus,
+textarea:focus,
+select:focus {
+  @apply outline-none ring-2 ring-blue-500 ring-offset-0 border-blue-500;
+}
+
+/* 链接焦点样式 */
+a:focus-visible {
+  @apply outline-none ring-2 ring-blue-500 ring-offset-2 rounded-sm;
+}
+
+/* 卡片焦点样式 */
+.card:focus-within {
+  @apply ring-2 ring-blue-500 ring-offset-2;
+}
+
+/* 导航项焦点样式 */
+.nav-item:focus-visible {
+  @apply outline-none ring-2 ring-blue-500 ring-offset-2 rounded-md;
+}
+
+/* 菜单项焦点样式 */
+.menu-item:focus {
+  @apply outline-none bg-blue-50 text-blue-900;
+}
+
+/* 标签页焦点样式 */
+.tab:focus-visible {
+  @apply outline-none ring-2 ring-blue-500 ring-offset-2 rounded-t-md;
+}
+
+/* 模态框焦点陷阱 */
+.modal-content {
+  @apply focus:outline-none;
+}
+
+/* 跳过链接（可访问性） */
+.skip-link {
+  @apply absolute -top-10 left-4 z-50 px-4 py-2 bg-blue-600 text-white rounded-md;
+  @apply focus:top-4 transition-all duration-200;
+}
+
+/* 键盘导航指示器 */
+.keyboard-navigation-active {
+  /* 当检测到键盘导航时显示所有焦点指示器 */
+}
+
+.keyboard-navigation-active *:focus {
+  @apply ring-2 ring-blue-500 ring-offset-2;
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .focus-ring,
+  .focus-ring-primary {
+    @apply focus:ring-black focus:ring-4;
+  }
+  
+  button:focus-visible,
+  .btn:focus-visible {
+    @apply ring-black ring-4;
+  }
+  
+  input:focus,
+  textarea:focus,
+  select:focus {
+    @apply ring-black border-black;
+  }
+}
+
+/* 减少动画偏好的用户 */
+@media (prefers-reduced-motion: reduce) {
+  .focus-ring,
+  .focus-ring-primary,
+  .focus-ring-secondary,
+  .focus-ring-success,
+  .focus-ring-warning,
+  .focus-ring-error {
+    transition: none !important;
+  }
+}
+
+/* 暗色主题焦点样式 */
+@media (prefers-color-scheme: dark) {
+  .focus-ring,
+  .focus-ring-primary {
+    @apply focus:ring-blue-400;
+  }
+  
+  button:focus-visible,
+  .btn:focus-visible {
+    @apply ring-blue-400;
+  }
+  
+  input:focus,
+  textarea:focus,
+  select:focus {
+    @apply ring-blue-400 border-blue-400;
+  }
+  
+  .menu-item:focus {
+    @apply bg-blue-900 text-blue-100;
+  }
+}
+
+/* 焦点指示器动画 */
+@keyframes focus-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.focus-pulse {
+  animation: focus-pulse 2s infinite;
+}
+
+/* 键盘快捷键样式 */
+kbd {
+  @apply inline-block px-2 py-1 text-xs font-mono bg-gray-100 border border-gray-300 rounded;
+  @apply shadow-sm;
+}
+
+@media (prefers-color-scheme: dark) {
+  kbd {
+    @apply bg-gray-800 border-gray-600 text-gray-200;
+  }
+}
+
+/* 焦点陷阱容器 */
+.focus-trap {
+  /* 确保焦点不会逃出容器 */
+}
+
+.focus-trap:focus {
+  @apply outline-none;
+}
+
+/* 可聚焦区域指示器 */
+.focusable-area {
+  position: relative;
+}
+
+.focusable-area::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 2px solid transparent;
+  border-radius: inherit;
+  pointer-events: none;
+  transition: border-color 0.2s ease;
+}
+
+.focusable-area:focus-within::before {
+  border-color: rgb(59, 130, 246);
+}

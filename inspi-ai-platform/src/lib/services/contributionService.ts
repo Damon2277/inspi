@@ -509,7 +509,6 @@ class ContributionService {
             authorId: { $toString: '$author' },
             authorName: '$authorInfo.name',
             reuseCount: '$totalReuseCount',
-            likeCount: { $ifNull: ['$likeCount', 0] },
             viewCount: { $ifNull: ['$viewCount', 0] },
             trendingScore: { $round: ['$trendingScore', 2] },
             createdAt: '$publishedAt',
@@ -770,7 +769,6 @@ class ContributionService {
             authorId: { $toString: '$work.author' },
             authorName: '$author.name',
             reuseCount: 1,
-            likeCount: '$work.likeCount',
             viewCount: '$work.viewCount',
             trendingScore: 1,
             createdAt: '$work.createdAt',
@@ -788,7 +786,6 @@ class ContributionService {
         authorId: item.authorId,
         authorName: item.authorName,
         reuseCount: item.reuseCount,
-        likeCount: item.likeCount || 0,
         viewCount: item.viewCount || 0,
         trendingScore: item.trendingScore,
         createdAt: item.createdAt,
@@ -899,8 +896,6 @@ class ContributionService {
         return CONTRIBUTION_POINTS.creation.points;
       case ContributionType.WORK_REUSED:
         return CONTRIBUTION_POINTS.reuse.points;
-      case ContributionType.WORK_LIKED:
-        return 2;
       case ContributionType.WORK_SHARED:
         return 5;
       case ContributionType.PROFILE_COMPLETED:
@@ -940,8 +935,6 @@ class ContributionService {
         return `发布作品《${record.metadata?.workTitle || '未知作品'}》获得 ${record.points} 分`;
       case ContributionType.WORK_REUSED:
         return `作品《${record.metadata?.workTitle || '未知作品'}》被复用获得 ${record.points} 分`;
-      case ContributionType.WORK_LIKED:
-        return `作品《${record.metadata?.workTitle || '未知作品'}》被点赞获得 ${record.points} 分`;
       case ContributionType.WORK_SHARED:
         return `作品《${record.metadata?.workTitle || '未知作品'}》被分享获得 ${record.points} 分`;
       case ContributionType.PROFILE_COMPLETED:

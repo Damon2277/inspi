@@ -199,9 +199,7 @@ export const createWorksFixture = (
 export const createWorkStatsFixture = (workId: string, overrides: Partial<MockWorkStats> = {}): MockWorkStats => ({
   workId,
   views: Math.floor(Math.random() * 1000),
-  likes: Math.floor(Math.random() * 100),
   reposts: Math.floor(Math.random() * 50),
-  comments: Math.floor(Math.random() * 30),
   shares: Math.floor(Math.random() * 20),
   dailyViews: Array.from({ length: 7 }, () => Math.floor(Math.random() * 50)),
   weeklyViews: Array.from({ length: 4 }, () => Math.floor(Math.random() * 200)),
@@ -209,16 +207,7 @@ export const createWorkStatsFixture = (workId: string, overrides: Partial<MockWo
   ...overrides,
 })
 
-// 作品评论
-export const createWorkCommentFixture = (workId: string, authorId: string) => ({
-  id: `comment-${Math.random().toString(36).substring(2, 15)}`,
-  workId,
-  authorId,
-  content: 'This is a test comment on the work.',
-  likes: Math.floor(Math.random() * 10),
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-})
+
 
 // 作品收藏
 export const createWorkBookmarkFixture = (workId: string, userId: string) => ({

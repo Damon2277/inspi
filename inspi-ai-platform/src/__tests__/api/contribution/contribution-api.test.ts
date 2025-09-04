@@ -152,9 +152,7 @@ jest.mock('@/lib/services/contributionService', () => ({
     const pointsMap = {
       creation: 10,
       reuse_made: 5,
-      reuse_received: 3,
-      like_received: 1,
-      comment_received: 2,
+      reuse_received: 3
     }
     
     let basePoints = pointsMap[type] || 0

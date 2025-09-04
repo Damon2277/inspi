@@ -1,0 +1,7 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" rx="24" fill="#FF8C00"/>
+  <path d="M96 48C78.3 48 64 62.3 64 80V112C64 129.7 78.3 144 96 144C113.7 144 128 129.7 128 112V80C128 62.3 113.7 48 96 48Z" fill="white"/>
+  <circle cx="96" cy="80" r="16" fill="#FF8C00"/>
+  <path d="M80 112H112" stroke="#FF8C00" stroke-width="4" stroke-linecap="round"/>
+  <text x="96" y="170" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">Inspi.AI</text>
+</svg>

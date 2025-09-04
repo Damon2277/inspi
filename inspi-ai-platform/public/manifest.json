@@ -1,50 +1,77 @@
 {
-  "name": "Inspi.AI - AI教师智慧与IP孵化平台",
+  "name": "Inspi.AI - AI驱动的教师智慧平台",
   "short_name": "Inspi.AI",
-  "description": "让教学创意飞起来 - AI驱动的教师智慧与IP孵化平台",
+  "description": "用AI激发教学创意，让每一次教学都充满魔法",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "background_color": "#F9FAFC",
+  "theme_color": "#FF8C00",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "zh-CN",
-  "categories": ["education", "productivity", "utilities"],
+  "categories": ["education", "productivity"],
   "icons": [
     {
-      "src": "/next.svg",
+      "src": "/icons/icon-144x144.svg",
+      "sizes": "144x144",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any"
+      "purpose": "maskable any"
     }
   ],
   "shortcuts": [
     {
-      "name": "AI教学魔法师",
+      "name": "AI魔法师",
       "short_name": "创作",
-      "description": "快速创建教学内容",
-      "url": "/create"
+      "description": "快速创建教学卡片",
+      "url": "/create",
+      "icons": [
+        {
+          "src": "/icons/icon.svg",
+          "sizes": "any"
+        }
+      ]
     },
     {
       "name": "智慧广场",
       "short_name": "广场",
-      "description": "浏览教学作品",
-      "url": "/square"
+      "description": "浏览优质教学内容",
+      "url": "/square",
+      "icons": [
+        {
+          "src": "/icons/icon.svg",
+          "sizes": "any"
+        }
+      ]
     },
     {
-      "name": "个人中心",
-      "short_name": "我的",
-      "description": "管理个人作品和设置",
-      "url": "/profile"
+      "name": "我的作品",
+      "short_name": "作品",
+      "description": "管理我的教学作品",
+      "url": "/works",
+      "icons": [
+        {
+          "src": "/icons/icon.svg",
+          "sizes": "any"
+        }
+      ]
     }
   ],
-  "screenshots": [],
-  "related_applications": [],
+
   "prefer_related_applications": false,
+  "related_applications": [],
   "edge_side_panel": {
     "preferred_width": 400
-  },
-  "launch_handler": {
-    "client_mode": "navigate-existing"
   }
 }

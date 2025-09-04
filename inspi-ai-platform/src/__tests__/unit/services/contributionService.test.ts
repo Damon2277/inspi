@@ -114,19 +114,7 @@ describe('贡献度服务测试', () => {
       expect(receivedPoints).toBe(3)
     })
 
-    test('应该计算社交互动分数', () => {
-      const likePoints = calculateContributionPoints('like_received', {
-        workId: 'work-1',
-        likerId: 'user-2',
-      })
-      const commentPoints = calculateContributionPoints('comment_received', {
-        workId: 'work-1',
-        commentId: 'comment-1',
-      })
-
-      expect(likePoints).toBe(1)
-      expect(commentPoints).toBe(2)
-    })
+    // 移除社交互动分数测试
 
     test('应该处理特殊奖励', () => {
       const firstWorkPoints = calculateContributionPoints('creation', {

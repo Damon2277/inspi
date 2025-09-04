@@ -1,0 +1,199 @@
+/* 响应式间距系统 */
+
+:root {
+  /* 基础间距单位 */
+  --spacing-unit: 0.25rem; /* 4px */
+  
+  /* 间距缩放比例 */
+  --spacing-scale-mobile: 1;
+  --spacing-scale-tablet: 1.125;
+  --spacing-scale-desktop: 1.25;
+  --spacing-scale-wide: 1.375;
+  
+  /* 响应式间距变量 - 移动端基准 */
+  --spacing-0: 0;
+  --spacing-px: 1px;
+  --spacing-1: calc(0.25rem * var(--spacing-scale-mobile));
+  --spacing-2: calc(0.5rem * var(--spacing-scale-mobile));
+  --spacing-3: calc(0.75rem * var(--spacing-scale-mobile));
+  --spacing-4: calc(1rem * var(--spacing-scale-mobile));
+  --spacing-5: calc(1.25rem * var(--spacing-scale-mobile));
+  --spacing-6: calc(1.5rem * var(--spacing-scale-mobile));
+  --spacing-8: calc(2rem * var(--spacing-scale-mobile));
+  --spacing-10: calc(2.5rem * var(--spacing-scale-mobile));
+  --spacing-12: calc(3rem * var(--spacing-scale-mobile));
+  --spacing-16: calc(4rem * var(--spacing-scale-mobile));
+  --spacing-20: calc(5rem * var(--spacing-scale-mobile));
+  --spacing-24: calc(6rem * var(--spacing-scale-mobile));
+  --spacing-32: calc(8rem * var(--spacing-scale-mobile));
+  
+  /* 语义化间距 */
+  --spacing-xs: var(--spacing-1);
+  --spacing-sm: var(--spacing-2);
+  --spacing-md: var(--spacing-4);
+  --spacing-lg: var(--spacing-6);
+  --spacing-xl: var(--spacing-8);
+  --spacing-2xl: var(--spacing-12);
+  --spacing-3xl: var(--spacing-16);
+  
+  /* 组件间距 */
+  --component-gap: var(--spacing-4);
+  --section-gap: var(--spacing-8);
+  --page-gap: var(--spacing-12);
+  
+  /* 内容间距 */
+  --content-padding: var(--spacing-4);
+  --container-padding: var(--spacing-6);
+  --card-padding: var(--spacing-6);
+}
+
+/* 平板端间距缩放 */
+@media (min-width: 768px) {
+  :root {
+    --spacing-1: calc(0.25rem * var(--spacing-scale-tablet));
+    --spacing-2: calc(0.5rem * var(--spacing-scale-tablet));
+    --spacing-3: calc(0.75rem * var(--spacing-scale-tablet));
+    --spacing-4: calc(1rem * var(--spacing-scale-tablet));
+    --spacing-5: calc(1.25rem * var(--spacing-scale-tablet));
+    --spacing-6: calc(1.5rem * var(--spacing-scale-tablet));
+    --spacing-8: calc(2rem * var(--spacing-scale-tablet));
+    --spacing-10: calc(2.5rem * var(--spacing-scale-tablet));
+    --spacing-12: calc(3rem * var(--spacing-scale-tablet));
+    --spacing-16: calc(4rem * var(--spacing-scale-tablet));
+    --spacing-20: calc(5rem * var(--spacing-scale-tablet));
+    --spacing-24: calc(6rem * var(--spacing-scale-tablet));
+    --spacing-32: calc(8rem * var(--spacing-scale-tablet));
+    
+    --component-gap: var(--spacing-5);
+    --section-gap: var(--spacing-10);
+    --page-gap: var(--spacing-16);
+    --content-padding: var(--spacing-6);
+    --container-padding: var(--spacing-8);
+    --card-padding: var(--spacing-8);
+  }
+}
+
+/* 桌面端间距缩放 */
+@media (min-width: 1024px) {
+  :root {
+    --spacing-1: calc(0.25rem * var(--spacing-scale-desktop));
+    --spacing-2: calc(0.5rem * var(--spacing-scale-desktop));
+    --spacing-3: calc(0.75rem * var(--spacing-scale-desktop));
+    --spacing-4: calc(1rem * var(--spacing-scale-desktop));
+    --spacing-5: calc(1.25rem * var(--spacing-scale-desktop));
+    --spacing-6: calc(1.5rem * var(--spacing-scale-desktop));
+    --spacing-8: calc(2rem * var(--spacing-scale-desktop));
+    --spacing-10: calc(2.5rem * var(--spacing-scale-desktop));
+    --spacing-12: calc(3rem * var(--spacing-scale-desktop));
+    --spacing-16: calc(4rem * var(--spacing-scale-desktop));
+    --spacing-20: calc(5rem * var(--spacing-scale-desktop));
+    --spacing-24: calc(6rem * var(--spacing-scale-desktop));
+    --spacing-32: calc(8rem * var(--spacing-scale-desktop));
+    
+    --component-gap: var(--spacing-6);
+    --section-gap: var(--spacing-12);
+    --page-gap: var(--spacing-20);
+    --content-padding: var(--spacing-8);
+    --container-padding: var(--spacing-10);
+    --card-padding: var(--spacing-10);
+  }
+}
+
+/* 宽屏端间距缩放 */
+@media (min-width: 1440px) {
+  :root {
+    --spacing-1: calc(0.25rem * var(--spacing-scale-wide));
+    --spacing-2: calc(0.5rem * var(--spacing-scale-wide));
+    --spacing-3: calc(0.75rem * var(--spacing-scale-wide));
+    --spacing-4: calc(1rem * var(--spacing-scale-wide));
+    --spacing-5: calc(1.25rem * var(--spacing-scale-wide));
+    --spacing-6: calc(1.5rem * var(--spacing-scale-wide));
+    --spacing-8: calc(2rem * var(--spacing-scale-wide));
+    --spacing-10: calc(2.5rem * var(--spacing-scale-wide));
+    --spacing-12: calc(3rem * var(--spacing-scale-wide));
+    --spacing-16: calc(4rem * var(--spacing-scale-wide));
+    --spacing-20: calc(5rem * var(--spacing-scale-wide));
+    --spacing-24: calc(6rem * var(--spacing-scale-wide));
+    --spacing-32: calc(8rem * var(--spacing-scale-wide));
+    
+    --component-gap: var(--spacing-8);
+    --section-gap: var(--spacing-16);
+    --page-gap: var(--spacing-24);
+    --content-padding: var(--spacing-10);
+    --container-padding: var(--spacing-12);
+    --card-padding: var(--spacing-12);
+  }
+}
+
+/* 间距平滑过渡 */
+* {
+  transition: margin 0.2s ease-in-out, padding 0.2s ease-in-out;
+}
+
+/* 间距工具类 */
+.m-0 { margin: var(--spacing-0); }
+.m-1 { margin: var(--spacing-1); }
+.m-2 { margin: var(--spacing-2); }
+.m-3 { margin: var(--spacing-3); }
+.m-4 { margin: var(--spacing-4); }
+.m-5 { margin: var(--spacing-5); }
+.m-6 { margin: var(--spacing-6); }
+.m-8 { margin: var(--spacing-8); }
+.m-10 { margin: var(--spacing-10); }
+.m-12 { margin: var(--spacing-12); }
+.m-16 { margin: var(--spacing-16); }
+.m-20 { margin: var(--spacing-20); }
+.m-24 { margin: var(--spacing-24); }
+.m-32 { margin: var(--spacing-32); }
+.m-auto { margin: auto; }
+
+.p-0 { padding: var(--spacing-0); }
+.p-1 { padding: var(--spacing-1); }
+.p-2 { padding: var(--spacing-2); }
+.p-3 { padding: var(--spacing-3); }
+.p-4 { padding: var(--spacing-4); }
+.p-5 { padding: var(--spacing-5); }
+.p-6 { padding: var(--spacing-6); }
+.p-8 { padding: var(--spacing-8); }
+.p-10 { padding: var(--spacing-10); }
+.p-12 { padding: var(--spacing-12); }
+.p-16 { padding: var(--spacing-16); }
+.p-20 { padding: var(--spacing-20); }
+.p-24 { padding: var(--spacing-24); }
+.p-32 { padding: var(--spacing-32); }
+
+/* 语义化间距类 */
+.gap-xs { gap: var(--spacing-xs); }
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+.gap-lg { gap: var(--spacing-lg); }
+.gap-xl { gap: var(--spacing-xl); }
+.gap-2xl { gap: var(--spacing-2xl); }
+.gap-3xl { gap: var(--spacing-3xl); }
+
+.space-y-xs > * + * { margin-top: var(--spacing-xs); }
+.space-y-sm > * + * { margin-top: var(--spacing-sm); }
+.space-y-md > * + * { margin-top: var(--spacing-md); }
+.space-y-lg > * + * { margin-top: var(--spacing-lg); }
+.space-y-xl > * + * { margin-top: var(--spacing-xl); }
+.space-y-2xl > * + * { margin-top: var(--spacing-2xl); }
+.space-y-3xl > * + * { margin-top: var(--spacing-3xl); }
+
+/* 组件专用间距 */
+.component-gap { gap: var(--component-gap); }
+.section-gap { gap: var(--section-gap); }
+.page-gap { gap: var(--page-gap); }
+
+.content-padding { padding: var(--content-padding); }
+.container-padding { padding: var(--container-padding); }
+.card-padding { padding: var(--card-padding); }
+
+.section-padding { 
+  padding-top: var(--section-gap); 
+  padding-bottom: var(--section-gap); 
+}
+
+.page-padding { 
+  padding-top: var(--page-gap); 
+  padding-bottom: var(--page-gap); 
+}

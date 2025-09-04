@@ -1,363 +1,306 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import SearchBar from '@/components/square/SearchBar';
-import FilterBar from '@/components/square/FilterBar';
-import WorkGrid from '@/components/square/WorkGrid';
-import MobileFilterBar from '@/components/mobile/MobileFilterBar';
-import MobileWorkCard from '@/components/mobile/MobileWorkCard';
-import PullToRefresh from '@/components/mobile/PullToRefresh';
-import { WorkCardData, FilterOptions, SearchSuggestion } from '@/types/square';
-import { useDebounce } from '@/hooks/useDebounce';
-import { useIsMobile } from '@/hooks/useResponsive';
+import React, { useState, useEffect } from 'react';
+import { MobileLayout } from '@/components/mobile/MobileLayout';
+import { MobileCard } from '@/components/mobile/MobileCard';
+import { MobileButton } from '@/components/mobile/MobileButton';
+import { MobileInput } from '@/components/mobile/MobileInput';
+import { MobilePageHeader } from '@/components/mobile/MobilePageHeader';
 
-function SquarePageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const isMobile = useIsMobile();
-  
-  // 状态管理
-  const [works, setWorks] = useState<WorkCardData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  
-  // 筛选和搜索状态
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [selectedSubject, setSelectedSubject] = useState(searchParams.get('subject') || undefined);
-  const [selectedGradeLevel, setSelectedGradeLevel] = useState(searchParams.get('gradeLevel') || undefined);
-  const [selectedSort, setSelectedSort] = useState(searchParams.get('sortBy') || 'latest');
-  
-  // 防抖搜索
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
-  
-  // 筛选选项和搜索建议
-  const [filters, setFilters] = useState<FilterOptions>({
-    subjects: [],
-    gradeLevels: [],
-    sortOptions: []
-  });
-  const [searchSuggestions] = useState<SearchSuggestion[]>([]);
+/**
+ * 移动端智慧广场页面
+ * 专为移动设备优化的内容浏览界面
+ */
+export default function SquarePage() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState('all');
+  const [selectedGrade, setSelectedGrade] = useState('all');
+  const [works, setWorks] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // 获取作品数据
-  const fetchWorks = useCallback(async (page = 1, reset = false) => {
+  const subjects = [
+    { value: 'all', label: '全部学科' },
+    { value: 'math', label: '数学' },
+    { value: 'chinese', label: '语文' },
+    { value: 'english', label: '英语' },
+    { value: 'physics', label: '物理' },
+    { value: 'chemistry', label: '化学' },
+    { value: 'biology', label: '生物' }
+  ];
+
+  const grades = [
+    { value: 'all', label: '全部学段' },
+    { value: 'primary', label: '小学' },
+    { value: 'middle', label: '初中' },
+    { value: 'high', label: '高中' }
+  ];
+
+  // 模拟作品数据
+  const mockWorks = [
+    {
+      id: 1,
+      title: '二次函数的图像与性质',
+      author: '张老师',
+      subject: '数学',
+      grade: '初中',
+      description: '通过生动的图像演示，帮助学生理解二次函数的基本性质和变化规律。',
+      likes: 128,
+      reuses: 45,
+      createdAt: '2024-01-15',
+      tags: ['函数', '图像', '性质'],
+      thumbnail: '📊'
+    },
+    {
+      id: 2,
+      title: '古诗词意境赏析',
+      author: '李老师',
+      subject: '语文',
+      grade: '高中',
+      description: '深入解析古诗词的意境美，培养学生的文学鉴赏能力。',
+      likes: 95,
+      reuses: 32,
+      createdAt: '2024-01-14',
+      tags: ['古诗词', '意境', '赏析'],
+      thumbnail: '📜'
+    },
+    {
+      id: 3,
+      title: '英语时态综合练习',
+      author: '王老师',
+      subject: '英语',
+      grade: '初中',
+      description: '系统梳理英语各种时态的用法，配合丰富的练习题目。',
+      likes: 156,
+      reuses: 67,
+      createdAt: '2024-01-13',
+      tags: ['时态', '语法', '练习'],
+      thumbnail: '🔤'
+    },
+    {
+      id: 4,
+      title: '化学实验安全指南',
+      author: '陈老师',
+      subject: '化学',
+      grade: '高中',
+      description: '详细介绍化学实验中的安全注意事项和应急处理方法。',
+      likes: 89,
+      reuses: 28,
+      createdAt: '2024-01-12',
+      tags: ['实验', '安全', '化学'],
+      thumbnail: '🧪'
+    }
+  ];
+
+  useEffect(() => {
+    loadWorks();
+  }, [selectedSubject, selectedGrade, searchQuery]);
+
+  const loadWorks = async () => {
+    setLoading(true);
+    
     try {
-      setLoading(true);
+      // 模拟API调用
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      const params = new URLSearchParams();
-      params.set('page', page.toString());
-      params.set('limit', '12');
-      params.set('sortBy', selectedSort);
+      let filteredWorks = mockWorks;
       
-      if (debouncedSearchQuery) params.set('search', debouncedSearchQuery);
-      if (selectedSubject) params.set('subject', selectedSubject);
-      if (selectedGradeLevel) params.set('gradeLevel', selectedGradeLevel);
-
-      const response = await fetch(`/api/works?${params.toString()}`);
-      const result = await response.json();
-
-      if (result.success) {
-        const newWorks = result.data.works || [];
-        
-        if (reset || page === 1) {
-          setWorks(newWorks);
-        } else {
-          setWorks(prev => [...prev, ...newWorks]);
-        }
-        
-        setHasMore(result.data.pagination?.hasNext || false);
-        setCurrentPage(page);
-        
-        // 更新筛选选项
-        if (result.data.filters) {
-          setFilters({
-            subjects: result.data.filters.subjects || [],
-            gradeLevels: result.data.filters.gradeLevels || [],
-            sortOptions: [
-              { value: 'latest', label: '最新发布' },
-              { value: 'popular', label: '最受欢迎' },
-              { value: 'reuse_count', label: '复用最多' }
-            ]
-          });
-        }
+      // 按学科筛选
+      if (selectedSubject !== 'all') {
+        filteredWorks = filteredWorks.filter(work => 
+          work.subject === subjects.find(s => s.value === selectedSubject)?.label
+        );
       }
+      
+      // 按学段筛选
+      if (selectedGrade !== 'all') {
+        filteredWorks = filteredWorks.filter(work => 
+          work.grade === grades.find(g => g.value === selectedGrade)?.label
+        );
+      }
+      
+      // 按搜索关键词筛选
+      if (searchQuery.trim()) {
+        filteredWorks = filteredWorks.filter(work =>
+          work.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          work.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          work.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
+      }
+      
+      setWorks(filteredWorks);
     } catch (error) {
-      console.error('获取作品失败:', error);
+      console.error('Failed to load works:', error);
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearchQuery, selectedSubject, selectedGradeLevel, selectedSort]);
-
-  // 初始加载
-  useEffect(() => {
-    fetchWorks(1, true);
-  }, [fetchWorks]);
-
-  // 更新URL参数
-  const updateURL = useCallback(() => {
-    const params = new URLSearchParams();
-    if (debouncedSearchQuery) params.set('search', debouncedSearchQuery);
-    if (selectedSubject) params.set('subject', selectedSubject);
-    if (selectedGradeLevel) params.set('gradeLevel', selectedGradeLevel);
-    if (selectedSort !== 'latest') params.set('sortBy', selectedSort);
-    
-    const newURL = params.toString() ? `/square?${params.toString()}` : '/square';
-    router.replace(newURL, { scroll: false });
-  }, [debouncedSearchQuery, selectedSubject, selectedGradeLevel, selectedSort, router]);
-
-  // 搜索处理
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setCurrentPage(1);
   };
 
-  // 筛选处理
-  const handleSubjectChange = (subject: string | undefined) => {
-    setSelectedSubject(subject);
-    setCurrentPage(1);
+  const handleLike = (workId) => {
+    setWorks(prevWorks =>
+      prevWorks.map(work =>
+        work.id === workId
+          ? { ...work, likes: work.likes + 1 }
+          : work
+      )
+    );
   };
 
-  const handleGradeLevelChange = (gradeLevel: string | undefined) => {
-    setSelectedGradeLevel(gradeLevel);
-    setCurrentPage(1);
-  };
-
-  const handleSortChange = (sort: string) => {
-    setSelectedSort(sort);
-    setCurrentPage(1);
-  };
-
-  const handleReset = () => {
-    setSearchQuery('');
-    setSelectedSubject(undefined);
-    setSelectedGradeLevel(undefined);
-    setSelectedSort('latest');
-    setCurrentPage(1);
-  };
-
-  // 加载更多
-  const handleLoadMore = () => {
-    if (!loading && hasMore) {
-      fetchWorks(currentPage + 1, false);
+  const handleReuse = (workId) => {
+    const work = works.find(w => w.id === workId);
+    if (work) {
+      alert(`即将复用作品：${work.title}`);
+      setWorks(prevWorks =>
+        prevWorks.map(w =>
+          w.id === workId
+            ? { ...w, reuses: w.reuses + 1 }
+            : w
+        )
+      );
     }
   };
 
-  // 作品操作
-  const handleWorkView = (workId: string) => {
-    router.push(`/works/${workId}`);
-  };
-
-  const handleWorkReuse = (workId: string) => {
-    // TODO: 实现复用逻辑
-    console.log('复用作品:', workId);
-  };
-
-  // 搜索建议点击
-  const handleSuggestionClick = (suggestion: SearchSuggestion) => {
-    setSearchQuery(suggestion.value);
-    setCurrentPage(1);
-  };
-
-  // 下拉刷新处理
-  const handleRefresh = async () => {
-    setCurrentPage(1);
-    await fetchWorks(1, true);
-  };
-
-  // 更新URL（延迟执行以避免频繁更新）
-  useEffect(() => {
-    const timer = setTimeout(updateURL, 300);
-    return () => clearTimeout(timer);
-  }, [updateURL]);
-
-  // 移动端作品网格组件
-  const MobileWorkGrid = () => (
-    <div className="space-y-3">
-      {works.map((work) => (
-        <MobileWorkCard
-          key={work.id}
-          work={work}
-          onReuse={handleWorkReuse}
-          onView={handleWorkView}
-        />
-      ))}
+  return (
+    <MobileLayout>
+      <MobilePageHeader 
+        title="智慧广场" 
+        subtitle="发现和分享优质教学内容"
+      />
       
-      {/* 移动端加载更多 */}
-      {!loading && works.length > 0 && hasMore && (
-        <div className="flex justify-center pt-4">
-          <button
-            onClick={handleLoadMore}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors duration-200"
-            style={{ 
-              minHeight: '44px',
-              touchAction: 'manipulation'
-            }}
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            加载更多
-          </button>
-        </div>
-      )}
-
-      {/* 移动端空状态 */}
-      {!loading && works.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">暂无作品</h3>
-          <p className="text-gray-500 text-center text-sm">
-            还没有找到符合条件的作品<br />试试调整筛选条件或搜索关键词
-          </p>
-        </div>
-      )}
-    </div>
-  );
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {isMobile ? (
-        // 移动端布局
-        <PullToRefresh onRefresh={handleRefresh}>
-          {/* 移动端页面头部 */}
-          <div className="bg-white border-b border-gray-200">
-            <div className="px-4 py-6">
-              <div className="text-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                  智慧广场
-                </h1>
-                <p className="text-sm text-gray-600">
-                  探索教学智慧，发现创意方法
-                </p>
-              </div>
-
-              {/* 移动端搜索栏 */}
-              <SearchBar
-                value={searchQuery}
-                onSearch={handleSearch}
-                suggestions={searchSuggestions}
-                onSuggestionClick={handleSuggestionClick}
-                loading={loading && currentPage === 1}
-              />
-            </div>
-          </div>
-
-          {/* 移动端筛选栏 */}
-          <MobileFilterBar
-            filters={filters}
-            selectedSubject={selectedSubject}
-            selectedGradeLevel={selectedGradeLevel}
-            selectedSort={selectedSort}
-            onSubjectChange={handleSubjectChange}
-            onGradeLevelChange={handleGradeLevelChange}
-            onSortChange={handleSortChange}
-            onReset={handleReset}
+      {/* 搜索和筛选区域 */}
+      <div className="px-4 py-4 bg-white border-b border-gray-200">
+        <div className="space-y-3">
+          {/* 搜索框 */}
+          <MobileInput
+            type="search"
+            placeholder="搜索作品、知识点..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full"
           />
-
-          {/* 移动端主要内容区域 */}
-          <div className="px-4 py-4">
-            {/* 移动端结果统计 */}
-            {!loading && works.length > 0 && (
-              <div className="mb-4">
-                <p className="text-xs text-gray-600">
-                  {debouncedSearchQuery && `搜索 "${debouncedSearchQuery}" `}
-                  {selectedSubject && `在 ${selectedSubject} `}
-                  {selectedGradeLevel && `${selectedGradeLevel} `}
-                  找到 {works.length} 个作品
-                </p>
-              </div>
-            )}
-
-            {/* 移动端作品网格 */}
-            <MobileWorkGrid />
+          
+          {/* 筛选器 */}
+          <div className="flex space-x-2 overflow-x-auto pb-2">
+            <select
+              value={selectedSubject}
+              onChange={(e) => setSelectedSubject(e.target.value)}
+              className="flex-shrink-0 px-3 py-1.5 text-sm border border-gray-300 rounded-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            >
+              {subjects.map((subject) => (
+                <option key={subject.value} value={subject.value}>
+                  {subject.label}
+                </option>
+              ))}
+            </select>
+            
+            <select
+              value={selectedGrade}
+              onChange={(e) => setSelectedGrade(e.target.value)}
+              className="flex-shrink-0 px-3 py-1.5 text-sm border border-gray-300 rounded-full focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            >
+              {grades.map((grade) => (
+                <option key={grade.value} value={grade.value}>
+                  {grade.label}
+                </option>
+              ))}
+            </select>
           </div>
-        </PullToRefresh>
-      ) : (
-        // 桌面端布局（保持原有逻辑）
-        <>
-          {/* 页面头部 */}
-          <div className="bg-white border-b border-gray-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  智慧广场
-                </h1>
-                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                  探索全球教师的教学智慧，发现创意教学方法，让每一份灵感都能被传承和发扬
-                </p>
-              </div>
-
-              {/* 搜索栏 */}
-              <div className="max-w-2xl mx-auto">
-                <SearchBar
-                  value={searchQuery}
-                  onSearch={handleSearch}
-                  suggestions={searchSuggestions}
-                  onSuggestionClick={handleSuggestionClick}
-                  loading={loading && currentPage === 1}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* 筛选栏 */}
-          <FilterBar
-            filters={filters}
-            selectedSubject={selectedSubject}
-            selectedGradeLevel={selectedGradeLevel}
-            selectedSort={selectedSort}
-            onSubjectChange={handleSubjectChange}
-            onGradeLevelChange={handleGradeLevelChange}
-            onSortChange={handleSortChange}
-            onReset={handleReset}
-          />
-
-          {/* 主要内容区域 */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {/* 结果统计 */}
-            {!loading && works.length > 0 && (
-              <div className="mb-6">
-                <p className="text-sm text-gray-600">
-                  {debouncedSearchQuery && `搜索 "${debouncedSearchQuery}" `}
-                  {selectedSubject && `在 ${selectedSubject} `}
-                  {selectedGradeLevel && `${selectedGradeLevel} `}
-                  找到 {works.length} 个作品
-                </p>
-              </div>
-            )}
-
-            {/* 作品网格 */}
-            <WorkGrid
-              works={works}
-              loading={loading && currentPage === 1}
-              onReuse={handleWorkReuse}
-              onView={handleWorkView}
-              onLoadMore={handleLoadMore}
-              hasMore={hasMore}
-            />
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-export default function SquarePage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">加载中...</p>
         </div>
       </div>
-    }>
-      <SquarePageContent />
-    </Suspense>
+
+      {/* 作品列表 */}
+      <div className="px-4 py-4 space-y-4">
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+            <p className="text-gray-500 text-sm">加载中...</p>
+          </div>
+        ) : works.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500 text-sm">暂无相关作品</p>
+          </div>
+        ) : (
+          works.map((work) => (
+            <MobileCard key={work.id} className="p-4">
+              <div className="flex items-start space-x-3">
+                <div className="text-2xl">{work.thumbnail}</div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">
+                    {work.title}
+                  </h3>
+                  <p className="text-gray-600 text-xs mb-2 line-clamp-2">
+                    {work.description}
+                  </p>
+                  
+                  {/* 标签 */}
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {work.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  
+                  {/* 作者和学科信息 */}
+                  <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                    <span>{work.author} • {work.subject} • {work.grade}</span>
+                    <span>{work.createdAt}</span>
+                  </div>
+                  
+                  {/* 操作按钮 */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4 text-xs text-gray-500">
+                      <span className="flex items-center space-x-1">
+                        <span>👍</span>
+                        <span>{work.likes}</span>
+                      </span>
+                      <span className="flex items-center space-x-1">
+                        <span>🔄</span>
+                        <span>{work.reuses}</span>
+                      </span>
+                    </div>
+                    
+                    <div className="flex space-x-2">
+                      <MobileButton
+                        variant="outline"
+                        size="xs"
+                        onClick={() => handleLike(work.id)}
+                      >
+                        点赞
+                      </MobileButton>
+                      <MobileButton
+                        variant="primary"
+                        size="xs"
+                        onClick={() => handleReuse(work.id)}
+                      >
+                        复用
+                      </MobileButton>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </MobileCard>
+          ))
+        )}
+      </div>
+
+      {/* 加载更多 */}
+      {works.length > 0 && (
+        <div className="px-4 pb-6">
+          <MobileButton
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              // 这里可以实现加载更多逻辑
+              console.log('Load more works');
+            }}
+          >
+            加载更多
+          </MobileButton>
+        </div>
+      )}
+    </MobileLayout>
   );
 }

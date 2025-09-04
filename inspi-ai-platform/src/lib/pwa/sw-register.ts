@@ -131,8 +131,8 @@ export const showNotification = (title: string, options?: NotificationOptions) =
   }
 
   return new Notification(title, {
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icons/icon-192x192.svg',
+    badge: '/icons/icon.svg',
     ...options
   });
 };

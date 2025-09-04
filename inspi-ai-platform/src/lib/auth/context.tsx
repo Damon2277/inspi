@@ -173,8 +173,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         return { success: true };
       } else {
-        dispatch({ type: 'SET_LOADING', payload: false });
-        return { success: false, error: data.error };
+        // 如果登录失败，可能是用户不存在，尝试自动注册
+        // 注意：后端已经实现了自动注册，这里是为了兼容可能的旧版API
+        const name = email.split('@')[0]; // 使用邮箱前缀作为默认名称
+        const registerResult = await register(email, password, name);
+        
+        if (registerResult.success) {
+          return { success: true };
+        } else {
+          dispatch({ type: 'SET_LOADING', payload: false });
+          return { success: false, error: data.error || registerResult.error };
+        }
       }
     } catch (error) {
       dispatch({ type: 'SET_LOADING', payload: false });

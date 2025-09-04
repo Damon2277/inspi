@@ -1,338 +1,373 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/auth/MockAuthProvider';
-import { GlassCard, Button } from '@/components/ui';
-import Link from 'next/link';
+import { MobileLayout } from '@/components/mobile/MobileLayout';
+import { MobileCard } from '@/components/mobile/MobileCard';
+import { MobileButton } from '@/components/mobile/MobileButton';
+import { MobilePageHeader } from '@/components/mobile/MobilePageHeader';
 
-interface Work {
-  id: string;
-  title: string;
-  knowledgePoint: string;
-  subject: string;
-  gradeLevel: string;
-  status: 'draft' | 'published';
-  createdAt: string;
-  updatedAt: string;
-}
-
-type TabType = 'published' | 'drafts' | 'all';
-
-const SUBJECTS = [
-  '数学', '语文', '英语', '物理', '化学', '生物', 
-  '历史', '地理', '政治', '音乐', '美术', '体育'
-];
-
-const GRADE_LEVELS = [
-  '小学一年级', '小学二年级', '小学三年级', '小学四年级', '小学五年级', '小学六年级',
-  '初中一年级', '初中二年级', '初中三年级',
-  '高中一年级', '高中二年级', '高中三年级'
-];
-
+/**
+ * 移动端我的作品页面
+ * 专为移动设备优化的作品管理界面
+ */
 export default function WorksPage() {
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>('published');
-  const [works, setWorks] = useState<Work[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState({
-    subject: '',
-    gradeLevel: '',
-    search: ''
-  });
+  const [activeTab, setActiveTab] = useState('published');
+  const [works, setWorks] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const tabs = [
+    { id: 'published', label: '已发布', count: 12 },
+    { id: 'draft', label: '草稿', count: 3 },
+    { id: 'liked', label: '收藏', count: 8 }
+  ];
+
+  // 模拟作品数据
+  const mockWorks = {
+    published: [
+      {
+        id: 1,
+        title: '分数的基本概念与运算',
+        subject: '数学',
+        grade: '小学',
+        status: 'published',
+        views: 245,
+        likes: 32,
+        reuses: 18,
+        createdAt: '2024-01-15',
+        updatedAt: '2024-01-16',
+        thumbnail: '🔢'
+      },
+      {
+        id: 2,
+        title: '唐诗宋词鉴赏方法',
+        subject: '语文',
+        grade: '初中',
+        status: 'published',
+        views: 189,
+        likes: 28,
+        reuses: 12,
+        createdAt: '2024-01-14',
+        updatedAt: '2024-01-14',
+        thumbnail: '📖'
+      },
+      {
+        id: 3,
+        title: '物理实验：光的折射',
+        subject: '物理',
+        grade: '高中',
+        status: 'published',
+        views: 156,
+        likes: 24,
+        reuses: 9,
+        createdAt: '2024-01-13',
+        updatedAt: '2024-01-13',
+        thumbnail: '🔬'
+      }
+    ],
+    draft: [
+      {
+        id: 4,
+        title: '化学元素周期表记忆法',
+        subject: '化学',
+        grade: '高中',
+        status: 'draft',
+        views: 0,
+        likes: 0,
+        reuses: 0,
+        createdAt: '2024-01-16',
+        updatedAt: '2024-01-16',
+        thumbnail: '⚗️'
+      },
+      {
+        id: 5,
+        title: '英语语法：现在完成时',
+        subject: '英语',
+        grade: '初中',
+        status: 'draft',
+        views: 0,
+        likes: 0,
+        reuses: 0,
+        createdAt: '2024-01-15',
+        updatedAt: '2024-01-16',
+        thumbnail: '🔤'
+      }
+    ],
+    liked: [
+      {
+        id: 6,
+        title: '生物细胞结构详解',
+        subject: '生物',
+        grade: '高中',
+        status: 'liked',
+        author: '王老师',
+        views: 312,
+        likes: 45,
+        reuses: 23,
+        createdAt: '2024-01-12',
+        thumbnail: '🧬'
+      },
+      {
+        id: 7,
+        title: '历史时间轴记忆技巧',
+        subject: '历史',
+        grade: '初中',
+        status: 'liked',
+        author: '李老师',
+        views: 278,
+        likes: 38,
+        reuses: 19,
+        createdAt: '2024-01-11',
+        thumbnail: '📜'
+      }
+    ]
+  };
 
   useEffect(() => {
-    if (!authLoading) {
-      fetchWorks();
-    }
-  }, [authLoading, activeTab, filters]);
+    loadWorks();
+  }, [activeTab]);
 
-  const fetchWorks = async () => {
+  const loadWorks = async () => {
+    setLoading(true);
+    
     try {
-      setLoading(true);
-      setError(null);
-
-      // 模拟API调用延迟
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // 模拟作品数据
-      const mockWorks: Work[] = [
-        {
-          id: '1',
-          title: '数学 - 两位数加法',
-          knowledgePoint: '两位数加法',
-          subject: '数学',
-          gradeLevel: '小学二年级',
-          status: 'published',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          title: '语文 - 古诗词鉴赏',
-          knowledgePoint: '古诗词鉴赏',
-          subject: '语文',
-          gradeLevel: '小学三年级',
-          status: 'draft',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: '3',
-          title: '英语 - 基础对话',
-          knowledgePoint: '日常对话',
-          subject: '英语',
-          gradeLevel: '小学四年级',
-          status: 'published',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-      ];
-
-      // 根据activeTab筛选
-      let filteredWorks = mockWorks;
-      if (activeTab === 'published') {
-        filteredWorks = mockWorks.filter(w => w.status === 'published');
-      } else if (activeTab === 'drafts') {
-        filteredWorks = mockWorks.filter(w => w.status === 'draft');
-      }
-
-      // 根据筛选条件进一步筛选
-      if (filters.subject) {
-        filteredWorks = filteredWorks.filter(w => w.subject === filters.subject);
-      }
-      if (filters.gradeLevel) {
-        filteredWorks = filteredWorks.filter(w => w.gradeLevel === filters.gradeLevel);
-      }
-      if (filters.search) {
-        filteredWorks = filteredWorks.filter(w => 
-          w.title.includes(filters.search) || 
-          w.knowledgePoint.includes(filters.search)
-        );
-      }
-
-      setWorks(filteredWorks);
-    } catch (err) {
-      setError('获取作品失败，请稍后重试');
+      // 模拟API调用
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setWorks(mockWorks[activeTab] || []);
+    } catch (error) {
+      console.error('Failed to load works:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (workId: string) => {
-    if (!confirm('确定要删除这个作品吗？此操作不可恢复。')) {
-      return;
-    }
+  const handleEdit = (workId) => {
+    console.log('Edit work:', workId);
+    // 这里可以导航到编辑页面
+  };
 
-    try {
-      setWorks(prev => prev.filter(work => work.id !== workId));
-    } catch (err) {
-      alert('删除失败，请稍后重试');
+  const handleDelete = (workId) => {
+    if (confirm('确定要删除这个作品吗？')) {
+      setWorks(prevWorks => prevWorks.filter(work => work.id !== workId));
     }
   };
 
-  const handleStatusChange = (workId: string, newStatus: 'draft' | 'published') => {
-    setWorks(prev => prev.map(work => 
-      work.id === workId ? { ...work, status: newStatus } : work
-    ));
+  const handlePublish = (workId) => {
+    console.log('Publish work:', workId);
+    // 这里可以实现发布逻辑
   };
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <GlassCard className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h2 className="heading-2 mb-2">加载中...</h2>
-          <p className="body-text">正在初始化系统</p>
-        </GlassCard>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <GlassCard className="text-center py-12 max-w-md mx-auto">
-          <h2 className="heading-2 mb-4">需要登录</h2>
-          <p className="body-text mb-6">请登录后访问此页面</p>
-          <Link href="/">
-            <Button variant="primary">返回首页</Button>
-          </Link>
-        </GlassCard>
-      </div>
-    );
-  }
+  const handleShare = (workId) => {
+    const work = works.find(w => w.id === workId);
+    if (work) {
+      // 模拟分享功能
+      if (navigator.share) {
+        navigator.share({
+          title: work.title,
+          text: `查看这个精彩的教学作品：${work.title}`,
+          url: window.location.href
+        });
+      } else {
+        // 降级到复制链接
+        navigator.clipboard.writeText(window.location.href);
+        alert('链接已复制到剪贴板');
+      }
+    }
+  };
 
   return (
-    <div className="min-h-screen">
-      <section className="container section-padding">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8 fade-in-up">
+    <MobileLayout title="我的作品">
+      {/* 标签页导航 */}
+      <div className="px-4 py-3 bg-white border-b border-gray-200">
+        <div className="flex space-x-1">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-indigo-100 text-indigo-700'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {tab.label}
+              {tab.count > 0 && (
+                <span className={`ml-1 px-1.5 py-0.5 text-xs rounded-full ${
+                  activeTab === tab.id
+                    ? 'bg-indigo-200 text-indigo-800'
+                    : 'bg-gray-200 text-gray-600'
+                }`}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 统计信息 */}
+      {activeTab === 'published' && (
+        <div className="px-4 py-4 bg-gradient-to-r from-indigo-50 to-purple-50">
+          <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <h1 className="heading-1 gradient-text mb-2">我的作品</h1>
-              <p className="body-text">管理您创建的教学作品</p>
+              <div className="text-lg font-bold text-indigo-600">590</div>
+              <div className="text-xs text-gray-600">总浏览量</div>
             </div>
-            <Link href="/create">
-              <Button variant="primary">✨ 创建新作品</Button>
-            </Link>
+            <div>
+              <div className="text-lg font-bold text-green-600">84</div>
+              <div className="text-xs text-gray-600">总点赞数</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold text-purple-600">39</div>
+              <div className="text-xs text-gray-600">总复用数</div>
+            </div>
           </div>
+        </div>
+      )}
 
-          {/* Filters */}
-          <GlassCard className="mb-8 fade-in-up stagger-1">
-            {/* 标签页 */}
-            <div className="flex space-x-1 mb-6">
-              {[
-                { key: 'published', label: '已发布' },
-                { key: 'drafts', label: '草稿' },
-                { key: 'all', label: '全部' }
-              ].map(tab => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key as TabType)}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === tab.key
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* 搜索和筛选 */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="md:col-span-2">
-                <div className="flex">
-                  <input
-                    type="text"
-                    placeholder="搜索作品标题、知识点..."
-                    value={filters.search}
-                    onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    onClick={fetchWorks}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700"
-                  >
-                    搜索
-                  </button>
-                </div>
-              </div>
-              
-              <select
-                value={filters.subject}
-                onChange={(e) => setFilters(prev => ({ ...prev, subject: e.target.value }))}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      {/* 作品列表 */}
+      <div className="px-4 py-4 space-y-3">
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+            <p className="text-gray-500 text-sm">加载中...</p>
+          </div>
+        ) : works.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-4xl mb-4">📝</div>
+            <p className="text-gray-500 text-sm mb-4">
+              {activeTab === 'published' && '还没有发布的作品'}
+              {activeTab === 'draft' && '还没有草稿'}
+              {activeTab === 'liked' && '还没有收藏的作品'}
+            </p>
+            {activeTab !== 'liked' && (
+              <MobileButton
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  // 导航到创作页面
+                  console.log('Navigate to create page');
+                }}
               >
-                <option value="">全部学科</option>
-                {SUBJECTS.map(subject => (
-                  <option key={subject} value={subject}>{subject}</option>
-                ))}
-              </select>
-              
-              <select
-                value={filters.gradeLevel}
-                onChange={(e) => setFilters(prev => ({ ...prev, gradeLevel: e.target.value }))}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">全部学段</option>
-                {GRADE_LEVELS.map(grade => (
-                  <option key={grade} value={grade}>{grade}</option>
-                ))}
-              </select>
-            </div>
-          </GlassCard>
-
-          {/* Loading State */}
-          {loading && (
-            <GlassCard className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="body-text">加载作品中...</p>
-            </GlassCard>
-          )}
-
-          {/* Error State */}
-          {error && (
-            <GlassCard className="text-center py-12">
-              <div className="text-red-600 mb-4">{error}</div>
-              <Button onClick={fetchWorks} variant="primary">重新加载</Button>
-            </GlassCard>
-          )}
-
-          {/* Works Grid */}
-          {!loading && !error && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {works.length === 0 ? (
-                <div className="col-span-full">
-                  <GlassCard className="text-center py-12">
-                    <h3 className="heading-3 mb-4">
-                      {activeTab === 'drafts' ? '还没有草稿' : '暂无作品'}
-                    </h3>
-                    <p className="body-text mb-6">开始创建您的第一个教学作品吧！</p>
-                    <Link href="/create">
-                      <Button variant="primary">创建作品</Button>
-                    </Link>
-                  </GlassCard>
-                </div>
-              ) : (
-                works.map((work, index) => (
-                  <GlassCard key={work.id} className={`fade-in-up stagger-${index + 1}`}>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-start">
-                        <h3 className="heading-3">{work.title}</h3>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          work.status === 'published' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {work.status === 'published' ? '已发布' : '草稿'}
-                        </span>
-                      </div>
-                      
-                      <div className="text-sm text-gray-600 space-y-1">
-                        <p><strong>知识点:</strong> {work.knowledgePoint}</p>
-                        <p><strong>学科:</strong> {work.subject}</p>
-                        <p><strong>年级:</strong> {work.gradeLevel}</p>
-                        <p><strong>创建时间:</strong> {new Date(work.createdAt).toLocaleDateString()}</p>
-                      </div>
-                      
-                      <div className="flex space-x-2 pt-4 border-t border-gray-200">
-                        <Button 
-                          variant="secondary" 
-                          size="small"
-                          onClick={() => window.location.href = `/works/${work.id}`}
+                开始创作
+              </MobileButton>
+            )}
+          </div>
+        ) : (
+          works.map((work) => (
+            <MobileCard key={work.id} className="p-4">
+              <div className="flex items-start space-x-3">
+                <div className="text-2xl">{work.thumbnail}</div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">
+                    {work.title}
+                  </h3>
+                  
+                  <div className="flex items-center text-xs text-gray-500 mb-2">
+                    <span>{work.subject} • {work.grade}</span>
+                    {work.author && (
+                      <span className="ml-2">• {work.author}</span>
+                    )}
+                  </div>
+                  
+                  {/* 统计数据 */}
+                  <div className="flex items-center space-x-4 text-xs text-gray-500 mb-3">
+                    <span className="flex items-center space-x-1">
+                      <span>👁️</span>
+                      <span>{work.views}</span>
+                    </span>
+                    <span className="flex items-center space-x-1">
+                      <span>👍</span>
+                      <span>{work.likes}</span>
+                    </span>
+                    <span className="flex items-center space-x-1">
+                      <span>🔄</span>
+                      <span>{work.reuses}</span>
+                    </span>
+                  </div>
+                  
+                  <div className="text-xs text-gray-400 mb-3">
+                    创建于 {work.createdAt}
+                    {work.updatedAt !== work.createdAt && (
+                      <span> • 更新于 {work.updatedAt}</span>
+                    )}
+                  </div>
+                  
+                  {/* 操作按钮 */}
+                  <div className="flex space-x-2">
+                    {activeTab === 'draft' ? (
+                      <>
+                        <MobileButton
+                          variant="primary"
+                          size="xs"
+                          onClick={() => handleEdit(work.id)}
                         >
-                          查看
-                        </Button>
-                        <Button 
-                          variant="secondary" 
-                          size="small"
-                          onClick={() => handleStatusChange(
-                            work.id, 
-                            work.status === 'published' ? 'draft' : 'published'
-                          )}
+                          编辑
+                        </MobileButton>
+                        <MobileButton
+                          variant="outline"
+                          size="xs"
+                          onClick={() => handlePublish(work.id)}
                         >
-                          {work.status === 'published' ? '取消发布' : '发布'}
-                        </Button>
-                        <Button 
-                          variant="secondary" 
-                          size="small"
+                          发布
+                        </MobileButton>
+                        <MobileButton
+                          variant="ghost"
+                          size="xs"
                           onClick={() => handleDelete(work.id)}
                           className="text-red-600 hover:text-red-700"
                         >
                           删除
-                        </Button>
-                      </div>
-                    </div>
-                  </GlassCard>
-                ))
-              )}
-            </div>
-          )}
+                        </MobileButton>
+                      </>
+                    ) : activeTab === 'published' ? (
+                      <>
+                        <MobileButton
+                          variant="outline"
+                          size="xs"
+                          onClick={() => handleEdit(work.id)}
+                        >
+                          编辑
+                        </MobileButton>
+                        <MobileButton
+                          variant="outline"
+                          size="xs"
+                          onClick={() => handleShare(work.id)}
+                        >
+                          分享
+                        </MobileButton>
+                      </>
+                    ) : (
+                      <MobileButton
+                        variant="primary"
+                        size="xs"
+                        onClick={() => {
+                          console.log('View work:', work.id);
+                        }}
+                      >
+                        查看
+                      </MobileButton>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </MobileCard>
+          ))
+        )}
+      </div>
+
+      {/* 浮动创作按钮 */}
+      {activeTab !== 'liked' && (
+        <div className="fixed bottom-20 right-4 z-10">
+          <button
+            onClick={() => {
+              console.log('Navigate to create page');
+            }}
+            className="w-14 h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
+          >
+            <span className="text-xl">✨</span>
+          </button>
         </div>
-      </section>
-    </div>
+      )}
+    </MobileLayout>
   );
 }

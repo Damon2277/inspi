@@ -1,300 +1,191 @@
-/**
- * 响应式样式系统
- * 移动优先的CSS架构
- */
+/* 响应式设计基础架构 - CSS变量系统 */
 
-/* 基础重置和移动优先样式 */
-* {
-  box-sizing: border-box;
+:root {
+  /* 断点定义 */
+  --breakpoint-mobile: 768px;
+  --breakpoint-tablet: 1024px;
+  --breakpoint-desktop: 1440px;
+  
+  /* 移动端基础值 */
+  --nav-height: 64px;
+  --content-padding: 1rem;
+  --card-gap: 1rem;
+  --font-scale: 1;
+  --grid-cols: 1;
+  --sidebar-width: 0px;
+  --max-content-width: 100%;
+  
+  /* 间距系统 */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  
+  /* 字体大小 */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  
+  /* 阴影系统 */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  
+  /* 过渡动画 */
+  --transition-fast: 0.15s ease-out;
+  --transition-normal: 0.3s ease-out;
+  --transition-slow: 0.5s ease-out;
 }
 
-html {
-  /* 移动端基础字体大小 */
-  font-size: 14px;
-  line-height: 1.5;
-  -webkit-text-size-adjust: 100%;
-  -webkit-tap-highlight-color: transparent;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #ffffff;
-  color: #1f2937;
-}
-
-/* 响应式字体系统 */
-.text-xs { font-size: 0.75rem; line-height: 1rem; }
-.text-sm { font-size: 0.875rem; line-height: 1.25rem; }
-.text-base { font-size: 1rem; line-height: 1.5rem; }
-.text-lg { font-size: 1.125rem; line-height: 1.75rem; }
-.text-xl { font-size: 1.25rem; line-height: 1.75rem; }
-.text-2xl { font-size: 1.5rem; line-height: 2rem; }
-.text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
-.text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
-
-/* 移动端间距系统 */
-.space-1 { margin: 0.25rem; }
-.space-2 { margin: 0.5rem; }
-.space-3 { margin: 0.75rem; }
-.space-4 { margin: 1rem; }
-.space-5 { margin: 1.25rem; }
-.space-6 { margin: 1.5rem; }
-.space-8 { margin: 2rem; }
-.space-10 { margin: 2.5rem; }
-.space-12 { margin: 3rem; }
-
-.p-1 { padding: 0.25rem; }
-.p-2 { padding: 0.5rem; }
-.p-3 { padding: 0.75rem; }
-.p-4 { padding: 1rem; }
-.p-5 { padding: 1.25rem; }
-.p-6 { padding: 1.5rem; }
-.p-8 { padding: 2rem; }
-
-/* 移动端触摸优化 */
-.touch-target {
-  min-height: 44px;
-  min-width: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.touch-button {
-  @extend .touch-target;
-  border: none;
-  border-radius: 8px;
-  background-color: #3b82f6;
-  color: white;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.touch-button:hover {
-  background-color: #2563eb;
-  transform: translateY(-1px);
-}
-
-.touch-button:active {
-  transform: translateY(0);
-  background-color: #1d4ed8;
-}
-
-/* 移动端输入框优化 */
-.mobile-input {
-  width: 100%;
-  padding: 12px 16px;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 16px; /* 防止iOS缩放 */
-  line-height: 1.5;
-  background-color: #ffffff;
-  transition: border-color 0.2s ease;
-}
-
-.mobile-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* 移动端卡片样式 */
-.mobile-card {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f3f4f6;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.mobile-card:active {
-  transform: scale(0.98);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* 平板端样式调整 */
+/* 平板端优化 (768px - 1023px) */
 @media (min-width: 768px) {
-  html {
-    font-size: 15px;
-  }
-  
-  .text-2xl { font-size: 1.75rem; line-height: 2.25rem; }
-  .text-3xl { font-size: 2.25rem; line-height: 2.5rem; }
-  .text-4xl { font-size: 2.75rem; line-height: 3rem; }
-  
-  .mobile-card {
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-  
-  .touch-button {
-    min-height: 40px;
-    padding: 0 20px;
+  :root {
+    --nav-height: 68px;
+    --content-padding: 1.5rem;
+    --card-gap: 1.25rem;
+    --font-scale: 1.05;
+    --grid-cols: 2;
+    --max-content-width: 90%;
+    
+    /* 字体增强 */
+    --text-base: 1.05rem;
+    --text-lg: 1.2rem;
+    --text-xl: 1.35rem;
+    --text-2xl: 1.6rem;
+    --text-3xl: 2rem;
+    --text-4xl: 2.4rem;
   }
 }
 
-/* 桌面端样式调整 */
+/* PC端增强 (1024px - 1439px) */
 @media (min-width: 1024px) {
-  html {
-    font-size: 16px;
-  }
-  
-  .text-3xl { font-size: 2.5rem; line-height: 2.75rem; }
-  .text-4xl { font-size: 3rem; line-height: 3.25rem; }
-  
-  .mobile-card {
-    padding: 24px;
-    margin-bottom: 24px;
-  }
-  
-  .touch-button {
-    min-height: 36px;
-    padding: 0 24px;
-  }
-  
-  .touch-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  :root {
+    --nav-height: 72px;
+    --content-padding: 2rem;
+    --card-gap: 1.5rem;
+    --font-scale: 1.125;
+    --grid-cols: 3;
+    --sidebar-width: 280px;
+    --max-content-width: 1200px;
+    
+    /* 间距增强 */
+    --spacing-md: 1.25rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 2.5rem;
+    --spacing-2xl: 4rem;
+    
+    /* 字体增强 */
+    --text-base: 1.125rem;
+    --text-lg: 1.25rem;
+    --text-xl: 1.5rem;
+    --text-2xl: 1.875rem;
+    --text-3xl: 2.25rem;
+    --text-4xl: 2.75rem;
   }
 }
 
-/* 宽屏样式调整 */
+/* 超宽屏优化 (≥1440px) */
 @media (min-width: 1440px) {
-  .text-4xl { font-size: 3.5rem; line-height: 3.75rem; }
-  
-  .mobile-card {
-    padding: 32px;
-    margin-bottom: 32px;
+  :root {
+    --nav-height: 80px;
+    --content-padding: 3rem;
+    --card-gap: 2rem;
+    --font-scale: 1.25;
+    --grid-cols: 4;
+    --sidebar-width: 320px;
+    --max-content-width: 1400px;
+    
+    /* 间距最大化 */
+    --spacing-lg: 2.5rem;
+    --spacing-xl: 3rem;
+    --spacing-2xl: 5rem;
+    
+    /* 字体最大化 */
+    --text-base: 1.25rem;
+    --text-lg: 1.375rem;
+    --text-xl: 1.625rem;
+    --text-2xl: 2rem;
+    --text-3xl: 2.5rem;
+    --text-4xl: 3rem;
   }
 }
 
-/* 移动端导航优化 */
-.mobile-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  border-top: 1px solid #e5e7eb;
-  padding: 8px 0;
-  z-index: 50;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
+/* 响应式工具类 */
+.responsive-padding {
+  padding: var(--content-padding);
 }
 
-.mobile-nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 8px 12px;
-  color: #6b7280;
-  text-decoration: none;
-  font-size: 0.75rem;
-  transition: color 0.2s ease;
+.responsive-gap {
+  gap: var(--card-gap);
 }
 
-.mobile-nav-item.active {
-  color: #3b82f6;
+.responsive-text {
+  font-size: calc(var(--text-base) * var(--font-scale));
 }
 
-.mobile-nav-item:active {
-  transform: scale(0.95);
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols), 1fr);
+  gap: var(--card-gap);
 }
 
-/* 移动端模态框优化 */
-.mobile-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 100;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 0;
+.responsive-container {
+  max-width: var(--max-content-width);
+  margin: 0 auto;
+  padding: 0 var(--content-padding);
 }
 
-.mobile-modal-content {
-  background: white;
-  border-radius: 16px 16px 0 0;
-  padding: 24px;
-  width: 100%;
-  max-height: 80vh;
-  overflow-y: auto;
-  transform: translateY(100%);
-  transition: transform 0.3s ease;
+.responsive-transition {
+  transition: all var(--transition-normal);
 }
 
-.mobile-modal.open .mobile-modal-content {
-  transform: translateY(0);
+/* 断点可见性工具类 */
+.mobile-only {
+  display: block;
 }
 
-/* 平板和桌面端模态框 */
-@media (min-width: 768px) {
-  .mobile-modal {
-    align-items: center;
-    padding: 20px;
-  }
-  
-  .mobile-modal-content {
-    border-radius: 16px;
-    max-width: 500px;
-    max-height: 90vh;
-    transform: scale(0.9);
-    opacity: 0;
-  }
-  
-  .mobile-modal.open .mobile-modal-content {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* 滚动优化 */
-.smooth-scroll {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* 移动端隐藏滚动条 */
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.hide-scrollbar::-webkit-scrollbar {
+.tablet-up {
   display: none;
 }
 
-/* 安全区域适配 */
-@supports (padding-top: env(safe-area-inset-top)) {
-  .safe-area-top {
-    padding-top: env(safe-area-inset-top);
+.desktop-up {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none;
   }
   
-  .safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
+  .tablet-up {
+    display: block;
+  }
+}
+
+@media (min-width: 1024px) {
+  .desktop-up {
+    display: block;
+  }
+}
+
+/* 悬停效果 (仅在支持悬停的设备上) */
+@media (hover: hover) {
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    transition: all var(--transition-fast);
   }
   
-  .safe-area-left {
-    padding-left: env(safe-area-inset-left);
-  }
-  
-  .safe-area-right {
-    padding-right: env(safe-area-inset-right);
+  .hover-scale:hover {
+    transform: scale(1.02);
+    transition: all var(--transition-fast);
   }
 }

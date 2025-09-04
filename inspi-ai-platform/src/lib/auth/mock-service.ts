@@ -202,6 +202,7 @@ export async function registerUser(data: RegisterData): Promise<AuthResponse> {
 
 /**
  * Mock用户登录
+ * 如果用户不存在，则自动注册
  */
 export async function loginUser(data: LoginData): Promise<AuthResponse> {
   try {
@@ -218,10 +219,18 @@ export async function loginUser(data: LoginData): Promise<AuthResponse> {
     // 查找用户
     const user = mockUsers.get(data.email.toLowerCase());
     if (!user) {
-      return {
-        success: false,
-        error: 'Invalid email or password',
+      // 用户不存在，自动注册
+      console.log('👤 User not found, auto-registering:', data.email);
+      
+      // 创建新用户（使用邮箱作为默认名称）
+      const registerData: RegisterData = {
+        email: data.email,
+        password: data.password,
+        name: data.email.split('@')[0] // 使用邮箱前缀作为默认名称
       };
+      
+      // 调用注册函数
+      return registerUser(registerData);
     }
 
     // 验证密码（简化版本）
@@ -248,6 +257,7 @@ export async function loginUser(data: LoginData): Promise<AuthResponse> {
       token,
       refreshToken,
     };
+  }
   } catch (error) {
     console.error('Mock login error:', error);
     return {

@@ -7,6 +7,16 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 
 /**
  * 错误边界属性接口
+ * 
+ * @property children - 子组件，将被错误边界包裹
+ * @property fallback - 自定义错误回退UI渲染函数，接收错误对象和错误信息
+ * @property onError - 错误发生时的回调函数，可用于日志记录或错误报告
+ * @property level - 错误边界级别，用于区分不同层级的错误处理
+ *   - 'global': 应用全局级错误边界，通常在应用根部使用
+ *   - 'page': 页面级错误边界，用于隔离整个页面的错误
+ *   - 'component': 组件级错误边界，用于隔离特定组件的错误
+ * @property resetOnPropsChange - 当props变化时是否重置错误状态
+ * @property resetKeys - 用于触发错误状态重置的特定props键数组
  */
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -19,6 +29,11 @@ interface ErrorBoundaryProps {
 
 /**
  * 错误边界状态接口
+ * 
+ * @property hasError - 是否捕获到错误
+ * @property error - 捕获到的错误对象
+ * @property errorInfo - React提供的错误信息，包含组件堆栈
+ * @property errorId - 错误的唯一标识符，用于日志追踪和错误报告
  */
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -29,6 +44,29 @@ interface ErrorBoundaryState {
 
 /**
  * React错误边界组件
+ * 
+ * 这是基础错误边界组件，用于捕获子组件树中的JavaScript错误，记录错误信息，
+ * 并显示备用UI，防止整个应用崩溃。
+ * 
+ * 使用场景：
+ * 1. 作为其他错误边界组件的基础组件
+ * 2. 直接用于包裹可能出错的组件
+ * 3. 通过withErrorBoundary高阶组件应用于函数组件
+ * 
+ * @example
+ * // 基本用法
+ * <ErrorBoundary>
+ *   <MyComponent />
+ * </ErrorBoundary>
+ * 
+ * @example
+ * // 自定义错误UI
+ * <ErrorBoundary
+ *   fallback={(error, errorInfo) => <MyErrorUI error={error} />}
+ *   onError={(error, errorInfo) => logError(error, errorInfo)}
+ * >
+ *   <MyComponent />
+ * </ErrorBoundary>
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   private resetTimeoutId: number | null = null;

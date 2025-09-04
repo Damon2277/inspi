@@ -119,9 +119,7 @@ export function validateOrigin(request: NextRequest): boolean {
     `https://${host}`,
     `http://${host}`, // 开发环境HTTP
     `http://localhost:3000`, // 开发环境
-    `http://localhost:3003`, // 测试环境
-    `http://127.0.0.1:3000`,  // 开发环境
-    `http://127.0.0.1:3003`   // 测试环境
+    `http://127.0.0.1:3000`  // 开发环境
   ].filter(Boolean);
   
   // 检查Origin头

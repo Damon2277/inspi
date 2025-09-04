@@ -23,7 +23,6 @@ export interface MockUserProfile {
   achievements: string[]
   totalWorks: number
   totalViews: number
-  totalLikes: number
 }
 
 // 基础用户工厂
@@ -77,7 +76,6 @@ export const createUserProfileFixture = (
   achievements: ['First Work', 'Popular Creator'],
   totalWorks: 5,
   totalViews: 100,
-  totalLikes: 25,
   ...overrides,
 })
 
@@ -131,8 +129,6 @@ export const createUserPreferencesFixture = (userId: string) => ({
   notifications: {
     email: true,
     push: false,
-    newFollower: true,
-    workLiked: true,
     workReposted: false,
   },
   privacy: {
@@ -148,13 +144,7 @@ export const createUserPreferencesFixture = (userId: string) => ({
   },
 })
 
-// 用户关注关系
-export const createUserFollowFixture = (followerId: string, followingId: string) => ({
-  id: `follow-${followerId}-${followingId}`,
-  followerId,
-  followingId,
-  createdAt: new Date().toISOString(),
-})
+// 移除用户关注关系相关代码
 
 // 用户会话数据
 export const createUserSessionFixture = (user: MockUser) => ({

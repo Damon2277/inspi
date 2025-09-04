@@ -103,7 +103,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">登录</h2>
+          <h2 className="text-2xl font-bold text-gray-900">登录 / 注册</h2>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600"
@@ -156,19 +156,13 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
             disabled={isLoading}
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? '登录中...' : '登录'}
+            {isLoading ? '处理中...' : '登录 / 注册'}
           </button>
         </form>
 
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-600">
-            还没有账号？{' '}
-            <button
-              onClick={onSwitchToRegister}
-              className="text-blue-600 hover:text-blue-800 font-medium"
-            >
-              立即注册
-            </button>
+            首次登录将自动为您创建账号
           </p>
         </div>
 

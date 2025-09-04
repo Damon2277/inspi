@@ -335,21 +335,7 @@ describe('UserProfile组件测试', () => {
       expect(screen.getByText('关注')).toBeInTheDocument()
     })
 
-    test('应该处理关注操作', async () => {
-      const mockFollow = jest.fn()
-      render(
-        <UserProfile 
-          {...defaultProps} 
-          isOwnProfile={false}
-          onFollow={mockFollow}
-        />
-      )
-      
-      const followButton = screen.getByText('关注')
-      await userEvent.click(followButton)
-      
-      expect(mockFollow).toHaveBeenCalledWith(mockUser)
-    })
+    // 移除关注功能测试
 
     test('应该显示私信按钮', () => {
       render(<UserProfile {...defaultProps} isOwnProfile={false} />)

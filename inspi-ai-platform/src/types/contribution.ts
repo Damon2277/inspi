@@ -6,7 +6,6 @@
 export enum ContributionType {
   WORK_CREATION = 'work_creation',     // 创作作品
   WORK_REUSED = 'work_reused',         // 作品被复用
-  WORK_LIKED = 'work_liked',           // 作品被点赞
   WORK_SHARED = 'work_shared',         // 作品被分享
   PROFILE_COMPLETED = 'profile_completed', // 完善个人资料
   FIRST_WORK = 'first_work',           // 首次发布作品
@@ -198,7 +197,6 @@ export interface TrendingWork {
   authorId: string;
   authorName: string;
   reuseCount: number;
-  likeCount: number;
   viewCount: number;
   trendingScore: number;
   createdAt: Date;

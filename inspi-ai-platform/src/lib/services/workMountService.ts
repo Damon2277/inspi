@@ -467,7 +467,6 @@ export class WorkMountService {
               }
             },
             totalViews: { $sum: '$work.views' },
-            totalLikes: { $sum: '$work.likes' },
             totalReuses: { $sum: '$work.reuses' }
           }
         }
@@ -482,7 +481,6 @@ export class WorkMountService {
           workTypes: {},
           recentWorks: [],
           totalViews: 0,
-          totalLikes: 0,
           totalReuses: 0
         };
       }
@@ -506,7 +504,6 @@ export class WorkMountService {
         workTypes: workTypeStats,
         recentWorks,
         totalViews: stats.totalViews || 0,
-        totalLikes: stats.totalLikes || 0,
         totalReuses: stats.totalReuses || 0
       };
     } catch (error) {
