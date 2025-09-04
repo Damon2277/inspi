@@ -1,6 +1,6 @@
 {
   "name": "inspi-ai-platform",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack --port 3000",
@@ -18,7 +18,6 @@
     "test:mobile": "playwright test src/__tests__/mobile",
     "test:security": "jest src/__tests__/security",
     "test:services": "node -e \"console.log('Services health check passed')\"",
-
     "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
     "test:watch": "jest --config jest.config.unit.js --watch",
     "test:watch:integration": "jest --config jest.config.integration.js --watch",
@@ -81,7 +80,7 @@
     "test-env:dashboard": "open http://localhost:3000/test-dashboard",
     "version:bump": "node scripts/bump-version.js",
     "version:major": "node scripts/bump-version.js major",
-    "version:minor": "node scripts/bump-version.js minor", 
+    "version:minor": "node scripts/bump-version.js minor",
     "version:patch": "node scripts/bump-version.js patch",
     "version:prerelease": "node scripts/bump-version.js prerelease",
     "version:current": "node scripts/bump-version.js --version",
