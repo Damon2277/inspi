@@ -163,17 +163,105 @@ src/
 
 ## 开发指南
 
+### 项目管理规则增强系统
+
+本项目集成了完整的项目管理规则增强系统，提供全面的开发流程管理和质量保证：
+
+#### 🛠️ 核心管理工具
+- **[质量检查系统](../.kiro/quality-checks/README.md)**: 代码质量监控和功能验证
+- **[样式恢复系统](../.kiro/style-recovery/README.md)**: 样式快照管理和视觉回归检测
+- **[恢复点系统](../.kiro/recovery-points/README.md)**: 项目状态恢复和回滚机制
+- **[开发者仪表板](../.kiro/dashboard/README.md)**: 项目健康监控和一键操作
+- **[配置管理系统](../.kiro/config-manager/README.md)**: 统一配置管理和同步
+- **[集成验证工具](../.kiro/integration-tests/README.md)**: 系统集成状态验证
+
+#### 🚀 快速开始项目管理
+```bash
+# 查看项目整体状态
+node ../.kiro/integration-tests/cli.js status
+
+# 启动开发者仪表板
+node ../.kiro/dashboard/cli.js start
+
+# 运行质量检查
+node ../.kiro/quality-checks/cli.js check
+
+# 创建项目快照 (重要变更前)
+node ../.kiro/recovery-points/cli.js create
+```
+
+#### 📊 系统集成状态
+- **最新验证**: 2025年9月5日
+- **集成状态**: 🟢 优秀 (100% 通过率)
+- **系统健康**: 6/6 系统正常运行
+- **详细报告**: [集成验证总结](../.kiro/integration-tests/INTEGRATION_SUMMARY.md)
+
 ### 开发规范文档
+- **主项目README**: 查看 [../README.md](../README.md) - 完整项目概述
 - **文档导航**: 查看 [`.kiro/specs/inspi-ai-platform/DOCS_NAVIGATION.md`](.kiro/specs/inspi-ai-platform/DOCS_NAVIGATION.md)
 - **详细开发规范**: 查看 [`.kiro/specs/inspi-ai-platform/DEVELOPMENT_GUIDE.md`](.kiro/specs/inspi-ai-platform/DEVELOPMENT_GUIDE.md)
 - **项目状态跟踪**: 查看 [`.kiro/specs/inspi-ai-platform/PROJECT_STATUS.md`](.kiro/specs/inspi-ai-platform/PROJECT_STATUS.md)
 - **任务定义**: 查看 [`.kiro/specs/inspi-ai-platform/tasks.md`](.kiro/specs/inspi-ai-platform/tasks.md)
+
+### 开发工作流程
+
+#### 1. 开发前准备
+```bash
+# 检查系统集成状态
+node ../.kiro/integration-tests/cli.js status
+
+# 启动项目监控
+node ../.kiro/dashboard/cli.js start
+
+# 创建开发前快照
+node ../.kiro/recovery-points/cli.js create --name "开发前快照"
+```
+
+#### 2. 开发过程中
+```bash
+# 启动开发服务器
+npm run dev
+
+# 运行质量检查 (推荐定期运行)
+node ../.kiro/quality-checks/cli.js check
+
+# 创建样式快照 (UI变更前)
+node ../.kiro/style-recovery/cli.js snapshot
+```
+
+#### 3. 提交前检查
+```bash
+# 运行完整质量检查
+node ../.kiro/quality-checks/cli.js full-check
+
+# 检测视觉回归
+node ../.kiro/style-recovery/cli.js detect
+
+# 运行集成测试
+node ../.kiro/integration-tests/run-tests.js
+
+# 验证配置一致性
+node ../.kiro/config-manager/cli.js validate
+```
+
+#### 4. 问题处理
+```bash
+# 查看问题详情
+node ../.kiro/dashboard/cli.js health
+
+# 恢复到稳定状态 (如需要)
+node ../.kiro/recovery-points/cli.js recover
+
+# 回滚样式变更 (如需要)
+node ../.kiro/style-recovery/cli.js rollback
+```
 
 ### 代码规范
 - 使用 TypeScript 进行类型检查
 - 遵循 ESLint 规则
 - 使用 Prettier 格式化代码
 - 遵循项目开发规范 (详见上述文档)
+- 使用项目管理工具进行质量保证
 
 ### 提交规范
 - feat: 新功能
@@ -183,6 +271,7 @@ src/
 - refactor: 代码重构
 - test: 测试相关
 - chore: 构建过程或辅助工具的变动
+- mgmt: 项目管理系统相关变更
 
 ## 部署
 
@@ -203,11 +292,31 @@ npm start
 ## 开发团队
 
 ### 新团队成员入门
-1. **阅读本文档** - 了解项目概述和技术栈
-2. **查看文档导航** - [DOCS_NAVIGATION.md](.kiro/specs/inspi-ai-platform/DOCS_NAVIGATION.md)
-3. **查看开发规范** - [DEVELOPMENT_GUIDE.md](.kiro/specs/inspi-ai-platform/DEVELOPMENT_GUIDE.md)
-4. **了解项目状态** - [PROJECT_STATUS.md](.kiro/specs/inspi-ai-platform/PROJECT_STATUS.md)
-5. **选择任务开始** - [tasks.md](.kiro/specs/inspi-ai-platform/tasks.md)
+1. **了解整体项目** - 阅读 [主项目README](../README.md) 了解完整项目结构
+2. **阅读本文档** - 了解Inspi.AI平台的技术栈和功能
+3. **熟悉管理工具** - 了解项目管理规则增强系统的各个组件
+4. **环境配置验证** - 运行 `node ../.kiro/integration-tests/run-tests.js` 验证环境
+5. **查看文档导航** - [DOCS_NAVIGATION.md](.kiro/specs/inspi-ai-platform/DOCS_NAVIGATION.md)
+6. **查看开发规范** - [DEVELOPMENT_GUIDE.md](.kiro/specs/inspi-ai-platform/DEVELOPMENT_GUIDE.md)
+7. **了解项目状态** - [PROJECT_STATUS.md](.kiro/specs/inspi-ai-platform/PROJECT_STATUS.md)
+8. **选择任务开始** - [tasks.md](.kiro/specs/inspi-ai-platform/tasks.md)
+
+#### 🎯 快速验证环境
+```bash
+# 1. 检查系统集成状态
+node ../.kiro/integration-tests/cli.js status
+
+# 2. 启动开发环境
+npm run dev
+
+# 3. 启动项目监控 (新终端)
+node ../.kiro/dashboard/cli.js start
+
+# 4. 运行质量检查
+node ../.kiro/quality-checks/cli.js check
+```
+
+如果所有检查都通过，说明环境配置正确，可以开始开发工作。
 
 ### 文档结构
 - **项目介绍** (本文件) - 项目概述、安装指南、API文档

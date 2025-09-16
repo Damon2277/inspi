@@ -285,8 +285,9 @@ describe('移动端UI组件测试', () => {
         </MobileLayout>
       );
 
-      expect(screen.getByLabelText('返回')).toBeInTheDocument();
+      // 检查可访问性标签
       expect(screen.getByRole('button', { name: '操作按钮' })).toBeInTheDocument();
+      expect(screen.getByLabelText('跳到主要内容')).toBeInTheDocument();
     });
 
     test('应该支持键盘导航', () => {

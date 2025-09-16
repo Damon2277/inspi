@@ -1,0 +1,603 @@
+/* 桌面端专用样式 - 使用标准CSS */
+
+/* 桌面端布局基础 */
+.desktop-layout {
+  min-height: 100vh;
+  background-color: #f9fafb;
+}
+
+.desktop-main {
+  min-height: 100vh;
+}
+
+.desktop-main.with-navigation {
+  padding-top: 4rem;
+}
+
+.desktop-container {
+  width: 100%;
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .desktop-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .desktop-container {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
+
+/* 桌面端网格系统 */
+.desktop-grid {
+  display: grid;
+}
+
+.desktop-grid-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.desktop-grid-2 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 1024px) {
+  .desktop-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.desktop-grid-3 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .desktop-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .desktop-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.desktop-grid-4 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .desktop-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .desktop-grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* 网格间距 */
+.desktop-grid-gap-sm {
+  gap: 1rem;
+}
+
+.desktop-grid-gap-md {
+  gap: 1.5rem;
+}
+
+.desktop-grid-gap-lg {
+  gap: 2rem;
+}
+
+.desktop-grid-gap-xl {
+  gap: 2.5rem;
+}
+
+/* 桌面端卡片样式 */
+.desktop-card {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease-in-out;
+}
+
+.desktop-card-elevated {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.desktop-card-outlined {
+  border: 2px solid #d1d5db;
+  box-shadow: none;
+}
+
+.desktop-card-sm {
+  padding: 1rem;
+}
+
+.desktop-card-md {
+  padding: 1.5rem;
+}
+
+.desktop-card-lg {
+  padding: 2rem;
+}
+
+.desktop-card-hover:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-0.125rem);
+}
+
+/* 桌面端按钮样式 */
+.desktop-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  user-select: none;
+  border: none;
+  cursor: pointer;
+}
+
+.desktop-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.desktop-button:hover:not(:disabled) {
+  transform: translateY(-0.125rem);
+}
+
+.desktop-button-primary {
+  background: linear-gradient(to right, #f97316, #ec4899);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.desktop-button-primary:hover:not(:disabled) {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.desktop-button-primary:focus {
+  outline-color: #f97316;
+}
+
+.desktop-button-secondary {
+  background-color: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.desktop-button-secondary:hover:not(:disabled) {
+  background-color: #f9fafb;
+}
+
+.desktop-button-secondary:focus {
+  outline-color: #6b7280;
+}
+
+.desktop-button-outline {
+  background-color: transparent;
+  color: #ea580c;
+  border: 2px solid #ea580c;
+}
+
+.desktop-button-outline:hover:not(:disabled) {
+  background-color: #fff7ed;
+}
+
+.desktop-button-outline:focus {
+  outline-color: #ea580c;
+}
+
+.desktop-button-ghost {
+  background-color: transparent;
+  color: #374151;
+}
+
+.desktop-button-ghost:hover:not(:disabled) {
+  background-color: #f3f4f6;
+}
+
+.desktop-button-ghost:focus {
+  outline-color: #6b7280;
+}
+
+.desktop-button-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.desktop-button-md {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+}
+
+.desktop-button-lg {
+  padding: 0.75rem 1.5rem;
+  font-size: 1.125rem;
+}
+
+/* 桌面端输入框样式 */
+.desktop-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  color: #111827;
+  transition: all 0.2s ease-in-out;
+}
+
+.desktop-input::placeholder {
+  color: #6b7280;
+}
+
+.desktop-input:hover {
+  border-color: #9ca3af;
+}
+
+.desktop-input:focus {
+  outline: 2px solid #f97316;
+  outline-offset: 0;
+  border-color: transparent;
+}
+
+.desktop-input-error {
+  border-color: #ef4444;
+}
+
+.desktop-input-error:focus {
+  outline-color: #ef4444;
+}
+
+.desktop-input-sm {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.desktop-input-lg {
+  padding: 1rem 1.25rem;
+  font-size: 1.125rem;
+}
+
+/* 桌面端页面间距优化 */
+.desktop-section {
+  padding: 4rem 0;
+}
+
+.desktop-section-lg {
+  padding: 6rem 0;
+}
+
+.desktop-section-sm {
+  padding: 2rem 0;
+}
+
+/* 桌面端文本优化 */
+.desktop-hero-title {
+  font-size: 3.5rem;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+@media (min-width: 1280px) {
+  .desktop-hero-title {
+    font-size: 4rem;
+  }
+}
+
+.desktop-section-title {
+  font-size: 2.25rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.desktop-section-subtitle {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+/* 桌面端按钮组间距 */
+.desktop-button-group {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 桌面端渐变背景 */
+.desktop-gradient-hero {
+  background: linear-gradient(135deg, #fff7ed 0%, #fdf2f8 50%, #f3e8ff 100%);
+}
+
+.desktop-gradient-section {
+  background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
+}
+
+/* 桌面端响应式隐藏 */
+@media (max-width: 1023px) {
+  .desktop-only {
+    display: none;
+  }
+}
+
+/* 桌面端动画 */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.3s ease-out;
+}/* 强制桌面端
+模式样式 */
+.desktop-mode {
+  /* 确保桌面端样式优先级 */
+}
+
+.desktop-mode .mobile-card,
+.desktop-mode .mobile-button,
+.desktop-mode .mobile-grid,
+.desktop-mode .mobile-container {
+  /* 禁用移动端样式 */
+  display: none !important;
+}
+
+.desktop-mode .desktop-container {
+  /* 强制桌面端容器样式 */
+  display: block !important;
+  width: 100% !important;
+  max-width: 80rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
+
+.desktop-mode .desktop-grid {
+  /* 强制桌面端网格样式 */
+  display: grid !important;
+}
+
+.desktop-mode .desktop-card {
+  /* 强制桌面端卡片样式 */
+  display: block !important;
+  background-color: white !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid #e5e7eb !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.desktop-mode .desktop-button {
+  /* 强制桌面端按钮样式 */
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.5rem !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease-in-out !important;
+  outline: 2px solid transparent !important;
+  outline-offset: 2px !important;
+  user-select: none !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+/* 桌面端特定的移动端样式覆盖 */
+@media (min-width: 1024px) {
+  .desktop-mode {
+    /* 在桌面端隐藏所有移动端特定元素 */
+  }
+  
+  .desktop-mode .mobile-bottom-nav {
+    display: none !important;
+  }
+  
+  .desktop-mode .mobile-main {
+    padding-bottom: 0 !important;
+  }
+  
+  .desktop-mode body {
+    overflow-x: visible !important;
+  }
+}
+
+/* 桌面端表单样式 */
+.desktop-form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+/* 桌面端侧边栏样式 */
+.desktop-sidebar {
+  width: 20rem;
+  background-color: white;
+  border-right: 1px solid #e5e7eb;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.desktop-sidebar-content {
+  height: 100%;
+}
+
+.desktop-layout-with-sidebar {
+  display: flex;
+  min-height: 100vh;
+}
+
+.desktop-layout-main-with-sidebar {
+  flex: 1;
+  padding: 2rem;
+  background-color: #f9fafb;
+}
+
+/* 桌面端空状态样式 */
+.desktop-empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.desktop-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.desktop-empty-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.desktop-empty-description {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* 桌面端加载动画 */
+.desktop-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid #f3f4f6;
+  border-top: 2px solid #f97316;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 桌面端搜索输入框 */
+.desktop-search-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.desktop-search-input input {
+  padding-left: 2.5rem;
+}
+
+.desktop-search-input .search-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: #6b7280;
+  z-index: 10;
+}
+
+/* 桌面端文本截断 */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 桌面端全宽按钮 */
+.desktop-button-full {
+  width: 100%;
+}
+
+/* 桌面端卡片头部和内容 */
+.desktop-card-header {
+  margin-bottom: 1.5rem;
+}
+
+.desktop-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.desktop-card-content {
+  /* 卡片内容区域 */
+}
+
+/* 桌面端表单组 */
+.desktop-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.desktop-form-error {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #ef4444;
+}
+
+.desktop-form-help {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* 桌面端工具类 */
+.pl-10 {
+  padding-left: 2.5rem;
+}
+
+.pr-10 {
+  padding-right: 2.5rem;
+}

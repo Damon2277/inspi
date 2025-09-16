@@ -1,0 +1,1113 @@
+{
+  "snapshots": [
+    {
+      "id": "2025-09-05T02-32-37-829Z-ce511217",
+      "name": "test-rollback-snapshot",
+      "description": "Automatic snapshot",
+      "timestamp": "2025-09-05T02:32:37.834Z",
+      "isStable": true,
+      "tags": [],
+      "files": {},
+      "metadata": {
+        "totalFiles": 0,
+        "totalSize": 0,
+        "createdBy": "system",
+        "reason": "manual-cli"
+      }
+    },
+    {
+      "id": "2025-09-05T01-47-02-899Z-9633d77b",
+      "name": "verification-snapshot",
+      "description": "Final verification snapshot",
+      "timestamp": "2025-09-05T01:47:02.902Z",
+      "isStable": true,
+      "tags": [],
+      "files": {},
+      "metadata": {
+        "totalFiles": 0,
+        "totalSize": 0,
+        "createdBy": "system",
+        "reason": "manual-cli"
+      }
+    },
+    {
+      "id": "2025-09-05T01-40-03-065Z-2d48f904",
+      "name": "test-snapshot",
+      "description": "Test snapshot for verification",
+      "timestamp": "2025-09-05T01:40:03.067Z",
+      "isStable": true,
+      "tags": [
+        "test",
+        "verification"
+      ],
+      "files": {
+        "inspi-ai-platform/src/styles/visual-hierarchy.css": {
+          "hash": "cff0222cc30414b502b4b8f575bff92b6ccf2cc1ad3fcbfda8dd9e1564ff8d41",
+          "size": 5877,
+          "lastModified": "2025-09-03T06:53:17.637Z"
+        },
+        "inspi-ai-platform/src/styles/utilities.css": {
+          "hash": "b08456768474b90358d15d4f16665251c2a1acdb98f1db468ff6e6b101f9d4b0",
+          "size": 1732,
+          "lastModified": "2025-09-02T10:50:39.531Z"
+        },
+        "inspi-ai-platform/src/styles/typography.css": {
+          "hash": "1db2774ac4b02e1debd95ad84bea9223e131dafc729132afc6abe61b66323889",
+          "size": 7686,
+          "lastModified": "2025-09-03T05:34:59.857Z"
+        },
+        "inspi-ai-platform/src/styles/spacing.css": {
+          "hash": "f600e5958f6057c6dd73576f771e33de4cbd5467e682554186cb21f7123478e3",
+          "size": 7277,
+          "lastModified": "2025-09-03T06:56:53.599Z"
+        },
+        "inspi-ai-platform/src/styles/responsive.css": {
+          "hash": "b5fea607ddeb4cfe12c69c3794298aac76af3c26b4fc56054322e25198ce4b6a",
+          "size": 3775,
+          "lastModified": "2025-09-03T02:00:22.670Z"
+        },
+        "inspi-ai-platform/src/styles/readability.css": {
+          "hash": "5d8760ffd5a5b70800db107591358768ce97640ad3eba76425f7671d8483c403",
+          "size": 12862,
+          "lastModified": "2025-09-03T05:49:20.849Z"
+        },
+        "inspi-ai-platform/src/styles/navigation.css": {
+          "hash": "d56ecee8680ab59ca58e9bdb1615511c8057d5e0a4a5f04b88c625f91a3d1104",
+          "size": 3013,
+          "lastModified": "2025-09-04T02:05:58.243Z"
+        },
+        "inspi-ai-platform/src/styles/mobile.css": {
+          "hash": "e0e05815687e95f8e505903cad388fb82f941b844a02872b98555bd7bdda3a26",
+          "size": 21200,
+          "lastModified": "2025-09-04T01:04:22.792Z"
+        },
+        "inspi-ai-platform/src/styles/layout.css": {
+          "hash": "b63c8518b66f7139573224acffedfa21c2080494da94c8684499339eff77ef09",
+          "size": 1190,
+          "lastModified": "2025-09-04T02:07:47.609Z"
+        },
+        "inspi-ai-platform/src/styles/hover-effects.css": {
+          "hash": "2433f95e22cb44d941a03493057699f1bd64a7152821cce62a0091cc2033289a",
+          "size": 4526,
+          "lastModified": "2025-09-03T07:25:55.019Z"
+        },
+        "inspi-ai-platform/src/styles/high-density.css": {
+          "hash": "60a005b92750eddb98bffe9219f8aaa09c3795aa5c2c81566f390693e543b8e0",
+          "size": 4079,
+          "lastModified": "2025-09-03T06:47:13.395Z"
+        },
+        "inspi-ai-platform/src/styles/focus-indicators.css": {
+          "hash": "2bcf83f9a6cd8532a5b3ecde70b362e836d5fbdf88a96aa37ab6eda82eb7d3a1",
+          "size": 4334,
+          "lastModified": "2025-09-03T06:32:46.117Z"
+        },
+        "inspi-ai-platform/src/styles/design-system.css": {
+          "hash": "d4c352d273feee4eff73b9afdabf3c36d3120cd0359051f35a4a8fa6fee6a0f1",
+          "size": 12103,
+          "lastModified": "2025-09-02T09:43:28.957Z"
+        },
+        "inspi-ai-platform/src/app/globals.css": {
+          "hash": "fca6ca662b5138861b42474bfcac96d2db11ad926ce59f74a005575d866f2a4f",
+          "size": 8897,
+          "lastModified": "2025-09-04T02:08:02.239Z"
+        },
+        "inspi-ai-platform/src/app/page.tsx": {
+          "hash": "1d85b0e246b61b3f2f11d00a0e6a9a476c29d3d015f0034d3fff0e2be6d861ef",
+          "size": 4018,
+          "lastModified": "2025-09-04T06:35:17.409Z"
+        },
+        "inspi-ai-platform/src/app/not-found.tsx": {
+          "hash": "8252455c4bd37370fb656e3a23f801a8767a4c72e95934743fc2833aa10b5205",
+          "size": 6418,
+          "lastModified": "2025-09-04T02:35:14.692Z"
+        },
+        "inspi-ai-platform/src/app/layout.tsx": {
+          "hash": "d7a8b7a7bdbc3a99f7fd8eb251b105af24cbb429e27cfe73f3a8fc6a4d166823",
+          "size": 2197,
+          "lastModified": "2025-09-04T02:58:37.470Z"
+        },
+        "inspi-ai-platform/src/app/error.tsx": {
+          "hash": "0f5db6b703aceaa76ee05ff2e848d722b5cc95a8b53ecb62868af38cecffccef",
+          "size": 8390,
+          "lastModified": "2025-09-01T05:59:02.293Z"
+        },
+        "inspi-ai-platform/src/lib/auth/context.tsx": {
+          "hash": "2dd09480a8c889253ed38bace4d804bff4fa795432a43f835075122513fbbdb7",
+          "size": 10231,
+          "lastModified": "2025-09-04T06:33:24.162Z"
+        },
+        "inspi-ai-platform/src/lib/auth/MockAuthProvider.tsx": {
+          "hash": "ac49181180acd8bbb824eebc9f5796c100db1e266deed7e3a3bd32e9e8e87e5d",
+          "size": 2275,
+          "lastModified": "2025-09-03T00:17:25.696Z"
+        },
+        "inspi-ai-platform/src/components/works/WorkPreview.tsx": {
+          "hash": "496982f13ebafd55df7dce8331744e6fcab1c1fb81114dc7400faa9a65e58e50",
+          "size": 10076,
+          "lastModified": "2025-08-27T05:58:13.534Z"
+        },
+        "inspi-ai-platform/src/components/works/WorkEditor.tsx": {
+          "hash": "d63f484f73b4fddff99212796da8706dc573c162ff63a52f595a2f8c6f3e5de9",
+          "size": 12818,
+          "lastModified": "2025-08-27T05:51:37.322Z"
+        },
+        "inspi-ai-platform/src/components/works/PublishModal.tsx": {
+          "hash": "24cdecb8ab881e69d97964733dcb27b380815cdd71a826e6168e84bab4fe6cd7",
+          "size": 8998,
+          "lastModified": "2025-08-27T05:04:16.673Z"
+        },
+        "inspi-ai-platform/src/components/works/DraftsList.tsx": {
+          "hash": "15867fbc325d3f0b1299a7dc3e389d5b50c02733b0fa030e185637192d80c2b8",
+          "size": 6019,
+          "lastModified": "2025-08-27T05:41:17.460Z"
+        },
+        "inspi-ai-platform/src/components/ui/KeyboardShortcuts.tsx": {
+          "hash": "624c4da2e3a60c9c0063f05d2d008c624e83d82c90c83ad0fc921beaaa5f8196",
+          "size": 5909,
+          "lastModified": "2025-09-04T02:04:33.445Z"
+        },
+        "inspi-ai-platform/src/components/subscription/SubscriptionUpgrade.tsx": {
+          "hash": "f14052d76314e15c5159eb1bd7bdcfca134650d4f8be133009d98d80a171646d",
+          "size": 8841,
+          "lastModified": "2025-08-27T03:15:22.755Z"
+        },
+        "inspi-ai-platform/src/components/subscription/SubscriptionStatus.tsx": {
+          "hash": "89c23414f01952b043cb22e03bc51f70084c07304cc4f59afd59cf664b44d0f5",
+          "size": 6824,
+          "lastModified": "2025-08-27T03:14:29.800Z"
+        },
+        "inspi-ai-platform/src/components/support/FAQSection.tsx": {
+          "hash": "22b29094c5d707e1baebc19403c2356476798ac82cf856e8eeae846a82d60012",
+          "size": 4893,
+          "lastModified": "2025-08-28T07:49:53.510Z"
+        },
+        "inspi-ai-platform/src/components/support/ContactForm.tsx": {
+          "hash": "239867d9ec58ff8ab979d2b4b929f25e9549158cf98363a4a0ff9a974fbd5c55",
+          "size": 11625,
+          "lastModified": "2025-08-28T07:15:18.380Z"
+        },
+        "inspi-ai-platform/src/components/square/WorkGrid.tsx": {
+          "hash": "fd4683d904dbdbd0932981fceffae8d8276ec93305e3f77eb003912b82053efb",
+          "size": 5227,
+          "lastModified": "2025-08-27T08:15:27.710Z"
+        },
+        "inspi-ai-platform/src/components/square/WorkCard.tsx": {
+          "hash": "ef6400ac1ff2cb3e18894b5565dfffdd048292260d9ae8aabb71d6ecf49c4ce0",
+          "size": 5562,
+          "lastModified": "2025-08-27T08:14:53.225Z"
+        },
+        "inspi-ai-platform/src/components/square/SearchBar.tsx": {
+          "hash": "1009788a911803283542f5fc7a8d7bc1e0ca802c3b2de135ff2939bee45bfbc3",
+          "size": 7408,
+          "lastModified": "2025-08-27T08:29:07.884Z"
+        },
+        "inspi-ai-platform/src/components/square/FilterBar.tsx": {
+          "hash": "ad195280f002bce6dd2cbf85f90c9f42c5c01a7870e5906bc5384f29c9b3e915",
+          "size": 8473,
+          "lastModified": "2025-08-27T08:28:30.158Z"
+        },
+        "inspi-ai-platform/src/components/shared/TrendingWorks.tsx": {
+          "hash": "66d05459b0ef4869e08d9c789a0e29fa112dd80dd29a436b616678d7f65918c9",
+          "size": 11314,
+          "lastModified": "2025-09-04T06:49:41.089Z"
+        },
+        "inspi-ai-platform/src/components/providers/KeyboardNavigationProvider.tsx": {
+          "hash": "6a1721f9dc4b00ee14ddc07a369ff3f4a8ac28b57de9ab78f1e1bfb77de53f42",
+          "size": 3627,
+          "lastModified": "2025-09-03T06:33:29.573Z"
+        },
+        "inspi-ai-platform/src/components/reuse/ReuseButton.tsx": {
+          "hash": "1f36447e63583557be0c9176af80ec8e36f5de87a2ba6524006a3b49cebbbcb1",
+          "size": 11217,
+          "lastModified": "2025-08-27T10:01:36.562Z"
+        },
+        "inspi-ai-platform/src/components/reuse/AttributionDisplay.tsx": {
+          "hash": "38c954f801a688b74b4a7863c71b12e11a63c8465f0254fe5acd076c25c88cb0",
+          "size": 6237,
+          "lastModified": "2025-08-27T10:01:44.008Z"
+        },
+        "inspi-ai-platform/src/components/seo/SEOHead.tsx": {
+          "hash": "122443ee499970371a58a0ab7f1bd48587ca784eb644133e40cf94ddcf806a9d",
+          "size": 3438,
+          "lastModified": "2025-08-28T05:57:25.748Z"
+        },
+        "inspi-ai-platform/src/components/navigation/Navigation.tsx": {
+          "hash": "c01eb6356505721a69e1882f18e16fd851b3a607bd562b0c842a996b5a7377f2",
+          "size": 6756,
+          "lastModified": "2025-09-04T02:05:23.106Z"
+        },
+        "inspi-ai-platform/src/components/mobile/PullToRefresh.tsx": {
+          "hash": "f920a3c934de5545004f57c893015cb0fe7b76cd65daaba860d9e4a240d6609b",
+          "size": 5227,
+          "lastModified": "2025-08-29T07:26:13.623Z"
+        },
+        "inspi-ai-platform/src/components/mobile/PWAInstallPrompt.tsx": {
+          "hash": "e7fd453c9bf31fe00118f32cda787d53888e94ec08ca1621776b19273928bca9",
+          "size": 7273,
+          "lastModified": "2025-09-03T09:57:53.511Z"
+        },
+        "inspi-ai-platform/src/components/mobile/OfflineIndicator.tsx": {
+          "hash": "aca13f25b712b0d501ce84a49c83707564b05d03377878a38524550da74bfac7",
+          "size": 10537,
+          "lastModified": "2025-09-02T01:15:28.893Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileWorkCard.tsx": {
+          "hash": "de2bf569f6ca5b173399d69dc9451af16cb4109a0f325d221472e2ac68a83338",
+          "size": 5826,
+          "lastModified": "2025-08-29T07:24:35.765Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileUserStats.tsx": {
+          "hash": "d72fb8450b78fc555728f08a19e20431818b9050beed7e39af1605715f382279",
+          "size": 13897,
+          "lastModified": "2025-08-29T07:39:00.933Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileProfile.tsx": {
+          "hash": "2a613ee0355b005ec691c283a87cb36fb34497acb57ec3a49e1821adedcb3a39",
+          "size": 9191,
+          "lastModified": "2025-08-29T07:36:04.647Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobilePageHeader.tsx": {
+          "hash": "481332b24d70095cc51aa2bfa7edfb4cb87f8e8263aec857d0d07aff887cc70f",
+          "size": 580,
+          "lastModified": "2025-09-03T23:25:47.639Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileModal.tsx": {
+          "hash": "e9322900a0b18e393b386e8bec3dc8ed871886debca37750e81a06f508f3d5c2",
+          "size": 1748,
+          "lastModified": "2025-09-03T09:35:49.826Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileLayout.tsx": {
+          "hash": "c11239098d2bbb16181d4743c98386f4255847034c70c5e6c4cd10bab7a008b7",
+          "size": 1079,
+          "lastModified": "2025-09-04T02:08:30.972Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileKnowledgeInput.tsx": {
+          "hash": "d50cbb709abcb438a97ebac6521d5d5a3f2eb4992d7447b933a2faef654b97da",
+          "size": 15385,
+          "lastModified": "2025-08-29T05:20:20.781Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileKnowledgeGraph.tsx": {
+          "hash": "60a4443eef557aa7062e449c44076bc847dc76a36cd7109b6922ed8680d54c13",
+          "size": 15852,
+          "lastModified": "2025-08-29T07:37:33.130Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileInput.tsx": {
+          "hash": "e3191ddac43e7b55cb0f75fb0fb04f9cfcf8f8351da41d00dd603f2248f3f586",
+          "size": 3960,
+          "lastModified": "2025-09-03T09:54:11.010Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileFilterBar.tsx": {
+          "hash": "a7416e5b618da3956d9fd33df928e098a2a46e0f91068db60207f62c13ea3a3e",
+          "size": 14031,
+          "lastModified": "2025-08-29T07:25:37.406Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileCard.tsx": {
+          "hash": "cba4563a5071eb20fcad16ef549bf94ab1c0f5e141082b6537c8f2e2d0afe16f",
+          "size": 854,
+          "lastModified": "2025-09-03T09:52:24.050Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileButton.tsx": {
+          "hash": "4c30ddb29b09d4802cbeff704ee342de0286283ee0282f5503429ef1d03fcf61",
+          "size": 1639,
+          "lastModified": "2025-09-03T09:52:57.724Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileBottomNav.tsx": {
+          "hash": "0f73c00f78d25ca9885043363b8d9276532af4e737f6b9bdeda2f0ce772ff165",
+          "size": 346,
+          "lastModified": "2025-09-04T02:18:42.111Z"
+        },
+        "inspi-ai-platform/src/components/mobile/CardSwiper.tsx": {
+          "hash": "29960e99addd5303bc883bc71ce0d5facb9695130b049342abc3d05a694eb295",
+          "size": 9646,
+          "lastModified": "2025-08-29T03:17:52.399Z"
+        },
+        "inspi-ai-platform/src/components/magic/KnowledgeInput.tsx": {
+          "hash": "2721a7f7ce1c7af19d131975682d540c53d092e1804eb9593994614488881fc6",
+          "size": 9811,
+          "lastModified": "2025-08-29T03:13:42.121Z"
+        },
+        "inspi-ai-platform/src/components/magic/CardGenerator.tsx": {
+          "hash": "eafcc817bc239039adfd223b2ea7293d341c7fbbd7cd4e173d781e53fe97af8d",
+          "size": 6487,
+          "lastModified": "2025-09-02T00:18:58.689Z"
+        },
+        "inspi-ai-platform/src/components/magic/CardEditor.tsx": {
+          "hash": "ba0abd2e4cd02c43f91da15b41963ced9fab6d3a701e49d4fbb5e69a53550911",
+          "size": 7302,
+          "lastModified": "2025-08-27T04:48:02.715Z"
+        },
+        "inspi-ai-platform/src/components/leaderboard/TrendingWorks.tsx": {
+          "hash": "b5b61bd636075a1781dc392de03173335c6a06278079339e7484a077e9b3b392",
+          "size": 198,
+          "lastModified": "2025-09-04T06:49:50.931Z"
+        },
+        "inspi-ai-platform/src/components/leaderboard/RankingList.tsx": {
+          "hash": "110275c7365dd7a7b150a131fe7878127e9f1cb65cdfe281e4c20eac6cbea81a",
+          "size": 6518,
+          "lastModified": "2025-08-28T05:19:39.701Z"
+        },
+        "inspi-ai-platform/src/components/leaderboard/LeaderboardCard.tsx": {
+          "hash": "97f6e141e2988cf5c94cf355332670a6cba56f98125daa1991f44934986e7ca9",
+          "size": 4097,
+          "lastModified": "2025-08-28T05:18:42.723Z"
+        },
+        "inspi-ai-platform/src/components/layout/AppLayout.tsx": {
+          "hash": "6d4e947d6ba717022058836efe273ea133d45fe674d7e225d0b53ec14f92736d",
+          "size": 1601,
+          "lastModified": "2025-09-04T02:06:59.190Z"
+        },
+        "inspi-ai-platform/src/components/knowledge-graph/KnowledgeGraphViewer.tsx": {
+          "hash": "8cb7048c283672ffd265c50691f076a046f6cd8bff3333bc754d5e8187b833ff",
+          "size": 12283,
+          "lastModified": "2025-08-28T03:32:07.551Z"
+        },
+        "inspi-ai-platform/src/components/errors/RetryButton.tsx": {
+          "hash": "fec9f05d111d1a61e56df33d80f325974160cec310192c05ea9bee8af834105a",
+          "size": 8417,
+          "lastModified": "2025-08-28T09:12:14.847Z"
+        },
+        "inspi-ai-platform/src/components/errors/NetworkError.tsx": {
+          "hash": "0a96b56b2364ed86beeb8a0adc6d8ae66f9baec41343bb4a05384a8819bd3d82",
+          "size": 10340,
+          "lastModified": "2025-08-28T08:56:52.410Z"
+        },
+        "inspi-ai-platform/src/components/errors/GlobalErrorBoundary.tsx": {
+          "hash": "7986da2c5ad31664eca39f642c47185a15e255593a211e627a02309bf7fdfa63",
+          "size": 9293,
+          "lastModified": "2025-09-04T06:53:05.391Z"
+        },
+        "inspi-ai-platform/src/components/errors/ErrorFallback.tsx": {
+          "hash": "52af8dd328fe86a186040d61f6dfa7c9b016473caa69017c8815e840073d6319",
+          "size": 7752,
+          "lastModified": "2025-09-01T05:41:28.328Z"
+        },
+        "inspi-ai-platform/src/components/errors/ErrorBoundary.tsx": {
+          "hash": "538d7eb20477e868ea956a3582165922efcde180219291d5cf396f84c5f0257e",
+          "size": 10646,
+          "lastModified": "2025-09-04T06:52:08.225Z"
+        },
+        "inspi-ai-platform/src/components/demo/ResponsiveDemo.tsx": {
+          "hash": "393eb916d25114707e1ff5c1e5adc4c528eb4105211db2ba3a915f8e55ce7166",
+          "size": 5278,
+          "lastModified": "2025-09-03T02:18:51.615Z"
+        },
+        "inspi-ai-platform/src/components/contribution/TrendingWorks.tsx": {
+          "hash": "dd7b4fd55af20fa171168823495fa40ee3d8708ea3757479e4901fa0fcebb447",
+          "size": 498,
+          "lastModified": "2025-09-04T06:50:04.454Z"
+        },
+        "inspi-ai-platform/src/components/contribution/Leaderboard.tsx": {
+          "hash": "755e531da949fa77ad85ed5145f6e80a90f6d8f63676c78d5342de0510900827",
+          "size": 9173,
+          "lastModified": "2025-08-28T00:15:20.377Z"
+        },
+        "inspi-ai-platform/src/components/contribution/ContributionStats.tsx": {
+          "hash": "dc55645f74f40fc9fe86fb489e0ac5bd04fd2c5bc5ad8d5c8588168f72b4979d",
+          "size": 6598,
+          "lastModified": "2025-08-28T00:14:36.948Z"
+        },
+        "inspi-ai-platform/src/components/contribution/ContributionHistory.tsx": {
+          "hash": "ddff0c9dcaa498fa08066260168f96b9d2fd4e6ee5fcf4e3ca666499c3b8b3bf",
+          "size": 12464,
+          "lastModified": "2025-08-28T00:16:13.266Z"
+        },
+        "inspi-ai-platform/src/components/contribution/ContributionChart.tsx": {
+          "hash": "9e190b31151512004424bbe05b3a65441bde51d1710726a8b598cb17608da7da",
+          "size": 8199,
+          "lastModified": "2025-08-28T00:17:41.374Z"
+        },
+        "inspi-ai-platform/src/components/auth/RegisterModal.tsx": {
+          "hash": "4f37f2b064495c2bdc537b8ee331544c7c5607ddd52f94fd5febc5c995863145",
+          "size": 8018,
+          "lastModified": "2025-08-27T00:19:28.921Z"
+        },
+        "inspi-ai-platform/src/components/auth/LoginModal.tsx": {
+          "hash": "7717d5699dd7760bfb03130fa3c6ddce2ebb873994e6544e71547a71ca13157a",
+          "size": 7151,
+          "lastModified": "2025-09-04T06:33:05.149Z"
+        },
+        "inspi-ai-platform/src/app/works/page.tsx": {
+          "hash": "640a86955166daad7c94b8ce7d765c2dce395861d6dbe4f0649d3da0f839b1f9",
+          "size": 11921,
+          "lastModified": "2025-09-03T23:29:19.964Z"
+        },
+        "inspi-ai-platform/src/app/square/page.tsx": {
+          "hash": "235e526b569a180818ef5ad57c8ac982254d934aed534f72af62d70efdd2a6cd",
+          "size": 10099,
+          "lastModified": "2025-09-03T23:28:54.080Z"
+        },
+        "inspi-ai-platform/src/app/profile/page.tsx": {
+          "hash": "6c9443148ae559832fbdbfae39f00e92a98da2c6d2a7edca97c742460ea12922",
+          "size": 4860,
+          "lastModified": "2025-09-04T05:22:17.499Z"
+        },
+        "inspi-ai-platform/src/app/create/page.tsx": {
+          "hash": "e5c3b6513bb64a4d5770e36554364ca080bdf4e58d9f4108450d86c5661f5351",
+          "size": 7545,
+          "lastModified": "2025-09-03T23:27:45.509Z"
+        },
+        "inspi-ai-platform/src/__tests__/responsive/pc-ui-enhancement.test.tsx": {
+          "hash": "b11ecb95fae5f7a9bf609e15e60a5ba845d98cd373f44c0d2a1bb9264d4b8eef",
+          "size": 16740,
+          "lastModified": "2025-09-03T07:54:28.149Z"
+        },
+        "inspi-ai-platform/src/__tests__/responsive/lazy-loading.test.tsx": {
+          "hash": "9a2d9ba8d39d6fc2993b6ce1399fbf1d1732401b77226ea28ef21eb6bef6fbe0",
+          "size": 5582,
+          "lastModified": "2025-09-03T07:56:03.812Z"
+        },
+        "inspi-ai-platform/src/__tests__/navigation/navigation-system.test.tsx": {
+          "hash": "90990ac0ad32b32bef6f283f24b5d2c7852f905f346f4ed32dcb76a06fdde2e9",
+          "size": 1803,
+          "lastModified": "2025-09-04T02:11:02.883Z"
+        },
+        "inspi-ai-platform/src/__tests__/mobile/mobile-ui.test.tsx": {
+          "hash": "27047aa455532bfde4353ca9863fb8889d49800a28ddd89e03e15236b8998768",
+          "size": 8928,
+          "lastModified": "2025-09-04T07:53:05.914Z"
+        },
+        "inspi-ai-platform/src/__tests__/integration/responsive-system.test.tsx": {
+          "hash": "352820c46d33ebc06b9e0f0d8c106ff1373b0d229ec42890342ee3b3bfa44dde",
+          "size": 3827,
+          "lastModified": "2025-09-03T02:23:17.057Z"
+        },
+        "inspi-ai-platform/src/__tests__/hydration/hydration-fix.test.tsx": {
+          "hash": "0c2b53cb2e49e4cab8e01e3dabba928ffb820e7a346327105c76702c8d22646c",
+          "size": 2571,
+          "lastModified": "2025-09-03T23:50:20.451Z"
+        },
+        "inspi-ai-platform/src/__tests__/unit/components/UserProfile.test.tsx": {
+          "hash": "0eec77683e6a8c779d5965ee104f95401c822e957e9e3dc9d51bb582c5416da7",
+          "size": 18462,
+          "lastModified": "2025-09-04T05:21:44.924Z"
+        },
+        "inspi-ai-platform/src/__tests__/unit/components/SearchFilter.test.tsx": {
+          "hash": "9f6a6268e18209a5893a06be1b9aa410a9fed651e13310dd83a5b05957f964d9",
+          "size": 20216,
+          "lastModified": "2025-08-30T04:09:59.068Z"
+        },
+        "inspi-ai-platform/src/__tests__/unit/components/MobileWorkCard.test.tsx": {
+          "hash": "1a8b4cc08ba88022f3c6c8fb006978642796558cb819fd253c0b6cc43de101c8",
+          "size": 16482,
+          "lastModified": "2025-08-30T04:06:41.989Z"
+        },
+        "inspi-ai-platform/src/__tests__/unit/components/Loading.test.tsx": {
+          "hash": "c2825a5f541e84b1ad80c132e14f5fac444b03ce1272b7685ccf047bd6637d84",
+          "size": 4120,
+          "lastModified": "2025-08-30T00:06:03.477Z"
+        },
+        "inspi-ai-platform/src/__tests__/unit/components/LazyImage.test.tsx": {
+          "hash": "419ec5229c53e07692e238a11426521ea3dbd444a62bc38feb71a443340888d9",
+          "size": 13515,
+          "lastModified": "2025-08-29T23:44:23.261Z"
+        },
+        "inspi-ai-platform/src/__tests__/unit/components/KnowledgeGraphViewer.test.tsx": {
+          "hash": "b484854c9ddcc38d92807b44ba2ad3c4f442eb6c4ddef4298a7037885fd6378e",
+          "size": 6551,
+          "lastModified": "2025-08-30T03:57:44.916Z"
+        },
+        "inspi-ai-platform/src/__tests__/unit/components/CardGenerator.test.tsx": {
+          "hash": "3c95cdcbc3e1c3bb129d4eea0a6476b38dc8bea6414477d38c92edcd93923e02",
+          "size": 22356,
+          "lastModified": "2025-08-30T04:05:13.127Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/ui/HoverEffects.test.tsx": {
+          "hash": "f9b405cb5476e2c00a0d0b43d5c884cece03f05c9d950ca0520784a18a083bed",
+          "size": 5397,
+          "lastModified": "2025-09-03T06:23:50.082Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/ui/HighDensityComponents.test.tsx": {
+          "hash": "0eebf1c700a76375c7803b2de3ed2a79aeee65b6c2b31527a6d8a31ed189cc5a",
+          "size": 4211,
+          "lastModified": "2025-09-03T07:13:40.936Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/ui/FocusIndicator.test.tsx": {
+          "hash": "4f88570d544db11179de0d24994b0d7a5ca60927098250a9962175bf7e7193d3",
+          "size": 5575,
+          "lastModified": "2025-09-03T06:36:26.458Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/layout/ThreeColumnLayout.test.tsx": {
+          "hash": "7670f14f16f0bf43ba112aec030487c7aa867104126aa9ae9a0208fe2004724a",
+          "size": 7724,
+          "lastModified": "2025-09-03T03:28:34.773Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/layout/ResponsiveLayout.test.tsx": {
+          "hash": "dd0fd14320a520cf25c14ffeaba74582e73bf14fb9cc6ca6cc81c94857f1feef",
+          "size": 6186,
+          "lastModified": "2025-09-03T02:04:57.291Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/layout/HomepageSidebar.test.tsx": {
+          "hash": "7e3c50493e61f8c3ff234354bf6e0909e1ca949c9e50659b2644e9956c9b873b",
+          "size": 5597,
+          "lastModified": "2025-09-03T05:30:10.257Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/layout/EnhancedHomepage.test.tsx": {
+          "hash": "b53efa9b8e8c6ee722c6cae9b5d76f2ab0d567d3a5506124e62d09517f18d873",
+          "size": 10190,
+          "lastModified": "2025-09-03T05:27:13.753Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/layout/AdaptiveGrid.test.tsx": {
+          "hash": "5e5563a02f5d31e0a8a276882a6f588f3bf3bc489d6d9133043320da8af020c7",
+          "size": 8113,
+          "lastModified": "2025-09-03T03:38:06.299Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/errors/ErrorBoundary.test.tsx": {
+          "hash": "92894dd01e445c82a139ca655e79c57b9de25bca04c87f560c16b0ead250e73e",
+          "size": 6485,
+          "lastModified": "2025-08-28T09:14:50.515Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/errors/ErrorBoundary-simple.test.tsx": {
+          "hash": "b981fedd6d8b5a457d72f82267af74f0e14aab9d6dbc503bb2470781d2dd1539",
+          "size": 3017,
+          "lastModified": "2025-08-28T09:39:00.870Z"
+        }
+      },
+      "metadata": {
+        "totalFiles": 105,
+        "totalSize": 784610,
+        "createdBy": "system",
+        "reason": "manual"
+      }
+    },
+    {
+      "id": "2025-09-05T01-39-21-536Z-b4f63945",
+      "name": "test-snapshot",
+      "description": "Test snapshot for verification",
+      "timestamp": "2025-09-05T01:39:21.546Z",
+      "isStable": true,
+      "tags": [
+        "test",
+        "verification"
+      ],
+      "files": {
+        "inspi-ai-platform/src/styles/visual-hierarchy.css": {
+          "hash": "cff0222cc30414b502b4b8f575bff92b6ccf2cc1ad3fcbfda8dd9e1564ff8d41",
+          "size": 5877,
+          "lastModified": "2025-09-03T06:53:17.637Z"
+        },
+        "inspi-ai-platform/src/styles/utilities.css": {
+          "hash": "b08456768474b90358d15d4f16665251c2a1acdb98f1db468ff6e6b101f9d4b0",
+          "size": 1732,
+          "lastModified": "2025-09-02T10:50:39.531Z"
+        },
+        "inspi-ai-platform/src/styles/typography.css": {
+          "hash": "1db2774ac4b02e1debd95ad84bea9223e131dafc729132afc6abe61b66323889",
+          "size": 7686,
+          "lastModified": "2025-09-03T05:34:59.857Z"
+        },
+        "inspi-ai-platform/src/styles/spacing.css": {
+          "hash": "f600e5958f6057c6dd73576f771e33de4cbd5467e682554186cb21f7123478e3",
+          "size": 7277,
+          "lastModified": "2025-09-03T06:56:53.599Z"
+        },
+        "inspi-ai-platform/src/styles/responsive.css": {
+          "hash": "b5fea607ddeb4cfe12c69c3794298aac76af3c26b4fc56054322e25198ce4b6a",
+          "size": 3775,
+          "lastModified": "2025-09-03T02:00:22.670Z"
+        },
+        "inspi-ai-platform/src/styles/readability.css": {
+          "hash": "5d8760ffd5a5b70800db107591358768ce97640ad3eba76425f7671d8483c403",
+          "size": 12862,
+          "lastModified": "2025-09-03T05:49:20.849Z"
+        },
+        "inspi-ai-platform/src/styles/navigation.css": {
+          "hash": "d56ecee8680ab59ca58e9bdb1615511c8057d5e0a4a5f04b88c625f91a3d1104",
+          "size": 3013,
+          "lastModified": "2025-09-04T02:05:58.243Z"
+        },
+        "inspi-ai-platform/src/styles/mobile.css": {
+          "hash": "e0e05815687e95f8e505903cad388fb82f941b844a02872b98555bd7bdda3a26",
+          "size": 21200,
+          "lastModified": "2025-09-04T01:04:22.792Z"
+        },
+        "inspi-ai-platform/src/styles/layout.css": {
+          "hash": "b63c8518b66f7139573224acffedfa21c2080494da94c8684499339eff77ef09",
+          "size": 1190,
+          "lastModified": "2025-09-04T02:07:47.609Z"
+        },
+        "inspi-ai-platform/src/styles/hover-effects.css": {
+          "hash": "2433f95e22cb44d941a03493057699f1bd64a7152821cce62a0091cc2033289a",
+          "size": 4526,
+          "lastModified": "2025-09-03T07:25:55.019Z"
+        },
+        "inspi-ai-platform/src/styles/high-density.css": {
+          "hash": "60a005b92750eddb98bffe9219f8aaa09c3795aa5c2c81566f390693e543b8e0",
+          "size": 4079,
+          "lastModified": "2025-09-03T06:47:13.395Z"
+        },
+        "inspi-ai-platform/src/styles/focus-indicators.css": {
+          "hash": "2bcf83f9a6cd8532a5b3ecde70b362e836d5fbdf88a96aa37ab6eda82eb7d3a1",
+          "size": 4334,
+          "lastModified": "2025-09-03T06:32:46.117Z"
+        },
+        "inspi-ai-platform/src/styles/design-system.css": {
+          "hash": "d4c352d273feee4eff73b9afdabf3c36d3120cd0359051f35a4a8fa6fee6a0f1",
+          "size": 12103,
+          "lastModified": "2025-09-02T09:43:28.957Z"
+        },
+        "inspi-ai-platform/src/app/globals.css": {
+          "hash": "fca6ca662b5138861b42474bfcac96d2db11ad926ce59f74a005575d866f2a4f",
+          "size": 8897,
+          "lastModified": "2025-09-04T02:08:02.239Z"
+        },
+        "inspi-ai-platform/src/app/page.tsx": {
+          "hash": "1d85b0e246b61b3f2f11d00a0e6a9a476c29d3d015f0034d3fff0e2be6d861ef",
+          "size": 4018,
+          "lastModified": "2025-09-04T06:35:17.409Z"
+        },
+        "inspi-ai-platform/src/app/not-found.tsx": {
+          "hash": "8252455c4bd37370fb656e3a23f801a8767a4c72e95934743fc2833aa10b5205",
+          "size": 6418,
+          "lastModified": "2025-09-04T02:35:14.692Z"
+        },
+        "inspi-ai-platform/src/app/layout.tsx": {
+          "hash": "d7a8b7a7bdbc3a99f7fd8eb251b105af24cbb429e27cfe73f3a8fc6a4d166823",
+          "size": 2197,
+          "lastModified": "2025-09-04T02:58:37.470Z"
+        },
+        "inspi-ai-platform/src/app/error.tsx": {
+          "hash": "0f5db6b703aceaa76ee05ff2e848d722b5cc95a8b53ecb62868af38cecffccef",
+          "size": 8390,
+          "lastModified": "2025-09-01T05:59:02.293Z"
+        },
+        "inspi-ai-platform/src/lib/auth/context.tsx": {
+          "hash": "2dd09480a8c889253ed38bace4d804bff4fa795432a43f835075122513fbbdb7",
+          "size": 10231,
+          "lastModified": "2025-09-04T06:33:24.162Z"
+        },
+        "inspi-ai-platform/src/lib/auth/MockAuthProvider.tsx": {
+          "hash": "ac49181180acd8bbb824eebc9f5796c100db1e266deed7e3a3bd32e9e8e87e5d",
+          "size": 2275,
+          "lastModified": "2025-09-03T00:17:25.696Z"
+        },
+        "inspi-ai-platform/src/components/works/WorkPreview.tsx": {
+          "hash": "496982f13ebafd55df7dce8331744e6fcab1c1fb81114dc7400faa9a65e58e50",
+          "size": 10076,
+          "lastModified": "2025-08-27T05:58:13.534Z"
+        },
+        "inspi-ai-platform/src/components/works/WorkEditor.tsx": {
+          "hash": "d63f484f73b4fddff99212796da8706dc573c162ff63a52f595a2f8c6f3e5de9",
+          "size": 12818,
+          "lastModified": "2025-08-27T05:51:37.322Z"
+        },
+        "inspi-ai-platform/src/components/works/PublishModal.tsx": {
+          "hash": "24cdecb8ab881e69d97964733dcb27b380815cdd71a826e6168e84bab4fe6cd7",
+          "size": 8998,
+          "lastModified": "2025-08-27T05:04:16.673Z"
+        },
+        "inspi-ai-platform/src/components/works/DraftsList.tsx": {
+          "hash": "15867fbc325d3f0b1299a7dc3e389d5b50c02733b0fa030e185637192d80c2b8",
+          "size": 6019,
+          "lastModified": "2025-08-27T05:41:17.460Z"
+        },
+        "inspi-ai-platform/src/components/ui/KeyboardShortcuts.tsx": {
+          "hash": "624c4da2e3a60c9c0063f05d2d008c624e83d82c90c83ad0fc921beaaa5f8196",
+          "size": 5909,
+          "lastModified": "2025-09-04T02:04:33.445Z"
+        },
+        "inspi-ai-platform/src/components/support/FAQSection.tsx": {
+          "hash": "22b29094c5d707e1baebc19403c2356476798ac82cf856e8eeae846a82d60012",
+          "size": 4893,
+          "lastModified": "2025-08-28T07:49:53.510Z"
+        },
+        "inspi-ai-platform/src/components/support/ContactForm.tsx": {
+          "hash": "239867d9ec58ff8ab979d2b4b929f25e9549158cf98363a4a0ff9a974fbd5c55",
+          "size": 11625,
+          "lastModified": "2025-08-28T07:15:18.380Z"
+        },
+        "inspi-ai-platform/src/components/subscription/SubscriptionUpgrade.tsx": {
+          "hash": "f14052d76314e15c5159eb1bd7bdcfca134650d4f8be133009d98d80a171646d",
+          "size": 8841,
+          "lastModified": "2025-08-27T03:15:22.755Z"
+        },
+        "inspi-ai-platform/src/components/subscription/SubscriptionStatus.tsx": {
+          "hash": "89c23414f01952b043cb22e03bc51f70084c07304cc4f59afd59cf664b44d0f5",
+          "size": 6824,
+          "lastModified": "2025-08-27T03:14:29.800Z"
+        },
+        "inspi-ai-platform/src/components/square/WorkGrid.tsx": {
+          "hash": "fd4683d904dbdbd0932981fceffae8d8276ec93305e3f77eb003912b82053efb",
+          "size": 5227,
+          "lastModified": "2025-08-27T08:15:27.710Z"
+        },
+        "inspi-ai-platform/src/components/square/WorkCard.tsx": {
+          "hash": "ef6400ac1ff2cb3e18894b5565dfffdd048292260d9ae8aabb71d6ecf49c4ce0",
+          "size": 5562,
+          "lastModified": "2025-08-27T08:14:53.225Z"
+        },
+        "inspi-ai-platform/src/components/square/SearchBar.tsx": {
+          "hash": "1009788a911803283542f5fc7a8d7bc1e0ca802c3b2de135ff2939bee45bfbc3",
+          "size": 7408,
+          "lastModified": "2025-08-27T08:29:07.884Z"
+        },
+        "inspi-ai-platform/src/components/square/FilterBar.tsx": {
+          "hash": "ad195280f002bce6dd2cbf85f90c9f42c5c01a7870e5906bc5384f29c9b3e915",
+          "size": 8473,
+          "lastModified": "2025-08-27T08:28:30.158Z"
+        },
+        "inspi-ai-platform/src/components/shared/TrendingWorks.tsx": {
+          "hash": "66d05459b0ef4869e08d9c789a0e29fa112dd80dd29a436b616678d7f65918c9",
+          "size": 11314,
+          "lastModified": "2025-09-04T06:49:41.089Z"
+        },
+        "inspi-ai-platform/src/components/seo/SEOHead.tsx": {
+          "hash": "122443ee499970371a58a0ab7f1bd48587ca784eb644133e40cf94ddcf806a9d",
+          "size": 3438,
+          "lastModified": "2025-08-28T05:57:25.748Z"
+        },
+        "inspi-ai-platform/src/components/reuse/ReuseButton.tsx": {
+          "hash": "1f36447e63583557be0c9176af80ec8e36f5de87a2ba6524006a3b49cebbbcb1",
+          "size": 11217,
+          "lastModified": "2025-08-27T10:01:36.562Z"
+        },
+        "inspi-ai-platform/src/components/reuse/AttributionDisplay.tsx": {
+          "hash": "38c954f801a688b74b4a7863c71b12e11a63c8465f0254fe5acd076c25c88cb0",
+          "size": 6237,
+          "lastModified": "2025-08-27T10:01:44.008Z"
+        },
+        "inspi-ai-platform/src/components/providers/KeyboardNavigationProvider.tsx": {
+          "hash": "6a1721f9dc4b00ee14ddc07a369ff3f4a8ac28b57de9ab78f1e1bfb77de53f42",
+          "size": 3627,
+          "lastModified": "2025-09-03T06:33:29.573Z"
+        },
+        "inspi-ai-platform/src/components/navigation/Navigation.tsx": {
+          "hash": "c01eb6356505721a69e1882f18e16fd851b3a607bd562b0c842a996b5a7377f2",
+          "size": 6756,
+          "lastModified": "2025-09-04T02:05:23.106Z"
+        },
+        "inspi-ai-platform/src/components/magic/KnowledgeInput.tsx": {
+          "hash": "2721a7f7ce1c7af19d131975682d540c53d092e1804eb9593994614488881fc6",
+          "size": 9811,
+          "lastModified": "2025-08-29T03:13:42.121Z"
+        },
+        "inspi-ai-platform/src/components/magic/CardGenerator.tsx": {
+          "hash": "eafcc817bc239039adfd223b2ea7293d341c7fbbd7cd4e173d781e53fe97af8d",
+          "size": 6487,
+          "lastModified": "2025-09-02T00:18:58.689Z"
+        },
+        "inspi-ai-platform/src/components/magic/CardEditor.tsx": {
+          "hash": "ba0abd2e4cd02c43f91da15b41963ced9fab6d3a701e49d4fbb5e69a53550911",
+          "size": 7302,
+          "lastModified": "2025-08-27T04:48:02.715Z"
+        },
+        "inspi-ai-platform/src/components/leaderboard/TrendingWorks.tsx": {
+          "hash": "b5b61bd636075a1781dc392de03173335c6a06278079339e7484a077e9b3b392",
+          "size": 198,
+          "lastModified": "2025-09-04T06:49:50.931Z"
+        },
+        "inspi-ai-platform/src/components/leaderboard/RankingList.tsx": {
+          "hash": "110275c7365dd7a7b150a131fe7878127e9f1cb65cdfe281e4c20eac6cbea81a",
+          "size": 6518,
+          "lastModified": "2025-08-28T05:19:39.701Z"
+        },
+        "inspi-ai-platform/src/components/leaderboard/LeaderboardCard.tsx": {
+          "hash": "97f6e141e2988cf5c94cf355332670a6cba56f98125daa1991f44934986e7ca9",
+          "size": 4097,
+          "lastModified": "2025-08-28T05:18:42.723Z"
+        },
+        "inspi-ai-platform/src/components/mobile/PullToRefresh.tsx": {
+          "hash": "f920a3c934de5545004f57c893015cb0fe7b76cd65daaba860d9e4a240d6609b",
+          "size": 5227,
+          "lastModified": "2025-08-29T07:26:13.623Z"
+        },
+        "inspi-ai-platform/src/components/mobile/PWAInstallPrompt.tsx": {
+          "hash": "e7fd453c9bf31fe00118f32cda787d53888e94ec08ca1621776b19273928bca9",
+          "size": 7273,
+          "lastModified": "2025-09-03T09:57:53.511Z"
+        },
+        "inspi-ai-platform/src/components/mobile/OfflineIndicator.tsx": {
+          "hash": "aca13f25b712b0d501ce84a49c83707564b05d03377878a38524550da74bfac7",
+          "size": 10537,
+          "lastModified": "2025-09-02T01:15:28.893Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileWorkCard.tsx": {
+          "hash": "de2bf569f6ca5b173399d69dc9451af16cb4109a0f325d221472e2ac68a83338",
+          "size": 5826,
+          "lastModified": "2025-08-29T07:24:35.765Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileUserStats.tsx": {
+          "hash": "d72fb8450b78fc555728f08a19e20431818b9050beed7e39af1605715f382279",
+          "size": 13897,
+          "lastModified": "2025-08-29T07:39:00.933Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileProfile.tsx": {
+          "hash": "2a613ee0355b005ec691c283a87cb36fb34497acb57ec3a49e1821adedcb3a39",
+          "size": 9191,
+          "lastModified": "2025-08-29T07:36:04.647Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobilePageHeader.tsx": {
+          "hash": "481332b24d70095cc51aa2bfa7edfb4cb87f8e8263aec857d0d07aff887cc70f",
+          "size": 580,
+          "lastModified": "2025-09-03T23:25:47.639Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileModal.tsx": {
+          "hash": "e9322900a0b18e393b386e8bec3dc8ed871886debca37750e81a06f508f3d5c2",
+          "size": 1748,
+          "lastModified": "2025-09-03T09:35:49.826Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileLayout.tsx": {
+          "hash": "c11239098d2bbb16181d4743c98386f4255847034c70c5e6c4cd10bab7a008b7",
+          "size": 1079,
+          "lastModified": "2025-09-04T02:08:30.972Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileKnowledgeInput.tsx": {
+          "hash": "d50cbb709abcb438a97ebac6521d5d5a3f2eb4992d7447b933a2faef654b97da",
+          "size": 15385,
+          "lastModified": "2025-08-29T05:20:20.781Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileKnowledgeGraph.tsx": {
+          "hash": "60a4443eef557aa7062e449c44076bc847dc76a36cd7109b6922ed8680d54c13",
+          "size": 15852,
+          "lastModified": "2025-08-29T07:37:33.130Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileInput.tsx": {
+          "hash": "e3191ddac43e7b55cb0f75fb0fb04f9cfcf8f8351da41d00dd603f2248f3f586",
+          "size": 3960,
+          "lastModified": "2025-09-03T09:54:11.010Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileFilterBar.tsx": {
+          "hash": "a7416e5b618da3956d9fd33df928e098a2a46e0f91068db60207f62c13ea3a3e",
+          "size": 14031,
+          "lastModified": "2025-08-29T07:25:37.406Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileCard.tsx": {
+          "hash": "cba4563a5071eb20fcad16ef549bf94ab1c0f5e141082b6537c8f2e2d0afe16f",
+          "size": 854,
+          "lastModified": "2025-09-03T09:52:24.050Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileButton.tsx": {
+          "hash": "4c30ddb29b09d4802cbeff704ee342de0286283ee0282f5503429ef1d03fcf61",
+          "size": 1639,
+          "lastModified": "2025-09-03T09:52:57.724Z"
+        },
+        "inspi-ai-platform/src/components/mobile/MobileBottomNav.tsx": {
+          "hash": "0f73c00f78d25ca9885043363b8d9276532af4e737f6b9bdeda2f0ce772ff165",
+          "size": 346,
+          "lastModified": "2025-09-04T02:18:42.111Z"
+        },
+        "inspi-ai-platform/src/components/mobile/CardSwiper.tsx": {
+          "hash": "29960e99addd5303bc883bc71ce0d5facb9695130b049342abc3d05a694eb295",
+          "size": 9646,
+          "lastModified": "2025-08-29T03:17:52.399Z"
+        },
+        "inspi-ai-platform/src/components/layout/AppLayout.tsx": {
+          "hash": "6d4e947d6ba717022058836efe273ea133d45fe674d7e225d0b53ec14f92736d",
+          "size": 1601,
+          "lastModified": "2025-09-04T02:06:59.190Z"
+        },
+        "inspi-ai-platform/src/components/knowledge-graph/KnowledgeGraphViewer.tsx": {
+          "hash": "8cb7048c283672ffd265c50691f076a046f6cd8bff3333bc754d5e8187b833ff",
+          "size": 12283,
+          "lastModified": "2025-08-28T03:32:07.551Z"
+        },
+        "inspi-ai-platform/src/components/errors/RetryButton.tsx": {
+          "hash": "fec9f05d111d1a61e56df33d80f325974160cec310192c05ea9bee8af834105a",
+          "size": 8417,
+          "lastModified": "2025-08-28T09:12:14.847Z"
+        },
+        "inspi-ai-platform/src/components/errors/NetworkError.tsx": {
+          "hash": "0a96b56b2364ed86beeb8a0adc6d8ae66f9baec41343bb4a05384a8819bd3d82",
+          "size": 10340,
+          "lastModified": "2025-08-28T08:56:52.410Z"
+        },
+        "inspi-ai-platform/src/components/errors/GlobalErrorBoundary.tsx": {
+          "hash": "7986da2c5ad31664eca39f642c47185a15e255593a211e627a02309bf7fdfa63",
+          "size": 9293,
+          "lastModified": "2025-09-04T06:53:05.391Z"
+        },
+        "inspi-ai-platform/src/components/errors/ErrorFallback.tsx": {
+          "hash": "52af8dd328fe86a186040d61f6dfa7c9b016473caa69017c8815e840073d6319",
+          "size": 7752,
+          "lastModified": "2025-09-01T05:41:28.328Z"
+        },
+        "inspi-ai-platform/src/components/errors/ErrorBoundary.tsx": {
+          "hash": "538d7eb20477e868ea956a3582165922efcde180219291d5cf396f84c5f0257e",
+          "size": 10646,
+          "lastModified": "2025-09-04T06:52:08.225Z"
+        },
+        "inspi-ai-platform/src/components/demo/ResponsiveDemo.tsx": {
+          "hash": "393eb916d25114707e1ff5c1e5adc4c528eb4105211db2ba3a915f8e55ce7166",
+          "size": 5278,
+          "lastModified": "2025-09-03T02:18:51.615Z"
+        },
+        "inspi-ai-platform/src/components/contribution/TrendingWorks.tsx": {
+          "hash": "dd7b4fd55af20fa171168823495fa40ee3d8708ea3757479e4901fa0fcebb447",
+          "size": 498,
+          "lastModified": "2025-09-04T06:50:04.454Z"
+        },
+        "inspi-ai-platform/src/components/contribution/Leaderboard.tsx": {
+          "hash": "755e531da949fa77ad85ed5145f6e80a90f6d8f63676c78d5342de0510900827",
+          "size": 9173,
+          "lastModified": "2025-08-28T00:15:20.377Z"
+        },
+        "inspi-ai-platform/src/components/contribution/ContributionStats.tsx": {
+          "hash": "dc55645f74f40fc9fe86fb489e0ac5bd04fd2c5bc5ad8d5c8588168f72b4979d",
+          "size": 6598,
+          "lastModified": "2025-08-28T00:14:36.948Z"
+        },
+        "inspi-ai-platform/src/components/contribution/ContributionHistory.tsx": {
+          "hash": "ddff0c9dcaa498fa08066260168f96b9d2fd4e6ee5fcf4e3ca666499c3b8b3bf",
+          "size": 12464,
+          "lastModified": "2025-08-28T00:16:13.266Z"
+        },
+        "inspi-ai-platform/src/components/contribution/ContributionChart.tsx": {
+          "hash": "9e190b31151512004424bbe05b3a65441bde51d1710726a8b598cb17608da7da",
+          "size": 8199,
+          "lastModified": "2025-08-28T00:17:41.374Z"
+        },
+        "inspi-ai-platform/src/components/auth/RegisterModal.tsx": {
+          "hash": "4f37f2b064495c2bdc537b8ee331544c7c5607ddd52f94fd5febc5c995863145",
+          "size": 8018,
+          "lastModified": "2025-08-27T00:19:28.921Z"
+        },
+        "inspi-ai-platform/src/components/auth/LoginModal.tsx": {
+          "hash": "7717d5699dd7760bfb03130fa3c6ddce2ebb873994e6544e71547a71ca13157a",
+          "size": 7151,
+          "lastModified": "2025-09-04T06:33:05.149Z"
+        },
+        "inspi-ai-platform/src/app/works/page.tsx": {
+          "hash": "640a86955166daad7c94b8ce7d765c2dce395861d6dbe4f0649d3da0f839b1f9",
+          "size": 11921,
+          "lastModified": "2025-09-03T23:29:19.964Z"
+        },
+        "inspi-ai-platform/src/app/square/page.tsx": {
+          "hash": "235e526b569a180818ef5ad57c8ac982254d934aed534f72af62d70efdd2a6cd",
+          "size": 10099,
+          "lastModified": "2025-09-03T23:28:54.080Z"
+        },
+        "inspi-ai-platform/src/app/profile/page.tsx": {
+          "hash": "6c9443148ae559832fbdbfae39f00e92a98da2c6d2a7edca97c742460ea12922",
+          "size": 4860,
+          "lastModified": "2025-09-04T05:22:17.499Z"
+        },
+        "inspi-ai-platform/src/app/create/page.tsx": {
+          "hash": "e5c3b6513bb64a4d5770e36554364ca080bdf4e58d9f4108450d86c5661f5351",
+          "size": 7545,
+          "lastModified": "2025-09-03T23:27:45.509Z"
+        },
+        "inspi-ai-platform/src/__tests__/responsive/pc-ui-enhancement.test.tsx": {
+          "hash": "b11ecb95fae5f7a9bf609e15e60a5ba845d98cd373f44c0d2a1bb9264d4b8eef",
+          "size": 16740,
+          "lastModified": "2025-09-03T07:54:28.149Z"
+        },
+        "inspi-ai-platform/src/__tests__/responsive/lazy-loading.test.tsx": {
+          "hash": "9a2d9ba8d39d6fc2993b6ce1399fbf1d1732401b77226ea28ef21eb6bef6fbe0",
+          "size": 5582,
+          "lastModified": "2025-09-03T07:56:03.812Z"
+        },
+        "inspi-ai-platform/src/__tests__/navigation/navigation-system.test.tsx": {
+          "hash": "90990ac0ad32b32bef6f283f24b5d2c7852f905f346f4ed32dcb76a06fdde2e9",
+          "size": 1803,
+          "lastModified": "2025-09-04T02:11:02.883Z"
+        },
+        "inspi-ai-platform/src/__tests__/mobile/mobile-ui.test.tsx": {
+          "hash": "27047aa455532bfde4353ca9863fb8889d49800a28ddd89e03e15236b8998768",
+          "size": 8928,
+          "lastModified": "2025-09-04T07:53:05.914Z"
+        },
+        "inspi-ai-platform/src/__tests__/integration/responsive-system.test.tsx": {
+          "hash": "352820c46d33ebc06b9e0f0d8c106ff1373b0d229ec42890342ee3b3bfa44dde",
+          "size": 3827,
+          "lastModified": "2025-09-03T02:23:17.057Z"
+        },
+        "inspi-ai-platform/src/__tests__/hydration/hydration-fix.test.tsx": {
+          "hash": "0c2b53cb2e49e4cab8e01e3dabba928ffb820e7a346327105c76702c8d22646c",
+          "size": 2571,
+          "lastModified": "2025-09-03T23:50:20.451Z"
+        },
+        "inspi-ai-platform/src/__tests__/unit/components/UserProfile.test.tsx": {
+          "hash": "0eec77683e6a8c779d5965ee104f95401c822e957e9e3dc9d51bb582c5416da7",
+          "size": 18462,
+          "lastModified": "2025-09-04T05:21:44.924Z"
+        },
+        "inspi-ai-platform/src/__tests__/unit/components/SearchFilter.test.tsx": {
+          "hash": "9f6a6268e18209a5893a06be1b9aa410a9fed651e13310dd83a5b05957f964d9",
+          "size": 20216,
+          "lastModified": "2025-08-30T04:09:59.068Z"
+        },
+        "inspi-ai-platform/src/__tests__/unit/components/MobileWorkCard.test.tsx": {
+          "hash": "1a8b4cc08ba88022f3c6c8fb006978642796558cb819fd253c0b6cc43de101c8",
+          "size": 16482,
+          "lastModified": "2025-08-30T04:06:41.989Z"
+        },
+        "inspi-ai-platform/src/__tests__/unit/components/Loading.test.tsx": {
+          "hash": "c2825a5f541e84b1ad80c132e14f5fac444b03ce1272b7685ccf047bd6637d84",
+          "size": 4120,
+          "lastModified": "2025-08-30T00:06:03.477Z"
+        },
+        "inspi-ai-platform/src/__tests__/unit/components/LazyImage.test.tsx": {
+          "hash": "419ec5229c53e07692e238a11426521ea3dbd444a62bc38feb71a443340888d9",
+          "size": 13515,
+          "lastModified": "2025-08-29T23:44:23.261Z"
+        },
+        "inspi-ai-platform/src/__tests__/unit/components/KnowledgeGraphViewer.test.tsx": {
+          "hash": "b484854c9ddcc38d92807b44ba2ad3c4f442eb6c4ddef4298a7037885fd6378e",
+          "size": 6551,
+          "lastModified": "2025-08-30T03:57:44.916Z"
+        },
+        "inspi-ai-platform/src/__tests__/unit/components/CardGenerator.test.tsx": {
+          "hash": "3c95cdcbc3e1c3bb129d4eea0a6476b38dc8bea6414477d38c92edcd93923e02",
+          "size": 22356,
+          "lastModified": "2025-08-30T04:05:13.127Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/layout/ThreeColumnLayout.test.tsx": {
+          "hash": "7670f14f16f0bf43ba112aec030487c7aa867104126aa9ae9a0208fe2004724a",
+          "size": 7724,
+          "lastModified": "2025-09-03T03:28:34.773Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/layout/ResponsiveLayout.test.tsx": {
+          "hash": "dd0fd14320a520cf25c14ffeaba74582e73bf14fb9cc6ca6cc81c94857f1feef",
+          "size": 6186,
+          "lastModified": "2025-09-03T02:04:57.291Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/layout/HomepageSidebar.test.tsx": {
+          "hash": "7e3c50493e61f8c3ff234354bf6e0909e1ca949c9e50659b2644e9956c9b873b",
+          "size": 5597,
+          "lastModified": "2025-09-03T05:30:10.257Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/layout/EnhancedHomepage.test.tsx": {
+          "hash": "b53efa9b8e8c6ee722c6cae9b5d76f2ab0d567d3a5506124e62d09517f18d873",
+          "size": 10190,
+          "lastModified": "2025-09-03T05:27:13.753Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/layout/AdaptiveGrid.test.tsx": {
+          "hash": "5e5563a02f5d31e0a8a276882a6f588f3bf3bc489d6d9133043320da8af020c7",
+          "size": 8113,
+          "lastModified": "2025-09-03T03:38:06.299Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/ui/HoverEffects.test.tsx": {
+          "hash": "f9b405cb5476e2c00a0d0b43d5c884cece03f05c9d950ca0520784a18a083bed",
+          "size": 5397,
+          "lastModified": "2025-09-03T06:23:50.082Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/ui/HighDensityComponents.test.tsx": {
+          "hash": "0eebf1c700a76375c7803b2de3ed2a79aeee65b6c2b31527a6d8a31ed189cc5a",
+          "size": 4211,
+          "lastModified": "2025-09-03T07:13:40.936Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/ui/FocusIndicator.test.tsx": {
+          "hash": "4f88570d544db11179de0d24994b0d7a5ca60927098250a9962175bf7e7193d3",
+          "size": 5575,
+          "lastModified": "2025-09-03T06:36:26.458Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/errors/ErrorBoundary.test.tsx": {
+          "hash": "92894dd01e445c82a139ca655e79c57b9de25bca04c87f560c16b0ead250e73e",
+          "size": 6485,
+          "lastModified": "2025-08-28T09:14:50.515Z"
+        },
+        "inspi-ai-platform/src/__tests__/components/errors/ErrorBoundary-simple.test.tsx": {
+          "hash": "b981fedd6d8b5a457d72f82267af74f0e14aab9d6dbc503bb2470781d2dd1539",
+          "size": 3017,
+          "lastModified": "2025-08-28T09:39:00.870Z"
+        }
+      },
+      "metadata": {
+        "totalFiles": 105,
+        "totalSize": 784610,
+        "createdBy": "system",
+        "reason": "manual"
+      }
+    }
+  ],
+  "lastCleanup": 1757036361528
+}

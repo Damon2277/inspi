@@ -1,0 +1,12 @@
+{
+  "autoSnapshot": true,
+  "debounceDelay": 2000,
+  "maxChangesBeforeSnapshot": 5,
+  "excludePatterns": [
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/node_modules/**",
+    "**/.git/**",
+    "**/.next/**"
+  ]
+}

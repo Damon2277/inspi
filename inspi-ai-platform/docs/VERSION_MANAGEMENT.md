@@ -146,6 +146,7 @@ BREAKING CHANGE: API接口路径从 /api/v1 改为 /api/v2"
 
 项目已配置以下NPM脚本：
 
+#### 版本管理
 ```json
 {
   "version:bump": "自动版本升级",
@@ -157,6 +158,152 @@ BREAKING CHANGE: API接口路径从 /api/v1 改为 /api/v2"
   "release": "完整发布流程"
 }
 ```
+
+#### 版本历史查询
+```json
+{
+  "version:history": "显示版本状态概览",
+  "version:history:list": "列出版本历史",
+  "version:history:show": "显示指定版本详情",
+  "version:history:compare": "比较两个版本",
+  "version:history:search": "搜索版本"
+}
+```
+
+#### 版本回滚
+```json
+{
+  "version:rollback": "回滚到指定版本",
+  "version:rollback:history": "显示回滚历史",
+  "version:rollback:backups": "列出可用备份",
+  "version:rollback:validate": "验证系统状态"
+}
+```
+
+## 版本历史管理
+
+### 查看版本历史
+
+#### 版本状态概览
+
+```bash
+npm run version:history
+# 或
+node scripts/version-history.js status
+```
+
+显示当前版本状态、最新标签和版本总数。
+
+#### 列出版本历史
+
+```bash
+# 列出最近10个版本
+npm run version:history:list
+
+# 列出所有版本
+node scripts/version-history.js list --limit 100
+
+# 以JSON格式输出
+node scripts/version-history.js list --json
+
+# 显示详细信息
+node scripts/version-history.js list --detail
+```
+
+#### 查看版本详情
+
+```bash
+# 查看指定版本的详细信息
+npm run version:history:show v0.3.0
+# 或
+node scripts/version-history.js show v0.3.0
+```
+
+显示版本的发布日期、作者、提交ID、标签说明和完整的发布说明。
+
+#### 比较版本
+
+```bash
+# 比较两个版本的差异
+npm run version:history:compare v0.2.0 v0.3.0
+# 或
+node scripts/version-history.js compare v0.2.0 v0.3.0
+```
+
+显示版本间的提交变更，按功能、修复和其他变更分类。
+
+#### 搜索版本
+
+```bash
+# 搜索包含关键词的版本
+npm run version:history:search "bug fix"
+
+# 按类型搜索
+node scripts/version-history.js search "feature" --type message
+node scripts/version-history.js search "John" --type author
+node scripts/version-history.js search "0.3" --type version
+```
+
+### 版本回滚
+
+#### 系统状态验证
+
+在执行回滚前，建议先验证系统状态：
+
+```bash
+npm run version:rollback:validate
+# 或
+node scripts/version-rollback.js validate
+```
+
+#### 执行版本回滚
+
+```bash
+# 回滚到指定版本
+npm run version:rollback v0.2.0
+# 或
+node scripts/version-rollback.js v0.2.0
+
+# 强制回滚（忽略工作目录检查）
+node scripts/version-rollback.js v0.2.0 --force
+
+# 跳过备份创建
+node scripts/version-rollback.js v0.2.0 --skip-backup
+
+# 指定回滚原因
+node scripts/version-rollback.js v0.2.0 --reason "修复关键安全漏洞"
+```
+
+#### 回滚安全检查
+
+回滚系统包含多重安全检查：
+
+1. **工作目录检查**: 确保没有未提交的更改
+2. **版本存在性验证**: 确认目标版本存在
+3. **向前回滚警告**: 提醒用户避免回滚到更新版本
+4. **自动备份**: 在回滚前创建当前状态的备份
+
+#### 查看回滚历史
+
+```bash
+npm run version:rollback:history
+# 或
+node scripts/version-rollback.js history
+```
+
+#### 管理备份
+
+```bash
+# 列出可用备份
+npm run version:rollback:backups
+# 或
+node scripts/version-rollback.js backups
+```
+
+备份包含：
+- 当前package.json的副本
+- 回滚操作的详细信息
+- Git分支和提交信息
 
 ## 最佳实践
 
@@ -188,6 +335,20 @@ git push origin main --tags
 git push origin main
 git push origin --tags
 ```
+
+### 5. 版本历史管理
+
+- 定期查看版本历史，了解项目发展轨迹
+- 使用版本比较功能分析变更影响
+- 保持发布说明的完整性和准确性
+
+### 6. 版本回滚策略
+
+- 仅在紧急情况下使用版本回滚
+- 回滚前务必验证系统状态
+- 保留回滚备份，以便必要时恢复
+- 回滚后立即运行完整测试套件
+- 记录回滚原因，便于后续分析
 
 ## 故障排除
 
@@ -264,8 +425,27 @@ jobs:
 2. 检查项目的Issue列表
 3. 创建新的Issue描述问题
 
+## 相关文档
+
+本文档是版本管理系统的基础使用指南。更详细的信息请参考：
+
+- **[完整使用指南](VERSION_MANAGEMENT_USER_GUIDE.md)** - 详细的功能说明和使用方法
+- **[快速参考](VERSION_MANAGEMENT_QUICK_REFERENCE.md)** - 常用命令速查表
+- **[常见问题解答](VERSION_MANAGEMENT_FAQ.md)** - FAQ和解决方案
+- **[故障排除指南](VERSION_MANAGEMENT_TROUBLESHOOTING.md)** - 错误诊断和修复方法
+
 ## 更新日志
 
 - v1.0.0: 初始版本，支持基础版本管理功能
 - v1.1.0: 添加自动提交类型检测
 - v1.2.0: 支持预发布版本管理
+- v1.3.0: 新增版本历史查询和版本回滚功能
+  - 版本历史查看、比较和搜索
+  - 安全的版本回滚机制
+  - 自动备份和回滚日志记录
+  - 系统状态验证和安全检查
+- v1.4.0: 完善文档体系
+  - 新增完整使用指南
+  - 添加快速参考和FAQ
+  - 提供详细的故障排除指南
+  - 优化用户体验和可维护性

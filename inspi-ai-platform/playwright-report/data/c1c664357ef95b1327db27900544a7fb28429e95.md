@@ -1,0 +1,115 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - link "跳到主要内容" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e3]:
+    - navigation [ref=e4]:
+      - link "首页" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img [ref=e7] [cursor=pointer]
+        - generic [ref=e9] [cursor=pointer]: 首页
+      - link "AI魔法师" [ref=e10] [cursor=pointer]:
+        - /url: /create
+        - img [ref=e12] [cursor=pointer]
+        - generic [ref=e14] [cursor=pointer]: AI魔法师
+      - link "智慧广场" [ref=e15] [cursor=pointer]:
+        - /url: /square
+        - img [ref=e17] [cursor=pointer]
+        - generic [ref=e19] [cursor=pointer]: 智慧广场
+      - link "我的作品" [ref=e20] [cursor=pointer]:
+        - /url: /works
+        - img [ref=e22] [cursor=pointer]
+        - generic [ref=e24] [cursor=pointer]: 我的作品
+      - link "我的" [ref=e25] [cursor=pointer]:
+        - /url: /profile
+        - img [ref=e27] [cursor=pointer]
+        - generic [ref=e29] [cursor=pointer]: 我的
+    - main [ref=e30]:
+      - generic [ref=e31]:
+        - generic [ref=e32]:
+          - heading "AI魔法师" [level=1] [ref=e33]
+          - paragraph [ref=e34]: 输入知识点，生成精美教学卡片
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - heading "输入知识点" [level=2] [ref=e37]
+            - generic [ref=e38]:
+              - generic [ref=e39]:
+                - generic [ref=e40]: 知识点内容 *
+                - textbox "请输入要生成教学卡片的知识点内容..." [ref=e43]
+              - generic [ref=e44]:
+                - generic [ref=e45]:
+                  - generic [ref=e46]: 学科 *
+                  - combobox [ref=e47]:
+                    - option "选择学科" [selected]
+                    - option "数学"
+                    - option "语文"
+                    - option "英语"
+                    - option "物理"
+                    - option "化学"
+                    - option "生物"
+                    - option "历史"
+                    - option "地理"
+                - generic [ref=e48]:
+                  - generic [ref=e49]: 学段 *
+                  - combobox [ref=e50]:
+                    - option "选择学段" [selected]
+                    - option "小学"
+                    - option "初中"
+                    - option "高中"
+          - generic [ref=e51]:
+            - heading "将生成的卡片类型" [level=3] [ref=e52]
+            - generic [ref=e53]:
+              - generic [ref=e55]:
+                - generic [ref=e56]: 💡
+                - generic [ref=e57]:
+                  - heading "概念解释卡" [level=4] [ref=e58]
+                  - paragraph [ref=e59]: 清晰解释核心概念
+              - generic [ref=e61]:
+                - generic [ref=e62]: 📝
+                - generic [ref=e63]:
+                  - heading "实例演示卡" [level=4] [ref=e64]
+                  - paragraph [ref=e65]: 生动的实际案例
+              - generic [ref=e67]:
+                - generic [ref=e68]: 🎯
+                - generic [ref=e69]:
+                  - heading "练习巩固卡" [level=4] [ref=e70]
+                  - paragraph [ref=e71]: 针对性练习题目
+              - generic [ref=e73]:
+                - generic [ref=e74]: 🚀
+                - generic [ref=e75]:
+                  - heading "拓展思考卡" [level=4] [ref=e76]
+                  - paragraph [ref=e77]: 深入思考与延伸
+          - button "✨ 生成教学卡片" [disabled] [ref=e79]
+        - generic [ref=e80]:
+          - generic [ref=e81]:
+            - heading "最近项目" [level=3] [ref=e82]
+            - generic [ref=e84]: 暂无最近项目
+          - generic [ref=e85]:
+            - heading "推荐模板" [level=3] [ref=e86]
+            - generic [ref=e87]:
+              - generic [ref=e88]:
+                - generic [ref=e89]: 🔢
+                - generic [ref=e90]: 数学概念卡
+              - generic [ref=e91]:
+                - generic [ref=e92]: 📖
+                - generic [ref=e93]: 语文阅读卡
+              - generic [ref=e94]:
+                - generic [ref=e95]: 🔤
+                - generic [ref=e96]: 英语词汇卡
+              - generic [ref=e97]:
+                - generic [ref=e98]: 🧪
+                - generic [ref=e99]: 科学实验卡
+          - generic [ref=e101]:
+            - generic [ref=e102]: 💡
+            - generic [ref=e103]:
+              - heading "使用小贴士" [level=4] [ref=e104]
+              - list [ref=e105]:
+                - listitem [ref=e106]: • 知识点描述越详细，生成的卡片质量越高
+                - listitem [ref=e107]: • 可以包含具体的教学目标和重难点
+                - listitem [ref=e108]: • 生成后可以进一步编辑和完善卡片内容
+  - button "Open Next.js Dev Tools" [ref=e114] [cursor=pointer]:
+    - img [ref=e115] [cursor=pointer]
+  - alert [ref=e118]
+```

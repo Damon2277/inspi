@@ -1,0 +1,114 @@
+{
+  "stages": {
+    "planning": {
+      "name": "规划阶段",
+      "description": "项目规划和需求分析阶段",
+      "prerequisites": [],
+      "gates": [
+        {
+          "id": "requirements_defined",
+          "name": "需求已定义",
+          "type": "file_exists",
+          "target": ".kiro/specs/*/requirements.md",
+          "required": true
+        },
+        {
+          "id": "design_approved",
+          "name": "设计已批准",
+          "type": "file_exists",
+          "target": ".kiro/specs/*/design.md",
+          "required": true
+        }
+      ]
+    },
+    "development": {
+      "name": "开发阶段",
+      "description": "代码开发和实现阶段",
+      "prerequisites": ["planning"],
+      "gates": [
+        {
+          "id": "tasks_defined",
+          "name": "任务已定义",
+          "type": "file_exists",
+          "target": ".kiro/specs/*/tasks.md",
+          "required": true
+        },
+        {
+          "id": "tests_exist",
+          "name": "测试文件存在",
+          "type": "pattern_exists",
+          "target": "**/*.test.{js,ts}",
+          "required": false
+        },
+        {
+          "id": "code_quality",
+          "name": "代码质量检查",
+          "type": "command",
+          "target": "npx eslint . --format json",
+          "required": false
+        }
+      ]
+    },
+    "testing": {
+      "name": "测试阶段",
+      "description": "功能测试和质量保证阶段",
+      "prerequisites": ["development"],
+      "gates": [
+        {
+          "id": "unit_tests_pass",
+          "name": "单元测试通过",
+          "type": "command",
+          "target": "npm test -- --run",
+          "required": true
+        },
+        {
+          "id": "integration_tests_pass",
+          "name": "集成测试通过",
+          "type": "command",
+          "target": "npm run test:integration",
+          "required": false
+        },
+        {
+          "id": "coverage_threshold",
+          "name": "测试覆盖率达标",
+          "type": "coverage",
+          "target": 80,
+          "required": false
+        }
+      ]
+    },
+    "deployment": {
+      "name": "部署阶段",
+      "description": "部署和发布阶段",
+      "prerequisites": ["testing"],
+      "gates": [
+        {
+          "id": "build_success",
+          "name": "构建成功",
+          "type": "command",
+          "target": "npm run build",
+          "required": true
+        },
+        {
+          "id": "deployment_config",
+          "name": "部署配置存在",
+          "type": "file_exists",
+          "target": ".github/workflows/*.yml",
+          "required": false
+        }
+      ]
+    }
+  },
+  "dependencies": {
+    "feature_completion": {
+      "name": "功能完成依赖",
+      "description": "检查功能是否完成",
+      "validator": "feature_status"
+    },
+    "task_completion": {
+      "name": "任务完成依赖",
+      "description": "检查任务是否完成",
+      "validator": "task_status"
+    }
+  }
+}

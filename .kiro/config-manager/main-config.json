@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "systems": {},
+  "global": {},
+  "test": {
+    "value": "test-data",
+    "listener": "listener-test"
+  },
+  "_metadata": {
+    "lastUpdated": "2025-09-05T05:07:34.698Z",
+    "version": "1.0.0",
+    "managedBy": "config-manager"
+  }
+}

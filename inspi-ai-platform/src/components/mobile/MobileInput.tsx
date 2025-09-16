@@ -38,6 +38,9 @@ export const MobileInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Mo
   rightIcon,
   onRightIconClick
 }, ref) => {
+  // 生成唯一ID用于label关联
+  const inputId = React.useId();
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (onChange) {
       onChange(e);
@@ -47,7 +50,7 @@ export const MobileInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Mo
   return (
     <div className={`mobile-input-group ${className}`}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 mb-2">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -62,6 +65,7 @@ export const MobileInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Mo
         
         {type === 'textarea' ? (
           <textarea
+            id={inputId}
             ref={ref as React.Ref<HTMLTextAreaElement>}
             value={value}
             onChange={handleChange}
@@ -81,6 +85,7 @@ export const MobileInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Mo
         ) : type === 'search' ? (
           <div className="mobile-search-input">
             <input
+              id={inputId}
               ref={ref as React.Ref<HTMLInputElement>}
               type="text"
               value={value}
@@ -100,6 +105,7 @@ export const MobileInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, Mo
           </div>
         ) : (
           <input
+            id={inputId}
             ref={ref as React.Ref<HTMLInputElement>}
             type={type}
             value={value}

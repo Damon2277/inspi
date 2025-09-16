@@ -1,0 +1,39 @@
+{
+  "qualityThresholds": {
+    "eslintErrors": 0,
+    "eslintWarnings": 10,
+    "testCoverage": 80,
+    "duplicateCodePercentage": 5,
+    "complexityScore": 10
+  },
+  "warningThresholds": {
+    "errorTrend": 3,
+    "performanceDegradation": 20,
+    "testCoverageDecline": 5,
+    "complexityIncrease": 2,
+    "duplicateCodeIncrease": 3
+  },
+  "patternAnalysis": {
+    "lookbackPeriod": 10,
+    "minDataPoints": 3
+  },
+  "testTimeout": 30000,
+  "reportFormats": ["console", "json", "html"],
+  "criticalPaths": [
+    "/",
+    "/create",
+    "/square",
+    "/profile",
+    "/works"
+  ],
+  "apiEndpoints": [
+    "/api/health",
+    "/api/auth/verify-email",
+    "/api/magic/generate"
+  ],
+  "notifications": {
+    "enabled": true,
+    "criticalOnly": true,
+    "methods": ["console", "file"]
+  }
+}

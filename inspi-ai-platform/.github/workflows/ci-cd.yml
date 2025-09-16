@@ -3,6 +3,8 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ main, develop ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main, develop ]
 
@@ -430,3 +432,336 @@ jobs:
           npx playwright test --config=playwright.prod.config.ts
         env:
           TEST_BASE_URL: ${{ secrets.PRODUCTION_URL }}
+
+  # 版本标签发布流程
+  version-release:
+    name: 版本标签发布
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [test, build, security-scan]
+    environment: production
+    
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+      release-url: ${{ steps.create-release.outputs.html_url }}
+    
+    steps:
+      - name: Checkout代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 获取版本号
+        id: get-version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: 验证版本标签格式
+        run: |
+          if [[ ! "${{ steps.get-version.outputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+            echo "Invalid version format: ${{ steps.get-version.outputs.version }}"
+            exit 1
+          fi
+
+      - name: 设置Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 安装pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 运行版本兼容性检查
+        run: pnpm run version:compatibility:validate ${{ steps.get-version.outputs.version }}
+        continue-on-error: true
+
+      - name: 构建发布版本
+        run: pnpm build
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+
+      - name: 运行发布前测试
+        run: |
+          pnpm test:unit
+          pnpm test:integration
+        env:
+          NODE_ENV: test
+
+      - name: 生成发布说明
+        run: |
+          pnpm run release:docs
+          if [ ! -f "RELEASE_NOTES_v${{ steps.get-version.outputs.version }}.md" ]; then
+            echo "Release notes not found, creating basic release notes"
+            echo "# Release v${{ steps.get-version.outputs.version }}" > RELEASE_NOTES_v${{ steps.get-version.outputs.version }}.md
+            echo "" >> RELEASE_NOTES_v${{ steps.get-version.outputs.version }}.md
+            echo "## Changes" >> RELEASE_NOTES_v${{ steps.get-version.outputs.version }}.md
+            git log --oneline $(git describe --tags --abbrev=0 HEAD^)..HEAD >> RELEASE_NOTES_v${{ steps.get-version.outputs.version }}.md
+          fi
+
+      - name: 创建GitHub Release
+        id: create-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.get-version.outputs.version }}
+          release_name: Release v${{ steps.get-version.outputs.version }}
+          body_path: RELEASE_NOTES_v${{ steps.get-version.outputs.version }}.md
+          draft: false
+          prerelease: ${{ contains(steps.get-version.outputs.version, '-') }}
+
+      - name: 上传构建产物到Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./.next
+          asset_name: build-v${{ steps.get-version.outputs.version }}.tar.gz
+          asset_content_type: application/gzip
+        continue-on-error: true
+
+  # 版本标签自动部署到预发布环境
+  deploy-staging-release:
+    name: 部署版本到预发布环境
+    runs-on: ubuntu-latest
+    needs: version-release
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment: staging
+    
+    steps:
+      - name: Checkout代码
+        uses: actions/checkout@v4
+
+      - name: 设置Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 安装pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 构建应用
+        run: pnpm build
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_API_URL: ${{ secrets.STAGING_API_URL }}
+
+      - name: 部署到Vercel预发布环境
+        id: deploy-staging
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--target staging'
+          working-directory: ./
+
+      - name: 预发布环境健康检查
+        run: |
+          sleep 30
+          curl -f ${{ steps.deploy-staging.outputs.preview-url }}/api/health || exit 1
+          echo "Staging deployment successful: ${{ steps.deploy-staging.outputs.preview-url }}"
+
+      - name: 运行预发布环境烟雾测试
+        run: |
+          curl -f ${{ steps.deploy-staging.outputs.preview-url }} || exit 1
+          curl -f ${{ steps.deploy-staging.outputs.preview-url }}/create || exit 1
+          curl -f ${{ steps.deploy-staging.outputs.preview-url }}/square || exit 1
+
+  # 版本标签自动部署到生产环境
+  deploy-production-release:
+    name: 部署版本到生产环境
+    runs-on: ubuntu-latest
+    needs: [version-release, deploy-staging-release]
+    if: startsWith(github.ref, 'refs/tags/v') && !contains(needs.version-release.outputs.version, '-')
+    environment: production
+    
+    steps:
+      - name: Checkout代码
+        uses: actions/checkout@v4
+
+      - name: 设置Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 安装pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 构建应用
+        run: pnpm build
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+
+      - name: 部署到Vercel生产环境
+        id: deploy-production
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./
+
+      - name: 生产环境健康检查
+        run: |
+          sleep 30
+          curl -f ${{ secrets.PRODUCTION_URL }}/api/health || exit 1
+          echo "Production deployment successful"
+
+      - name: 运行生产环境烟雾测试
+        run: |
+          curl -f ${{ secrets.PRODUCTION_URL }} || exit 1
+          curl -f ${{ secrets.PRODUCTION_URL }}/create || exit 1
+          curl -f ${{ secrets.PRODUCTION_URL }}/square || exit 1
+
+      - name: 发送部署成功通知
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#deployments'
+          text: |
+            🚀 Version ${{ needs.version-release.outputs.version }} deployed to production successfully!
+            Release: ${{ needs.version-release.outputs.release-url }}
+            URL: ${{ secrets.PRODUCTION_URL }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # 版本发布后验证
+  post-release-verification:
+    name: 版本发布后验证
+    runs-on: ubuntu-latest
+    needs: [version-release, deploy-production-release]
+    if: startsWith(github.ref, 'refs/tags/v') && !contains(needs.version-release.outputs.version, '-')
+    
+    steps:
+      - name: Checkout代码
+        uses: actions/checkout@v4
+
+      - name: 设置Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 安装pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 安装Playwright浏览器
+        run: pnpm exec playwright install --with-deps
+
+      - name: 运行生产环境端到端测试
+        run: pnpm test:e2e
+        env:
+          TEST_BASE_URL: ${{ secrets.PRODUCTION_URL }}
+
+      - name: 运行性能测试
+        run: pnpm test:performance
+        env:
+          TEST_BASE_URL: ${{ secrets.PRODUCTION_URL }}
+
+      - name: 验证版本信息
+        run: |
+          VERSION_FROM_API=$(curl -s ${{ secrets.PRODUCTION_URL }}/api/version | jq -r '.version')
+          if [ "$VERSION_FROM_API" != "${{ needs.version-release.outputs.version }}" ]; then
+            echo "Version mismatch: API reports $VERSION_FROM_API, expected ${{ needs.version-release.outputs.version }}"
+            exit 1
+          fi
+          echo "Version verification successful: $VERSION_FROM_API"
+
+      - name: 发送验证结果通知
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          text: |
+            📋 Post-release verification for v${{ needs.version-release.outputs.version }}: ${{ job.status }}
+            ${{ job.status == 'success' && '✅ All verification tests passed' || '❌ Some verification tests failed' }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # 部署失败回滚
+  rollback-on-failure:
+    name: 部署失败回滚
+    runs-on: ubuntu-latest
+    needs: [version-release, deploy-production-release, post-release-verification]
+    if: failure() && startsWith(github.ref, 'refs/tags/v')
+    environment: production
+    
+    steps:
+      - name: Checkout代码
+        uses: actions/checkout@v4
+
+      - name: 设置Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 安装pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 获取上一个稳定版本
+        id: get-previous-version
+        run: |
+          PREVIOUS_VERSION=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -2 | tail -1)
+          echo "previous-version=${PREVIOUS_VERSION#v}" >> $GITHUB_OUTPUT
+          echo "Previous stable version: ${PREVIOUS_VERSION#v}"
+
+      - name: 执行版本回滚
+        run: |
+          pnpm run version:rollback ${{ steps.get-previous-version.outputs.previous-version }}
+        continue-on-error: true
+
+      - name: 重新部署上一个稳定版本
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./
+
+      - name: 验证回滚成功
+        run: |
+          sleep 30
+          curl -f ${{ secrets.PRODUCTION_URL }}/api/health || exit 1
+          echo "Rollback successful"
+
+      - name: 发送回滚通知
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          text: |
+            🔄 Automatic rollback executed for failed deployment of v${{ needs.version-release.outputs.version }}
+            Rolled back to: v${{ steps.get-previous-version.outputs.previous-version }}
+            Status: ${{ job.status == 'success' && 'Rollback successful' || 'Rollback failed - manual intervention required' }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}

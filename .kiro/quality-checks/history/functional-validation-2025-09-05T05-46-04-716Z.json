@@ -1,0 +1,66 @@
+{
+  "status": "warning",
+  "timestamp": "2025-09-05T05:45:58.249Z",
+  "testResults": {
+    "unit": {
+      "passed": 0,
+      "failed": 0,
+      "total": 0,
+      "details": []
+    },
+    "integration": {
+      "passed": 0,
+      "failed": 0,
+      "total": 0,
+      "details": []
+    },
+    "e2e": {
+      "passed": 0,
+      "failed": 0,
+      "total": 0,
+      "details": []
+    },
+    "api": {
+      "passed": 0,
+      "failed": 0,
+      "total": 0,
+      "details": []
+    }
+  },
+  "functionalChecks": {
+    "unitTests": {
+      "status": "error",
+      "passed": 0,
+      "failed": 0,
+      "total": 0,
+      "error": "Failed to parse test results"
+    },
+    "integrationTests": {
+      "status": "skipped",
+      "message": "No integration tests found",
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    },
+    "apiTests": {
+      "status": "skipped",
+      "message": "Project is not running, cannot test API endpoints",
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    },
+    "consistencyCheck": {
+      "status": "warning",
+      "issues": [
+        {
+          "type": "outdated_lockfile",
+          "severity": "medium",
+          "message": "package-lock.json is older than package.json, run npm install"
+        }
+      ],
+      "totalIssues": 1
+    }
+  },
+  "regressionIssues": [],
+  "consistencyIssues": []
+}

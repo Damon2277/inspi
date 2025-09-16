@@ -1,0 +1,40 @@
+{
+  "name": "developer-dashboard",
+  "version": "1.0.0",
+  "description": "开发者仪表板 - 项目管理系统统一界面",
+  "main": "index.js",
+  "bin": {
+    "dashboard": "./cli.js"
+  },
+  "scripts": {
+    "start": "node cli.js start",
+    "dev": "node cli.js start",
+    "status": "node cli.js status",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "dashboard",
+    "project-management",
+    "developer-tools",
+    "monitoring",
+    "recovery"
+  ],
+  "author": "Kiro AI Assistant",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
+  },
+  "bugs": {
+    "url": "."
+  },
+  "homepage": "."
+}

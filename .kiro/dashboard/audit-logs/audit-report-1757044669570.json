@@ -1,0 +1,24 @@
+{
+  "id": "op-1757044669569-0nm3g76g6",
+  "timestamp": "2025-09-05T03:57:49.569Z",
+  "period": {
+    "start": "2025-09-04T03:57:49.569Z",
+    "end": "2025-09-05T03:57:49.569Z"
+  },
+  "summary": {
+    "totalOperations": 2,
+    "successfulOperations": 1,
+    "failedOperations": 0,
+    "securityEvents": 0,
+    "uniqueUsers": 2,
+    "operationTypes": {
+      "test_operation": 1,
+      "session_start": 1
+    },
+    "dailyActivity": {
+      "2025-09-05": 2
+    }
+  },
+  "details": null,
+  "recommendations": []
+}

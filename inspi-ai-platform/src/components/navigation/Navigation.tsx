@@ -107,7 +107,7 @@ export function Navigation() {
   // 移动端导航 - 底部导航栏
   if (isMobile) {
     return (
-      <nav className="mobile-bottom-navigation">
+      <nav className="mobile-bottom-navigation mobile-bottom-nav">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           

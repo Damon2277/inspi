@@ -1,0 +1,212 @@
+{
+  "timestamp": "2025-09-05T05:45:38.705Z",
+  "totalTests": 5,
+  "passedTests": 5,
+  "failedTests": 0,
+  "tests": [
+    {
+      "name": "系统文件存在性验证",
+      "description": "验证所有核心系统文件是否存在",
+      "passed": true,
+      "message": "系统文件存在性: 6/6 (100%)",
+      "details": [
+        {
+          "name": "质量检查系统",
+          "exists": true,
+          "path": ".kiro/quality-checks/index.js"
+        },
+        {
+          "name": "样式恢复系统",
+          "exists": true,
+          "path": ".kiro/style-recovery/index.js"
+        },
+        {
+          "name": "恢复点系统",
+          "exists": true,
+          "path": ".kiro/recovery-points/index.js"
+        },
+        {
+          "name": "开发者仪表板",
+          "exists": true,
+          "path": ".kiro/dashboard/index.js"
+        },
+        {
+          "name": "配置管理系统",
+          "exists": true,
+          "path": ".kiro/config-manager/index.js"
+        },
+        {
+          "name": "版本管理系统",
+          "exists": true,
+          "path": "inspi-ai-platform/scripts/bump-version.js"
+        }
+      ],
+      "issues": [],
+      "timestamp": "2025-09-05T05:45:38.712Z"
+    },
+    {
+      "name": "配置文件完整性验证",
+      "description": "验证系统配置文件的完整性",
+      "passed": true,
+      "message": "配置文件完整性: 6/6 (100%)",
+      "details": [
+        {
+          "name": "质量检查配置",
+          "valid": true,
+          "path": ".kiro/quality-checks/config.json",
+          "keys": 8
+        },
+        {
+          "name": "样式恢复配置",
+          "valid": true,
+          "path": ".kiro/style-recovery/config.json",
+          "keys": 4
+        },
+        {
+          "name": "恢复点配置",
+          "valid": true,
+          "path": ".kiro/recovery-points/config.json",
+          "keys": 4
+        },
+        {
+          "name": "仪表板配置",
+          "valid": true,
+          "path": ".kiro/dashboard/config.json",
+          "keys": 4
+        },
+        {
+          "name": "配置管理主配置",
+          "valid": true,
+          "path": ".kiro/config-manager/main-config.json",
+          "keys": 5
+        },
+        {
+          "name": "版本管理配置",
+          "valid": true,
+          "path": "inspi-ai-platform/version.config.json",
+          "keys": 4
+        }
+      ],
+      "issues": [],
+      "timestamp": "2025-09-05T05:45:38.721Z"
+    },
+    {
+      "name": "系统间依赖关系验证",
+      "description": "验证系统间的依赖关系是否正确",
+      "passed": true,
+      "message": "系统依赖关系: 3/3 正常",
+      "details": [
+        {
+          "system": "仪表板",
+          "description": "仪表板需要从其他系统获取数据",
+          "valid": true,
+          "missingDependencies": []
+        },
+        {
+          "system": "恢复点系统",
+          "description": "恢复点系统需要质量和样式信息",
+          "valid": true,
+          "missingDependencies": []
+        },
+        {
+          "system": "配置管理系统",
+          "description": "配置管理系统为所有系统提供配置",
+          "valid": true,
+          "missingDependencies": []
+        }
+      ],
+      "issues": [],
+      "timestamp": "2025-09-05T05:45:38.722Z"
+    },
+    {
+      "name": "基本功能接口验证",
+      "description": "验证各系统的基本功能接口",
+      "passed": true,
+      "message": "基本接口验证: 2/2 通过",
+      "details": [
+        {
+          "name": "CLI接口一致性",
+          "description": "检查各系统CLI接口的一致性",
+          "passed": true,
+          "details": [
+            {
+              "file": ".kiro/quality-checks/cli.js",
+              "consistent": true,
+              "hasHelp": true,
+              "hasShebang": true
+            },
+            {
+              "file": ".kiro/style-recovery/cli.js",
+              "consistent": false,
+              "hasHelp": false,
+              "hasShebang": true
+            },
+            {
+              "file": ".kiro/recovery-points/cli.js",
+              "consistent": true,
+              "hasHelp": true,
+              "hasShebang": true
+            },
+            {
+              "file": ".kiro/dashboard/cli.js",
+              "consistent": true,
+              "hasHelp": true,
+              "hasShebang": true
+            },
+            {
+              "file": ".kiro/config-manager/cli.js",
+              "consistent": true,
+              "hasHelp": true,
+              "hasShebang": true
+            }
+          ]
+        },
+        {
+          "name": "配置接口标准化",
+          "description": "检查配置接口的标准化程度",
+          "passed": true,
+          "details": []
+        }
+      ],
+      "issues": [],
+      "timestamp": "2025-09-05T05:45:38.731Z"
+    },
+    {
+      "name": "数据流连通性验证",
+      "description": "验证系统间的数据流连通性",
+      "passed": true,
+      "message": "数据流连通性: 3/3 正常",
+      "details": [
+        {
+          "name": "配置数据流",
+          "from": "配置管理系统",
+          "to": "各子系统",
+          "description": "配置管理系统向各子系统提供配置数据",
+          "connected": true
+        },
+        {
+          "name": "状态数据流",
+          "from": "各子系统",
+          "to": "仪表板",
+          "description": "各子系统向仪表板提供状态信息",
+          "connected": true
+        },
+        {
+          "name": "恢复数据流",
+          "from": "恢复点系统",
+          "to": "样式恢复系统",
+          "description": "恢复点系统向样式恢复系统提供快照数据",
+          "connected": true
+        }
+      ],
+      "issues": [],
+      "timestamp": "2025-09-05T05:45:38.737Z"
+    }
+  ],
+  "summary": {
+    "overallStatus": "excellent",
+    "successRate": 100,
+    "criticalIssues": 0,
+    "warnings": 0
+  }
+}

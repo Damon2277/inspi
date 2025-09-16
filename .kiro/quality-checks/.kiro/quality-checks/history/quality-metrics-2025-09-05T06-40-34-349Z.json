@@ -1,0 +1,40 @@
+{
+  "status": "failed",
+  "timestamp": "2025-09-05T06:40:34.341Z",
+  "metrics": {
+    "eslint": {
+      "errors": 0,
+      "warnings": 0,
+      "fixableIssues": 0,
+      "message": "ESLint config not found, skipping check"
+    },
+    "testCoverage": {
+      "percentage": 0,
+      "message": "No coverage data found. Run tests with coverage first."
+    },
+    "codeComplexity": {
+      "averageComplexity": 0,
+      "totalFunctions": 0,
+      "highComplexityFunctions": []
+    },
+    "duplicateCode": {
+      "percentage": 0,
+      "totalBlocks": 0,
+      "duplicateBlocks": []
+    },
+    "dependencies": {
+      "outdated": [],
+      "vulnerable": [],
+      "error": "ENOENT: no such file or directory, open '/Users/apple/inspi/.kiro/quality-checks/inspi-ai-platform/package.json'"
+    }
+  },
+  "issues": [
+    {
+      "type": "low_coverage",
+      "severity": "high",
+      "message": "Test coverage is 0% (threshold: 80%)",
+      "coverage": 0
+    }
+  ],
+  "suggestions": []
+}

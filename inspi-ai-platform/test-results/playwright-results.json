@@ -1,0 +1,330 @@
+{
+  "config": {
+    "configFile": "/Users/apple/inspi/inspi-ai-platform/playwright.config.ts",
+    "rootDir": "/Users/apple/inspi/inspi-ai-platform/src/__tests__/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": "/Users/apple/inspi/inspi-ai-platform/src/__tests__/setup/global-setup.ts",
+    "globalTeardown": "/Users/apple/inspi/inspi-ai-platform/src/__tests__/setup/global-teardown.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 2
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/playwright-results.json"
+        }
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "test-results/playwright-results.xml"
+        }
+      ],
+      [
+        "line",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/apple/inspi/inspi-ai-platform/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/apple/inspi/inspi-ai-platform/src/__tests__/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 15000
+      },
+      {
+        "outputDir": "/Users/apple/inspi/inspi-ai-platform/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "/Users/apple/inspi/inspi-ai-platform/src/__tests__/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 15000
+      },
+      {
+        "outputDir": "/Users/apple/inspi/inspi-ai-platform/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "/Users/apple/inspi/inspi-ai-platform/src/__tests__/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 15000
+      },
+      {
+        "outputDir": "/Users/apple/inspi/inspi-ai-platform/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "Mobile Chrome",
+        "name": "Mobile Chrome",
+        "testDir": "/Users/apple/inspi/inspi-ai-platform/src/__tests__/mobile",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 15000
+      },
+      {
+        "outputDir": "/Users/apple/inspi/inspi-ai-platform/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "Mobile Safari",
+        "name": "Mobile Safari",
+        "testDir": "/Users/apple/inspi/inspi-ai-platform/src/__tests__/mobile",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 15000
+      },
+      {
+        "outputDir": "/Users/apple/inspi/inspi-ai-platform/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "iPad",
+        "name": "iPad",
+        "testDir": "/Users/apple/inspi/inspi-ai-platform/src/__tests__/mobile",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 15000
+      },
+      {
+        "outputDir": "/Users/apple/inspi/inspi-ai-platform/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "performance",
+        "name": "performance",
+        "testDir": "/Users/apple/inspi/inspi-ai-platform/src/__tests__/performance",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 15000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.55.0",
+    "workers": 4,
+    "webServer": {
+      "command": "npm run start",
+      "url": "http://localhost:3000",
+      "reuseExistingServer": true,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "main-user-flows.e2e.test.ts",
+      "file": "main-user-flows.e2e.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "主要用户流程端到端测试",
+          "file": "main-user-flows.e2e.test.ts",
+          "line": 113,
+          "column": 6,
+          "specs": [],
+          "suites": [
+            {
+              "title": "创作流程",
+              "file": "main-user-flows.e2e.test.ts",
+              "line": 193,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "应该能够查看创作选项并选择创作类型",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "failed",
+                          "duration": 5419,
+                          "error": {
+                            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
+                            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at /Users/apple/inspi/inspi-ai-platform/src/__tests__/e2e/main-user-flows.e2e.test.ts:199:28",
+                            "location": {
+                              "file": "/Users/apple/inspi/inspi-ai-platform/src/__tests__/e2e/main-user-flows.e2e.test.ts",
+                              "column": 28,
+                              "line": 199
+                            },
+                            "snippet": "\u001b[0m \u001b[90m 197 |\u001b[39m       \u001b[90m// 验证创作选项存在\u001b[39m\n \u001b[90m 198 |\u001b[39m       \u001b[36mconst\u001b[39m optionsCount \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m createPage\u001b[33m.\u001b[39mgetCreateOptions()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 199 |\u001b[39m       expect(optionsCount)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                            \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 200 |\u001b[39m       \n \u001b[90m 201 |\u001b[39m       \u001b[90m// 验证最近项目区域\u001b[39m\n \u001b[90m 202 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.recent-projects'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/apple/inspi/inspi-ai-platform/src/__tests__/e2e/main-user-flows.e2e.test.ts",
+                                "column": 28,
+                                "line": 199
+                              },
+                              "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\n\u001b[0m \u001b[90m 197 |\u001b[39m       \u001b[90m// 验证创作选项存在\u001b[39m\n \u001b[90m 198 |\u001b[39m       \u001b[36mconst\u001b[39m optionsCount \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m createPage\u001b[33m.\u001b[39mgetCreateOptions()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 199 |\u001b[39m       expect(optionsCount)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                            \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 200 |\u001b[39m       \n \u001b[90m 201 |\u001b[39m       \u001b[90m// 验证最近项目区域\u001b[39m\n \u001b[90m 202 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.recent-projects'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /Users/apple/inspi/inspi-ai-platform/src/__tests__/e2e/main-user-flows.e2e.test.ts:199:28\u001b[22m"
+                            }
+                          ],
+                          "stdout": [
+                            {
+                              "text": "端到端测试完成，清理测试数据...\n"
+                            }
+                          ],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-09-12T09:54:03.792Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/apple/inspi/inspi-ai-platform/test-results/main-user-flows.e2e-主要用户流程端到端测试-创作流程-应该能够查看创作选项并选择创作类型-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/apple/inspi/inspi-ai-platform/test-results/main-user-flows.e2e-主要用户流程端到端测试-创作流程-应该能够查看创作选项并选择创作类型-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/apple/inspi/inspi-ai-platform/test-results/main-user-flows.e2e-主要用户流程端到端测试-创作流程-应该能够查看创作选项并选择创作类型-chromium/error-context.md"
+                            },
+                            {
+                              "name": "trace",
+                              "contentType": "application/zip",
+                              "path": "/Users/apple/inspi/inspi-ai-platform/test-results/main-user-flows.e2e-主要用户流程端到端测试-创作流程-应该能够查看创作选项并选择创作类型-chromium/trace.zip"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/apple/inspi/inspi-ai-platform/src/__tests__/e2e/main-user-flows.e2e.test.ts",
+                            "column": 28,
+                            "line": 199
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "fc37c8dca7ac9170485e-8bcbeb99c2a5fa1d6993",
+                  "file": "main-user-flows.e2e.test.ts",
+                  "line": 194,
+                  "column": 9
+                },
+                {
+                  "title": "应该能够查看最近项目和模板",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 1,
+                          "parallelIndex": 1,
+                          "status": "passed",
+                          "duration": 5111,
+                          "errors": [],
+                          "stdout": [
+                            {
+                              "text": "端到端测试完成，清理测试数据...\n"
+                            }
+                          ],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-09-12T09:54:03.788Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "fc37c8dca7ac9170485e-863e1d7fb8e18f81ee64",
+                  "file": "main-user-flows.e2e.test.ts",
+                  "line": 211,
+                  "column": 9
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-09-12T09:53:23.456Z",
+    "duration": 48264.283,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

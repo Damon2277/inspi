@@ -1,16 +1,36 @@
 'use client';
 
 import React from 'react';
-import { MobileLayout } from '@/components/mobile/MobileLayout';
-import { MobileCard } from '@/components/mobile/MobileCard';
-import { MobileButton } from '@/components/mobile/MobileButton';
-import { MobilePageHeader } from '@/components/mobile/MobilePageHeader';
+import { DesktopHomePage } from '@/components/desktop/pages/DesktopHomePage';
+import { DesktopLayout } from '@/components/desktop';
 
 /**
- * 移动端首页
- * 专为移动设备优化的界面布局
+ * 首页 - 暂时只显示桌面端版本
  */
 export default function HomePage() {
+  // 直接显示桌面端版本，不做响应式检测
+  return (
+    <DesktopLayout>
+      <DesktopHomePage />
+    </DesktopLayout>
+  );
+}
+
+/* 
+// 移动端代码已注释，等桌面端调试完成后再启用
+export default function HomePage() {
+  const { isMobile, screenWidth } = useResponsive();
+
+  // 桌面端显示专用组件 (屏幕宽度 >= 1024px)
+  if (screenWidth >= 1024) {
+    return (
+      <AppLayout className="desktop-mode">
+        <DesktopHomePage />
+      </AppLayout>
+    );
+  }
+
+  // 移动端保持原有设计
   const features = [
     {
       id: 1,
@@ -39,13 +59,13 @@ export default function HomePage() {
   ];
 
   return (
-    <MobileLayout>
+    <AppLayout>
       <MobilePageHeader 
         title="Inspi.AI" 
         subtitle="用AI激发教学创意，让每一次教学都充满魔法"
+        className="hero-section"
       />
 
-      {/* 功能卡片区域 */}
       <div className="px-4 py-6 space-y-4">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
           开始你的创作之旅
@@ -54,7 +74,8 @@ export default function HomePage() {
         {features.map((feature) => (
           <MobileCard
             key={feature.id}
-            className="p-0 overflow-hidden"
+            className="p-0 overflow-hidden feature-card"
+            data-testid={`feature-card-${feature.id}`}
           >
             <div className={`${feature.color} p-4 text-white`}>
               <div className="flex items-center space-x-3">
@@ -73,7 +94,6 @@ export default function HomePage() {
                 size="sm"
                 className="w-full"
                 onClick={() => {
-                  // 这里可以添加导航逻辑
                   console.log(`Navigate to ${feature.href}`);
                 }}
               >
@@ -84,7 +104,6 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* 快速统计 */}
       <div className="px-4 py-6 bg-gray-50">
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
@@ -102,7 +121,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* 行动号召 */}
       <div className="px-4 py-6">
         <MobileCard className="text-center p-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
           <h3 className="text-lg font-semibold mb-2">
@@ -119,6 +137,7 @@ export default function HomePage() {
           </MobileButton>
         </MobileCard>
       </div>
-    </MobileLayout>
+    </AppLayout>
   );
 }
+*/

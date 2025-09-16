@@ -17,11 +17,17 @@ export function MobilePageHeader({
   subtitle, 
   className = '' 
 }: MobilePageHeaderProps) {
+  const isHeroSection = className.includes('hero-section');
+  
   return (
     <header className={`mobile-page-header ${className}`}>
-      <h1 className="mobile-page-title">{title}</h1>
+      <h1 className={`mobile-page-title ${isHeroSection ? 'hero-title' : ''}`} data-testid="page-title">
+        {title}
+      </h1>
       {subtitle && (
-        <p className="mobile-page-subtitle">{subtitle}</p>
+        <p className="mobile-page-subtitle" data-testid="page-subtitle">
+          {subtitle}
+        </p>
       )}
     </header>
   );

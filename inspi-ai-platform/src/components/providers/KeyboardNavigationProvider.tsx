@@ -1,126 +1,53 @@
 'use client';
-
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation';
-import { KeyboardShortcutsProvider } from '@/components/ui/KeyboardShortcuts';
+import React, { createContext, useContext, useRef } from 'react';
+import { useKeyboardNavigation, useFocusManagement } from '@/hooks/useKeyboardNavigation';
 
 interface KeyboardNavigationContextType {
-  isKeyboardUser: boolean;
-  setKeyboardUser: (isKeyboard: boolean) => void;
+  containerRef: React.RefObject<HTMLElement>;
+  focusFirst: () => void;
+  focusLast: () => void;
+  focusNext: () => void;
+  focusPrevious: () => void;
 }
 
-const KeyboardNavigationContext = createContext<KeyboardNavigationContextType | undefined>(undefined);
+const KeyboardNavigationContext = createContext<KeyboardNavigationContextType | null>(null);
 
-export const useKeyboardNavigationContext = () => {
+export function useKeyboardNavigationContext() {
   const context = useContext(KeyboardNavigationContext);
   if (!context) {
     throw new Error('useKeyboardNavigationContext must be used within KeyboardNavigationProvider');
   }
   return context;
-};
+}
 
 interface KeyboardNavigationProviderProps {
   children: React.ReactNode;
 }
 
-/**
- * 全局键盘导航提供者
- * 管理键盘导航状态和全局快捷键
- */
-export const KeyboardNavigationProvider: React.FC<KeyboardNavigationProviderProps> = ({
-  children
-}) => {
-  const [isKeyboardUser, setIsKeyboardUser] = useState(false);
+export function KeyboardNavigationProvider({ children }: KeyboardNavigationProviderProps) {
+  const containerRef = useRef<HTMLElement>(null);
+  const { focusFirst, focusLast, focusNext, focusPrevious } = useFocusManagement(containerRef);
 
-  // 全局键盘快捷键
+  // 设置全局键盘导航
   useKeyboardNavigation({
-    shortcuts: [
-      {
-        key: '/',
-        action: () => {
-          // 聚焦搜索框
-          const searchInput = document.querySelector('input[type="search"], input[placeholder*="搜索"], input[placeholder*="search"]') as HTMLInputElement;
-          if (searchInput) {
-            searchInput.focus();
-          }
-        },
-        description: '聚焦搜索框'
-      },
-      {
-        key: 'Escape',
-        action: () => {
-          // 关闭模态框或清除焦点
-          const activeElement = document.activeElement as HTMLElement;
-          if (activeElement && activeElement.blur) {
-            activeElement.blur();
-          }
-          
-          // 触发全局 ESC 事件
-          document.dispatchEvent(new CustomEvent('global-escape'));
-        },
-        description: '关闭模态框或清除焦点'
-      },
-      {
-        key: 'h',
-        action: () => {
-          // 返回首页
-          window.location.href = '/';
-        },
-        description: '返回首页'
-      }
-    ]
+    onArrowUp: focusPrevious,
+    onArrowDown: focusNext,
+    enabled: true
   });
 
-  // 检测键盘使用
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Tab') {
-        setIsKeyboardUser(true);
-        document.body.classList.add('keyboard-navigation-active');
-      }
-    };
-
-    const handleMouseDown = () => {
-      setIsKeyboardUser(false);
-      document.body.classList.remove('keyboard-navigation-active');
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('mousedown', handleMouseDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('mousedown', handleMouseDown);
-    };
-  }, []);
-
-  // 添加跳过链接
-  useEffect(() => {
-    const skipLink = document.createElement('a');
-    skipLink.href = '#main-content';
-    skipLink.className = 'skip-link';
-    skipLink.textContent = '跳到主要内容';
-    skipLink.setAttribute('aria-label', '跳到主要内容');
-    
-    document.body.insertBefore(skipLink, document.body.firstChild);
-
-    return () => {
-      if (skipLink.parentNode) {
-        skipLink.parentNode.removeChild(skipLink);
-      }
-    };
-  }, []);
-
-  const contextValue: KeyboardNavigationContextType = {
-    isKeyboardUser,
-    setKeyboardUser: setIsKeyboardUser
+  const value = {
+    containerRef,
+    focusFirst,
+    focusLast,
+    focusNext,
+    focusPrevious
   };
 
   return (
-    <KeyboardNavigationContext.Provider value={contextValue}>
-      <KeyboardShortcutsProvider>
+    <KeyboardNavigationContext.Provider value={value}>
+      <div ref={containerRef as React.RefObject<HTMLDivElement>}>
         {children}
-      </KeyboardShortcutsProvider>
+      </div>
     </KeyboardNavigationContext.Provider>
   );
-};
+}

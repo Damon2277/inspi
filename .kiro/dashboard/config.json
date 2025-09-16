@@ -1,0 +1,10 @@
+{
+  "port": 3001,
+  "autoRefresh": 30,
+  "theme": "light",
+  "_metadata": {
+    "lastUpdated": "2025-09-05T05:07:34.631Z",
+    "version": "1.0.0",
+    "managedBy": "config-manager"
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "coverage": {
+    "threshold": {
+      "statements": 95,
+      "branches": 90,
+      "functions": 95,
+      "lines": 95
+    },
+    "exclude": [
+      "node_modules/**",
+      "coverage/**",
+      "**/*.d.ts",
+      "**/*.test.{js,jsx,ts,tsx}",
+      "**/*.spec.{js,jsx,ts,tsx}",
+      "**/*.stories.{js,jsx,ts,tsx}",
+      "src/types/**",
+      "src/__tests__/**"
+    ],
+    "include": [
+      "src/**/*.{js,jsx,ts,tsx}"
+    ],
+    "reporters": ["text", "lcov", "html", "json"],
+    "directory": "coverage"
+  },
+  "execution": {
+    "timeout": 60000,
+    "maxWorkers": "50%",
+    "parallel": true,
+    "bail": false,
+    "verbose": true,
+    "silent": false,
+    "detectOpenHandles": true,
+    "forceExit": true
+  },
+  "reporting": {
+    "formats": ["html", "json", "junit"],
+    "outputDir": "test-reports",
+    "verbose": true,
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!src/**/*.d.ts",
+      "!src/**/*.test.{js,jsx,ts,tsx}",
+      "!src/**/*.spec.{js,jsx,ts,tsx}",
+      "!src/**/*.stories.{js,jsx,ts,tsx}"
+    ]
+  },
+  "quality": {
+    "gates": [
+      {
+        "name": "Coverage Gate",
+        "condition": {
+          "type": "coverage",
+          "threshold": 95,
+          "operator": "gte",
+          "metric": "statements"
+        },
+        "action": {
+          "type": "fail",
+          "message": "Coverage threshold not met"
+        },
+        "enabled": true
+      },
+      {
+        "name": "Performance Gate",
+        "condition": {
+          "type": "performance",
+          "threshold": 60000,
+          "operator": "lte",
+          "metric": "execution_time"
+        },
+        "action": {
+          "type": "warn",
+          "message": "Test execution time exceeded threshold"
+        },
+        "enabled": true
+      }
+    ],
+    "notifications": [],
+    "failFast": false
+  },
+  "database": {
+    "mongodb": {
+      "uri": "mongodb://localhost:27017/test",
+      "dbName": "test_db",
+      "options": {
+        "useNewUrlParser": true,
+        "useUnifiedTopology": true
+      }
+    },
+    "redis": {
+      "url": "redis://localhost:6379",
+      "options": {
+        "retryDelayOnFailover": 100,
+        "maxRetriesPerRequest": 3
+      }
+    }
+  },
+  "mocks": {
+    "external": true,
+    "database": true,
+    "filesystem": false,
+    "network": true
+  },
+  "environment": {
+    "type": "unit",
+    "variables": {
+      "NODE_ENV": "test",
+      "TEST_TIMEOUT": "30000",
+      "LOG_LEVEL": "error"
+    },
+    "cleanup": true
+  }
+}

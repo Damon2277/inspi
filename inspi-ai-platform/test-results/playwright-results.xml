@@ -1,0 +1,60 @@
+<testsuites id="" name="" tests="2" failures="1" skipped="0" errors="0" time="48.264283000000006">
+<testsuite name="main-user-flows.e2e.test.ts" timestamp="2025-09-12T09:54:02.307Z" hostname="chromium" tests="2" failures="1" skipped="0" time="10.53" errors="0">
+<testcase name="主要用户流程端到端测试 › 创作流程 › 应该能够查看创作选项并选择创作类型" classname="main-user-flows.e2e.test.ts" time="5.419">
+<failure message="main-user-flows.e2e.test.ts:194:9 应该能够查看创作选项并选择创作类型" type="FAILURE">
+<![CDATA[  [chromium] › main-user-flows.e2e.test.ts:194:9 › 主要用户流程端到端测试 › 创作流程 › 应该能够查看创作选项并选择创作类型 ──────────
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      197 |       // 验证创作选项存在
+      198 |       const optionsCount = await createPage.getCreateOptions();
+    > 199 |       expect(optionsCount).toBeGreaterThan(0);
+          |                            ^
+      200 |       
+      201 |       // 验证最近项目区域
+      202 |       await expect(page.locator('.recent-projects')).toBeVisible();
+        at /Users/apple/inspi/inspi-ai-platform/src/__tests__/e2e/main-user-flows.e2e.test.ts:199:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../test-results/main-user-flows.e2e-主要用户流程端到端测试-创作流程-应该能够查看创作选项并选择创作类型-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../../test-results/main-user-flows.e2e-主要用户流程端到端测试-创作流程-应该能够查看创作选项并选择创作类型-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/main-user-flows.e2e-主要用户流程端到端测试-创作流程-应该能够查看创作选项并选择创作类型-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../test-results/main-user-flows.e2e-主要用户流程端到端测试-创作流程-应该能够查看创作选项并选择创作类型-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../test-results/main-user-flows.e2e-主要用户流程端到端测试-创作流程-应该能够查看创作选项并选择创作类型-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[端到端测试完成，清理测试数据...
+
+[[ATTACHMENT|main-user-flows.e2e-主要用户流程端到端测试-创作流程-应该能够查看创作选项并选择创作类型-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|main-user-flows.e2e-主要用户流程端到端测试-创作流程-应该能够查看创作选项并选择创作类型-chromium/video.webm]]
+
+[[ATTACHMENT|main-user-flows.e2e-主要用户流程端到端测试-创作流程-应该能够查看创作选项并选择创作类型-chromium/error-context.md]]
+
+[[ATTACHMENT|main-user-flows.e2e-主要用户流程端到端测试-创作流程-应该能够查看创作选项并选择创作类型-chromium/trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="主要用户流程端到端测试 › 创作流程 › 应该能够查看最近项目和模板" classname="main-user-flows.e2e.test.ts" time="5.111">
+<system-out>
+<![CDATA[端到端测试完成，清理测试数据...
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

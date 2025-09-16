@@ -1,9 +1,13 @@
 /**
- * Mock AI教学魔法师 - 生成教学卡片API
- * 遵循"先让它工作，再让它完美"原则
+ * AI教学魔法师 - 生成教学卡片API
+ * 集成真实的Gemini AI服务
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { geminiService } from '@/lib/ai/geminiService';
+import { generateAllCardsPrompt, validateAllCards, cardTemplates } from '@/lib/ai/promptTemplates';
+import { quotaManager } from '@/lib/quota/quotaManager';
+import { logger } from '@/lib/utils/logger';
 import type { GenerateCardsRequest, GenerateCardsResponse } from '@/types/teaching';
 
 // Mock教学卡片数据
@@ -63,10 +67,12 @@ const mockCards = {
 };
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  
   try {
-    console.log('🔧 Using mock magic generate service');
+    logger.info('AI card generation request started');
     
-    // 1. 简化的身份验证（检查是否有token）
+    // 1. 身份验证
     const token = request.cookies.get('token')?.value || 
                   request.headers.get('authorization')?.replace('Bearer ', '');
     
@@ -79,7 +85,7 @@ export async function POST(request: NextRequest) {
 
     // 2. 解析请求体
     const body: GenerateCardsRequest = await request.json();
-    const { knowledgePoint, subject, gradeLevel } = body;
+    const { knowledgePoint, subject, gradeLevel, difficulty, additionalContext } = body;
 
     // 3. 验证输入
     if (!knowledgePoint || knowledgePoint.trim().length === 0) {
@@ -96,70 +102,160 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. 模拟AI生成延迟
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // 5. 获取mock卡片数据
-    let cards = [];
+    // 4. 检查用户配额（简化版，实际应该从JWT中获取用户信息）
+    const userId = 'temp_user_' + token.slice(-8); // 临时用户ID
+    const userPlan = 'free'; // 临时设为免费用户
     
-    if (mockCards[subject] && mockCards[subject][knowledgePoint]) {
-      cards = mockCards[subject][knowledgePoint];
-    } else {
-      // 生成通用的mock卡片
-      cards = [
-        {
-          id: `card-${Date.now()}-1`,
-          type: 'visualization' as const,
-          title: '可视化理解',
-          content: `让我们用图像来理解"${knowledgePoint}"：\n\n通过具体的例子和图表，我们可以更好地掌握这个概念。想象一下相关的场景，用你熟悉的事物来类比这个知识点。\n\n这样的视觉化方法能帮助你更深入地理解和记忆。`,
-          explanation: `通过视觉化的方式帮助学生理解${knowledgePoint}的核心概念。`
+    const canConsume = await quotaManager.consumeQuota(userId, userPlan, 1);
+    if (!canConsume) {
+      const quota = await quotaManager.checkQuota(userId, userPlan);
+      return NextResponse.json(
+        { 
+          error: '今日AI生成次数已用完',
+          quota: {
+            current: quota.currentUsage,
+            limit: quota.dailyLimit,
+            remaining: quota.remaining,
+            resetTime: quota.resetTime
+          }
         },
-        {
-          id: `card-${Date.now()}-2`,
-          type: 'analogy' as const,
-          title: '类比延展',
-          content: `"${knowledgePoint}"就像生活中的很多现象：\n\n我们可以把它比作日常生活中熟悉的事物，这样就能更容易理解其中的规律和特点。\n\n通过这种类比，复杂的概念变得简单易懂。`,
-          explanation: `用生活中的类比帮助学生理解${knowledgePoint}。`
-        },
-        {
-          id: `card-${Date.now()}-3`,
-          type: 'thinking' as const,
-          title: '启发思考',
-          content: `🤔 关于"${knowledgePoint}"，让我们思考：\n\n1. 这个概念在生活中有哪些应用？\n2. 你能举出相关的例子吗？\n3. 如果没有这个概念，会有什么影响？\n\n💡 试着从不同角度思考这个问题。`,
-          explanation: `通过启发性问题引导学生深入思考${knowledgePoint}。`
-        },
-        {
-          id: `card-${Date.now()}-4`,
-          type: 'interaction' as const,
-          title: '互动氛围',
-          content: `🎮 让我们一起探索"${knowledgePoint}"：\n\n互动活动：\n- 小组讨论相关话题\n- 分享个人理解和经验\n- 一起解决相关问题\n- 创造性地应用这个概念\n\n让学习变得更有趣！`,
-          explanation: `通过互动活动提高学生对${knowledgePoint}的参与度和理解。`
-        }
-      ];
+        { status: 429 }
+      );
     }
 
-    // 6. 生成会话ID
-    const sessionId = `mock_session_${Date.now()}`;
+    // 5. 检查AI服务健康状态
+    const isHealthy = await geminiService.healthCheck();
+    if (!isHealthy) {
+      logger.error('AI service health check failed');
+      return NextResponse.json(
+        { error: 'AI服务暂时不可用，请稍后重试' },
+        { status: 503 }
+      );
+    }
 
-    // 7. 构建响应
+    // 6. 生成提示词上下文
+    const promptContext = {
+      knowledgePoint: knowledgePoint.trim(),
+      subject: subject || '通用',
+      gradeLevel: gradeLevel || '中学',
+      difficulty: difficulty || 'medium',
+      language: '中文',
+      additionalContext
+    };
+
+    // 7. 生成四张卡片
+    const cards = [];
+    const cardTypes = ['concept', 'example', 'practice', 'extension'] as const;
+    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    for (const cardType of cardTypes) {
+      try {
+        const prompt = generateAllCardsPrompt(promptContext)[cardType];
+        
+        const result = await geminiService.generateContent(prompt, {
+          temperature: 0.7,
+          maxTokens: 500,
+          useCache: true,
+          cacheKey: `card_${cardType}_${knowledgePoint}_${subject}`,
+          cacheTTL: 3600 // 1小时缓存
+        });
+
+        // 验证生成的内容
+        const validation = validateAllCards({ [cardType]: result.content })[cardType];
+        
+        if (!validation.valid) {
+          logger.warn(`Generated card validation failed for ${cardType}`, { 
+            errors: validation.errors,
+            knowledgePoint 
+          });
+        }
+
+        // 映射卡片类型到前端期望的格式
+        const cardTypeMap = {
+          concept: 'visualization',
+          example: 'analogy', 
+          practice: 'thinking',
+          extension: 'interaction'
+        } as const;
+
+        const cardTitleMap = {
+          concept: '概念解释',
+          example: '实例演示',
+          practice: '练习巩固', 
+          extension: '拓展延伸'
+        } as const;
+
+        cards.push({
+          id: `card_${sessionId}_${cardType}`,
+          type: cardTypeMap[cardType],
+          title: cardTitleMap[cardType],
+          content: result.content,
+          explanation: `AI生成的${cardTitleMap[cardType]}卡片，帮助理解"${knowledgePoint}"`,
+          cached: result.cached
+        });
+
+      } catch (error) {
+        logger.error(`Failed to generate ${cardType} card`, { 
+          error: error instanceof Error ? error.message : 'Unknown error',
+          knowledgePoint,
+          cardType
+        });
+
+        // 生成失败时使用备用内容
+        const fallbackContent = generateFallbackCard(cardType, knowledgePoint);
+        cards.push(fallbackContent);
+      }
+    }
+
+    // 8. 获取更新后的配额信息
+    const updatedQuota = await quotaManager.checkQuota(userId, userPlan);
+    const usage = {
+      current: updatedQuota.currentUsage,
+      limit: updatedQuota.dailyLimit,
+      remaining: updatedQuota.remaining
+    };
+
+    // 9. 构建响应
     const response: GenerateCardsResponse = {
       cards,
       sessionId,
-      usage: {
-        current: 1,
-        limit: 10, // Mock免费用户限制
-        remaining: 9
-      }
+      usage
     };
 
-    console.log('✅ Mock cards generated successfully:', cards.length, 'cards');
+    const duration = Date.now() - startTime;
+    logger.info('AI card generation completed', { 
+      knowledgePoint,
+      subject,
+      cardsGenerated: cards.length,
+      duration,
+      sessionId
+    });
 
     return NextResponse.json(response);
 
   } catch (error) {
-    console.error('Mock generate cards error:', error);
+    const duration = Date.now() - startTime;
+    logger.error('AI card generation failed', { 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      duration
+    });
     
     if (error instanceof Error) {
+      // 处理特定错误类型
+      if (error.message.includes('quota') || error.message.includes('limit')) {
+        return NextResponse.json(
+          { error: 'AI服务配额已用完，请稍后重试或升级账户' },
+          { status: 429 }
+        );
+      }
+      
+      if (error.message.includes('timeout')) {
+        return NextResponse.json(
+          { error: 'AI服务响应超时，请重试' },
+          { status: 408 }
+        );
+      }
+
       return NextResponse.json(
         { error: error.message },
         { status: 500 }
@@ -171,4 +267,43 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * 生成备用卡片内容
+ */
+function generateFallbackCard(cardType: string, knowledgePoint: string) {
+  const fallbackMap = {
+    concept: {
+      type: 'visualization' as const,
+      title: '概念解释',
+      content: `关于"${knowledgePoint}"的核心概念：\n\n这是一个重要的知识点，需要我们深入理解其基本含义和应用场景。通过系统学习和实践，我们可以更好地掌握相关内容。`,
+      explanation: `概念解释卡片 - ${knowledgePoint}`
+    },
+    example: {
+      type: 'analogy' as const,
+      title: '实例演示', 
+      content: `让我们通过具体例子来理解"${knowledgePoint}"：\n\n在实际应用中，这个概念有很多具体的体现。通过观察和分析这些例子，我们能更好地理解其实际意义。`,
+      explanation: `实例演示卡片 - ${knowledgePoint}`
+    },
+    practice: {
+      type: 'thinking' as const,
+      title: '练习巩固',
+      content: `关于"${knowledgePoint}"的练习思考：\n\n1. 这个概念的核心要点是什么？\n2. 在什么情况下会用到它？\n3. 你能想到相关的例子吗？\n\n通过这些问题，加深对知识点的理解。`,
+      explanation: `练习巩固卡片 - ${knowledgePoint}`
+    },
+    extension: {
+      type: 'interaction' as const,
+      title: '拓展延伸',
+      content: `"${knowledgePoint}"的拓展思考：\n\n这个知识点与其他概念有什么联系？在更广阔的知识体系中，它扮演什么角色？让我们一起探索更深层的内容。`,
+      explanation: `拓展延伸卡片 - ${knowledgePoint}`
+    }
+  };
+
+  const fallback = fallbackMap[cardType as keyof typeof fallbackMap];
+  return {
+    id: `fallback_${cardType}_${Date.now()}`,
+    ...fallback,
+    cached: false
+  };
 }

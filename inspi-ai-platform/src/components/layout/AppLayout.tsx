@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Navigation } from '@/components/navigation/Navigation';
+import { MobileLayout } from '@/components/mobile/MobileLayout';
+import { DesktopLayout, DesktopNavigation } from '@/components/desktop';
+import { PWAInstallPrompt } from '@/components/mobile/PWAInstallPrompt';
 import { KeyboardNavigationProvider } from '@/components/providers/KeyboardNavigationProvider';
 import { useResponsive } from '@/hooks/useResponsive';
 
@@ -41,23 +44,26 @@ export function AppLayout({
     );
   }
 
+  // 检查是否强制桌面端模式
+  const isDesktopMode = className.includes('desktop-mode');
+
   return (
     <KeyboardNavigationProvider>
-      <div className={`app-layout ${isMobile ? 'mobile' : 'desktop'} ${className}`}>
-        {/* 导航组件 */}
-        {showNavigation && <Navigation />}
-        
-        {/* 主内容区域 */}
-        <main 
-          id="main-content" 
-          className={`app-main ${showNavigation ? 'with-navigation' : ''}`}
-          tabIndex={-1}
+      {/* 移动端布局 */}
+      {isMobile && !isDesktopMode ? (
+        <MobileLayout showNavigation={showNavigation} className={className}>
+          <PWAInstallPrompt />
+          {children}
+        </MobileLayout>
+      ) : (
+        /* 桌面端布局 */
+        <DesktopLayout
+          className={className}
+          header={showNavigation ? <DesktopNavigation /> : undefined}
         >
-          <div className="app-container">
-            {children}
-          </div>
-        </main>
-      </div>
+          {children}
+        </DesktopLayout>
+      )}
     </KeyboardNavigationProvider>
   );
 }

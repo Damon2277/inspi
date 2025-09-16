@@ -3,10 +3,15 @@
  * 用于监控系统状态和依赖服务健康状况
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/database/connection';
 import { redisManager } from '@/lib/cache/simple-redis';
-import { env } from '../../../../config/environment.simple';
+import { geminiService } from '@/lib/ai/geminiService';
+import { emailService } from '@/lib/email/service';
+import { verificationManager } from '@/lib/email/verification';
+import { quotaManager } from '@/lib/quota/quotaManager';
+import { memoryMonitor } from '@/lib/utils/memoryMonitor';
+import { env } from '@/config/environment';
 
 // 健康检查结果接口
 interface HealthCheckResult {
@@ -21,6 +26,10 @@ interface HealthCheckResult {
     memory: HealthCheck;
     disk: HealthCheck;
     external: HealthCheck;
+    ai: HealthCheck;
+    email: HealthCheck;
+    verification: HealthCheck;
+    quota: HealthCheck;
   };
   metadata?: {
     nodeVersion: string;
@@ -79,31 +88,30 @@ async function checkRedis(): Promise<HealthCheck> {
   const startTime = Date.now();
 
   try {
-    const redis = redisManager.getClient();
-    if (!redis) {
+    const isHealthy = await redisManager.healthCheck();
+    const responseTime = Date.now() - startTime;
+    const status = redisManager.getStatus();
+
+    if (isHealthy) {
       return {
-        status: 'warn',
-        responseTime: Date.now() - startTime,
-        message: 'Redis client not available (development mode)',
-        details: 'Redis is optional in development environment',
+        status: 'pass',
+        responseTime,
+        message: redisManager.isUsingMemoryFallback() 
+          ? 'Using memory cache fallback' 
+          : 'Redis connection successful',
+        details: status,
+      };
+    } else {
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      return {
+        status: isDevelopment ? 'warn' : 'fail',
+        responseTime,
+        message: isDevelopment 
+          ? 'Redis unavailable, using memory fallback' 
+          : 'Redis connection failed',
+        details: status,
       };
     }
-
-    // 设置超时以避免长时间等待
-    const pingPromise = redis.ping();
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Redis ping timeout')), 2000);
-    });
-
-    await Promise.race([pingPromise, timeoutPromise]);
-
-    const responseTime = Date.now() - startTime;
-
-    return {
-      status: 'pass',
-      responseTime,
-      message: 'Redis connection successful',
-    };
   } catch (error) {
     const responseTime = Date.now() - startTime;
     const isDevelopment = process.env.NODE_ENV === 'development';
@@ -111,7 +119,9 @@ async function checkRedis(): Promise<HealthCheck> {
     return {
       status: isDevelopment ? 'warn' : 'fail',
       responseTime,
-      message: isDevelopment ? 'Redis unavailable (development mode)' : 'Redis connection failed',
+      message: isDevelopment 
+        ? 'Redis unavailable, using memory fallback' 
+        : 'Redis connection failed',
       details: error instanceof Error ? error.message : 'Unknown error',
     };
   }
@@ -119,31 +129,23 @@ async function checkRedis(): Promise<HealthCheck> {
 
 // 检查内存使用情况
 function checkMemory(): HealthCheck {
-  const memoryUsage = process.memoryUsage();
-  const totalMemory = memoryUsage.heapTotal;
-  const usedMemory = memoryUsage.heapUsed;
-  const memoryUsagePercent = (usedMemory / totalMemory) * 100;
-
-  let status: 'pass' | 'warn' | 'fail' = 'pass';
-  let message = 'Memory usage normal';
-
-  if (memoryUsagePercent > 90) {
-    status = 'fail';
-    message = 'Critical memory usage';
-  } else if (memoryUsagePercent > 80) {
-    status = 'warn';
-    message = 'High memory usage';
+  const healthStatus = memoryMonitor.getHealthStatus();
+  
+  // 如果内存使用过高，触发清理
+  if (healthStatus.status === 'critical') {
+    memoryMonitor.cleanup();
   }
 
   return {
-    status,
-    message,
+    status: healthStatus.status === 'healthy' ? 'pass' : 
+           healthStatus.status === 'warning' ? 'warn' : 'fail',
+    message: healthStatus.message,
     details: {
-      heapUsed: Math.round(usedMemory / 1024 / 1024) + 'MB',
-      heapTotal: Math.round(totalMemory / 1024 / 1024) + 'MB',
-      usagePercent: Math.round(memoryUsagePercent * 100) / 100 + '%',
-      external: Math.round(memoryUsage.external / 1024 / 1024) + 'MB',
-      rss: Math.round(memoryUsage.rss / 1024 / 1024) + 'MB',
+      heapUsed: memoryMonitor.formatBytes(healthStatus.stats.heapUsed),
+      heapTotal: memoryMonitor.formatBytes(healthStatus.stats.heapTotal),
+      usagePercent: `${Math.round(healthStatus.stats.usagePercent * 100)}%`,
+      external: memoryMonitor.formatBytes(healthStatus.stats.external),
+      rss: memoryMonitor.formatBytes(healthStatus.stats.rss),
     },
   };
 }
@@ -161,27 +163,136 @@ function checkDisk(): HealthCheck {
   };
 }
 
+// 检查AI服务
+async function checkAIService(): Promise<HealthCheck> {
+  const startTime = Date.now();
+
+  try {
+    const isHealthy = await geminiService.healthCheck();
+    const responseTime = Date.now() - startTime;
+
+    if (isHealthy) {
+      return {
+        status: 'pass',
+        responseTime,
+        message: 'AI service healthy',
+        details: geminiService.getStatus()
+      };
+    } else {
+      return {
+        status: 'fail',
+        responseTime,
+        message: 'AI service unhealthy',
+        details: geminiService.getStatus()
+      };
+    }
+  } catch (error) {
+    return {
+      status: 'fail',
+      responseTime: Date.now() - startTime,
+      message: 'AI service check failed',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+// 检查邮件服务
+async function checkEmailService(): Promise<HealthCheck> {
+  const startTime = Date.now();
+
+  try {
+    const isHealthy = await emailService.healthCheck();
+    const responseTime = Date.now() - startTime;
+
+    if (isHealthy) {
+      return {
+        status: 'pass',
+        responseTime,
+        message: 'Email service healthy',
+        details: emailService.getStatus()
+      };
+    } else {
+      return {
+        status: 'warn',
+        responseTime,
+        message: 'Email service not configured or unhealthy',
+        details: emailService.getStatus()
+      };
+    }
+  } catch (error) {
+    return {
+      status: 'fail',
+      responseTime: Date.now() - startTime,
+      message: 'Email service check failed',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+// 检查验证码服务
+async function checkVerificationService(): Promise<HealthCheck> {
+  const startTime = Date.now();
+
+  try {
+    const isHealthy = await verificationManager.healthCheck();
+    const responseTime = Date.now() - startTime;
+
+    return {
+      status: isHealthy ? 'pass' : 'fail',
+      responseTime,
+      message: isHealthy ? 'Verification service healthy' : 'Verification service unhealthy',
+      details: verificationManager.getConfig()
+    };
+  } catch (error) {
+    return {
+      status: 'fail',
+      responseTime: Date.now() - startTime,
+      message: 'Verification service check failed',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+// 检查配额服务
+async function checkQuotaService(): Promise<HealthCheck> {
+  const startTime = Date.now();
+
+  try {
+    const isHealthy = await quotaManager.healthCheck();
+    const responseTime = Date.now() - startTime;
+
+    return {
+      status: isHealthy ? 'pass' : 'fail',
+      responseTime,
+      message: isHealthy ? 'Quota service healthy' : 'Quota service unhealthy',
+      details: quotaManager.getStatus()
+    };
+  } catch (error) {
+    return {
+      status: 'fail',
+      responseTime: Date.now() - startTime,
+      message: 'Quota service check failed',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
 // 检查外部服务
 async function checkExternalServices(): Promise<HealthCheck> {
   const checks = [];
 
-  // 检查AI服务可用性
-  if (env.GEMINI_API_KEY) {
-    try {
-      // 这里可以添加对Gemini API的简单ping检查
-      checks.push({ service: 'Gemini API', status: 'available' });
-    } catch (error) {
-      checks.push({
-        service: 'Gemini API',
-        status: 'unavailable',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
+  // 检查AI服务配置
+  if (env.AI.GEMINI_API_KEY) {
+    checks.push({ service: 'Gemini API', status: 'configured' });
+  } else {
+    checks.push({ service: 'Gemini API', status: 'not_configured' });
   }
 
-  // 检查邮件服务
-  if (env.SMTP_HOST) {
+  // 检查邮件服务配置
+  if (env.EMAIL.SMTP_HOST && env.EMAIL.SMTP_USER) {
     checks.push({ service: 'SMTP', status: 'configured' });
+  } else {
+    checks.push({ service: 'SMTP', status: 'not_configured' });
   }
 
   return {
@@ -215,10 +326,22 @@ export async function GET() {
 
   try {
     // 并行执行所有健康检查
-    const [databaseCheck, redisCheck, externalCheck] = await Promise.all([
+    const [
+      databaseCheck, 
+      redisCheck, 
+      externalCheck,
+      aiCheck,
+      emailCheck,
+      verificationCheck,
+      quotaCheck
+    ] = await Promise.all([
       checkDatabase(),
       checkRedis(),
       checkExternalServices(),
+      checkAIService(),
+      checkEmailService(),
+      checkVerificationService(),
+      checkQuotaService()
     ]);
 
     const memoryCheck = checkMemory();
@@ -230,6 +353,10 @@ export async function GET() {
       memory: memoryCheck,
       disk: diskCheck,
       external: externalCheck,
+      ai: aiCheck,
+      email: emailCheck,
+      verification: verificationCheck,
+      quota: quotaCheck,
     };
 
     const overallStatus = determineOverallStatus(checks);

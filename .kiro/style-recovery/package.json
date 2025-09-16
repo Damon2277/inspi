@@ -1,0 +1,29 @@
+{
+  "name": "style-recovery-system",
+  "version": "1.0.0",
+  "description": "Style version control and recovery system",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "start": "node cli.js",
+    "monitor": "node cli.js monitor",
+    "snapshot": "node cli.js snapshot",
+    "rollback": "node cli.js rollback"
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "commander": "^11.1.0",
+    "glob": "^10.4.5",
+    "playwright": "^1.55.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "keywords": [
+    "style",
+    "css",
+    "version-control",
+    "snapshot",
+    "recovery"
+  ]
+}

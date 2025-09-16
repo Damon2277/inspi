@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开发者仪表板 - Inspi AI Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+</head>
+<body>
+    <div id="app">
+        <!-- 头部导航 -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="header-title">
+                    <span class="header-icon">🚀</span>
+                    开发者仪表板
+                </h1>
+                <div class="header-actions">
+                    <button id="refresh-btn" class="btn btn-secondary">
+                        <span class="btn-icon">🔄</span>
+                        刷新
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main class="main">
+            <!-- 系统健康状态卡片 -->
+            <section class="section">
+                <h2 class="section-title">系统健康状态</h2>
+                <div class="cards-grid">
+                    <div class="card health-card">
+                        <div class="card-header">
+                            <h3 class="card-title">整体状态</h3>
+                            <div id="overall-status" class="status-badge status-unknown">检查中...</div>
+                        </div>
+                        <div class="card-content">
+                            <div id="health-details" class="health-details">
+                                <div class="loading">正在加载健康状态...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card metrics-card">
+                        <div class="card-header">
+                            <h3 class="card-title">项目指标</h3>
+                        </div>
+                        <div class="card-content">
+                            <div id="project-metrics" class="metrics-grid">
+                                <div class="loading">正在加载项目指标...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 快速操作区域 -->
+            <section class="section">
+                <h2 class="section-title">快速操作</h2>
+                <div class="quick-actions">
+                    <button id="create-snapshot-btn" class="action-btn">
+                        <span class="action-icon">📸</span>
+                        <span class="action-text">创建快照</span>
+                    </button>
+                    <button id="diagnose-health-btn" class="action-btn">
+                        <span class="action-icon">🔍</span>
+                        <span class="action-text">健康诊断</span>
+                    </button>
+                    <button id="quality-check-btn" class="action-btn">
+                        <span class="action-icon">✅</span>
+                        <span class="action-text">质量检查</span>
+                    </button>
+                    <button id="style-snapshot-btn" class="action-btn">
+                        <span class="action-icon">🎨</span>
+                        <span class="action-text">样式快照</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 系统详情 -->
+            <section class="section">
+                <h2 class="section-title">系统详情</h2>
+                <div class="cards-grid">
+                    <!-- 恢复系统 -->
+                    <div class="card system-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <span class="system-icon">🔄</span>
+                                恢复系统
+                            </h3>
+                            <div id="recovery-status" class="status-badge status-unknown">未知</div>
+                        </div>
+                        <div class="card-content">
+                            <div id="recovery-details" class="system-details">
+                                <div class="loading">加载中...</div>
+                            </div>
+                            <div class="card-actions">
+                                <button id="recovery-snapshots-btn" class="btn btn-small">查看快照</button>
+                                <button id="recovery-guide-btn" class="btn btn-small">恢复指导</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 质量检查系统 -->
+                    <div class="card system-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <span class="system-icon">✅</span>
+                                质量检查
+                            </h3>
+                            <div id="quality-status" class="status-badge status-unknown">未知</div>
+                        </div>
+                        <div class="card-content">
+                            <div id="quality-details" class="system-details">
+                                <div class="loading">加载中...</div>
+                            </div>
+                            <div class="card-actions">
+                                <button id="quality-run-btn" class="btn btn-small">运行检查</button>
+                                <button id="quality-report-btn" class="btn btn-small">查看报告</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 样式恢复系统 -->
+                    <div class="card system-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <span class="system-icon">🎨</span>
+                                样式恢复
+                            </h3>
+                            <div id="style-status" class="status-badge status-unknown">未知</div>
+                        </div>
+                        <div class="card-content">
+                            <div id="style-details" class="system-details">
+                                <div class="loading">加载中...</div>
+                            </div>
+                            <div class="card-actions">
+                                <button id="style-snapshots-btn" class="btn btn-small">查看快照</button>
+                                <button id="style-rollback-btn" class="btn btn-small">回滚样式</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 最近活动 -->
+            <section class="section">
+                <h2 class="section-title">最近活动</h2>
+                <div class="card activity-card">
+                    <div class="card-content">
+                        <div id="recent-activity" class="activity-list">
+                            <div class="loading">正在加载活动记录...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 模态框 -->
+        <div id="modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title" class="modal-title">标题</h3>
+                    <button id="modal-close" class="modal-close">&times;</button>
+                </div>
+                <div id="modal-body" class="modal-body">
+                    内容
+                </div>
+                <div class="modal-footer">
+                    <button id="modal-cancel" class="btn btn-secondary">取消</button>
+                    <button id="modal-confirm" class="btn btn-primary">确认</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 通知容器 -->
+        <div id="notifications" class="notifications"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

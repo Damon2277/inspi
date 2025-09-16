@@ -1,0 +1,64 @@
+{
+  "timestamp": "2025-09-04T23:26:59.563Z",
+  "summary": {
+    "passed": null,
+    "failed": null,
+    "total": null,
+    "duration": 17468
+  },
+  "suites": {
+    "unit": {
+      "description": "单元测试",
+      "results": {
+        "passed": null,
+        "failed": null,
+        "total": null,
+        "duration": 17458
+      },
+      "files": [
+        "bump-version.test.js",
+        "git-flow.test.js",
+        "validate-commit-msg.test.js",
+        "version-history.test.js",
+        "version-rollback.test.js",
+        "release-doc-generator.test.js"
+      ]
+    },
+    "integration": {
+      "description": "集成测试",
+      "results": {
+        "passed": 0,
+        "failed": 0,
+        "total": 0,
+        "duration": 0
+      },
+      "files": [
+        "version-management-integration.test.js"
+      ]
+    },
+    "gitOps": {
+      "description": "Git操作验证测试",
+      "results": {
+        "passed": 0,
+        "failed": 0,
+        "total": 0,
+        "duration": 0
+      },
+      "files": [
+        "git-operations-validation.test.js"
+      ]
+    },
+    "requirements": {
+      "description": "需求验证测试",
+      "results": {
+        "passed": 0,
+        "failed": 0,
+        "total": 0,
+        "duration": 0
+      },
+      "files": [
+        "version-management-requirements.test.js"
+      ]
+    }
+  }
+}

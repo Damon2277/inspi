@@ -44,16 +44,16 @@ function isTouchDevice(): boolean {
  * 提供当前屏幕尺寸、断点信息和设备类型检测
  */
 export function useResponsive(): ResponsiveState {
-  // 始终使用相同的初始状态以避免hydration错误
+  // 使用更合理的初始状态，假设桌面端以避免闪烁
   const [state, setState] = useState<ResponsiveState>({
-    breakpoint: 'mobile',
-    screenWidth: 0,
-    screenHeight: 0,
-    isMobile: true,
+    breakpoint: 'desktop',
+    screenWidth: 1024,
+    screenHeight: 768,
+    isMobile: false,
     isTablet: false,
-    isDesktop: false,
+    isDesktop: true,
     isWide: false,
-    orientation: 'portrait',
+    orientation: 'landscape',
     touchDevice: false,
   });
 

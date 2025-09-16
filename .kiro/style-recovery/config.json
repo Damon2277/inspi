@@ -1,0 +1,10 @@
+{
+  "enabled": true,
+  "autoSnapshot": true,
+  "maxSnapshots": 20,
+  "_metadata": {
+    "lastUpdated": "2025-09-05T05:07:34.627Z",
+    "version": "1.0.0",
+    "managedBy": "config-manager"
+  }
+}

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspi.AI 前端测试页面</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            margin: 0 0 10px 0;
+        }
+        .header p {
+            color: #666;
+            margin: 0;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+        }
+        .test-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .test-item:last-child {
+            border-bottom: none;
+        }
+        .status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Inspi.AI 前端测试页面</h1>
+            <p>测试前端功能和API连接</p>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 系统状态检查</h3>
+            <div class="test-item">
+                <span>前端服务器</span>
+                <span class="status success">运行中</span>
+            </div>
+            <div class="test-item">
+                <span>API健康检查</span>
+                <span class="status" id="api-status">检查中...</span>
+            </div>
+            <div class="test-item">
+                <span>数据库连接</span>
+                <span class="status" id="db-status">检查中...</span>
+            </div>
+            <div class="test-item">
+                <span>Redis缓存</span>
+                <span class="status" id="redis-status">检查中...</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 功能测试</h3>
+            <button class="btn" onclick="testAPI()">测试API连接</button>
+            <button class="btn" onclick="testMagicGenerate()">测试AI魔法生成</button>
+            <button class="btn" onclick="testResponsive()">测试响应式设计</button>
+            <button class="btn" onclick="testMobileFeatures()">测试移动端功能</button>
+            <div id="test-results" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📱 移动端预览</h3>
+            <p>在移动设备上访问: <a href="http://192.168.9.63:3000" target="_blank">http://192.168.9.63:3000</a></p>
+            <p>本地访问: <a href="http://localhost:3000" target="_blank">http://localhost:3000</a></p>
+        </div>
+    </div>
+
+    <script>
+        // 检查API健康状态
+        async function checkHealth() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                // 更新API状态
+                const apiStatus = document.getElementById('api-status');
+                apiStatus.textContent = data.status === 'healthy' ? '正常' : '异常';
+                apiStatus.className = `status ${data.status === 'healthy' ? 'success' : 'error'}`;
+                
+                // 更新数据库状态
+                const dbStatus = document.getElementById('db-status');
+                const dbCheck = data.checks?.database?.status;
+                dbStatus.textContent = dbCheck === 'pass' ? '正常' : '异常';
+                dbStatus.className = `status ${dbCheck === 'pass' ? 'success' : 'error'}`;
+                
+                // 更新Redis状态
+                const redisStatus = document.getElementById('redis-status');
+                const redisCheck = data.checks?.redis?.status;
+                redisStatus.textContent = redisCheck === 'pass' ? '正常' : (redisCheck === 'warn' ? '警告' : '异常');
+                redisStatus.className = `status ${redisCheck === 'pass' ? 'success' : (redisCheck === 'warn' ? 'warning' : 'error')}`;
+                
+            } catch (error) {
+                console.error('Health check failed:', error);
+                document.getElementById('api-status').textContent = '连接失败';
+                document.getElementById('api-status').className = 'status error';
+            }
+        }
+
+        // 测试API连接
+        async function testAPI() {
+            const results = document.getElementById('test-results');
+            results.style.display = 'block';
+            results.innerHTML = '正在测试API连接...';
+            
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                results.innerHTML = `API测试结果:\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                results.innerHTML = `API测试失败: ${error.message}`;
+            }
+        }
+
+        // 测试AI魔法生成
+        async function testMagicGenerate() {
+            const results = document.getElementById('test-results');
+            results.style.display = 'block';
+            results.innerHTML = '正在测试AI魔法生成...';
+            
+            try {
+                const response = await fetch('/api/magic/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: '创建一个关于数学的教学卡片',
+                        type: 'educational'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    results.innerHTML = `AI生成测试成功:\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    results.innerHTML = `AI生成测试失败: ${response.status} ${response.statusText}`;
+                }
+            } catch (error) {
+                results.innerHTML = `AI生成测试错误: ${error.message}`;
+            }
+        }
+
+        // 测试响应式设计
+        function testResponsive() {
+            const results = document.getElementById('test-results');
+            results.style.display = 'block';
+            
+            const viewport = {
+                width: window.innerWidth,
+                height: window.innerHeight,
+                devicePixelRatio: window.devicePixelRatio,
+                userAgent: navigator.userAgent
+            };
+            
+            results.innerHTML = `响应式设计测试:\n${JSON.stringify(viewport, null, 2)}`;
+        }
+
+        // 测试移动端功能
+        function testMobileFeatures() {
+            const results = document.getElementById('test-results');
+            results.style.display = 'block';
+            
+            const mobileFeatures = {
+                touchSupport: 'ontouchstart' in window,
+                orientation: screen.orientation ? screen.orientation.type : 'unknown',
+                standalone: window.navigator.standalone,
+                serviceWorker: 'serviceWorker' in navigator,
+                webShare: 'share' in navigator,
+                vibration: 'vibrate' in navigator
+            };
+            
+            results.innerHTML = `移动端功能测试:\n${JSON.stringify(mobileFeatures, null, 2)}`;
+        }
+
+        // 页面加载时检查健康状态
+        window.addEventListener('load', checkHealth);
+    </script>
+</body>
+</html>

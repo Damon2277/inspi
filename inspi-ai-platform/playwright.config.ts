@@ -1,109 +1,71 @@
-import { defineConfig, devices } from '@playwright/test'
+import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Playwright 配置文件
- * 用于端到端测试和性能测试
+ * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
-  // 测试目录
   testDir: './src/__tests__/e2e',
-  
-  // 全局设置
+  /* Run tests in files in parallel */
   fullyParallel: true,
+  /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
+  /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
+  /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
-  
-  // 报告配置
-  reporter: [
-    ['html', { outputFolder: 'playwright-report' }],
-    ['json', { outputFile: 'test-results/playwright-results.json' }],
-    ['junit', { outputFile: 'test-results/playwright-results.xml' }],
-    ['line']
-  ],
-  
-  // 全局配置
+  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
+  reporter: 'html',
+  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    // 基础URL
-    baseURL: process.env.BASE_URL || 'http://localhost:3000',
-    
-    // 浏览器设置
-    headless: process.env.CI ? true : false,
-    viewport: { width: 1280, height: 720 },
-    ignoreHTTPSErrors: true,
-    
-    // 录制设置
-    video: 'retain-on-failure',
-    screenshot: 'only-on-failure',
-    trace: 'retain-on-failure',
-    
-    // 超时设置
-    actionTimeout: 10000,
-    navigationTimeout: 30000,
+    /* Base URL to use in actions like `await page.goto('/')`. */
+    baseURL: 'http://localhost:3000',
+
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    trace: 'on-first-retry',
   },
-  
-  // 测试项目配置
+
+  /* Configure projects for major browsers */
   projects: [
-    // 桌面浏览器
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
     },
+
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
-    
-    // 移动设备
+
+    /* Test against mobile viewports. */
     {
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
-      testDir: './src/__tests__/mobile',
     },
     {
       name: 'Mobile Safari',
       use: { ...devices['iPhone 12'] },
-      testDir: './src/__tests__/mobile',
     },
-    
-    // 平板设备
-    {
-      name: 'iPad',
-      use: { ...devices['iPad Pro'] },
-      testDir: './src/__tests__/mobile',
-    },
-    
-    // 性能测试
-    {
-      name: 'performance',
-      use: { ...devices['Desktop Chrome'] },
-      testDir: './src/__tests__/performance',
-      timeout: 60000, // 性能测试需要更长时间
-    },
+
+    /* Test against branded browsers. */
+    // {
+    //   name: 'Microsoft Edge',
+    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
+    // },
+    // {
+    //   name: 'Google Chrome',
+    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    // },
   ],
-  
-  // Web服务器配置
+
+  /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npm run start',
+    command: 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 120000,
   },
-  
-  // 输出目录
-  outputDir: 'test-results/',
-  
-  // 全局设置
-  globalSetup: require.resolve('./src/__tests__/setup/global-setup.ts'),
-  globalTeardown: require.resolve('./src/__tests__/setup/global-teardown.ts'),
-  
-  // 测试超时
-  timeout: 30000,
-  expect: {
-    timeout: 5000,
-  },
-})
+});

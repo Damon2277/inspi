@@ -179,9 +179,35 @@ class VersionManager {
   }
 
   /**
-   * 生成发布说明
+   * 生成发布说明（使用新的发布文档生成器）
    */
-  generateReleaseNotes(version, commits) {
+  async generateReleaseNotes(version, commits) {
+    try {
+      const ReleaseDocGenerator = require('./release-doc-generator');
+      const generator = new ReleaseDocGenerator();
+      
+      // 转换提交格式以兼容新的生成器
+      const formattedCommits = commits.map(commit => {
+        const message = commit.replace(/^[a-f0-9]+\s/, ''); // 移除commit hash
+        return {
+          hash: 'unknown',
+          message: message,
+          author: 'Unknown',
+          date: new Date().toISOString().split('T')[0]
+        };
+      });
+      
+      return generator.generateReleaseNotes(version, formattedCommits);
+    } catch (error) {
+      console.warn('使用新生成器失败，回退到简单生成器:', error.message);
+      return this.generateSimpleReleaseNotes(version, commits);
+    }
+  }
+
+  /**
+   * 简单的发布说明生成（备用方案）
+   */
+  generateSimpleReleaseNotes(version, commits) {
     const date = new Date().toISOString().split('T')[0];
     const tagName = `v${version}`;
     
@@ -280,7 +306,7 @@ class VersionManager {
   /**
    * 主要的版本升级流程
    */
-  async release(versionType) {
+  async release(versionType, options = {}) {
     try {
       console.log('🚀 开始版本发布流程...\n');
 
@@ -310,22 +336,58 @@ class VersionManager {
       const newVersion = this.bumpVersion(currentVersion, finalVersionType);
       console.log(`   新版本: ${newVersion}`);
 
-      // 6. 更新package.json
-      console.log('5. 更新package.json...');
+      // 6. 执行兼容性检查（如果启用）
+      if (!options.skipCompatibilityCheck) {
+        console.log('5. 执行版本兼容性检查...');
+        try {
+          const CompatibilityChecker = require('./compatibility-checker');
+          const checker = new CompatibilityChecker();
+          const compatibilityReport = await checker.checkCompatibility({
+            newVersion: newVersion
+          });
+          
+          if (compatibilityReport.summary.riskLevel === 'high' || 
+              compatibilityReport.versionValidation.errors.length > 0) {
+            console.log('\n⚠️  兼容性检查发现高风险问题！');
+            console.log('   建议先解决以下问题再继续发布：');
+            
+            compatibilityReport.versionValidation.errors.forEach(error => {
+              console.log(`   - ${error.message}`);
+            });
+            
+            if (!options.force) {
+              console.log('\n💡 使用 --force 参数可强制继续发布');
+              throw new Error('兼容性检查未通过，发布已中止');
+            } else {
+              console.log('\n⚠️  使用 --force 参数强制继续发布');
+            }
+          } else {
+            console.log('   ✅ 兼容性检查通过');
+          }
+        } catch (error) {
+          if (error.message.includes('兼容性检查未通过')) {
+            throw error;
+          }
+          console.warn(`   ⚠️  兼容性检查失败，但继续发布: ${error.message}`);
+        }
+      }
+
+      // 7. 更新package.json
+      console.log('6. 更新package.json...');
       this.updatePackageJson(newVersion);
 
-      // 7. 生成发布说明
-      console.log('6. 生成发布说明...');
-      const releaseNotes = this.generateReleaseNotes(newVersion, commits);
+      // 8. 生成发布说明
+      console.log('7. 生成发布说明...');
+      const releaseNotes = await this.generateReleaseNotes(newVersion, commits);
       this.saveReleaseNotes(newVersion, releaseNotes);
 
-      // 8. 提交更改
-      console.log('7. 提交版本更改...');
+      // 9. 提交更改
+      console.log('8. 提交版本更改...');
       execSync(`git add package.json ../RELEASE_NOTES_v${newVersion}.md`, { stdio: 'inherit' });
       execSync(`git commit -m "chore: bump version to ${newVersion}"`, { stdio: 'inherit' });
 
-      // 9. 创建标签
-      console.log('8. 创建Git标签...');
+      // 10. 创建标签
+      console.log('9. 创建Git标签...');
       const tagName = this.createGitTag(newVersion, `Release ${newVersion}`);
 
       console.log('\n✅ 版本发布完成!');
@@ -346,14 +408,29 @@ class VersionManager {
 function main() {
   const args = process.argv.slice(2);
   const versionManager = new VersionManager();
+  const options = {};
 
-  if (args.length === 0) {
+  // 解析选项参数
+  const filteredArgs = [];
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    
+    if (arg === '--skip-compatibility-check') {
+      options.skipCompatibilityCheck = true;
+    } else if (arg === '--force') {
+      options.force = true;
+    } else {
+      filteredArgs.push(arg);
+    }
+  }
+
+  if (filteredArgs.length === 0) {
     // 自动检测版本类型
-    versionManager.release();
+    versionManager.release(null, options);
     return;
   }
 
-  const command = args[0];
+  const command = filteredArgs[0];
 
   switch (command) {
     case '--version':
@@ -369,15 +446,21 @@ function main() {
       console.log('  node scripts/bump-version.js minor   # 次版本升级 (新功能)');
       console.log('  node scripts/bump-version.js patch   # 修订版本升级 (问题修复)');
       console.log('  node scripts/bump-version.js prerelease # 预发布版本\n');
+      console.log('选项:');
+      console.log('  --skip-compatibility-check  # 跳过兼容性检查');
+      console.log('  --force                      # 强制发布（忽略兼容性警告）\n');
       console.log('其他命令:');
       console.log('  node scripts/bump-version.js --version  # 显示当前版本');
-      console.log('  node scripts/bump-version.js --help     # 显示帮助信息');
+      console.log('  node scripts/bump-version.js --help     # 显示帮助信息\n');
+      console.log('示例:');
+      console.log('  node scripts/bump-version.js major --force');
+      console.log('  node scripts/bump-version.js --skip-compatibility-check');
       break;
     case 'major':
     case 'minor':
     case 'patch':
     case 'prerelease':
-      versionManager.release(command);
+      versionManager.release(command, options);
       break;
     default:
       if (command && command.startsWith('-')) {
@@ -385,7 +468,7 @@ function main() {
         process.exit(1);
       } else {
         // 自动检测版本类型
-        versionManager.release();
+        versionManager.release(null, options);
       }
   }
 }
