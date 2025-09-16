@@ -1,45 +1,26 @@
-/* 移动端优化的全局样式 */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import '../styles/mobile.css';
-@import '../styles/navigation.css';
-@import '../styles/layout.css';
+/* 现代化桌面端全局样式 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import '../styles/desktop-modern.css';
+@import '../styles/desktop.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 临时注释移动端样式，专注桌面端调试 */
 
 /* CSS 变量定义 */
 :root {
-  /* 移动端优化的色彩系统 */
+  /* 桌面端优化的色彩系统 */
   --primary-orange: #FF8C00;
   --primary-magenta: #E025B0;
   --gradient-primary: linear-gradient(135deg, #FF8C00 0%, #E025B0 100%);
   
-  /* 移动端友好的间距系统 */
+  /* 桌面端间距系统 */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
-  
-  /* 移动端字体系统 */
-  --font-size-xs: 12px;
-  --font-size-sm: 14px;
-  --font-size-base: 16px;
-  --font-size-lg: 18px;
-  --font-size-xl: 20px;
-  --font-size-2xl: 24px;
-  --font-size-3xl: 28px;
-  
-  /* 移动端触摸目标尺寸 */
-  --touch-target-min: 44px;
-  --touch-target-comfortable: 48px;
-  
-  /* 移动端安全区域 */
-  --safe-area-top: env(safe-area-inset-top);
-  --safe-area-bottom: env(safe-area-inset-bottom);
-  --safe-area-left: env(safe-area-inset-left);
-  --safe-area-right: env(safe-area-inset-right);
-  
-  /* 移动端导航高度 */
-  --mobile-nav-height: 60px;
-  --mobile-bottom-nav-height: 70px;
 }
 
 /* 基础重置 */
@@ -64,13 +45,11 @@ body {
   overflow-x: hidden;
 }
 
-/* 移动端优化类 */
+/* 
+移动端样式已临时注释，专注桌面端调试
 .mobile-optimized {
-  /* 防止水平滚动 */
   overflow-x: hidden;
-  /* 优化触摸滚动 */
   -webkit-overflow-scrolling: touch;
-  /* 防止选择文本时的高亮 */
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
@@ -78,6 +57,7 @@ body {
   -ms-user-select: none;
   user-select: none;
 }
+*/
 
 /* 允许特定元素选择文本 */
 .selectable {
