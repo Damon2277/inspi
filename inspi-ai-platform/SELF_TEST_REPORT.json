@@ -1,0 +1,109 @@
+{
+  "timestamp": "2025-09-17T07:27:54.844Z",
+  "summary": {
+    "totalTests": 17,
+    "passed": 17,
+    "failed": 0,
+    "successRate": "100.0%"
+  },
+  "modules": {
+    "contentSecurity": {
+      "passed": 7,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "核心文件存在性检查",
+          "status": "passed",
+          "result": "所有 10 个核心文件存在"
+        },
+        {
+          "name": "敏感词检测功能",
+          "status": "passed",
+          "result": "敏感词检测器结构正确，包含detect和filter方法"
+        },
+        {
+          "name": "XSS过滤功能",
+          "status": "passed",
+          "result": "XSS过滤器结构正确，包含detect和sanitize方法"
+        },
+        {
+          "name": "内容验证器集成",
+          "status": "passed",
+          "result": "内容验证器结构正确，包含同步和异步验证方法"
+        },
+        {
+          "name": "React Hook功能",
+          "status": "passed",
+          "result": "React Hook文件存在且结构正确"
+        },
+        {
+          "name": "安全组件功能",
+          "status": "passed",
+          "result": "安全文本输入组件存在且结构正确"
+        },
+        {
+          "name": "API集成检查",
+          "status": "passed",
+          "result": "内容验证API存在且集成正确"
+        }
+      ]
+    },
+    "invitationSystem": {
+      "passed": 10,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "邀请系统核心文件检查",
+          "status": "passed",
+          "result": "所有 8 个核心文件存在"
+        },
+        {
+          "name": "邀请服务基础功能",
+          "status": "passed",
+          "result": "InvitationService结构正确，包含生成和验证方法"
+        },
+        {
+          "name": "奖励引擎功能",
+          "status": "passed",
+          "result": "RewardEngine结构正确，包含计算邀请奖励和发放奖励方法"
+        },
+        {
+          "name": "积分系统功能",
+          "status": "passed",
+          "result": "CreditSystem结构正确，包含增加和使用积分方法"
+        },
+        {
+          "name": "徽章系统功能",
+          "status": "passed",
+          "result": "BadgeSystem结构正确，包含颁发徽章和自动检查方法"
+        },
+        {
+          "name": "反欺诈系统功能",
+          "status": "passed",
+          "result": "FraudDetectionService结构正确，包含风险评估和IP检查方法"
+        },
+        {
+          "name": "通知系统功能",
+          "status": "passed",
+          "result": "NotificationService结构正确，包含发送通知和标记已读方法"
+        },
+        {
+          "name": "API路由完整性",
+          "status": "passed",
+          "result": "所有 5 个API路由存在"
+        },
+        {
+          "name": "数据库迁移文件",
+          "status": "passed",
+          "result": "找到 7 个数据库迁移文件"
+        },
+        {
+          "name": "前端组件完整性",
+          "status": "passed",
+          "result": "所有 4 个前端组件存在"
+        }
+      ]
+    }
+  },
+  "failures": []
+}

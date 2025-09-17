@@ -2,19 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-// 案例数据接口
+// 简化的案例数据接口
 interface CaseItem {
   id: number;
   title: string;
   author: string;
   subject: string;
-  grade: string;
-  description: string;
   thumbnail: string;
-  likes: number;
-  uses: number;
-  rating: number;
-  tags: string[];
+  uses: number; // 仅保留使用数
 }
 
 /**
@@ -23,50 +18,34 @@ interface CaseItem {
 export function DesktopHomePage() {
   // 状态管理
   const [inputContent, setInputContent] = useState('');
-  const [showCreateOptions, setShowCreateOptions] = useState(false);
   const [popularCases, setPopularCases] = useState<CaseItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 模拟热门案例数据
+  // 简化的热门案例数据
   const mockPopularCases: CaseItem[] = [
     {
       id: 1,
       title: '二次函数的图像与性质',
       author: '张老师',
       subject: '数学',
-      grade: '高中',
-      description: '通过动态图像展示二次函数的变化规律，帮助学生理解抛物线的开口方向、对称轴等重要概念。',
       thumbnail: '📊',
-      likes: 156,
-      uses: 89,
-      rating: 4.8,
-      tags: ['函数', '图像', '可视化']
+      uses: 89
     },
     {
       id: 2,
       title: '古诗词意境赏析',
       author: '李老师',
       subject: '语文',
-      grade: '初中',
-      description: '结合古诗词的创作背景，引导学生感受诗人的情感世界，提升文学鉴赏能力。',
       thumbnail: '📜',
-      likes: 234,
-      uses: 156,
-      rating: 4.9,
-      tags: ['古诗词', '意境', '赏析']
+      uses: 156
     },
     {
       id: 3,
       title: '化学反应速率实验',
       author: '王老师',
       subject: '化学',
-      grade: '高中',
-      description: '通过实验现象和理论分析，帮助学生掌握化学反应速率的影响因素。',
       thumbnail: '⚗️',
-      likes: 123,
-      uses: 67,
-      rating: 4.7,
-      tags: ['化学反应', '实验', '速率']
+      uses: 67
     }
   ];
 
@@ -127,7 +106,6 @@ export function DesktopHomePage() {
     const value = e.target.value;
     if (value.length <= 500) { // 字数限制
       setInputContent(value);
-      setShowCreateOptions(value.trim().length > 0);
     }
   };
 
@@ -151,12 +129,11 @@ export function DesktopHomePage() {
       <nav className="modern-nav">
         <div className="modern-container">
           <div className="modern-nav-content">
-            <div className="modern-logo">Inspi.AI</div>
+            <Link href="/" className="modern-logo">Inspi.AI</Link>
             <div className="modern-nav-links mobile-hidden">
               <Link href="/" className="modern-nav-link active">首页</Link>
               <Link href="/create" className="modern-nav-link">创作</Link>
-              <Link href="/square" className="modern-nav-link">广场</Link>
-              <Link href="/profile" className="modern-nav-link">我的</Link>
+              <Link href="/profile" className="modern-nav-link">个人中心</Link>
             </div>
             <div className="flex gap-4">
               <Link href="/create" className="modern-btn modern-btn-primary modern-btn-sm">
@@ -195,7 +172,7 @@ export function DesktopHomePage() {
                     color: 'var(--gray-900)',
                     marginBottom: '8px'
                   }}>
-                    💡 描述您要教授的知识点
+                    描述您要教授的知识点
                   </label>
                   <textarea
                     className="modern-input modern-textarea"
@@ -211,26 +188,17 @@ export function DesktopHomePage() {
                     }}
                   />
                   <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center',
                     marginTop: '8px',
                     fontSize: '14px',
                     color: 'var(--gray-500)'
                   }}>
-                    <span>💡 详细描述有助于AI生成更精准的内容</span>
-                    <span>{inputContent.length}/500</span>
+                    <span>输入教学内容开始创作</span>
                   </div>
                 </div>
 
-                {/* 创建选项展开区域 */}
-                <div className="expand-section" style={{
-                  maxHeight: showCreateOptions ? '400px' : '0',
-                  overflow: 'hidden',
-                  transition: 'all 0.3s ease-in-out',
-                  opacity: showCreateOptions ? 1 : 0
-                }}>
-                  <div style={{ padding: showCreateOptions ? '24px 0 0' : '0' }}>
+                {/* 直接显示创建选项 */}
+                {inputContent.trim().length > 0 && (
+                  <div style={{ paddingTop: '24px' }}>
                     <h3 style={{ 
                       fontSize: '18px',
                       fontWeight: '600',
@@ -245,23 +213,11 @@ export function DesktopHomePage() {
                         <div
                           key={type.id}
                           onClick={() => handleCreateCard(type.id)}
-                          className="create-option-card modern-card"
+                          className="unified-card"
                           style={{
                             padding: '20px',
                             cursor: 'pointer',
-                            border: '2px solid var(--gray-200)',
-                            transition: 'all var(--transition-base)',
                             textAlign: 'center'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = 'var(--primary-500)';
-                            e.currentTarget.style.transform = 'translateY(-2px)';
-                            e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = 'var(--gray-200)';
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = 'var(--shadow-base)';
                           }}
                         >
                           <div style={{
@@ -288,7 +244,7 @@ export function DesktopHomePage() {
                       ))}
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -338,19 +294,10 @@ export function DesktopHomePage() {
                 {popularCases.map((caseItem) => (
                   <div 
                     key={caseItem.id} 
-                    className="case-card modern-card modern-card-elevated" 
+                    className="unified-card" 
                     onClick={() => handleCaseClick(caseItem)}
                     style={{
-                      cursor: 'pointer',
-                      transition: 'all var(--transition-base)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-4px)';
-                      e.currentTarget.style.boxShadow = 'var(--shadow-xl)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+                      cursor: 'pointer'
                     }}>
                     <div className="modern-card-body">
                       <div style={{ 
@@ -360,7 +307,7 @@ export function DesktopHomePage() {
                         marginBottom: '16px' 
                       }}>
                         <div style={{ fontSize: '48px' }}>{caseItem.thumbnail}</div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div>
                           <span style={{
                             padding: '4px 8px',
                             background: 'var(--primary-100)',
@@ -371,15 +318,6 @@ export function DesktopHomePage() {
                           }}>
                             {caseItem.subject}
                           </span>
-                          <span style={{
-                            padding: '4px 8px',
-                            background: 'var(--gray-100)',
-                            color: 'var(--gray-600)',
-                            borderRadius: 'var(--radius-sm)',
-                            fontSize: '12px'
-                          }}>
-                            {caseItem.grade}
-                          </span>
                         </div>
                       </div>
 
@@ -387,74 +325,21 @@ export function DesktopHomePage() {
                         fontSize: '20px',
                         fontWeight: '600',
                         color: 'var(--gray-900)',
-                        marginBottom: '8px',
+                        marginBottom: '16px',
                         lineHeight: '1.3'
                       }}>
                         {caseItem.title}
                       </h3>
 
-                      <p style={{
-                        color: 'var(--gray-600)',
-                        fontSize: '14px',
-                        marginBottom: '16px',
-                        lineHeight: '1.5',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden'
-                      }}>
-                        {caseItem.description}
-                      </p>
-
-                      <div style={{ 
-                        display: 'flex', 
-                        flexWrap: 'wrap', 
-                        gap: '6px', 
-                        marginBottom: '16px' 
-                      }}>
-                        {caseItem.tags.map((tag, index) => (
-                          <span key={index} style={{
-                            padding: '2px 8px',
-                            background: 'var(--gray-100)',
-                            color: 'var(--gray-600)',
-                            fontSize: '12px',
-                            borderRadius: 'var(--radius-sm)'
-                          }}>
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-
                       <div style={{ 
                         display: 'flex', 
                         alignItems: 'center', 
-                        justifyContent: 'space-between', 
-                        paddingTop: '16px', 
-                        borderTop: '1px solid var(--gray-200)' 
+                        justifyContent: 'space-between',
+                        fontSize: '14px', 
+                        color: 'var(--gray-500)'
                       }}>
-                        <div style={{ 
-                          fontSize: '14px', 
-                          color: 'var(--gray-500)' 
-                        }}>
-                          by {caseItem.author}
-                        </div>
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '16px', 
-                          fontSize: '14px', 
-                          color: 'var(--gray-500)' 
-                        }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            ❤️ {caseItem.likes}
-                          </span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            🔄 {caseItem.uses}
-                          </span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            ⭐ {caseItem.rating}
-                          </span>
-                        </div>
+                        <span>by {caseItem.author}</span>
+                        <span>🔄 {caseItem.uses} 次使用</span>
                       </div>
                     </div>
                   </div>

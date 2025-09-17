@@ -89,8 +89,7 @@ export function DesktopCreatePage() {
             <div className="modern-nav-links mobile-hidden">
               <Link href="/" className="modern-nav-link">首页</Link>
               <Link href="/create" className="modern-nav-link active">创作</Link>
-              <Link href="/square" className="modern-nav-link">广场</Link>
-              <Link href="/profile" className="modern-nav-link">我的</Link>
+              <Link href="/profile" className="modern-nav-link">个人中心</Link>
             </div>
           </div>
         </div>

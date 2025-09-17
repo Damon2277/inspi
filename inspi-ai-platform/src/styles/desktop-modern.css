@@ -230,6 +230,20 @@ body {
   background: var(--gray-50);
 }
 
+/* 统一卡片样式系统 */
+.unified-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-base);
+  border: 1px solid var(--gray-200);
+  transition: box-shadow var(--transition-base);
+  overflow: hidden;
+}
+
+.unified-card:hover {
+  box-shadow: var(--shadow-md); /* 简化悬停效果，仅轻微阴影变化 */
+}
+
 /* 现代化按钮系统 */
 .modern-btn {
   display: inline-flex;

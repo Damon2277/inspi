@@ -5,66 +5,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { geminiService } from '@/lib/ai/geminiService';
-import { generateAllCardsPrompt, validateAllCards, cardTemplates } from '@/lib/ai/promptTemplates';
+import { generateAllCardsPrompt, validateAllCards } from '@/lib/ai/promptTemplates';
 import { quotaManager } from '@/lib/quota/quotaManager';
 import { logger } from '@/lib/utils/logger';
+import { validateContent, cleanUserContent } from '@/lib/security';
 import type { GenerateCardsRequest, GenerateCardsResponse } from '@/types/teaching';
 
-// Mock教学卡片数据
-const mockCards = {
-  数学: {
-    '两位数加法': [
-      {
-        id: 'card-1',
-        type: 'visualization' as const,
-        title: '可视化理解',
-        content: '想象一下，你有23个苹果，朋友又给了你15个苹果。我们可以用小方块来表示：\n\n🟦🟦🟦🟦🟦🟦🟦🟦🟦🟦 (20个)\n🟦🟦🟦 (3个)\n\n🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨 (10个)\n🟨🟨🟨🟨🟨 (5个)\n\n先把十位相加：20 + 10 = 30\n再把个位相加：3 + 5 = 8\n最后合并：30 + 8 = 38',
-        explanation: '通过视觉化的方式，让学生直观理解两位数加法的过程，先处理十位，再处理个位。'
-      },
-      {
-        id: 'card-2',
-        type: 'analogy' as const,
-        title: '类比延展',
-        content: '两位数加法就像整理玩具箱：\n\n🧸 个位数字像散落的小玩具\n📦 十位数字像装满玩具的盒子\n\n当我们计算23 + 15时：\n- 先数盒子：2盒 + 1盒 = 3盒\n- 再数散落的玩具：3个 + 5个 = 8个\n- 最后合起来：3盒8个玩具 = 38个玩具\n\n这样，复杂的数学变成了简单的整理游戏！',
-        explanation: '用孩子熟悉的整理玩具场景来类比数学概念，降低理解难度。'
-      },
-      {
-        id: 'card-3',
-        type: 'thinking' as const,
-        title: '启发思考',
-        content: '🤔 思考时间：\n\n如果你在商店买东西：\n- 一本书23元\n- 一支笔15元\n\n问题1：你需要带多少钱？\n问题2：如果你带了50元，还剩多少钱？\n问题3：你能想出其他需要用到两位数加法的生活场景吗？\n\n💡 提示：想想你的年龄、身高、或者收集的卡片数量...',
-        explanation: '通过实际生活场景引发思考，让学生主动探索数学在生活中的应用。'
-      },
-      {
-        id: 'card-4',
-        type: 'interaction' as const,
-        title: '互动氛围',
-        content: '🎮 数字接龙游戏：\n\n游戏规则：\n1. 老师说一个两位数（如23）\n2. 学生轮流说另一个两位数（如15）\n3. 全班一起计算结果（23 + 15 = 38）\n4. 下一轮从结果开始（38 + ?）\n\n🏆 挑战模式：\n- 看谁能最快说出正确答案\n- 尝试让结果正好等于100\n- 用手势表示十位和个位\n\n让数学变成快乐的游戏！',
-        explanation: '通过游戏化的互动方式，提高学生参与度和学习兴趣。'
-      }
-    ],
-    '分数概念': [
-      {
-        id: 'card-5',
-        type: 'visualization' as const,
-        title: '可视化理解',
-        content: '🍕 分数就像分披萨：\n\n一整个披萨 = 1\n切成2块，每块是 1/2\n切成4块，每块是 1/4\n切成8块，每块是 1/8\n\n📊 用图形表示：\n⚪ = 1 (完整的圆)\n◐ = 1/2 (半个圆)\n◔ = 1/4 (四分之一圆)\n\n分母告诉我们分成几份，分子告诉我们取了几份。',
-        explanation: '用披萨和图形直观展示分数概念，帮助学生理解分子分母的含义。'
-      }
-    ]
-  },
-  语文: {
-    '文章主旨理解': [
-      {
-        id: 'card-6',
-        type: 'visualization' as const,
-        title: '可视化理解',
-        content: '📖 理解文章主旨就像寻宝：\n\n🗺️ 文章 = 寻宝地图\n💎 主旨 = 宝藏位置\n🔍 关键词 = 寻宝线索\n\n寻宝步骤：\n1. 快速浏览全文（观察地图）\n2. 找出关键词句（收集线索）\n3. 思考作者想表达什么（推理宝藏位置）\n4. 用一句话概括（找到宝藏！）\n\n记住：主旨通常藏在开头、结尾或反复出现的地方！',
-        explanation: '用寻宝游戏比喻阅读理解过程，让抽象的概念变得具体有趣。'
-      }
-    ]
-  }
-};
+
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -102,7 +49,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. 检查用户配额（简化版，实际应该从JWT中获取用户信息）
+    // 4. 内容安全验证
+    const contentValidation = validateContent(knowledgePoint, {
+      maxLength: 100,
+      enableXssFilter: true,
+      enableSensitiveWordFilter: true,
+      enableHtmlFilter: true
+    });
+
+    if (!contentValidation.isValid) {
+      const errors = contentValidation.issues
+        .filter(issue => issue.severity === 'error')
+        .map(issue => issue.message);
+      
+      return NextResponse.json(
+        { 
+          error: '输入内容包含不当信息',
+          details: errors
+        },
+        { status: 400 }
+      );
+    }
+
+    // 使用清理后的内容
+    const cleanKnowledgePoint = contentValidation.cleanContent;
+
+    // 5. 检查用户配额（简化版，实际应该从JWT中获取用户信息）
     const userId = 'temp_user_' + token.slice(-8); // 临时用户ID
     const userPlan = 'free'; // 临时设为免费用户
     
@@ -123,7 +95,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. 检查AI服务健康状态
+    // 6. 检查AI服务健康状态
     const isHealthy = await geminiService.healthCheck();
     if (!isHealthy) {
       logger.error('AI service health check failed');
@@ -133,17 +105,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. 生成提示词上下文
+    // 7. 生成提示词上下文
     const promptContext = {
-      knowledgePoint: knowledgePoint.trim(),
+      knowledgePoint: cleanKnowledgePoint,
       subject: subject || '通用',
       gradeLevel: gradeLevel || '中学',
-      difficulty: difficulty || 'medium',
-      language: '中文',
-      additionalContext
+      language: '中文'
     };
 
-    // 7. 生成四张卡片
+    // 8. 生成四张卡片
     const cards = [];
     const cardTypes = ['concept', 'example', 'practice', 'extension'] as const;
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -156,9 +126,21 @@ export async function POST(request: NextRequest) {
           temperature: 0.7,
           maxTokens: 500,
           useCache: true,
-          cacheKey: `card_${cardType}_${knowledgePoint}_${subject}`,
+          cacheKey: `card_${cardType}_${cleanKnowledgePoint}_${subject}`,
           cacheTTL: 3600 // 1小时缓存
         });
+
+        // 对AI生成的内容进行安全验证和清理
+        const aiContentValidation = validateContent(result.content, {
+          maxLength: 1000,
+          enableXssFilter: true,
+          enableSensitiveWordFilter: true,
+          enableHtmlFilter: false // AI生成的内容可能包含格式化标记
+        });
+
+        const cleanAIContent = aiContentValidation.isValid ? 
+          result.content : 
+          cleanUserContent(result.content);
 
         // 验证生成的内容
         const validation = validateAllCards({ [cardType]: result.content })[cardType];
@@ -189,25 +171,25 @@ export async function POST(request: NextRequest) {
           id: `card_${sessionId}_${cardType}`,
           type: cardTypeMap[cardType],
           title: cardTitleMap[cardType],
-          content: result.content,
-          explanation: `AI生成的${cardTitleMap[cardType]}卡片，帮助理解"${knowledgePoint}"`,
+          content: cleanAIContent,
+          explanation: `AI生成的${cardTitleMap[cardType]}卡片，帮助理解"${cleanKnowledgePoint}"`,
           cached: result.cached
         });
 
       } catch (error) {
         logger.error(`Failed to generate ${cardType} card`, { 
           error: error instanceof Error ? error.message : 'Unknown error',
-          knowledgePoint,
+          knowledgePoint: cleanKnowledgePoint,
           cardType
         });
 
         // 生成失败时使用备用内容
-        const fallbackContent = generateFallbackCard(cardType, knowledgePoint);
+        const fallbackContent = generateFallbackCard(cardType, cleanKnowledgePoint);
         cards.push(fallbackContent);
       }
     }
 
-    // 8. 获取更新后的配额信息
+    // 9. 获取更新后的配额信息
     const updatedQuota = await quotaManager.checkQuota(userId, userPlan);
     const usage = {
       current: updatedQuota.currentUsage,
@@ -215,7 +197,7 @@ export async function POST(request: NextRequest) {
       remaining: updatedQuota.remaining
     };
 
-    // 9. 构建响应
+    // 10. 构建响应
     const response: GenerateCardsResponse = {
       cards,
       sessionId,
@@ -224,7 +206,7 @@ export async function POST(request: NextRequest) {
 
     const duration = Date.now() - startTime;
     logger.info('AI card generation completed', { 
-      knowledgePoint,
+      knowledgePoint: cleanKnowledgePoint,
       subject,
       cardsGenerated: cards.length,
       duration,

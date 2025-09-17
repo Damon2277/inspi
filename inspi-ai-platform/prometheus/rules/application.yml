@@ -1,0 +1,161 @@
+# 应用层告警规则
+groups:
+  - name: application.rules
+    rules:
+      # 应用可用性告警
+      - alert: ApplicationDown
+        expr: up{job="inspi-ai-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: inspi-ai-app
+          category: availability
+        annotations:
+          summary: "应用服务不可用"
+          description: "应用 {{ $labels.instance }} 已经停止响应超过1分钟"
+          runbook_url: "https://docs.inspi.ai/runbooks/application-down"
+
+      # 高响应时间告警
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="inspi-ai-app"}[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: inspi-ai-app
+          category: performance
+        annotations:
+          summary: "应用响应时间过高"
+          description: "应用 {{ $labels.instance }} 的95%响应时间超过2秒，当前值: {{ $value }}秒"
+          runbook_url: "https://docs.inspi.ai/runbooks/high-response-time"
+
+      # 高错误率告警
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{job="inspi-ai-app",status=~"5.."}[5m]) / rate(http_requests_total{job="inspi-ai-app"}[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: critical
+          service: inspi-ai-app
+          category: reliability
+        annotations:
+          summary: "应用错误率过高"
+          description: "应用 {{ $labels.instance }} 的5xx错误率超过5%，当前值: {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.inspi.ai/runbooks/high-error-rate"
+
+      # 内存使用率告警
+      - alert: HighMemoryUsage
+        expr: (nodejs_memory_heap_used_bytes / nodejs_memory_heap_total_bytes) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: inspi-ai-app
+          category: resource
+        annotations:
+          summary: "应用内存使用率过高"
+          description: "应用 {{ $labels.instance }} 内存使用率超过85%，当前值: {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.inspi.ai/runbooks/high-memory-usage"
+
+      # CPU使用率告警
+      - alert: HighCPUUsage
+        expr: nodejs_process_cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: inspi-ai-app
+          category: resource
+        annotations:
+          summary: "应用CPU使用率过高"
+          description: "应用 {{ $labels.instance }} CPU使用率超过80%，当前值: {{ $value }}%"
+          runbook_url: "https://docs.inspi.ai/runbooks/high-cpu-usage"
+
+      # 事件循环延迟告警
+      - alert: HighEventLoopDelay
+        expr: nodejs_eventloop_delay_milliseconds > 100
+        for: 2m
+        labels:
+          severity: warning
+          service: inspi-ai-app
+          category: performance
+        annotations:
+          summary: "Node.js事件循环延迟过高"
+          description: "应用 {{ $labels.instance }} 事件循环延迟超过100ms，当前值: {{ $value }}ms"
+          runbook_url: "https://docs.inspi.ai/runbooks/high-event-loop-delay"
+
+      # 数据库连接池告警
+      - alert: DatabaseConnectionPoolExhaustion
+        expr: database_connections_active / (database_connections_active + database_connections_idle) > 0.9
+        for: 2m
+        labels:
+          severity: critical
+          service: inspi-ai-app
+          category: database
+        annotations:
+          summary: "数据库连接池即将耗尽"
+          description: "应用 {{ $labels.instance }} 数据库连接池使用率超过90%，当前值: {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.inspi.ai/runbooks/db-connection-pool-exhaustion"
+
+      # 缓存命中率告警
+      - alert: LowCacheHitRate
+        expr: cache_hit_ratio < 0.7
+        for: 10m
+        labels:
+          severity: warning
+          service: inspi-ai-app
+          category: performance
+        annotations:
+          summary: "缓存命中率过低"
+          description: "应用 {{ $labels.instance }} 缓存命中率低于70%，当前值: {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.inspi.ai/runbooks/low-cache-hit-rate"
+
+  - name: business.rules
+    rules:
+      # 邀请码生成异常
+      - alert: InvitationCodeGenerationFailure
+        expr: increase(invitation_codes_generation_failures_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: inspi-ai-app
+          category: business
+        annotations:
+          summary: "邀请码生成失败率过高"
+          description: "过去5分钟内邀请码生成失败超过10次"
+          runbook_url: "https://docs.inspi.ai/runbooks/invitation-code-generation-failure"
+
+      # 奖励发放异常
+      - alert: RewardDistributionFailure
+        expr: increase(rewards_distribution_failures_total[5m]) > 5
+        for: 1m
+        labels:
+          severity: critical
+          service: inspi-ai-app
+          category: business
+        annotations:
+          summary: "奖励发放失败"
+          description: "过去5分钟内奖励发放失败超过5次"
+          runbook_url: "https://docs.inspi.ai/runbooks/reward-distribution-failure"
+
+      # 邀请注册转化率异常
+      - alert: LowInvitationConversionRate
+        expr: rate(invitation_registrations_total[1h]) / rate(invitation_codes_generated_total[1h]) < 0.1
+        for: 30m
+        labels:
+          severity: warning
+          service: inspi-ai-app
+          category: business
+        annotations:
+          summary: "邀请注册转化率过低"
+          description: "过去1小时邀请注册转化率低于10%，当前值: {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.inspi.ai/runbooks/low-invitation-conversion-rate"
+
+      # 防作弊检测异常
+      - alert: HighFraudDetectionRate
+        expr: rate(fraud_detection_alerts_total[10m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: inspi-ai-app
+          category: security
+        annotations:
+          summary: "防作弊检测告警频率过高"
+          description: "过去10分钟防作弊检测告警频率超过0.1/秒"
+          runbook_url: "https://docs.inspi.ai/runbooks/high-fraud-detection-rate"
