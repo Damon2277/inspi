@@ -1,519 +1,537 @@
 #!/usr/bin/env node
 
 /**
- * 性能测试脚本
+ * 性能压测脚本 - 负载测试和性能优化
  */
+
 const { execSync, spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
+const http = require('http');
+const https = require('https');
 
-/**
- * 性能测试配置
- */
-const config = {
-  // 测试套件
-  testSuites: [
-    'benchmark',
-    'load',
-    'regression'
-  ],
-  
-  // 输出目录
-  outputDir: path.join(__dirname, '../performance-reports'),
-  
-  // Jest配置
-  jestConfig: {
-    testMatch: ['**/__tests__/performance/**/*.test.ts'],
-    testTimeout: 60000, // 60秒
-    maxWorkers: 1, // 单线程运行以获得一致的结果
-    verbose: true
+console.log('⚡ 开始性能压测 - 负载测试和性能优化...\n');
+
+// 性能测试配置
+const PERF_CONFIG = {
+  baseUrl: 'http://localhost:3000',
+  concurrency: 10,        // 并发用户数
+  duration: 60,           // 测试持续时间(秒)
+  rampUp: 10,            // 用户增长时间(秒)
+  testScenarios: [
+    'api-load-test',
+    'content-validation-stress',
+    'invitation-system-load',
+    'database-performance',
+    'memory-usage-test'
+  ]
+};
+
+// 性能指标记录
+const perfMetrics = {
+  requests: {
+    total: 0,
+    successful: 0,
+    failed: 0,
+    avgResponseTime: 0,
+    maxResponseTime: 0,
+    minResponseTime: Infinity
   },
-  
-  // 报告配置
-  reports: {
-    json: true,
-    html: true,
-    console: true
+  throughput: {
+    requestsPerSecond: 0,
+    bytesPerSecond: 0
   },
-  
-  // 基准配置
-  benchmarks: {
-    warmupRuns: 3,
-    testRuns: 5,
-    gcBetweenRuns: true
-  }
+  resources: {
+    maxMemoryUsage: 0,
+    avgCpuUsage: 0,
+    peakCpuUsage: 0
+  },
+  scenarios: []
 };
 
 /**
- * 系统信息收集
+ * HTTP请求性能测试
  */
-function getSystemInfo() {
+async function performanceRequest(url, options = {}) {
+  const startTime = Date.now();
+  
+  return new Promise((resolve, reject) => {
+    const protocol = url.startsWith('https') ? https : http;
+    
+    const req = protocol.request(url, {
+      method: options.method || 'GET',
+      headers: options.headers || {},
+      timeout: options.timeout || 10000
+    }, (res) => {
+      let data = '';
+      
+      res.on('data', chunk => {
+        data += chunk;
+      });
+      
+      res.on('end', () => {
+        const endTime = Date.now();
+        const responseTime = endTime - startTime;
+        
+        resolve({
+          statusCode: res.statusCode,
+          responseTime,
+          dataSize: data.length,
+          success: res.statusCode >= 200 && res.statusCode < 400
+        });
+      });
+    });
+    
+    req.on('error', (error) => {
+      const endTime = Date.now();
+      const responseTime = endTime - startTime;
+      
+      reject({
+        error: error.message,
+        responseTime,
+        success: false
+      });
+    });
+    
+    req.on('timeout', () => {
+      req.destroy();
+      reject({
+        error: 'Request timeout',
+        responseTime: options.timeout || 10000,
+        success: false
+      });
+    });
+    
+    if (options.body) {
+      req.write(JSON.stringify(options.body));
+    }
+    
+    req.end();
+  });
+}
+
+/**
+ * API负载测试
+ */
+async function apiLoadTest() {
+  console.log('🔥 API负载测试');
+  
+  const endpoints = [
+    { path: '/api/health', method: 'GET' },
+    { path: '/api/content/validate', method: 'POST', body: { content: '测试内容' } },
+    { path: '/api/invite/stats/test-user', method: 'GET' },
+    { path: '/api/notifications', method: 'GET' }
+  ];
+  
+  const results = [];
+  const startTime = Date.now();
+  
+  // 并发请求测试
+  for (let i = 0; i < PERF_CONFIG.concurrency; i++) {
+    const promises = endpoints.map(async (endpoint) => {
+      const requests = [];
+      
+      // 每个端点发送多个请求
+      for (let j = 0; j < 10; j++) {
+        try {
+          const result = await performanceRequest(
+            `${PERF_CONFIG.baseUrl}${endpoint.path}`,
+            {
+              method: endpoint.method,
+              headers: endpoint.method === 'POST' ? { 'Content-Type': 'application/json' } : {},
+              body: endpoint.body
+            }
+          );
+          requests.push(result);
+        } catch (error) {
+          requests.push(error);
+        }
+      }
+      
+      return { endpoint: endpoint.path, requests };
+    });
+    
+    const endpointResults = await Promise.all(promises);
+    results.push(...endpointResults);
+  }
+  
+  const endTime = Date.now();
+  const totalTime = (endTime - startTime) / 1000;
+  
+  // 计算性能指标
+  let totalRequests = 0;
+  let successfulRequests = 0;
+  let totalResponseTime = 0;
+  let maxResponseTime = 0;
+  let minResponseTime = Infinity;
+  
+  results.forEach(endpointResult => {
+    endpointResult.requests.forEach(req => {
+      totalRequests++;
+      if (req.success) successfulRequests++;
+      totalResponseTime += req.responseTime;
+      maxResponseTime = Math.max(maxResponseTime, req.responseTime);
+      minResponseTime = Math.min(minResponseTime, req.responseTime);
+    });
+  });
+  
+  const avgResponseTime = totalResponseTime / totalRequests;
+  const requestsPerSecond = totalRequests / totalTime;
+  
+  console.log(`  📊 总请求数: ${totalRequests}`);
+  console.log(`  ✅ 成功请求: ${successfulRequests} (${((successfulRequests/totalRequests)*100).toFixed(1)}%)`);
+  console.log(`  ⏱️  平均响应时间: ${avgResponseTime.toFixed(2)}ms`);
+  console.log(`  🚀 吞吐量: ${requestsPerSecond.toFixed(2)} req/s`);
+  
   return {
-    platform: os.platform(),
-    arch: os.arch(),
-    cpus: os.cpus().length,
-    totalMemory: Math.round(os.totalmem() / 1024 / 1024 / 1024) + 'GB',
-    freeMemory: Math.round(os.freemem() / 1024 / 1024 / 1024) + 'GB',
-    nodeVersion: process.version,
-    timestamp: new Date().toISOString()
+    name: 'API负载测试',
+    totalRequests,
+    successfulRequests,
+    avgResponseTime,
+    maxResponseTime,
+    minResponseTime,
+    requestsPerSecond,
+    successRate: (successfulRequests/totalRequests)*100
   };
 }
 
 /**
- * 创建输出目录
+ * 内容验证压力测试
  */
-function ensureOutputDir() {
-  if (!fs.existsSync(config.outputDir)) {
-    fs.mkdirSync(config.outputDir, { recursive: true });
+async function contentValidationStressTest() {
+  console.log('🛡️ 内容验证压力测试');
+  
+  const testContents = [
+    '正常的测试内容',
+    '这个白痴真是垃圾',
+    '<script>alert("xss")</script>',
+    'a'.repeat(1000), // 长文本
+    '包含特殊字符的内容 @#$%^&*()',
+    '多行内容\n第二行\n第三行'
+  ];
+  
+  const results = [];
+  const startTime = Date.now();
+  
+  // 并发内容验证测试
+  const promises = [];
+  for (let i = 0; i < PERF_CONFIG.concurrency; i++) {
+    for (const content of testContents) {
+      promises.push(
+        performanceRequest(
+          `${PERF_CONFIG.baseUrl}/api/content/validate`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: { content }
+          }
+        ).catch(error => error)
+      );
+    }
+  }
+  
+  const responses = await Promise.all(promises);
+  const endTime = Date.now();
+  
+  const totalTime = (endTime - startTime) / 1000;
+  const successfulRequests = responses.filter(r => r.success).length;
+  const avgResponseTime = responses.reduce((sum, r) => sum + r.responseTime, 0) / responses.length;
+  
+  console.log(`  📊 内容验证请求: ${responses.length}`);
+  console.log(`  ✅ 成功验证: ${successfulRequests} (${((successfulRequests/responses.length)*100).toFixed(1)}%)`);
+  console.log(`  ⏱️  平均验证时间: ${avgResponseTime.toFixed(2)}ms`);
+  
+  return {
+    name: '内容验证压力测试',
+    totalRequests: responses.length,
+    successfulRequests,
+    avgResponseTime,
+    successRate: (successfulRequests/responses.length)*100
+  };
+}
+
+/**
+ * 邀请系统负载测试
+ */
+async function invitationSystemLoadTest() {
+  console.log('🎁 邀请系统负载测试');
+  
+  const operations = [
+    { path: '/api/invite/generate', method: 'POST', body: { userId: 'load-test-user', type: 'standard' } },
+    { path: '/api/invite/stats/load-test-user', method: 'GET' },
+    { path: '/api/activities', method: 'GET' },
+    { path: '/api/notifications', method: 'POST', body: { userId: 'load-test-user', type: 'test', title: '测试', message: '负载测试' } }
+  ];
+  
+  const results = [];
+  const startTime = Date.now();
+  
+  // 模拟多用户并发操作
+  const promises = [];
+  for (let i = 0; i < PERF_CONFIG.concurrency; i++) {
+    for (const op of operations) {
+      promises.push(
+        performanceRequest(
+          `${PERF_CONFIG.baseUrl}${op.path}`,
+          {
+            method: op.method,
+            headers: op.method === 'POST' ? { 'Content-Type': 'application/json' } : {},
+            body: op.body
+          }
+        ).catch(error => error)
+      );
+    }
+  }
+  
+  const responses = await Promise.all(promises);
+  const endTime = Date.now();
+  
+  const totalTime = (endTime - startTime) / 1000;
+  const successfulRequests = responses.filter(r => r.success).length;
+  const avgResponseTime = responses.reduce((sum, r) => sum + r.responseTime, 0) / responses.length;
+  
+  console.log(`  📊 邀请系统操作: ${responses.length}`);
+  console.log(`  ✅ 成功操作: ${successfulRequests} (${((successfulRequests/responses.length)*100).toFixed(1)}%)`);
+  console.log(`  ⏱️  平均响应时间: ${avgResponseTime.toFixed(2)}ms`);
+  
+  return {
+    name: '邀请系统负载测试',
+    totalRequests: responses.length,
+    successfulRequests,
+    avgResponseTime,
+    successRate: (successfulRequests/responses.length)*100
+  };
+}
+
+/**
+ * 数据库性能测试
+ */
+async function databasePerformanceTest() {
+  console.log('🗄️ 数据库性能测试');
+  
+  // 模拟数据库密集型操作
+  const dbOperations = [
+    { path: '/api/invite/history/test-user', method: 'GET' },
+    { path: '/api/invite/leaderboard', method: 'GET' },
+    { path: '/api/activities', method: 'GET' },
+    { path: '/api/notifications', method: 'GET' }
+  ];
+  
+  const results = [];
+  const startTime = Date.now();
+  
+  // 高并发数据库查询
+  const promises = [];
+  for (let i = 0; i < PERF_CONFIG.concurrency * 2; i++) { // 增加并发数测试数据库
+    for (const op of dbOperations) {
+      promises.push(
+        performanceRequest(`${PERF_CONFIG.baseUrl}${op.path}`, { method: op.method })
+        .catch(error => error)
+      );
+    }
+  }
+  
+  const responses = await Promise.all(promises);
+  const endTime = Date.now();
+  
+  const totalTime = (endTime - startTime) / 1000;
+  const successfulRequests = responses.filter(r => r.success).length;
+  const avgResponseTime = responses.reduce((sum, r) => sum + r.responseTime, 0) / responses.length;
+  
+  console.log(`  📊 数据库查询: ${responses.length}`);
+  console.log(`  ✅ 成功查询: ${successfulRequests} (${((successfulRequests/responses.length)*100).toFixed(1)}%)`);
+  console.log(`  ⏱️  平均查询时间: ${avgResponseTime.toFixed(2)}ms`);
+  
+  return {
+    name: '数据库性能测试',
+    totalRequests: responses.length,
+    successfulRequests,
+    avgResponseTime,
+    successRate: (successfulRequests/responses.length)*100
+  };
+}
+
+/**
+ * 内存使用测试
+ */
+async function memoryUsageTest() {
+  console.log('💾 内存使用测试');
+  
+  const initialMemory = process.memoryUsage();
+  console.log(`  📊 初始内存使用: ${(initialMemory.heapUsed / 1024 / 1024).toFixed(2)} MB`);
+  
+  // 模拟内存密集型操作
+  const largeData = [];
+  for (let i = 0; i < 1000; i++) {
+    largeData.push({
+      id: i,
+      content: 'x'.repeat(1000),
+      timestamp: new Date(),
+      metadata: { test: true, index: i }
+    });
+  }
+  
+  const afterAllocationMemory = process.memoryUsage();
+  console.log(`  📊 分配后内存使用: ${(afterAllocationMemory.heapUsed / 1024 / 1024).toFixed(2)} MB`);
+  
+  // 清理内存
+  largeData.length = 0;
+  global.gc && global.gc(); // 如果启用了--expose-gc
+  
+  const afterCleanupMemory = process.memoryUsage();
+  console.log(`  📊 清理后内存使用: ${(afterCleanupMemory.heapUsed / 1024 / 1024).toFixed(2)} MB`);
+  
+  return {
+    name: '内存使用测试',
+    initialMemory: initialMemory.heapUsed,
+    peakMemory: afterAllocationMemory.heapUsed,
+    finalMemory: afterCleanupMemory.heapUsed,
+    memoryIncrease: afterAllocationMemory.heapUsed - initialMemory.heapUsed
+  };
+}
+
+/**
+ * 执行性能测试场景
+ */
+async function runPerformanceScenario(scenarioName) {
+  console.log(`\n⚡ 执行性能测试: ${scenarioName}`);
+  
+  try {
+    switch (scenarioName) {
+      case 'api-load-test':
+        return await apiLoadTest();
+      case 'content-validation-stress':
+        return await contentValidationStressTest();
+      case 'invitation-system-load':
+        return await invitationSystemLoadTest();
+      case 'database-performance':
+        return await databasePerformanceTest();
+      case 'memory-usage-test':
+        return await memoryUsageTest();
+      default:
+        throw new Error(`未知的性能测试场景: ${scenarioName}`);
+    }
+  } catch (error) {
+    console.error(`❌ 性能测试失败: ${scenarioName} - ${error.message}`);
+    return { name: scenarioName, error: error.message, success: false };
   }
 }
 
 /**
- * 运行Jest测试
+ * 等待服务器启动
  */
-function runJestTests(suite) {
-  return new Promise((resolve, reject) => {
-    const testPattern = `**/__tests__/performance/${suite}.test.ts`;
-    const outputFile = path.join(config.outputDir, `${suite}-results.json`);
-    
-    const jestArgs = [
-      '--testMatch', testPattern,
-      '--testTimeout', config.jestConfig.testTimeout.toString(),
-      '--maxWorkers', config.jestConfig.maxWorkers.toString(),
-      '--json',
-      '--outputFile', outputFile,
-      '--verbose'
-    ];
+async function waitForServer(url, timeout = 30000) {
+  const start = Date.now();
+  
+  while (Date.now() - start < timeout) {
+    try {
+      await performanceRequest(url);
+      return true;
+    } catch (error) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+  return false;
+}
 
-    console.log(`\n🧪 Running ${suite} tests...`);
-    console.log(`Command: npx jest ${jestArgs.join(' ')}\n`);
-
-    const jest = spawn('npx', ['jest', ...jestArgs], {
-      stdio: 'inherit',
+/**
+ * 主性能测试流程
+ */
+async function runPerformanceTests() {
+  let server = null;
+  
+  try {
+    // 启动服务器
+    console.log('🔧 启动开发服务器进行性能测试...');
+    server = spawn('npm', ['run', 'dev'], {
+      stdio: 'pipe',
       cwd: path.join(__dirname, '..')
     });
-
-    jest.on('close', (code) => {
-      if (code === 0) {
-        console.log(`✅ ${suite} tests completed successfully`);
-        resolve({ suite, success: true, outputFile });
+    
+    // 等待服务器就绪
+    console.log('⏳ 等待服务器就绪...');
+    const isReady = await waitForServer(PERF_CONFIG.baseUrl);
+    if (!isReady) {
+      throw new Error('服务器启动失败');
+    }
+    
+    console.log('✅ 服务器就绪，开始性能测试');
+    
+    // 执行所有性能测试场景
+    const results = [];
+    for (const scenarioName of PERF_CONFIG.testScenarios) {
+      const result = await runPerformanceScenario(scenarioName);
+      results.push(result);
+      perfMetrics.scenarios.push(result);
+    }
+    
+    // 生成性能测试报告
+    console.log('\n📊 性能测试结果汇总');
+    console.log('=' .repeat(60));
+    
+    results.forEach(result => {
+      if (result.success !== false) {
+        console.log(`\n🎯 ${result.name}:`);
+        if (result.totalRequests) {
+          console.log(`  📊 总请求数: ${result.totalRequests}`);
+          console.log(`  ✅ 成功率: ${result.successRate?.toFixed(1)}%`);
+          console.log(`  ⏱️  平均响应时间: ${result.avgResponseTime?.toFixed(2)}ms`);
+          if (result.requestsPerSecond) {
+            console.log(`  🚀 吞吐量: ${result.requestsPerSecond.toFixed(2)} req/s`);
+          }
+        }
+        if (result.memoryIncrease) {
+          console.log(`  💾 内存增长: ${(result.memoryIncrease / 1024 / 1024).toFixed(2)} MB`);
+        }
       } else {
-        console.log(`❌ ${suite} tests failed with code ${code}`);
-        resolve({ suite, success: false, code, outputFile });
+        console.log(`\n❌ ${result.name}: ${result.error}`);
       }
     });
-
-    jest.on('error', (error) => {
-      console.error(`❌ Failed to run ${suite} tests:`, error);
-      reject(error);
-    });
-  });
-}
-
-/**
- * 解析Jest结果
- */
-function parseJestResults(outputFile) {
-  try {
-    if (!fs.existsSync(outputFile)) {
-      return null;
-    }
-
-    const content = fs.readFileSync(outputFile, 'utf8');
-    return JSON.parse(content);
+    
+    // 保存性能测试报告
+    const reportData = {
+      timestamp: new Date().toISOString(),
+      testType: 'performance',
+      config: PERF_CONFIG,
+      results: results,
+      summary: {
+        totalScenarios: results.length,
+        successfulScenarios: results.filter(r => r.success !== false).length,
+        avgResponseTime: results.reduce((sum, r) => sum + (r.avgResponseTime || 0), 0) / results.length
+      }
+    };
+    
+    fs.writeFileSync(
+      path.join(__dirname, '../PERFORMANCE_TEST_REPORT.json'),
+      JSON.stringify(reportData, null, 2)
+    );
+    
+    console.log('\n📄 详细报告已保存到: PERFORMANCE_TEST_REPORT.json');
+    
+    return results.every(r => r.success !== false);
+    
   } catch (error) {
-    console.warn(`⚠️  Failed to parse results from ${outputFile}:`, error.message);
-    return null;
-  }
-}
-
-/**
- * 生成HTML报告
- */
-function generateHtmlReport(results, systemInfo) {
-  const htmlTemplate = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Performance Test Report</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 2.5em;
-        }
-        .system-info {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .test-suite {
-            background: white;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .suite-header {
-            padding: 20px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-        }
-        .suite-content {
-            padding: 20px;
-        }
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8em;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .status-success {
-            background: #d4edda;
-            color: #155724;
-        }
-        .status-failure {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .metrics {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        .metric {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            text-align: center;
-        }
-        .metric-value {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #495057;
-        }
-        .metric-label {
-            font-size: 0.9em;
-            color: #6c757d;
-            margin-top: 5px;
-        }
-        .test-details {
-            margin-top: 20px;
-        }
-        .test-item {
-            padding: 10px;
-            border-left: 4px solid #dee2e6;
-            margin-bottom: 10px;
-            background: #f8f9fa;
-        }
-        .test-item.passed {
-            border-left-color: #28a745;
-        }
-        .test-item.failed {
-            border-left-color: #dc3545;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-            padding: 20px;
-            color: #6c757d;
-            font-size: 0.9em;
-        }
-        pre {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            overflow-x: auto;
-            font-size: 0.9em;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>🚀 Performance Test Report</h1>
-        <p>Generated on ${new Date().toLocaleString()}</p>
-    </div>
-
-    <div class="system-info">
-        <h2>🖥️ System Information</h2>
-        <div class="metrics">
-            <div class="metric">
-                <div class="metric-value">${systemInfo.platform}</div>
-                <div class="metric-label">Platform</div>
-            </div>
-            <div class="metric">
-                <div class="metric-value">${systemInfo.arch}</div>
-                <div class="metric-label">Architecture</div>
-            </div>
-            <div class="metric">
-                <div class="metric-value">${systemInfo.cpus}</div>
-                <div class="metric-label">CPU Cores</div>
-            </div>
-            <div class="metric">
-                <div class="metric-value">${systemInfo.totalMemory}</div>
-                <div class="metric-label">Total Memory</div>
-            </div>
-            <div class="metric">
-                <div class="metric-value">${systemInfo.nodeVersion}</div>
-                <div class="metric-label">Node.js Version</div>
-            </div>
-        </div>
-    </div>
-
-    ${results.map(result => `
-    <div class="test-suite">
-        <div class="suite-header">
-            <h2>📊 ${result.suite.charAt(0).toUpperCase() + result.suite.slice(1)} Tests</h2>
-            <span class="status-badge ${result.success ? 'status-success' : 'status-failure'}">
-                ${result.success ? 'Passed' : 'Failed'}
-            </span>
-        </div>
-        <div class="suite-content">
-            ${result.jestResults ? `
-            <div class="metrics">
-                <div class="metric">
-                    <div class="metric-value">${result.jestResults.numTotalTests}</div>
-                    <div class="metric-label">Total Tests</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-value">${result.jestResults.numPassedTests}</div>
-                    <div class="metric-label">Passed</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-value">${result.jestResults.numFailedTests}</div>
-                    <div class="metric-label">Failed</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-value">${(result.jestResults.testResults[0]?.perfStats?.runtime || 0).toFixed(2)}ms</div>
-                    <div class="metric-label">Runtime</div>
-                </div>
-            </div>
-            ` : ''}
-            
-            ${result.error ? `
-            <div class="test-details">
-                <h3>❌ Error Details</h3>
-                <pre>${result.error}</pre>
-            </div>
-            ` : ''}
-        </div>
-    </div>
-    `).join('')}
-
-    <div class="footer">
-        <p>Report generated by Performance Test Runner</p>
-        <p>For more details, check the JSON reports in the performance-reports directory</p>
-    </div>
-</body>
-</html>
-  `;
-
-  const htmlFile = path.join(config.outputDir, 'performance-report.html');
-  fs.writeFileSync(htmlFile, htmlTemplate);
-  console.log(`📄 HTML report generated: ${htmlFile}`);
-}
-
-/**
- * 生成JSON报告
- */
-function generateJsonReport(results, systemInfo) {
-  const report = {
-    timestamp: new Date().toISOString(),
-    systemInfo,
-    results,
-    summary: {
-      totalSuites: results.length,
-      passedSuites: results.filter(r => r.success).length,
-      failedSuites: results.filter(r => !r.success).length,
-      totalTests: results.reduce((sum, r) => sum + (r.jestResults?.numTotalTests || 0), 0),
-      passedTests: results.reduce((sum, r) => sum + (r.jestResults?.numPassedTests || 0), 0),
-      failedTests: results.reduce((sum, r) => sum + (r.jestResults?.numFailedTests || 0), 0)
-    }
-  };
-
-  const jsonFile = path.join(config.outputDir, 'performance-report.json');
-  fs.writeFileSync(jsonFile, JSON.stringify(report, null, 2));
-  console.log(`📄 JSON report generated: ${jsonFile}`);
-  
-  return report;
-}
-
-/**
- * 生成控制台报告
- */
-function generateConsoleReport(results, systemInfo) {
-  console.log('\n' + '='.repeat(60));
-  console.log('🚀 PERFORMANCE TEST SUMMARY');
-  console.log('='.repeat(60));
-  
-  console.log(`\n🖥️  System: ${systemInfo.platform} ${systemInfo.arch}`);
-  console.log(`💾 Memory: ${systemInfo.totalMemory} total`);
-  console.log(`🔧 Node.js: ${systemInfo.nodeVersion}`);
-  console.log(`📅 Date: ${new Date().toLocaleString()}\n`);
-
-  results.forEach(result => {
-    const status = result.success ? '✅' : '❌';
-    const suite = result.suite.charAt(0).toUpperCase() + result.suite.slice(1);
-    
-    console.log(`${status} ${suite} Tests`);
-    
-    if (result.jestResults) {
-      console.log(`   📊 ${result.jestResults.numPassedTests}/${result.jestResults.numTotalTests} tests passed`);
-      console.log(`   ⏱️  Runtime: ${(result.jestResults.testResults[0]?.perfStats?.runtime || 0).toFixed(2)}ms`);
-    }
-    
-    if (result.error) {
-      console.log(`   ❌ Error: ${result.error}`);
-    }
-    
-    console.log('');
-  });
-
-  const totalTests = results.reduce((sum, r) => sum + (r.jestResults?.numTotalTests || 0), 0);
-  const passedTests = results.reduce((sum, r) => sum + (r.jestResults?.numPassedTests || 0), 0);
-  const failedTests = results.reduce((sum, r) => sum + (r.jestResults?.numFailedTests || 0), 0);
-
-  console.log('📈 OVERALL RESULTS:');
-  console.log(`   Total Tests: ${totalTests}`);
-  console.log(`   Passed: ${passedTests}`);
-  console.log(`   Failed: ${failedTests}`);
-  console.log(`   Success Rate: ${totalTests > 0 ? ((passedTests / totalTests) * 100).toFixed(1) : 0}%`);
-  
-  console.log('\n' + '='.repeat(60));
-}
-
-/**
- * 清理旧报告
- */
-function cleanupOldReports() {
-  if (fs.existsSync(config.outputDir)) {
-    const files = fs.readdirSync(config.outputDir);
-    files.forEach(file => {
-      const filePath = path.join(config.outputDir, file);
-      fs.unlinkSync(filePath);
-    });
-    console.log('🧹 Cleaned up old reports');
-  }
-}
-
-/**
- * 主函数
- */
-async function main() {
-  console.log('🚀 Starting Performance Test Runner...\n');
-  
-  // 获取系统信息
-  const systemInfo = getSystemInfo();
-  console.log('🖥️  System Info:', systemInfo);
-  
-  // 创建输出目录
-  ensureOutputDir();
-  
-  // 清理旧报告
-  cleanupOldReports();
-  
-  // 运行测试套件
-  const results = [];
-  
-  for (const suite of config.testSuites) {
-    try {
-      const result = await runJestTests(suite);
-      
-      // 解析Jest结果
-      const jestResults = parseJestResults(result.outputFile);
-      
-      results.push({
-        ...result,
-        jestResults,
-        error: !result.success ? `Test suite failed with code ${result.code}` : null
-      });
-      
-    } catch (error) {
-      console.error(`❌ Failed to run ${suite} tests:`, error);
-      results.push({
-        suite,
-        success: false,
-        error: error.message,
-        jestResults: null
-      });
+    console.error('❌ 性能测试失败:', error.message);
+    return false;
+  } finally {
+    // 清理服务器
+    if (server) {
+      console.log('\n🔧 关闭开发服务器...');
+      server.kill();
     }
   }
-  
-  // 生成报告
-  console.log('\n📊 Generating reports...');
-  
-  if (config.reports.json) {
-    generateJsonReport(results, systemInfo);
-  }
-  
-  if (config.reports.html) {
-    generateHtmlReport(results, systemInfo);
-  }
-  
-  if (config.reports.console) {
-    generateConsoleReport(results, systemInfo);
-  }
-  
-  // 检查是否有失败的测试
-  const hasFailures = results.some(r => !r.success);
-  
-  if (hasFailures) {
-    console.log('\n❌ Some performance tests failed. Check the reports for details.');
-    process.exit(1);
-  } else {
-    console.log('\n✅ All performance tests passed!');
-    process.exit(0);
-  }
 }
 
-// 处理未捕获的异常
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
-});
-
-process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception:', error);
-  process.exit(1);
-});
-
-// 运行主函数
+// 执行性能测试
 if (require.main === module) {
-  main().catch(error => {
-    console.error('❌ Performance test runner failed:', error);
-    process.exit(1);
-  });
+  runPerformanceTests()
+    .then(success => {
+      process.exit(success ? 0 : 1);
+    })
+    .catch(error => {
+      console.error('性能测试执行失败:', error);
+      process.exit(1);
+    });
 }
 
-module.exports = {
-  config,
-  getSystemInfo,
-  runJestTests,
-  generateHtmlReport,
-  generateJsonReport,
-  generateConsoleReport
-};
+module.exports = { runPerformanceTests };

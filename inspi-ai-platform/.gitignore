@@ -39,3 +39,28 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 测试报告和临时文件
+*_TEST_REPORT.json
+*_REPORT.json
+test-*.js
+run-*.js
+
+# 构建和缓存目录
+.next/
+.swc/
+test-results/
+playwright-report/
+reports/*.json
+
+# IDE和编辑器文件
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# 临时文件
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
