@@ -104,8 +104,18 @@ export function LoginForm({ onSuccess, redirectTo = '/', className = '' }: Login
       const result = await login(formData);
 
       if (result.success) {
+        // 先调用成功回调
         onSuccess && onSuccess();
-        router.push(redirectTo);
+        
+        // 稍微延迟以确保状态更新
+        setTimeout(() => {
+          // 如果是默认路径，刷新页面以确保状态更新
+          if (redirectTo === '/') {
+            window.location.reload();
+          } else {
+            router.push(redirectTo);
+          }
+        }, 100);
       } else {
         setErrors({ general: result.error || '登录失败，请稍后重试' });
       }

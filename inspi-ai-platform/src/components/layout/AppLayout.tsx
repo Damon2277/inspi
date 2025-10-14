@@ -4,6 +4,7 @@ import React from 'react';
 
 import { DesktopLayout, DesktopNavigation } from '@/components/desktop';
 import { KeyboardNavigationProvider } from '@/components/providers/KeyboardNavigationProvider';
+import { AuthProvider } from '@/shared/hooks/useAuth';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -21,13 +22,15 @@ export function AppLayout({
   className = '',
 }: AppLayoutProps) {
   return (
-    <KeyboardNavigationProvider>
-      <DesktopLayout
-        className={className}
-        header={showNavigation ? <DesktopNavigation /> : undefined}
-      >
-        {children}
-      </DesktopLayout>
-    </KeyboardNavigationProvider>
+    <AuthProvider>
+      <KeyboardNavigationProvider>
+        <DesktopLayout
+          className={className}
+          header={showNavigation ? <DesktopNavigation /> : undefined}
+        >
+          {children}
+        </DesktopLayout>
+      </KeyboardNavigationProvider>
+    </AuthProvider>
   );
 }

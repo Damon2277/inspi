@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { useLoginPrompt } from '@/components/auth/LoginPrompt';
+import { useAuth } from '@/shared/hooks/useAuth';
 interface CaseItem {
   id: number;
   title: string;
@@ -136,12 +138,20 @@ export function DesktopHomePage() {
   const [popularCases, setPopularCases] = useState<CaseItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { showPrompt, LoginPromptComponent } = useLoginPrompt();
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
 
-  const showCreatePrompt = useCallback(
+  const handleCreateClick = useCallback(
     (message?: string) => {
-      showPrompt('create', message);
+      if (isAuthenticated) {
+        // 已登录，直接跳转到创作页面
+        router.push('/create');
+      } else {
+        // 未登录，显示登录提示
+        showPrompt('create', message);
+      }
     },
-    [showPrompt],
+    [isAuthenticated, router, showPrompt],
   );
 
   useEffect(() => {
@@ -191,7 +201,7 @@ export function DesktopHomePage() {
                 <button
                   type="button"
                   className="modern-btn modern-btn-primary modern-btn-lg"
-                  onClick={() => showCreatePrompt(HERO_CREATE_PROMPT_MESSAGE)}
+                  onClick={() => handleCreateClick(HERO_CREATE_PROMPT_MESSAGE)}
                 >
                   立即开启创作
                 </button>
@@ -224,7 +234,7 @@ export function DesktopHomePage() {
                       key={type.id}
                       type="button"
                       className="desktop-card-type"
-                      onClick={() => showCreatePrompt(CARD_TYPE_PROMPT_MESSAGE)}
+                      onClick={() => handleCreateClick(CARD_TYPE_PROMPT_MESSAGE)}
                     >
                       <span className="desktop-card-type__icon">{type.icon}</span>
                       <span className="desktop-card-type__name">{type.name}</span>

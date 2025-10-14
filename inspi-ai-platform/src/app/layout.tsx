@@ -1,58 +1,22 @@
-import fs from 'fs';
-import path from 'path';
-
 import type { Metadata } from 'next';
-import { Inter as GoogleInter, Noto_Sans_SC as GoogleNotoSansSC } from 'next/font/google';
-import localFont from 'next/font/local';
+import { Inter, Noto_Sans_SC } from 'next/font/google';
 import '@/styles/desktop-modern.css';
 import '@/styles/desktop.css';
 import './globals.css';
 
-const fontsDir = path.join(process.cwd(), 'public', 'fonts');
-const hasInterLocal = fs.existsSync(path.join(fontsDir, 'Inter-Variable.woff2'));
-const hasNotoRegularLocal = fs.existsSync(path.join(fontsDir, 'NotoSansSC-Regular.woff2'));
+// 直接使用Google字体，避免条件加载
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
-const inter = hasInterLocal
-  ? localFont({
-      src: [
-        {
-          path: '../public/fonts/Inter-Variable.woff2',
-          style: 'normal',
-          weight: '100 900',
-        },
-      ],
-      variable: '--font-inter',
-      display: 'swap',
-    })
-  : GoogleInter({
-      subsets: ['latin'],
-      variable: '--font-inter',
-      display: 'swap',
-    });
-
-const notoSansSC = hasNotoRegularLocal
-  ? localFont({
-      src: [
-        {
-          path: '../public/fonts/NotoSansSC-Regular.woff2',
-          style: 'normal',
-          weight: '400',
-        },
-        {
-          path: '../public/fonts/NotoSansSC-Medium.woff2',
-          style: 'normal',
-          weight: '500',
-        },
-      ],
-      variable: '--font-noto-sans-sc',
-      display: 'swap',
-    })
-  : GoogleNotoSansSC({
-      subsets: ['latin'],
-      weight: ['400', '500'],
-      variable: '--font-noto-sans-sc',
-      display: 'swap',
-    });
+const notoSansSC = Noto_Sans_SC({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-noto-sans-sc',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Inspi.AI - AI驱动的教师智慧平台',

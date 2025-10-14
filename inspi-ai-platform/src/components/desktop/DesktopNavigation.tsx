@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import React, { useCallback } from 'react';
 
 import { useLoginPrompt } from '@/components/auth/LoginPrompt';
+import { useAuth } from '@/shared/hooks/useAuth';
 
 interface DesktopNavigationProps {
   className?: string;
@@ -29,10 +30,15 @@ export function DesktopNavigation({
   const pathname = usePathname();
   const current = activeHref ?? pathname;
   const { showPrompt, LoginPromptComponent } = useLoginPrompt();
+  const { user, isAuthenticated, logout, loading } = useAuth();
 
   const handleLoginClick = useCallback(() => {
     showPrompt('create', NAV_LOGIN_PROMPT_MESSAGE);
   }, [showPrompt]);
+
+  const handleLogout = useCallback(async () => {
+    await logout();
+  }, [logout]);
 
   const navItems: NavItem[] = [
     {
@@ -101,13 +107,33 @@ export function DesktopNavigation({
 
           <div className="desktop-nav-right">
             <div className="desktop-nav__actions">
-              <button
-                type="button"
-                className="modern-btn modern-btn-ghost modern-btn-sm"
-                onClick={handleLoginClick}
-              >
-                登录
-              </button>
+              {loading ? (
+                <span className="text-gray-500">加载中...</span>
+              ) : isAuthenticated && user ? (
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-medium">
+                      {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                    <span className="text-gray-700 font-medium">{user.name || user.email}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="modern-btn modern-btn-ghost modern-btn-sm"
+                    onClick={handleLogout}
+                  >
+                    退出
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="modern-btn modern-btn-ghost modern-btn-sm"
+                  onClick={handleLoginClick}
+                >
+                  登录
+                </button>
+              )}
             </div>
           </div>
         </div>
