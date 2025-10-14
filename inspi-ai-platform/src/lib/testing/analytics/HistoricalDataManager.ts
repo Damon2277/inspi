@@ -1,6 +1,6 @@
 /**
  * Historical Data Manager
- * 
+ *
  * Manages the storage, retrieval, and lifecycle of test execution history data.
  * Provides efficient data access patterns for trend analysis and reporting.
  */
@@ -107,13 +107,13 @@ export class HistoricalDataManager extends EventEmitter {
 
   constructor(retentionPolicy?: Partial<DataRetentionPolicy>) {
     super();
-    
+
     this.retentionPolicy = {
       maxAge: 90, // 90 days
       maxRecords: 100000,
       compressionThreshold: 30, // 30 days
       archiveThreshold: 60, // 60 days
-      ...retentionPolicy
+      ...retentionPolicy,
     };
 
     // Start cleanup interval
@@ -126,12 +126,12 @@ export class HistoricalDataManager extends EventEmitter {
   async storeTestSuiteRecord(record: TestSuiteRecord): Promise<void> {
     const key = this.generateSuiteKey(record.suiteName);
     const records = this.storage.get(key) || [];
-    
+
     records.push(record);
-    
+
     // Sort by timestamp (newest first)
     records.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-    
+
     this.storage.set(key, records);
 
     // Store individual test records
@@ -140,7 +140,7 @@ export class HistoricalDataManager extends EventEmitter {
     }
 
     this.emit('suiteRecordStored', record);
-    
+
     // Apply retention policy
     await this.applyRetentionPolicy(key);
   }
@@ -151,12 +151,12 @@ export class HistoricalDataManager extends EventEmitter {
   async storeTestRecord(record: TestExecutionRecord): Promise<void> {
     const key = this.generateTestKey(record.testFile, record.testName);
     const records = this.testRecords.get(key) || [];
-    
+
     records.push(record);
-    
+
     // Sort by timestamp (newest first)
     records.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-    
+
     this.testRecords.set(key, records);
 
     this.emit('testRecordStored', record);
@@ -167,7 +167,7 @@ export class HistoricalDataManager extends EventEmitter {
    */
   async queryTestSuiteRecords(
     suiteName?: string,
-    options?: QueryOptions
+    options?: QueryOptions,
   ): Promise<TestSuiteRecord[]> {
     let allRecords: TestSuiteRecord[] = [];
 
@@ -192,7 +192,7 @@ export class HistoricalDataManager extends EventEmitter {
   async queryTestRecords(
     testFile?: string,
     testName?: string,
-    options?: QueryOptions
+    options?: QueryOptions,
   ): Promise<TestExecutionRecord[]> {
     let allRecords: TestExecutionRecord[] = [];
 
@@ -223,7 +223,7 @@ export class HistoricalDataManager extends EventEmitter {
    */
   async getAggregatedData(options: AggregationOptions): Promise<any[]> {
     const allSuiteRecords = await this.queryTestSuiteRecords();
-    
+
     // Filter by date range
     const filteredRecords = allSuiteRecords.filter(record => {
       if (options.startDate && record.timestamp < options.startDate) return false;
@@ -233,33 +233,33 @@ export class HistoricalDataManager extends EventEmitter {
 
     // Group data
     const grouped = this.groupRecords(filteredRecords, options.groupBy);
-    
+
     // Calculate metrics for each group
     const aggregated = Object.entries(grouped).map(([key, records]) => {
       const metrics: any = { group: key, count: records.length };
-      
+
       if (options.metrics.includes('duration')) {
         metrics.averageDuration = records.reduce((sum, r) => sum + r.duration, 0) / records.length;
         metrics.totalDuration = records.reduce((sum, r) => sum + r.duration, 0);
       }
-      
+
       if (options.metrics.includes('coverage')) {
         metrics.averageCoverage = {
           statements: records.reduce((sum, r) => sum + r.coverage.statements, 0) / records.length,
           branches: records.reduce((sum, r) => sum + r.coverage.branches, 0) / records.length,
           functions: records.reduce((sum, r) => sum + r.coverage.functions, 0) / records.length,
-          lines: records.reduce((sum, r) => sum + r.coverage.lines, 0) / records.length
+          lines: records.reduce((sum, r) => sum + r.coverage.lines, 0) / records.length,
         };
       }
-      
+
       if (options.metrics.includes('performance')) {
         metrics.averagePerformance = {
           totalMemory: records.reduce((sum, r) => sum + r.performance.totalMemory, 0) / records.length,
           peakMemory: Math.max(...records.map(r => r.performance.peakMemory)),
-          averageExecutionTime: records.reduce((sum, r) => sum + r.performance.averageExecutionTime, 0) / records.length
+          averageExecutionTime: records.reduce((sum, r) => sum + r.performance.averageExecutionTime, 0) / records.length,
         };
       }
-      
+
       return metrics;
     });
 
@@ -272,11 +272,11 @@ export class HistoricalDataManager extends EventEmitter {
   async getFailurePatterns(days: number = 30): Promise<any[]> {
     const endDate = new Date();
     const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
-    
+
     const failedTests = await this.queryTestRecords(undefined, undefined, {
       startDate,
       endDate,
-      status: 'failed'
+      status: 'failed',
     });
 
     // Group by error type and message
@@ -291,10 +291,10 @@ export class HistoricalDataManager extends EventEmitter {
 
     for (const test of failedTests) {
       if (!test.error) continue;
-      
+
       const key = `${test.error.type}:${test.error.message}`;
       const existing = patterns.get(key);
-      
+
       if (existing) {
         existing.count++;
         existing.tests.push(`${test.testFile}:${test.testName}`);
@@ -306,7 +306,7 @@ export class HistoricalDataManager extends EventEmitter {
           errorType: test.error.type,
           errorMessage: test.error.message,
           firstSeen: test.timestamp,
-          lastSeen: test.timestamp
+          lastSeen: test.timestamp,
         });
       }
     }
@@ -322,7 +322,7 @@ export class HistoricalDataManager extends EventEmitter {
   async getFlakyTests(days: number = 30, threshold: number = 0.1): Promise<any[]> {
     const endDate = new Date();
     const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
-    
+
     const testStats = new Map<string, {
       total: number;
       failed: number;
@@ -334,13 +334,13 @@ export class HistoricalDataManager extends EventEmitter {
 
     const allTests = await this.queryTestRecords(undefined, undefined, {
       startDate,
-      endDate
+      endDate,
     });
 
     for (const test of allTests) {
       const key = `${test.testFile}:${test.testName}`;
       const existing = testStats.get(key);
-      
+
       if (existing) {
         existing.total++;
         if (test.status === 'failed') {
@@ -354,7 +354,7 @@ export class HistoricalDataManager extends EventEmitter {
           testFile: test.testFile,
           testName: test.testName,
           flakiness: 0,
-          recentFailures: test.status === 'failed' ? [test.timestamp] : []
+          recentFailures: test.status === 'failed' ? [test.timestamp] : [],
         });
       }
     }
@@ -363,7 +363,7 @@ export class HistoricalDataManager extends EventEmitter {
     const flakyTests = Array.from(testStats.values())
       .map(stat => ({
         ...stat,
-        flakiness: stat.total > 0 ? stat.failed / stat.total : 0
+        flakiness: stat.total > 0 ? stat.failed / stat.total : 0,
       }))
       .filter(stat => stat.flakiness > threshold && stat.total >= 5) // At least 5 runs
       .sort((a, b) => b.flakiness - a.flakiness);
@@ -376,13 +376,13 @@ export class HistoricalDataManager extends EventEmitter {
    */
   async exportData(format: 'json' | 'csv' = 'json'): Promise<string> {
     const allSuiteRecords = await this.queryTestSuiteRecords();
-    
+
     if (format === 'json') {
       return JSON.stringify({
         exportDate: new Date(),
         totalRecords: allSuiteRecords.length,
         retentionPolicy: this.retentionPolicy,
-        data: allSuiteRecords
+        data: allSuiteRecords,
       }, null, 2);
     } else {
       // CSV format
@@ -390,9 +390,9 @@ export class HistoricalDataManager extends EventEmitter {
         'timestamp', 'suiteName', 'totalTests', 'passedTests', 'failedTests',
         'skippedTests', 'duration', 'coverageStatements', 'coverageBranches',
         'coverageFunctions', 'coverageLines', 'totalMemory', 'peakMemory',
-        'averageExecutionTime', 'nodeVersion', 'platform', 'ci', 'branch', 'commit'
+        'averageExecutionTime', 'nodeVersion', 'platform', 'ci', 'branch', 'commit',
       ];
-      
+
       const rows = allSuiteRecords.map(record => [
         record.timestamp.toISOString(),
         record.suiteName,
@@ -412,9 +412,9 @@ export class HistoricalDataManager extends EventEmitter {
         record.environment.platform,
         record.environment.ci,
         record.environment.branch,
-        record.environment.commit
+        record.environment.commit,
       ]);
-      
+
       return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
     }
   }
@@ -425,13 +425,13 @@ export class HistoricalDataManager extends EventEmitter {
   async importData(data: string, format: 'json' | 'csv' = 'json'): Promise<void> {
     if (format === 'json') {
       const parsed = JSON.parse(data);
-      
+
       if (parsed.data && Array.isArray(parsed.data)) {
         for (const record of parsed.data) {
           // Ensure timestamp is a Date object
           const recordWithDate = {
             ...record,
-            timestamp: new Date(record.timestamp)
+            timestamp: new Date(record.timestamp),
           };
           await this.storeTestSuiteRecord(recordWithDate);
         }
@@ -461,7 +461,7 @@ export class HistoricalDataManager extends EventEmitter {
 
     for (const records of this.storage.values()) {
       totalSuiteRecords += records.length;
-      
+
       for (const record of records) {
         if (!oldestRecord || record.timestamp < oldestRecord) {
           oldestRecord = record.timestamp;
@@ -481,7 +481,7 @@ export class HistoricalDataManager extends EventEmitter {
       totalTestRecords,
       oldestRecord,
       newestRecord,
-      storageSize: this.calculateStorageSize()
+      storageSize: this.calculateStorageSize(),
     };
   }
 
@@ -507,7 +507,7 @@ export class HistoricalDataManager extends EventEmitter {
 
   private applyQueryFilters(
     records: TestSuiteRecord[],
-    options?: QueryOptions
+    options?: QueryOptions,
   ): TestSuiteRecord[] {
     let filtered = records;
 
@@ -527,7 +527,7 @@ export class HistoricalDataManager extends EventEmitter {
     if (options?.sortBy) {
       filtered.sort((a, b) => {
         let aVal: any, bVal: any;
-        
+
         switch (options.sortBy) {
           case 'timestamp':
             aVal = a.timestamp.getTime();
@@ -541,7 +541,7 @@ export class HistoricalDataManager extends EventEmitter {
             aVal = a.suiteName;
             bVal = b.suiteName;
         }
-        
+
         const result = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
         return options.sortOrder === 'desc' ? -result : result;
       });
@@ -559,7 +559,7 @@ export class HistoricalDataManager extends EventEmitter {
 
   private applyTestQueryFilters(
     records: TestExecutionRecord[],
-    options?: QueryOptions
+    options?: QueryOptions,
   ): TestExecutionRecord[] {
     let filtered = records;
 
@@ -591,7 +591,7 @@ export class HistoricalDataManager extends EventEmitter {
     if (options?.sortBy) {
       filtered.sort((a, b) => {
         let aVal: any, bVal: any;
-        
+
         switch (options.sortBy) {
           case 'timestamp':
             aVal = a.timestamp.getTime();
@@ -609,7 +609,7 @@ export class HistoricalDataManager extends EventEmitter {
             aVal = a.timestamp.getTime();
             bVal = b.timestamp.getTime();
         }
-        
+
         const result = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
         return options.sortOrder === 'desc' ? -result : result;
       });
@@ -630,7 +630,7 @@ export class HistoricalDataManager extends EventEmitter {
 
     for (const record of records) {
       let key: string;
-      
+
       switch (groupBy) {
         case 'day':
           key = record.timestamp.toISOString().split('T')[0];
@@ -649,7 +649,7 @@ export class HistoricalDataManager extends EventEmitter {
         default:
           key = 'all';
       }
-      
+
       if (!grouped[key]) {
         grouped[key] = [];
       }
@@ -662,21 +662,21 @@ export class HistoricalDataManager extends EventEmitter {
   private async applyRetentionPolicy(key: string): Promise<void> {
     const records = this.storage.get(key) || [];
     const cutoffDate = new Date(Date.now() - this.retentionPolicy.maxAge * 24 * 60 * 60 * 1000);
-    
+
     // Remove old records
     const filteredRecords = records.filter(record => record.timestamp > cutoffDate);
-    
+
     // Limit number of records
     if (filteredRecords.length > this.retentionPolicy.maxRecords) {
       filteredRecords.splice(this.retentionPolicy.maxRecords);
     }
-    
+
     this.storage.set(key, filteredRecords);
-    
+
     if (filteredRecords.length < records.length) {
       this.emit('recordsCleanedUp', {
         key,
-        removedCount: records.length - filteredRecords.length
+        removedCount: records.length - filteredRecords.length,
       });
     }
   }
@@ -692,25 +692,25 @@ export class HistoricalDataManager extends EventEmitter {
 
   private calculateStorageSize(): number {
     let size = 0;
-    
+
     for (const records of this.storage.values()) {
       size += JSON.stringify(records).length;
     }
-    
+
     for (const records of this.testRecords.values()) {
       size += JSON.stringify(records).length;
     }
-    
+
     return size;
   }
 
   private getTotalRecords(): number {
     let total = 0;
-    
+
     for (const records of this.storage.values()) {
       total += records.length;
     }
-    
+
     return total;
   }
 

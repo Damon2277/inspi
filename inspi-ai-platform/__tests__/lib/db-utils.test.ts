@@ -34,14 +34,14 @@ describe('DatabaseUtils', () => {
     it('should return true when connected', () => {
       const mongoose = require('mongoose');
       mongoose.connection.readyState = 1;
-      
+
       expect(DatabaseUtils.isMongoConnected()).toBe(true);
     });
 
     it('should return false when not connected', () => {
       const mongoose = require('mongoose');
       mongoose.connection.readyState = 0;
-      
+
       expect(DatabaseUtils.isMongoConnected()).toBe(false);
     });
   });
@@ -55,7 +55,7 @@ describe('DatabaseUtils', () => {
       getRedisClient.mockResolvedValue(mockClient);
 
       const health = await DatabaseUtils.healthCheck();
-      
+
       expect(health).toHaveProperty('mongodb');
       expect(health).toHaveProperty('redis');
       expect(health).toHaveProperty('timestamp');
@@ -79,7 +79,7 @@ describe('CacheUtils', () => {
       keys: jest.fn(),
       flushAll: jest.fn(),
     };
-    
+
     const getRedisClient = require('@/lib/redis').default;
     getRedisClient.mockResolvedValue(mockClient);
   });
@@ -88,14 +88,14 @@ describe('CacheUtils', () => {
     it('should set cache without TTL', async () => {
       const testData = { key: 'value' };
       await CacheUtils.set('test-key', testData);
-      
+
       expect(mockClient.set).toHaveBeenCalledWith('test-key', JSON.stringify(testData));
     });
 
     it('should set cache with TTL', async () => {
       const testData = { key: 'value' };
       await CacheUtils.set('test-key', testData, 3600);
-      
+
       expect(mockClient.setEx).toHaveBeenCalledWith('test-key', 3600, JSON.stringify(testData));
     });
   });
@@ -104,18 +104,18 @@ describe('CacheUtils', () => {
     it('should get and parse cached data', async () => {
       const testData = { key: 'value' };
       mockClient.get.mockResolvedValue(JSON.stringify(testData));
-      
+
       const result = await CacheUtils.get('test-key');
-      
+
       expect(mockClient.get).toHaveBeenCalledWith('test-key');
       expect(result).toEqual(testData);
     });
 
     it('should return null for non-existent key', async () => {
       mockClient.get.mockResolvedValue(null);
-      
+
       const result = await CacheUtils.get('non-existent-key');
-      
+
       expect(result).toBeNull();
     });
   });
@@ -123,7 +123,7 @@ describe('CacheUtils', () => {
   describe('del', () => {
     it('should delete cache key', async () => {
       await CacheUtils.del('test-key');
-      
+
       expect(mockClient.del).toHaveBeenCalledWith('test-key');
     });
   });
@@ -131,17 +131,17 @@ describe('CacheUtils', () => {
   describe('exists', () => {
     it('should return true if key exists', async () => {
       mockClient.exists.mockResolvedValue(1);
-      
+
       const result = await CacheUtils.exists('test-key');
-      
+
       expect(result).toBe(true);
     });
 
     it('should return false if key does not exist', async () => {
       mockClient.exists.mockResolvedValue(0);
-      
+
       const result = await CacheUtils.exists('test-key');
-      
+
       expect(result).toBe(false);
     });
   });

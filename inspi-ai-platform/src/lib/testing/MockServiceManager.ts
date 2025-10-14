@@ -3,7 +3,7 @@
  * 提供统一的Mock服务注册、管理和验证功能
  */
 
-import { logger } from '@/lib/utils/logger';
+import { logger } from '@/shared/utils/logger';
 
 export interface MockService {
   name: string;
@@ -53,13 +53,13 @@ export class MockServiceManager {
    */
   registerMock(service: MockService, config?: MockServiceConfig): void {
     const serviceName = service.name;
-    
+
     if (this.services.has(serviceName)) {
       logger.warn(`Mock service ${serviceName} already registered, replacing...`);
     }
 
     this.services.set(serviceName, service);
-    
+
     if (config) {
       this.configs.set(serviceName, config);
     }
@@ -68,7 +68,7 @@ export class MockServiceManager {
 
     logger.info(`Mock service registered: ${serviceName}`, {
       version: service.version,
-      config: config || {}
+      config: config || {},
     });
   }
 
@@ -84,7 +84,7 @@ export class MockServiceManager {
 
     // 记录调用
     this.recordCall(name, 'getMock');
-    
+
     return service as T;
   }
 
@@ -108,7 +108,7 @@ export class MockServiceManager {
         logger.error(`Failed to reset mock service: ${name}`, { error });
       }
     }
-    
+
     logger.info('All mock services reset');
   }
 
@@ -142,12 +142,12 @@ export class MockServiceManager {
       try {
         const isValid = await service.verify();
         const status = service.getStatus();
-        
+
         results.push({
           serviceName: name,
           isValid,
           status,
-          errors: status.errors
+          errors: status.errors,
         });
 
         if (!isValid) {
@@ -159,7 +159,7 @@ export class MockServiceManager {
           serviceName: name,
           isValid: false,
           status: service.getStatus(),
-          errors: [errorMessage]
+          errors: [errorMessage],
         });
         allValid = false;
       }
@@ -168,7 +168,7 @@ export class MockServiceManager {
     return {
       allValid,
       results,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -186,21 +186,21 @@ export class MockServiceManager {
           version: 'unknown',
           isActive: false,
           callCount: 0,
-          errors: ['Service not found']
+          errors: ['Service not found'],
         },
-        errors: ['Service not found']
+        errors: ['Service not found'],
       };
     }
 
     try {
       const isValid = await service.verify();
       const status = service.getStatus();
-      
+
       return {
         serviceName: name,
         isValid,
         status,
-        errors: status.errors
+        errors: status.errors,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -208,7 +208,7 @@ export class MockServiceManager {
         serviceName: name,
         isValid: false,
         status: service.getStatus(),
-        errors: [errorMessage]
+        errors: [errorMessage],
       };
     }
   }
@@ -218,11 +218,11 @@ export class MockServiceManager {
    */
   getAllMockStatus(): MockServiceStatus[] {
     const statuses: MockServiceStatus[] = [];
-    
+
     for (const service of this.services.values()) {
       statuses.push(service.getStatus());
     }
-    
+
     return statuses;
   }
 
@@ -234,7 +234,7 @@ export class MockServiceManager {
       const history = this.callHistory.get(serviceName);
       return new Map(history ? [[serviceName, history]] : []);
     }
-    
+
     return new Map(this.callHistory);
   }
 
@@ -246,7 +246,7 @@ export class MockServiceManager {
     this.services.clear();
     this.configs.clear();
     this.callHistory.clear();
-    
+
     logger.info('Mock service manager cleaned up');
   }
 
@@ -263,7 +263,7 @@ export class MockServiceManager {
     history.push({
       method,
       args,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     // 限制历史记录数量
@@ -282,7 +282,7 @@ export class MockServiceManager {
       totalServices: this.services.size,
       activeServices: Array.from(this.services.values()).filter(s => s.isActive).length,
       totalCalls: Array.from(this.callHistory.values()).reduce((sum, calls) => sum + calls.length, 0),
-      servicesWithErrors: Array.from(this.services.values()).filter(s => s.getStatus().errors.length > 0).length
+      servicesWithErrors: Array.from(this.services.values()).filter(s => s.getStatus().errors.length > 0).length,
     };
   }
 }

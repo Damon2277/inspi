@@ -1,12 +1,13 @@
 /**
  * Compliance Checker
- * 
+ *
  * Implements compliance rules verification for code quality standards,
  * documentation requirements, and development best practices.
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
+
 import { glob } from 'glob';
 
 export interface ComplianceViolation {
@@ -78,10 +79,10 @@ export class ComplianceChecker {
     try {
       const violations: ComplianceViolation[] = [];
       const allRules = [...this.builtInRules, ...this.config.customRules];
-      
+
       // Get all files to check
       const filesToCheck = await this.getFilesToCheck();
-      
+
       // Apply each rule to each file
       for (const rule of allRules) {
         if (this.isRuleEnabled(rule)) {
@@ -106,7 +107,7 @@ export class ComplianceChecker {
         passed,
         violations,
         summary,
-        scores
+        scores,
       };
     } catch (error) {
       return {
@@ -117,10 +118,10 @@ export class ComplianceChecker {
           file: 'unknown',
           message: `Compliance check failed: ${(error as Error).message}`,
           recommendation: 'Fix compliance checker configuration',
-          category: 'testing'
+          category: 'testing',
         }],
         summary: { total: 1, documentation: 0, naming: 0, errorHandling: 0, typeScript: 0, testing: 1 },
-        scores: { documentation: 0, naming: 0, errorHandling: 0, typeScript: 0, testing: 0, overall: 0 }
+        scores: { documentation: 0, naming: 0, errorHandling: 0, typeScript: 0, testing: 0, overall: 0 },
       };
     }
   }
@@ -156,16 +157,16 @@ export class ComplianceChecker {
       `- Error Handling: ${result.summary.errorHandling}`,
       `- TypeScript: ${result.summary.typeScript}`,
       `- Testing: ${result.summary.testing}`,
-      ''
+      '',
     ];
 
     // Group violations by category
     const categories = this.groupViolationsByCategory(result.violations);
-    
+
     for (const [category, violations] of Object.entries(categories)) {
       if (violations.length > 0) {
         lines.push(`## ${category.charAt(0).toUpperCase() + category.slice(1)} Violations`);
-        
+
         violations.slice(0, 10).forEach(violation => {
           lines.push(`### ${violation.rule} (${violation.severity.toUpperCase()})`);
           lines.push(`**File:** ${violation.file}${violation.line ? `:${violation.line}` : ''}`);
@@ -209,7 +210,7 @@ export class ComplianceChecker {
         category: 'documentation',
         check: (file: string, content: string) => {
           const violations: ComplianceViolation[] = [];
-          
+
           if (file.includes('.test.') || file.includes('.spec.')) {
             // Check for describe blocks without documentation
             const describeMatches = content.match(/describe\s*\(\s*['"`]([^'"`]+)['"`]/g);
@@ -217,7 +218,7 @@ export class ComplianceChecker {
               describeMatches.forEach((match, index) => {
                 const lineNumber = this.getLineNumber(content, content.indexOf(match));
                 const hasDocComment = this.hasDocumentationBefore(content, content.indexOf(match));
-                
+
                 if (!hasDocComment) {
                   violations.push({
                     rule: 'missing-test-documentation',
@@ -226,15 +227,15 @@ export class ComplianceChecker {
                     line: lineNumber,
                     message: 'Test suite lacks documentation comment',
                     recommendation: 'Add JSDoc comment describing the test suite purpose',
-                    category: 'documentation'
+                    category: 'documentation',
                   });
                 }
               });
             }
           }
-          
+
           return violations;
-        }
+        },
       },
 
       {
@@ -245,20 +246,20 @@ export class ComplianceChecker {
         category: 'documentation',
         check: (file: string, content: string) => {
           const violations: ComplianceViolation[] = [];
-          
+
           // Skip test files
           if (file.includes('.test.') || file.includes('.spec.')) {
             return violations;
           }
-          
+
           // Find exported functions without documentation
           const exportFunctionRegex = /export\s+(?:async\s+)?function\s+(\w+)/g;
           let match;
-          
+
           while ((match = exportFunctionRegex.exec(content)) !== null) {
             const lineNumber = this.getLineNumber(content, match.index);
             const hasDocComment = this.hasDocumentationBefore(content, match.index);
-            
+
             if (!hasDocComment) {
               violations.push({
                 rule: 'missing-function-documentation',
@@ -267,13 +268,13 @@ export class ComplianceChecker {
                 line: lineNumber,
                 message: `Exported function '${match[1]}' lacks documentation`,
                 recommendation: 'Add JSDoc comment describing function purpose, parameters, and return value',
-                category: 'documentation'
+                category: 'documentation',
               });
             }
           }
-          
+
           return violations;
-        }
+        },
       },
 
       // Naming convention rules
@@ -285,10 +286,10 @@ export class ComplianceChecker {
         category: 'naming',
         check: (file: string, content: string) => {
           const violations: ComplianceViolation[] = [];
-          
+
           if (file.includes('.test.') || file.includes('.spec.')) {
             const fileName = path.basename(file);
-            
+
             // Check if test file follows naming convention
             if (!fileName.match(/^[a-zA-Z][a-zA-Z0-9]*\.(test|spec)\.(ts|js|tsx|jsx)$/)) {
               violations.push({
@@ -297,18 +298,18 @@ export class ComplianceChecker {
                 file,
                 message: 'Test file does not follow naming convention',
                 recommendation: 'Use camelCase for test file names: component.test.ts',
-                category: 'naming'
+                category: 'naming',
               });
             }
-            
+
             // Check test case naming
             const testCaseRegex = /(it|test)\s*\(\s*['"`]([^'"`]+)['"`]/g;
             let match;
-            
+
             while ((match = testCaseRegex.exec(content)) !== null) {
               const testName = match[2];
               const lineNumber = this.getLineNumber(content, match.index);
-              
+
               // Test names should start with lowercase and be descriptive
               if (testName.length < 10) {
                 violations.push({
@@ -318,14 +319,14 @@ export class ComplianceChecker {
                   line: lineNumber,
                   message: `Test name '${testName}' is too short`,
                   recommendation: 'Use descriptive test names that explain what is being tested',
-                  category: 'naming'
+                  category: 'naming',
                 });
               }
             }
           }
-          
+
           return violations;
-        }
+        },
       },
 
       {
@@ -336,15 +337,15 @@ export class ComplianceChecker {
         category: 'naming',
         check: (file: string, content: string) => {
           const violations: ComplianceViolation[] = [];
-          
+
           // Check variable declarations
           const variableRegex = /(?:const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/g;
           let match;
-          
+
           while ((match = variableRegex.exec(content)) !== null) {
             const variableName = match[1];
             const lineNumber = this.getLineNumber(content, match.index);
-            
+
             // Check if variable follows camelCase (allowing CONSTANTS)
             if (!variableName.match(/^[a-z][a-zA-Z0-9]*$|^[A-Z][A-Z0-9_]*$/)) {
               violations.push({
@@ -354,13 +355,13 @@ export class ComplianceChecker {
                 line: lineNumber,
                 message: `Variable '${variableName}' does not follow camelCase convention`,
                 recommendation: 'Use camelCase for variables or UPPER_CASE for constants',
-                category: 'naming'
+                category: 'naming',
               });
             }
           }
-          
+
           return violations;
-        }
+        },
       },
 
       // Error handling rules
@@ -372,15 +373,15 @@ export class ComplianceChecker {
         category: 'errorHandling',
         check: (file: string, content: string) => {
           const violations: ComplianceViolation[] = [];
-          
+
           // Find async functions without try-catch
           const asyncFunctionRegex = /async\s+function\s+\w+[^{]*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/g;
           let match;
-          
+
           while ((match = asyncFunctionRegex.exec(content)) !== null) {
             const functionBody = match[1];
             const lineNumber = this.getLineNumber(content, match.index);
-            
+
             // Check if function body contains try-catch or .catch()
             if (!functionBody.includes('try') && !functionBody.includes('.catch(')) {
               violations.push({
@@ -390,13 +391,13 @@ export class ComplianceChecker {
                 line: lineNumber,
                 message: 'Async function lacks error handling',
                 recommendation: 'Add try-catch block or .catch() handler for async operations',
-                category: 'errorHandling'
+                category: 'errorHandling',
               });
             }
           }
-          
+
           return violations;
-        }
+        },
       },
 
       {
@@ -407,14 +408,14 @@ export class ComplianceChecker {
         category: 'errorHandling',
         check: (file: string, content: string) => {
           const violations: ComplianceViolation[] = [];
-          
+
           // Find promises without .catch() or await
           const promiseRegex = /\w+\([^)]*\)\.then\([^)]*\)(?!\.catch)/g;
           let match;
-          
+
           while ((match = promiseRegex.exec(content)) !== null) {
             const lineNumber = this.getLineNumber(content, match.index);
-            
+
             violations.push({
               rule: 'unhandled-promise',
               severity: 'warning',
@@ -422,12 +423,12 @@ export class ComplianceChecker {
               line: lineNumber,
               message: 'Promise chain lacks error handling',
               recommendation: 'Add .catch() handler or use try-catch with await',
-              category: 'errorHandling'
+              category: 'errorHandling',
             });
           }
-          
+
           return violations;
-        }
+        },
       },
 
       // TypeScript rules
@@ -439,19 +440,19 @@ export class ComplianceChecker {
         category: 'typeScript',
         check: (file: string, content: string) => {
           const violations: ComplianceViolation[] = [];
-          
+
           if (!file.endsWith('.ts') && !file.endsWith('.tsx')) {
             return violations;
           }
-          
+
           // Find function parameters without type annotations
           const functionRegex = /function\s+\w+\s*\(([^)]*)\)/g;
           let match;
-          
+
           while ((match = functionRegex.exec(content)) !== null) {
             const params = match[1];
             const lineNumber = this.getLineNumber(content, match.index);
-            
+
             if (params && !params.includes(':') && params.trim() !== '') {
               violations.push({
                 rule: 'missing-type-annotations',
@@ -460,13 +461,13 @@ export class ComplianceChecker {
                 line: lineNumber,
                 message: 'Function parameters lack type annotations',
                 recommendation: 'Add TypeScript type annotations to function parameters',
-                category: 'typeScript'
+                category: 'typeScript',
               });
             }
           }
-          
+
           return violations;
-        }
+        },
       },
 
       {
@@ -477,17 +478,17 @@ export class ComplianceChecker {
         category: 'typeScript',
         check: (file: string, content: string) => {
           const violations: ComplianceViolation[] = [];
-          
+
           if (!file.endsWith('.ts') && !file.endsWith('.tsx')) {
             return violations;
           }
-          
+
           const anyTypeRegex = /:\s*any\b/g;
           let match;
-          
+
           while ((match = anyTypeRegex.exec(content)) !== null) {
             const lineNumber = this.getLineNumber(content, match.index);
-            
+
             violations.push({
               rule: 'any-type-usage',
               severity: 'warning',
@@ -495,12 +496,12 @@ export class ComplianceChecker {
               line: lineNumber,
               message: 'Usage of "any" type reduces type safety',
               recommendation: 'Use specific types or generic types instead of "any"',
-              category: 'typeScript'
+              category: 'typeScript',
             });
           }
-          
+
           return violations;
-        }
+        },
       },
 
       // Testing rules
@@ -512,19 +513,19 @@ export class ComplianceChecker {
         category: 'testing',
         check: (file: string, content: string) => {
           const violations: ComplianceViolation[] = [];
-          
+
           if (!file.includes('.test.') && !file.includes('.spec.')) {
             return violations;
           }
-          
+
           // Find test cases without assertions
           const testCaseRegex = /(it|test)\s*\(\s*['"`][^'"`]+['"`]\s*,\s*(?:async\s+)?\([^)]*\)\s*=>\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/g;
           let match;
-          
+
           while ((match = testCaseRegex.exec(content)) !== null) {
             const testBody = match[2];
             const lineNumber = this.getLineNumber(content, match.index);
-            
+
             // Check if test body contains assertions
             if (!testBody.includes('expect(') && !testBody.includes('assert')) {
               violations.push({
@@ -534,14 +535,14 @@ export class ComplianceChecker {
                 line: lineNumber,
                 message: 'Test case lacks assertions',
                 recommendation: 'Add expect() assertions to verify test behavior',
-                category: 'testing'
+                category: 'testing',
               });
             }
           }
-          
+
           return violations;
-        }
-      }
+        },
+      },
     ];
   }
 
@@ -554,7 +555,7 @@ export class ComplianceChecker {
       '!node_modules/**',
       '!coverage/**',
       '!dist/**',
-      '!build/**'
+      '!build/**',
     ];
 
     // Add exclude patterns from config
@@ -593,7 +594,7 @@ export class ComplianceChecker {
   private hasDocumentationBefore(content: string, index: number): boolean {
     const beforeContent = content.substring(0, index);
     const lines = beforeContent.split('\n');
-    
+
     // Look for JSDoc comment in the previous few lines
     for (let i = lines.length - 1; i >= Math.max(0, lines.length - 5); i--) {
       const line = lines[i].trim();
@@ -604,7 +605,7 @@ export class ComplianceChecker {
         break; // Stop if we hit non-comment code
       }
     }
-    
+
     return false;
   }
 
@@ -615,7 +616,7 @@ export class ComplianceChecker {
       naming: 0,
       errorHandling: 0,
       typeScript: 0,
-      testing: 0
+      testing: 0,
     };
 
     violations.forEach(violation => {
@@ -628,16 +629,16 @@ export class ComplianceChecker {
   private calculateScores(violations: ComplianceViolation[], totalFiles: number): ComplianceCheckResult['scores'] {
     const categories = ['documentation', 'naming', 'errorHandling', 'typeScript', 'testing'] as const;
     const scores: any = {};
-    
+
     categories.forEach(category => {
       const categoryViolations = violations.filter(v => v.category === category);
       const errorCount = categoryViolations.filter(v => v.severity === 'error').length;
       const warningCount = categoryViolations.filter(v => v.severity === 'warning').length;
-      
+
       // Calculate score based on violations (errors are weighted more heavily)
       const penalty = (errorCount * 10) + (warningCount * 5);
       const maxPossiblePenalty = totalFiles * 10; // Assume max 1 error per file
-      
+
       scores[category] = Math.max(0, 100 - (penalty / Math.max(1, maxPossiblePenalty)) * 100);
     });
 
@@ -663,7 +664,7 @@ export class ComplianceChecker {
       naming: [],
       errorHandling: [],
       typeScript: [],
-      testing: []
+      testing: [],
     };
 
     violations.forEach(violation => {
@@ -675,7 +676,7 @@ export class ComplianceChecker {
 
   private generateTopRecommendations(violations: ComplianceViolation[]): string[] {
     const recommendations = new Map<string, number>();
-    
+
     violations.forEach(violation => {
       const count = recommendations.get(violation.recommendation) || 0;
       recommendations.set(violation.recommendation, count + 1);

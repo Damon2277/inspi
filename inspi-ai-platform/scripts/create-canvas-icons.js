@@ -84,7 +84,7 @@ async function createCanvasIcons() {
     crc.update(typeBuffer);
     crc.update(data);
     const crcBuffer = Buffer.alloc(4);
-    crcBuffer.writeUInt32BE(parseInt(crc.digest('hex'), 16), 0);
+    crcBuffer.writeUInt32BE(parseInt(crc.digest('hex', 10), 16), 0);
     
     return Buffer.concat([length, typeBuffer, data, crcBuffer]);
   }

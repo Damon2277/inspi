@@ -9,7 +9,7 @@ import {
   getPasswordResetSuccessTemplate,
   renderTemplate,
   EmailTemplate,
-  TemplateVariables
+  TemplateVariables,
 } from '@/lib/email/templates';
 
 describe('Email Template Simple Tests', () => {
@@ -29,7 +29,7 @@ describe('Email Template Simple Tests', () => {
         code: '123456',
         email: 'test@example.com',
         type: 'registration' as const,
-        expiryMinutes: 10
+        expiryMinutes: 10,
       };
 
       // Act
@@ -50,7 +50,7 @@ describe('Email Template Simple Tests', () => {
       const variables = {
         code: '654321',
         email: 'login@example.com',
-        type: 'login' as const
+        type: 'login' as const,
       };
 
       // Act
@@ -67,7 +67,7 @@ describe('Email Template Simple Tests', () => {
       const variables = {
         code: '789012',
         email: 'reset@example.com',
-        type: 'password_reset' as const
+        type: 'password_reset' as const,
       };
 
       // Act
@@ -84,7 +84,7 @@ describe('Email Template Simple Tests', () => {
       const variables = {
         code: '111111',
         email: 'security@example.com',
-        type: 'registration' as const
+        type: 'registration' as const,
       };
 
       // Act
@@ -102,7 +102,7 @@ describe('Email Template Simple Tests', () => {
       const variables = {
         code: '222222',
         email: 'html@example.com',
-        type: 'registration' as const
+        type: 'registration' as const,
       };
 
       // Act
@@ -123,7 +123,7 @@ describe('Email Template Simple Tests', () => {
       // Arrange
       const variables = {
         name: 'John Doe',
-        email: 'john@example.com'
+        email: 'john@example.com',
       };
 
       // Act
@@ -140,7 +140,7 @@ describe('Email Template Simple Tests', () => {
       // Arrange
       const variables = {
         name: 'Feature Tester',
-        email: 'features@example.com'
+        email: 'features@example.com',
       };
 
       // Act
@@ -151,7 +151,7 @@ describe('Email Template Simple Tests', () => {
         'AI教学魔法师',
         '智慧广场',
         '知识图谱',
-        '贡献度系统'
+        '贡献度系统',
       ];
 
       expectedFeatures.forEach(feature => {
@@ -164,7 +164,7 @@ describe('Email Template Simple Tests', () => {
       // Arrange
       const variables = {
         name: 'CTA Tester',
-        email: 'cta@example.com'
+        email: 'cta@example.com',
       };
 
       // Act
@@ -180,7 +180,7 @@ describe('Email Template Simple Tests', () => {
       // Arrange
       const variables = {
         name: '张三',
-        email: 'chinese@example.com'
+        email: 'chinese@example.com',
       };
 
       // Act
@@ -197,7 +197,7 @@ describe('Email Template Simple Tests', () => {
       // Arrange
       const variables = {
         email: 'reset@example.com',
-        resetTime: '2024-01-15 14:30:00'
+        resetTime: '2024-01-15 14:30:00',
       };
 
       // Act
@@ -215,7 +215,7 @@ describe('Email Template Simple Tests', () => {
       // Arrange
       const variables = {
         email: 'security@example.com',
-        resetTime: new Date().toISOString()
+        resetTime: new Date().toISOString(),
       };
 
       // Act
@@ -225,7 +225,7 @@ describe('Email Template Simple Tests', () => {
       const securityTips = [
         '使用强密码',
         '不要在多个网站使用相同密码',
-        '定期更换密码'
+        '定期更换密码',
       ];
 
       securityTips.forEach(tip => {
@@ -238,7 +238,7 @@ describe('Email Template Simple Tests', () => {
       // Arrange
       const variables = {
         email: 'warning@example.com',
-        resetTime: new Date().toISOString()
+        resetTime: new Date().toISOString(),
       };
 
       // Act
@@ -257,7 +257,7 @@ describe('Email Template Simple Tests', () => {
       const template = 'Hello {{name}}, your code is {{code}}.';
       const variables: TemplateVariables = {
         name: 'John',
-        code: '123456'
+        code: '123456',
       };
 
       // Act
@@ -271,7 +271,7 @@ describe('Email Template Simple Tests', () => {
       // Arrange
       const template = 'Hello {{name}}, welcome {{name}} to our platform!';
       const variables: TemplateVariables = {
-        name: 'Alice'
+        name: 'Alice',
       };
 
       // Act
@@ -285,7 +285,7 @@ describe('Email Template Simple Tests', () => {
       // Arrange
       const template = 'Hello {{name}}, your {{missing}} is ready.';
       const variables: TemplateVariables = {
-        name: 'Bob'
+        name: 'Bob',
       };
 
       // Act
@@ -300,7 +300,7 @@ describe('Email Template Simple Tests', () => {
       const template = 'Hello {{ name }}, your code is {{  code  }}.';
       const variables: TemplateVariables = {
         name: 'Charlie',
-        code: 'ABC-123'
+        code: 'ABC-123',
       };
 
       // Act
@@ -315,7 +315,7 @@ describe('Email Template Simple Tests', () => {
       const template = 'Count: {{count}}, Active: {{active}}';
       const variables: TemplateVariables = {
         count: 42,
-        active: true
+        active: true,
       };
 
       // Act
@@ -331,7 +331,7 @@ describe('Email Template Simple Tests', () => {
       // Arrange
       const variables = {
         name: '<script>alert("xss")</script>',
-        email: 'xss@example.com'
+        email: 'xss@example.com',
       };
 
       // Act
@@ -350,7 +350,7 @@ describe('Email Template Simple Tests', () => {
       const variables = {
         code: '123456<img src="x" onerror="alert(1)">',
         email: 'injection@example.com',
-        type: 'registration' as const
+        type: 'registration' as const,
       };
 
       // Act
@@ -369,7 +369,7 @@ describe('Email Template Simple Tests', () => {
       const variables = {
         code: '555555',
         email: 'performance@example.com',
-        type: 'registration' as const
+        type: 'registration' as const,
       };
 
       // Act
@@ -387,7 +387,7 @@ describe('Email Template Simple Tests', () => {
       // Arrange
       const variables = {
         name: 'Size Test User',
-        email: 'size@example.com'
+        email: 'size@example.com',
       };
 
       // Act
@@ -404,7 +404,7 @@ describe('Email Template Simple Tests', () => {
       // Arrange
       const variables = {
         name: '测试用户',
-        email: 'chinese@example.com'
+        email: 'chinese@example.com',
       };
 
       // Act
@@ -421,7 +421,7 @@ describe('Email Template Simple Tests', () => {
       const variables = {
         code: '666666',
         email: 'encoding@example.com',
-        type: 'registration' as const
+        type: 'registration' as const,
       };
 
       // Act
@@ -439,7 +439,7 @@ describe('Email Template Simple Tests', () => {
       // Arrange
       const variables = {
         name: 'Structure Test',
-        email: 'structure@example.com'
+        email: 'structure@example.com',
       };
 
       // Act
@@ -451,10 +451,10 @@ describe('Email Template Simple Tests', () => {
       expect(template.html).toMatch(/<head[^>]*>/);
       expect(template.html).toMatch(/<body[^>]*>/);
       expect(template.html).toMatch(/<\/html>/);
-      
+
       // 检查语言属性
       expect(template.html).toContain('lang="zh-CN"');
-      
+
       // 检查标题结构
       expect(template.html).toMatch(/<h[1-6][^>]*>/);
     });
@@ -463,7 +463,7 @@ describe('Email Template Simple Tests', () => {
       // Arrange
       const variables = {
         name: 'Contact Test',
-        email: 'contact@example.com'
+        email: 'contact@example.com',
       };
 
       // Act
@@ -481,7 +481,7 @@ describe('Email Template Simple Tests', () => {
       const variables = {
         code: '777777',
         email: 'text@example.com',
-        type: 'login' as const
+        type: 'login' as const,
       };
 
       // Act
@@ -492,7 +492,7 @@ describe('Email Template Simple Tests', () => {
       expect(template.text).toContain(variables.code);
       expect(template.text).toContain('登录验证');
       expect(template.text).toContain('Inspi.AI');
-      
+
       // 文本版本不应该包含HTML标签
       expect(template.text).not.toMatch(/<[^>]*>/);
     });

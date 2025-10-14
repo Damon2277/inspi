@@ -4,6 +4,7 @@
  */
 
 const nextJest = require('next/jest');
+
 const { JestConfigGenerator } = require('./src/lib/testing/JestConfigGenerator');
 
 const createJestConfig = nextJest({
@@ -13,16 +14,16 @@ const createJestConfig = nextJest({
 // 检测测试类型
 function detectTestType() {
   const args = process.argv;
-  
+
   if (args.includes('--config') && args.includes('unit')) return 'unit';
   if (args.includes('--config') && args.includes('integration')) return 'integration';
   if (args.includes('--config') && args.includes('e2e')) return 'e2e';
-  
+
   // 从环境变量检测
   if (process.env.TEST_TYPE) {
     return process.env.TEST_TYPE;
   }
-  
+
   // 默认为单元测试
   return 'unit';
 }

@@ -1,15 +1,16 @@
 /**
  * Middleware Test Utilities
- * 
+ *
  * Utility functions and helpers for middleware testing including
  * request/response mocking, assertion helpers, and test data generation.
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  BoundaryTestCase, 
-  TestInput, 
+
+import {
+  BoundaryTestCase,
+  TestInput,
   MockConfiguration,
-  MiddlewareFunction 
+  MiddlewareFunction,
 } from './MiddlewareTestFramework';
 
 export class MiddlewareTestUtils {
@@ -30,18 +31,18 @@ export class MiddlewareTestUtils {
       headers = {},
       body,
       cookies = {},
-      searchParams = {}
+      searchParams = {},
     } = options;
 
     const requestUrl = new URL(url);
-    
+
     // Add search params
     Object.entries(searchParams).forEach(([key, value]) => {
       requestUrl.searchParams.set(key, value);
     });
 
     const requestHeaders = new Headers(headers);
-    
+
     // Add cookies
     if (Object.keys(cookies).length > 0) {
       const cookieString = Object.entries(cookies)
@@ -80,7 +81,7 @@ export class MiddlewareTestUtils {
       statusText = 'OK',
       headers = {},
       body,
-      cookies = {}
+      cookies = {},
     } = options;
 
     let response: NextResponse;
@@ -92,14 +93,14 @@ export class MiddlewareTestUtils {
         statusText,
         headers: {
           'content-type': 'application/json',
-          ...headers
-        }
+          ...headers,
+        },
       });
     } else {
       response = new NextResponse(null, {
         status,
         statusText,
-        headers
+        headers,
       });
     }
 
@@ -123,7 +124,7 @@ export class MiddlewareTestUtils {
       description: `Test ${fieldName} with null value`,
       input: { [fieldName]: null },
       expectedBehavior: 'error',
-      category: 'null'
+      category: 'null',
     });
 
     // Undefined values
@@ -132,7 +133,7 @@ export class MiddlewareTestUtils {
       description: `Test ${fieldName} with undefined value`,
       input: { [fieldName]: undefined },
       expectedBehavior: 'error',
-      category: 'undefined'
+      category: 'undefined',
     });
 
     // Empty values
@@ -143,7 +144,7 @@ export class MiddlewareTestUtils {
           description: `Test ${fieldName} with empty string`,
           input: { [fieldName]: '' },
           expectedBehavior: 'error',
-          category: 'empty'
+          category: 'empty',
         });
 
         cases.push({
@@ -151,7 +152,7 @@ export class MiddlewareTestUtils {
           description: `Test ${fieldName} with whitespace only`,
           input: { [fieldName]: '   ' },
           expectedBehavior: 'error',
-          category: 'empty'
+          category: 'empty',
         });
 
         cases.push({
@@ -159,7 +160,7 @@ export class MiddlewareTestUtils {
           description: `Test ${fieldName} with extremely long string`,
           input: { [fieldName]: 'a'.repeat(10000) },
           expectedBehavior: 'error',
-          category: 'extreme'
+          category: 'extreme',
         });
 
         cases.push({
@@ -167,7 +168,7 @@ export class MiddlewareTestUtils {
           description: `Test ${fieldName} with special characters`,
           input: { [fieldName]: '<script>alert("xss")</script>' },
           expectedBehavior: 'error',
-          category: 'malformed'
+          category: 'malformed',
         });
         break;
 
@@ -177,7 +178,7 @@ export class MiddlewareTestUtils {
           description: `Test ${fieldName} with zero`,
           input: { [fieldName]: 0 },
           expectedBehavior: 'success',
-          category: 'empty'
+          category: 'empty',
         });
 
         cases.push({
@@ -185,7 +186,7 @@ export class MiddlewareTestUtils {
           description: `Test ${fieldName} with negative number`,
           input: { [fieldName]: -1 },
           expectedBehavior: 'error',
-          category: 'invalid'
+          category: 'invalid',
         });
 
         cases.push({
@@ -193,7 +194,7 @@ export class MiddlewareTestUtils {
           description: `Test ${fieldName} with extremely large number`,
           input: { [fieldName]: Number.MAX_SAFE_INTEGER },
           expectedBehavior: 'error',
-          category: 'extreme'
+          category: 'extreme',
         });
 
         cases.push({
@@ -201,7 +202,7 @@ export class MiddlewareTestUtils {
           description: `Test ${fieldName} with NaN`,
           input: { [fieldName]: NaN },
           expectedBehavior: 'error',
-          category: 'invalid'
+          category: 'invalid',
         });
 
         cases.push({
@@ -209,7 +210,7 @@ export class MiddlewareTestUtils {
           description: `Test ${fieldName} with Infinity`,
           input: { [fieldName]: Infinity },
           expectedBehavior: 'error',
-          category: 'extreme'
+          category: 'extreme',
         });
         break;
 
@@ -219,7 +220,7 @@ export class MiddlewareTestUtils {
           description: `Test ${fieldName} with empty object`,
           input: { [fieldName]: {} },
           expectedBehavior: 'error',
-          category: 'empty'
+          category: 'empty',
         });
 
         cases.push({
@@ -231,7 +232,7 @@ export class MiddlewareTestUtils {
             return obj;
           })(),
           expectedBehavior: 'error',
-          category: 'malformed'
+          category: 'malformed',
         });
 
         cases.push({
@@ -239,7 +240,7 @@ export class MiddlewareTestUtils {
           description: `Test ${fieldName} with deeply nested object`,
           input: { [fieldName]: this.createDeeplyNestedObject(100) },
           expectedBehavior: 'error',
-          category: 'extreme'
+          category: 'extreme',
         });
         break;
 
@@ -249,7 +250,7 @@ export class MiddlewareTestUtils {
           description: `Test ${fieldName} with empty array`,
           input: { [fieldName]: [] },
           expectedBehavior: 'error',
-          category: 'empty'
+          category: 'empty',
         });
 
         cases.push({
@@ -257,7 +258,7 @@ export class MiddlewareTestUtils {
           description: `Test ${fieldName} with extremely large array`,
           input: { [fieldName]: new Array(10000).fill('item') },
           expectedBehavior: 'error',
-          category: 'extreme'
+          category: 'extreme',
         });
         break;
     }
@@ -288,8 +289,8 @@ export class MiddlewareTestUtils {
           tags: ['user', 'test'],
           metadata: {
             created: new Date().toISOString(),
-            source: 'test'
-          }
+            source: 'test',
+          },
         };
 
       case 'invalid':
@@ -300,7 +301,7 @@ export class MiddlewareTestUtils {
           age: -5,
           active: 'not-boolean',
           tags: 'not-array',
-          metadata: null
+          metadata: null,
         };
 
       case 'edge':
@@ -311,7 +312,7 @@ export class MiddlewareTestUtils {
           age: 0,
           active: false,
           tags: [],
-          metadata: {}
+          metadata: {},
         };
 
       case 'malicious':
@@ -324,8 +325,8 @@ export class MiddlewareTestUtils {
           tags: ['<img src=x onerror=alert("xss")>'],
           metadata: {
             '__proto__': { admin: true },
-            'constructor': { prototype: { admin: true } }
-          }
+            'constructor': { prototype: { admin: true } },
+          },
         };
 
       default:
@@ -360,7 +361,7 @@ export class MiddlewareTestUtils {
     return {
       middleware,
       calls,
-      reset: () => calls.splice(0, calls.length)
+      reset: () => calls.splice(0, calls.length),
     };
   }
 
@@ -382,7 +383,7 @@ export class MiddlewareTestUtils {
    */
   static assertExecutionOrder(
     spies: Array<{ calls: any[] }>,
-    expectedOrder: number[]
+    expectedOrder: number[],
   ): { passed: boolean; message: string } {
     const actualOrder: number[] = [];
     const allCalls: Array<{ spyIndex: number; timestamp: Date }> = [];
@@ -396,7 +397,7 @@ export class MiddlewareTestUtils {
 
     // Sort by timestamp to get execution order
     allCalls.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-    
+
     // Extract spy indices in order
     allCalls.forEach(call => {
       if (!actualOrder.includes(call.spyIndex)) {
@@ -405,7 +406,7 @@ export class MiddlewareTestUtils {
     });
 
     const passed = JSON.stringify(actualOrder) === JSON.stringify(expectedOrder);
-    const message = passed 
+    const message = passed
       ? 'Middleware execution order is correct'
       : `Expected order ${expectedOrder}, got ${actualOrder}`;
 
@@ -418,7 +419,7 @@ export class MiddlewareTestUtils {
   static async measurePerformance(
     middleware: MiddlewareFunction,
     request: NextRequest,
-    iterations: number = 100
+    iterations: number = 100,
   ): Promise<{
     averageTime: number;
     minTime: number;
@@ -432,7 +433,7 @@ export class MiddlewareTestUtils {
       const startTime = process.hrtime.bigint();
       await middleware(request);
       const endTime = process.hrtime.bigint();
-      
+
       const executionTime = Number(endTime - startTime) / 1000000; // Convert to milliseconds
       times.push(executionTime);
     }
@@ -448,7 +449,7 @@ export class MiddlewareTestUtils {
       minTime,
       maxTime,
       totalTime,
-      throughput
+      throughput,
     };
   }
 
@@ -462,7 +463,7 @@ export class MiddlewareTestUtils {
       headers?: Record<string, string>;
       body?: any;
       cookies?: Record<string, string>;
-    }
+    },
   ): Array<{ name: string; passed: boolean; message: string }> {
     const validations: Array<{ name: string; passed: boolean; message: string }> = [];
 
@@ -472,9 +473,9 @@ export class MiddlewareTestUtils {
       validations.push({
         name: 'Status Code',
         passed,
-        message: passed 
-          ? `Status code is ${expectations.status}` 
-          : `Expected status ${expectations.status}, got ${response.status}`
+        message: passed
+          ? `Status code is ${expectations.status}`
+          : `Expected status ${expectations.status}, got ${response.status}`,
       });
     }
 
@@ -486,9 +487,9 @@ export class MiddlewareTestUtils {
         validations.push({
           name: `Header ${key}`,
           passed,
-          message: passed 
+          message: passed
             ? `Header ${key} is ${expectedValue}`
-            : `Expected header ${key} to be ${expectedValue}, got ${actualValue}`
+            : `Expected header ${key} to be ${expectedValue}, got ${actualValue}`,
         });
       });
     }
@@ -501,9 +502,9 @@ export class MiddlewareTestUtils {
         validations.push({
           name: `Cookie ${key}`,
           passed,
-          message: passed 
+          message: passed
             ? `Cookie ${key} is ${expectedValue}`
-            : `Expected cookie ${key} to be ${expectedValue}, got ${actualValue}`
+            : `Expected cookie ${key} to be ${expectedValue}, got ${actualValue}`,
         });
       });
     }
@@ -519,17 +520,17 @@ export class MiddlewareTestUtils {
       switch (errorType) {
         case 'sync':
           throw new Error(message);
-        
+
         case 'async':
           return new Promise((_, reject) => {
             setTimeout(() => reject(new Error(message)), 10);
           });
-        
+
         case 'timeout':
           return new Promise(() => {
             // Never resolves, simulating timeout
           });
-        
+
         default:
           throw new Error(message);
       }
@@ -549,8 +550,8 @@ export class MiddlewareTestUtils {
         request: {
           url: baseUrl,
           method: 'GET',
-          headers: { 'x-forwarded-for': '192.168.1.1' }
-        }
+          headers: { 'x-forwarded-for': '192.168.1.1' },
+        },
       });
     }
 
@@ -559,8 +560,8 @@ export class MiddlewareTestUtils {
       request: {
         url: baseUrl,
         method: 'GET',
-        headers: { 'x-forwarded-for': '192.168.1.1' }
-      }
+        headers: { 'x-forwarded-for': '192.168.1.1' },
+      },
     });
 
     return scenarios;
@@ -576,40 +577,40 @@ export class MiddlewareTestUtils {
         request: {
           url: 'http://localhost:3000/api/protected',
           method: 'GET',
-          headers: { 'authorization': 'Bearer valid-token-123' }
-        }
+          headers: { 'authorization': 'Bearer valid-token-123' },
+        },
       },
       // Invalid token
       {
         request: {
           url: 'http://localhost:3000/api/protected',
           method: 'GET',
-          headers: { 'authorization': 'Bearer invalid-token' }
-        }
+          headers: { 'authorization': 'Bearer invalid-token' },
+        },
       },
       // Missing token
       {
         request: {
           url: 'http://localhost:3000/api/protected',
-          method: 'GET'
-        }
+          method: 'GET',
+        },
       },
       // Malformed authorization header
       {
         request: {
           url: 'http://localhost:3000/api/protected',
           method: 'GET',
-          headers: { 'authorization': 'InvalidFormat token' }
-        }
+          headers: { 'authorization': 'InvalidFormat token' },
+        },
       },
       // Expired token
       {
         request: {
           url: 'http://localhost:3000/api/protected',
           method: 'GET',
-          headers: { 'authorization': 'Bearer expired-token' }
-        }
-      }
+          headers: { 'authorization': 'Bearer expired-token' },
+        },
+      },
     ];
   }
 
@@ -623,24 +624,24 @@ export class MiddlewareTestUtils {
         request: {
           url: 'http://localhost:3000/api/test',
           method: 'GET',
-          headers: { 'origin': 'http://localhost:3000' }
-        }
+          headers: { 'origin': 'http://localhost:3000' },
+        },
       },
       // Allowed origin
       {
         request: {
           url: 'http://localhost:3000/api/test',
           method: 'GET',
-          headers: { 'origin': 'https://example.com' }
-        }
+          headers: { 'origin': 'https://example.com' },
+        },
       },
       // Disallowed origin
       {
         request: {
           url: 'http://localhost:3000/api/test',
           method: 'GET',
-          headers: { 'origin': 'https://malicious.com' }
-        }
+          headers: { 'origin': 'https://malicious.com' },
+        },
       },
       // Preflight request
       {
@@ -650,10 +651,10 @@ export class MiddlewareTestUtils {
           headers: {
             'origin': 'https://example.com',
             'access-control-request-method': 'POST',
-            'access-control-request-headers': 'content-type'
-          }
-        }
-      }
+            'access-control-request-headers': 'content-type',
+          },
+        },
+      },
     ];
   }
 
@@ -670,9 +671,9 @@ export class MiddlewareTestUtils {
           body: {
             name: 'John Doe',
             email: 'john@example.com',
-            age: 30
-          }
-        }
+            age: 30,
+          },
+        },
       },
       // Missing required fields
       {
@@ -680,10 +681,10 @@ export class MiddlewareTestUtils {
           url: 'http://localhost:3000/api/users',
           method: 'POST',
           body: {
-            name: 'John Doe'
+            name: 'John Doe',
             // Missing email and age
-          }
-        }
+          },
+        },
       },
       // Invalid field types
       {
@@ -693,9 +694,9 @@ export class MiddlewareTestUtils {
           body: {
             name: 123, // Should be string
             email: 'not-an-email',
-            age: 'thirty' // Should be number
-          }
-        }
+            age: 'thirty', // Should be number
+          },
+        },
       },
       // Invalid field values
       {
@@ -705,10 +706,10 @@ export class MiddlewareTestUtils {
           body: {
             name: '',
             email: 'invalid-email',
-            age: -5
-          }
-        }
-      }
+            age: -5,
+          },
+        },
+      },
     ];
   }
 }
@@ -724,7 +725,7 @@ export class MiddlewareAssertions {
     const passed = spy.calls.length > 0;
     return {
       passed,
-      message: passed ? 'Middleware was called' : 'Middleware was not called'
+      message: passed ? 'Middleware was called' : 'Middleware was not called',
     };
   }
 
@@ -736,9 +737,9 @@ export class MiddlewareAssertions {
     const passed = actualTimes === expectedTimes;
     return {
       passed,
-      message: passed 
+      message: passed
         ? `Middleware was called ${expectedTimes} times`
-        : `Expected middleware to be called ${expectedTimes} times, but was called ${actualTimes} times`
+        : `Expected middleware to be called ${expectedTimes} times, but was called ${actualTimes} times`,
     };
   }
 
@@ -746,20 +747,20 @@ export class MiddlewareAssertions {
    * Assert that middleware was called with specific request
    */
   static wasCalledWith(
-    spy: { calls: Array<{ request: NextRequest }> }, 
-    expectedRequest: Partial<{ url: string; method: string; headers: Record<string, string> }>
+    spy: { calls: Array<{ request: NextRequest }> },
+    expectedRequest: Partial<{ url: string; method: string; headers: Record<string, string> }>,
   ): { passed: boolean; message: string } {
     const matchingCalls = spy.calls.filter(call => {
       const request = call.request;
-      
+
       if (expectedRequest.url && !request.url.includes(expectedRequest.url)) {
         return false;
       }
-      
+
       if (expectedRequest.method && request.method !== expectedRequest.method) {
         return false;
       }
-      
+
       if (expectedRequest.headers) {
         for (const [key, value] of Object.entries(expectedRequest.headers)) {
           if (request.headers.get(key) !== value) {
@@ -767,16 +768,16 @@ export class MiddlewareAssertions {
           }
         }
       }
-      
+
       return true;
     });
 
     const passed = matchingCalls.length > 0;
     return {
       passed,
-      message: passed 
+      message: passed
         ? 'Middleware was called with expected request'
-        : 'Middleware was not called with expected request'
+        : 'Middleware was not called with expected request',
     };
   }
 
@@ -785,7 +786,7 @@ export class MiddlewareAssertions {
    */
   static responseHas(
     response: NextResponse,
-    expected: { status?: number; headers?: Record<string, string>; body?: any }
+    expected: { status?: number; headers?: Record<string, string>; body?: any },
   ): { passed: boolean; message: string } {
     const failures: string[] = [];
 
@@ -805,7 +806,7 @@ export class MiddlewareAssertions {
     const passed = failures.length === 0;
     return {
       passed,
-      message: passed ? 'Response has expected properties' : failures.join('; ')
+      message: passed ? 'Response has expected properties' : failures.join('; '),
     };
   }
 
@@ -816,9 +817,9 @@ export class MiddlewareAssertions {
     const passed = actualTime <= maxTime;
     return {
       passed,
-      message: passed 
+      message: passed
         ? `Execution time ${actualTime}ms is within threshold ${maxTime}ms`
-        : `Execution time ${actualTime}ms exceeds threshold ${maxTime}ms`
+        : `Execution time ${actualTime}ms exceeds threshold ${maxTime}ms`,
     };
   }
 
@@ -828,19 +829,19 @@ export class MiddlewareAssertions {
   static async throwsError(
     middleware: MiddlewareFunction,
     request: NextRequest,
-    expectedError?: { type?: string; message?: string }
+    expectedError?: { type?: string; message?: string },
   ): Promise<{ passed: boolean; message: string }> {
     try {
       await middleware(request);
       return {
         passed: false,
-        message: 'Expected middleware to throw error, but it did not'
+        message: 'Expected middleware to throw error, but it did not',
       };
     } catch (error) {
       if (!expectedError) {
         return {
           passed: true,
-          message: 'Middleware threw error as expected'
+          message: 'Middleware threw error as expected',
         };
       }
 
@@ -857,7 +858,7 @@ export class MiddlewareAssertions {
       const passed = failures.length === 0;
       return {
         passed,
-        message: passed ? 'Middleware threw expected error' : failures.join('; ')
+        message: passed ? 'Middleware threw expected error' : failures.join('; '),
       };
     }
   }

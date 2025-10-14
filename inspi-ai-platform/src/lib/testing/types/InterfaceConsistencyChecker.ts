@@ -1,12 +1,13 @@
 /**
  * Interface Consistency Checker
- * 
+ *
  * Validates interface consistency across the codebase,
  * checks for proper implementation, and ensures type safety.
  */
 
-import * as ts from 'typescript';
 import * as fs from 'fs';
+
+import * as ts from 'typescript';
 
 export interface ConsistencyCheckConfig {
   sourceRoot: string;
@@ -121,15 +122,15 @@ export class InterfaceConsistencyChecker {
    */
   async initialize(): Promise<void> {
     const sourceFiles = await this.getSourceFiles();
-    
+
     this.program = ts.createProgram(sourceFiles, {
       target: ts.ScriptTarget.Latest,
       module: ts.ModuleKind.CommonJS,
       strict: this.config.strictMode,
       esModuleInterop: true,
-      skipLibCheck: true
+      skipLibCheck: true,
     });
-    
+
     this.typeChecker = this.program.getTypeChecker();
   }
 
@@ -143,23 +144,23 @@ export class InterfaceConsistencyChecker {
 
     // Extract interfaces
     await this.extractInterfaces();
-    
+
     // Check implementations
     if (this.config.checkImplementations) {
       await this.checkImplementations();
     }
-    
+
     // Check extensions
     if (this.config.checkExtensions) {
       await this.checkExtensions();
     }
-    
+
     // Check usage
     const usages = this.config.checkUsage ? await this.checkUsage() : new Map();
-    
+
     // Generate violations
     const violations = this.generateViolations();
-    
+
     // Generate summary
     const summary = this.generateSummary(violations);
 
@@ -169,7 +170,7 @@ export class InterfaceConsistencyChecker {
       implementations: Array.from(this.implementations.values()).flat(),
       usages,
       violations,
-      summary
+      summary,
     };
   }
 
@@ -206,10 +207,10 @@ export class InterfaceConsistencyChecker {
    */
   private createInterfaceInfo(node: ts.InterfaceDeclaration, sourceFile: ts.SourceFile): InterfaceInfo {
     const position = sourceFile.getLineAndCharacterOfPosition(node.getStart());
-    
+
     const properties: PropertyInfo[] = [];
     const methods: MethodInfo[] = [];
-    
+
     // Extract members
     for (const member of node.members) {
       if (ts.isPropertySignature(member)) {
@@ -222,8 +223,8 @@ export class InterfaceConsistencyChecker {
     }
 
     // Extract extends clause
-    const extendsClause = node.heritageClauses?.find(clause => 
-      clause.token === ts.SyntaxKind.ExtendsKeyword
+    const extendsClause = node.heritageClauses?.find(clause =>
+      clause.token === ts.SyntaxKind.ExtendsKeyword,
     );
     const extends_ = extendsClause?.types.map(type => type.getText()) || [];
 
@@ -244,7 +245,7 @@ export class InterfaceConsistencyChecker {
       extends: extends_,
       generic,
       typeParameters,
-      exported
+      exported,
     };
   }
 
@@ -265,7 +266,7 @@ export class InterfaceConsistencyChecker {
       type,
       optional,
       readonly,
-      line: position.line + 1
+      line: position.line + 1,
     };
   }
 
@@ -283,7 +284,7 @@ export class InterfaceConsistencyChecker {
     const parameters: ParameterInfo[] = node.parameters.map(param => ({
       name: param.name.getText(),
       type: param.type?.getText() || 'any',
-      optional: !!param.questionToken
+      optional: !!param.questionToken,
     }));
 
     return {
@@ -291,7 +292,7 @@ export class InterfaceConsistencyChecker {
       parameters,
       returnType,
       optional,
-      line: position.line + 1
+      line: position.line + 1,
     };
   }
 
@@ -336,16 +337,16 @@ export class InterfaceConsistencyChecker {
     if (!node.name) return null;
 
     const position = sourceFile.getLineAndCharacterOfPosition(node.getStart());
-    
+
     // Get implements clause
-    const implementsClause = node.heritageClauses?.find(clause => 
-      clause.token === ts.SyntaxKind.ImplementsKeyword
+    const implementsClause = node.heritageClauses?.find(clause =>
+      clause.token === ts.SyntaxKind.ImplementsKeyword,
     );
-    
+
     if (!implementsClause) return null;
 
     const implements_ = implementsClause.types.map(type => type.getText());
-    
+
     // Check each implemented interface
     const missingMembers: string[] = [];
     const extraMembers: string[] = [];
@@ -368,7 +369,7 @@ export class InterfaceConsistencyChecker {
       implements: implements_,
       missingMembers,
       extraMembers,
-      incorrectTypes
+      incorrectTypes,
     };
   }
 
@@ -407,7 +408,7 @@ export class InterfaceConsistencyChecker {
             memberName: prop.name,
             expected: prop.type,
             actual: classType,
-            severity: 'error'
+            severity: 'error',
           });
         }
       }
@@ -506,7 +507,7 @@ export class InterfaceConsistencyChecker {
             line: position.line + 1,
             context: this.getUsageContext(node),
             correct: true, // Simplified - would need more analysis
-            issues: []
+            issues: [],
           };
 
           if (!usages.has(typeName)) {
@@ -528,7 +529,7 @@ export class InterfaceConsistencyChecker {
    */
   private getUsageContext(node: ts.Node): UsageInfo['context'] {
     const parent = node.parent;
-    
+
     if (ts.isParameter(parent)) {
       return 'parameter';
     } else if (ts.isFunctionDeclaration(parent) || ts.isMethodDeclaration(parent)) {
@@ -555,7 +556,7 @@ export class InterfaceConsistencyChecker {
           interfaceName: name,
           description: `Interface '${name}' has no implementations`,
           location: `${interfaceInfo.sourceFile}:${interfaceInfo.line}`,
-          suggestion: `Consider implementing interface '${name}' or mark as utility type`
+          suggestion: `Consider implementing interface '${name}' or mark as utility type`,
         });
       }
     }
@@ -570,7 +571,7 @@ export class InterfaceConsistencyChecker {
             interfaceName,
             description: `Class '${impl.className}' missing required members: ${impl.missingMembers.join(', ')}`,
             location: `${impl.sourceFile}:${impl.line}`,
-            suggestion: `Implement missing members in class '${impl.className}'`
+            suggestion: `Implement missing members in class '${impl.className}'`,
           });
         }
 
@@ -582,7 +583,7 @@ export class InterfaceConsistencyChecker {
               interfaceName,
               description: `Type mismatch in '${impl.className}.${mismatch.memberName}': expected '${mismatch.expected}', got '${mismatch.actual}'`,
               location: `${impl.sourceFile}:${impl.line}`,
-              suggestion: `Fix type of '${mismatch.memberName}' to match interface`
+              suggestion: `Fix type of '${mismatch.memberName}' to match interface`,
             });
           }
         }
@@ -601,9 +602,9 @@ export class InterfaceConsistencyChecker {
     const violationsCount = violations.length;
     const errorCount = violations.filter(v => v.severity === 'error').length;
     const warningCount = violations.filter(v => v.severity === 'warning').length;
-    
+
     // Calculate consistency score (0-100)
-    const consistencyScore = totalInterfaces > 0 
+    const consistencyScore = totalInterfaces > 0
       ? Math.max(0, 100 - (violationsCount / totalInterfaces) * 100)
       : 100;
 
@@ -613,7 +614,7 @@ export class InterfaceConsistencyChecker {
       violationsCount,
       errorCount,
       warningCount,
-      consistencyScore
+      consistencyScore,
     };
   }
 
@@ -622,14 +623,14 @@ export class InterfaceConsistencyChecker {
    */
   private async getSourceFiles(): Promise<string[]> {
     const files: string[] = [];
-    
+
     const walkDir = (dir: string) => {
       try {
         const entries = fs.readdirSync(dir, { withFileTypes: true });
-        
+
         for (const entry of entries) {
           const fullPath = `${dir}/${entry.name}`;
-          
+
           if (entry.isDirectory() && !entry.name.includes('node_modules')) {
             walkDir(fullPath);
           } else if (entry.isFile() && this.shouldAnalyzeFile(fullPath)) {
@@ -657,12 +658,12 @@ export class InterfaceConsistencyChecker {
       return false;
     }
 
-    const included = this.config.includePatterns.some(pattern => 
-      fileName.includes(pattern)
+    const included = this.config.includePatterns.some(pattern =>
+      fileName.includes(pattern),
     );
 
-    const excluded = this.config.excludePatterns.some(pattern => 
-      fileName.includes(pattern)
+    const excluded = this.config.excludePatterns.some(pattern =>
+      fileName.includes(pattern),
     );
 
     return included && !excluded;
@@ -672,11 +673,11 @@ export class InterfaceConsistencyChecker {
    * Generate consistency report
    */
   generateReport(report: ConsistencyReport): string {
-    let output = `# Interface Consistency Report\n\n`;
-    
+    let output = '# Interface Consistency Report\n\n';
+
     output += `**Generated:** ${report.timestamp.toLocaleString()}\n\n`;
-    
-    output += `## Summary\n\n`;
+
+    output += '## Summary\n\n';
     output += `- Total Interfaces: ${report.summary.totalInterfaces}\n`;
     output += `- Implemented Interfaces: ${report.summary.implementedInterfaces}\n`;
     output += `- Violations: ${report.summary.violationsCount}\n`;
@@ -685,22 +686,22 @@ export class InterfaceConsistencyChecker {
     output += `- Consistency Score: ${report.summary.consistencyScore.toFixed(1)}%\n\n`;
 
     if (report.violations.length > 0) {
-      output += `## Violations\n\n`;
-      
+      output += '## Violations\n\n';
+
       const errors = report.violations.filter(v => v.severity === 'error');
       const warnings = report.violations.filter(v => v.severity === 'warning');
-      
+
       if (errors.length > 0) {
-        output += `### Errors\n\n`;
+        output += '### Errors\n\n';
         for (const violation of errors) {
           output += `- **${violation.interfaceName}**: ${violation.description}\n`;
           output += `  - Location: ${violation.location}\n`;
           output += `  - Suggestion: ${violation.suggestion}\n\n`;
         }
       }
-      
+
       if (warnings.length > 0) {
-        output += `### Warnings\n\n`;
+        output += '### Warnings\n\n';
         for (const violation of warnings) {
           output += `- **${violation.interfaceName}**: ${violation.description}\n`;
           output += `  - Location: ${violation.location}\n`;

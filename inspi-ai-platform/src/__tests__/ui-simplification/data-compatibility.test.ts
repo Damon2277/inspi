@@ -39,7 +39,7 @@ describe('数据结构兼容性测试', () => {
     likes: 156,
     uses: 89,
     rating: 4.8,
-    tags: ['函数', '图像', '可视化']
+    tags: ['函数', '图像', '可视化'],
   };
 
   const simplifiedData: SimplifiedCaseItem = {
@@ -48,7 +48,7 @@ describe('数据结构兼容性测试', () => {
     author: '张老师',
     subject: '数学',
     thumbnail: '📊',
-    uses: 89
+    uses: 89,
   };
 
   test('简化数据模型包含所有必需字段', () => {
@@ -77,7 +77,7 @@ describe('数据结构兼容性测试', () => {
         author: original.author,
         subject: original.subject,
         thumbnail: original.thumbnail,
-        uses: original.uses
+        uses: original.uses,
       };
     };
 
@@ -91,13 +91,13 @@ describe('数据结构兼容性测试', () => {
       title: '测试标题',
       author: '测试作者',
       subject: '测试学科',
-      thumbnail: '📝'
+      thumbnail: '📝',
       // uses 字段缺失
     };
 
     const withDefaults = {
       ...incompleteData,
-      uses: 0 // 默认值
+      uses: 0, // 默认值
     };
 
     expect(withDefaults.uses).toBe(0);
@@ -112,7 +112,7 @@ describe('数据结构兼容性测试', () => {
       author: item.author,
       subject: item.subject,
       thumbnail: item.thumbnail,
-      uses: item.uses
+      uses: item.uses,
     }));
 
     expect(simplifiedArray).toHaveLength(1);

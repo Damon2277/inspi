@@ -12,7 +12,7 @@ describe('TestRetryManager', () => {
       maxRetries: 3,
       retryDelay: 10, // Short delay for tests
       exponentialBackoff: true,
-      retryOnlyFlaky: false
+      retryOnlyFlaky: false,
     });
   });
 
@@ -23,7 +23,7 @@ describe('TestRetryManager', () => {
         testName: 'stable test',
         testFile: 'stable.spec.ts',
         isFlaky: false,
-        flakinessScore: 0
+        flakinessScore: 0,
       };
 
       const result = await retryManager.executeWithRetry(testFunction, context);
@@ -48,7 +48,7 @@ describe('TestRetryManager', () => {
         testName: 'flaky test',
         testFile: 'flaky.spec.ts',
         isFlaky: true,
-        flakinessScore: 0.3
+        flakinessScore: 0.3,
       };
 
       const result = await retryManager.executeWithRetry(testFunction, context);
@@ -66,7 +66,7 @@ describe('TestRetryManager', () => {
         testName: 'failing test',
         testFile: 'failing.spec.ts',
         isFlaky: true,
-        flakinessScore: 0.5
+        flakinessScore: 0.5,
       };
 
       await expect(retryManager.executeWithRetry(testFunction, context)).rejects.toThrow('Persistent failure');
@@ -77,7 +77,7 @@ describe('TestRetryManager', () => {
       const retryManagerFlaky = new TestRetryManager({
         maxRetries: 3,
         retryDelay: 10,
-        retryOnlyFlaky: true
+        retryOnlyFlaky: true,
       });
 
       const testFunction = jest.fn().mockRejectedValue(new Error('Failure'));
@@ -85,7 +85,7 @@ describe('TestRetryManager', () => {
         testName: 'stable test',
         testFile: 'stable.spec.ts',
         isFlaky: false,
-        flakinessScore: 0
+        flakinessScore: 0,
       };
 
       await expect(retryManagerFlaky.executeWithRetry(testFunction, context)).rejects.toThrow('Failure');
@@ -98,7 +98,7 @@ describe('TestRetryManager', () => {
         testName: 'syntax error test',
         testFile: 'syntax.spec.ts',
         isFlaky: true,
-        flakinessScore: 0.3
+        flakinessScore: 0.3,
       };
 
       await expect(retryManager.executeWithRetry(testFunction, context)).rejects.toThrow('Syntax error in test');
@@ -108,7 +108,7 @@ describe('TestRetryManager', () => {
     it('should apply exponential backoff', async () => {
       const delays: number[] = [];
       const originalSetTimeout = global.setTimeout;
-      
+
       global.setTimeout = jest.fn().mockImplementation((callback, delay) => {
         delays.push(delay);
         return originalSetTimeout(callback, 0); // Execute immediately for test
@@ -127,7 +127,7 @@ describe('TestRetryManager', () => {
         testName: 'backoff test',
         testFile: 'backoff.spec.ts',
         isFlaky: true,
-        flakinessScore: 0.3
+        flakinessScore: 0.3,
       };
 
       await retryManager.executeWithRetry(testFunction, context);
@@ -144,7 +144,7 @@ describe('TestRetryManager', () => {
       // Generate some retry history
       const contexts = [
         { testName: 'test1', testFile: 'test1.spec.ts', isFlaky: true, flakinessScore: 0.3 },
-        { testName: 'test2', testFile: 'test2.spec.ts', isFlaky: true, flakinessScore: 0.5 }
+        { testName: 'test2', testFile: 'test2.spec.ts', isFlaky: true, flakinessScore: 0.5 },
       ];
 
       for (const context of contexts) {
@@ -189,7 +189,7 @@ describe('TestRetryManager', () => {
       const customStrategy = {
         shouldRetry: jest.fn().mockReturnValue(true),
         getDelay: jest.fn().mockReturnValue(5),
-        maxAttempts: 2
+        maxAttempts: 2,
       };
 
       retryManager.addRetryStrategy('custom', customStrategy);
@@ -204,11 +204,11 @@ describe('TestRetryManager', () => {
         testName: 'custom test',
         testFile: 'custom.spec.ts',
         isFlaky: true,
-        flakinessScore: 0.3
+        flakinessScore: 0.3,
       };
 
       await expect(retryManager.executeWithRetry(testFunction, context)).rejects.toThrow('Always fails');
-      
+
       expect(customStrategy.shouldRetry).toHaveBeenCalled();
       expect(customStrategy.getDelay).toHaveBeenCalled();
       expect(testFunction).toHaveBeenCalledTimes(2); // Custom maxAttempts
@@ -223,7 +223,7 @@ describe('TestRetryManager', () => {
         testName: 'history test',
         testFile: 'history.spec.ts',
         isFlaky: true,
-        flakinessScore: 0.3
+        flakinessScore: 0.3,
       };
 
       await retryManager.executeWithRetry(testFunction, context);
@@ -256,7 +256,7 @@ describe('TestRetryManager', () => {
         'Race condition detected',
         'Async operation failed',
         'Assertion failed',
-        'Unknown error'
+        'Unknown error',
       ];
 
       for (const errorMessage of errorTypes) {
@@ -265,7 +265,7 @@ describe('TestRetryManager', () => {
           testName: `error test ${errorMessage}`,
           testFile: 'error.spec.ts',
           isFlaky: true,
-          flakinessScore: 0.3
+          flakinessScore: 0.3,
         };
 
         try {
@@ -284,7 +284,7 @@ describe('TestRetryManager', () => {
     it('should use different strategies based on flakiness score', async () => {
       const contexts = [
         { testName: 'low flaky', testFile: 'low.spec.ts', isFlaky: true, flakinessScore: 0.2 },
-        { testName: 'high flaky', testFile: 'high.spec.ts', isFlaky: true, flakinessScore: 0.8 }
+        { testName: 'high flaky', testFile: 'high.spec.ts', isFlaky: true, flakinessScore: 0.8 },
       ];
 
       for (const context of contexts) {

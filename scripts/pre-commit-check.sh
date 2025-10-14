@@ -7,9 +7,16 @@ echo "🔍 开始预提交检查..."
 echo "=================================="
 
 # 检查是否在项目根目录
-if [ ! -f "README.md" ] || [ ! -d ".kiro" ]; then
+if [ ! -f "README.md" ]; then
     echo "❌ 请在项目根目录运行此脚本"
     exit 1
+fi
+
+# 检查项目管理规则系统是否存在
+HAS_KIRO=true
+if [ ! -d ".kiro" ]; then
+    HAS_KIRO=false
+    echo "⚠️ 未找到 .kiro 项目管理系统目录，相关检查将被跳过"
 fi
 
 # 初始化检查结果
@@ -38,16 +45,15 @@ run_check() {
 }
 
 # 1. 系统集成验证
-run_check "系统集成验证" "node .kiro/integration-tests/run-tests.js"
-
-# 2. 项目管理系统健康检查
-run_check "项目管理系统健康检查" "node .kiro/dashboard/cli.js health"
-
-# 3. 配置验证
-run_check "配置一致性验证" "node .kiro/config-manager/cli.js validate"
-
-# 4. 样式系统状态检查
-run_check "样式系统状态检查" "node .kiro/style-recovery/cli.js status"
+if [ "$HAS_KIRO" = true ]; then
+    run_check "系统集成验证" "node .kiro/integration-tests/run-tests.js"
+    run_check "项目管理系统健康检查" "node .kiro/dashboard/cli.js health"
+    run_check "配置一致性验证" "node .kiro/config-manager/cli.js validate"
+    run_check "样式系统状态检查" "node .kiro/style-recovery/cli.js status"
+else
+    echo ""
+    echo "ℹ️ 跳过 .kiro 系统相关检查"
+fi
 
 # 5. 主应用构建检查 (如果存在)
 if [ -f "inspi-ai-platform/package.json" ]; then

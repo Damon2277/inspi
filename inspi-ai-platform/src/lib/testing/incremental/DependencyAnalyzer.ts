@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+
 import * as ts from 'typescript';
 
 export interface FileDependency {
@@ -40,9 +41,9 @@ export class DependencyAnalyzer {
     this.dependencyGraph = {
       nodes: new Map(),
       edges: new Map(),
-      reverseEdges: new Map()
+      reverseEdges: new Map(),
     };
-    
+
     this.loadCompilerOptions();
   }
 
@@ -56,7 +57,7 @@ export class DependencyAnalyzer {
         const parsedConfig = ts.parseJsonConfigFileContent(
           configFile.config,
           ts.sys,
-          path.dirname(this.tsConfigPath)
+          path.dirname(this.tsConfigPath),
         );
         this.compilerOptions = parsedConfig.options;
       } else {
@@ -73,7 +74,7 @@ export class DependencyAnalyzer {
    */
   async buildDependencyGraph(includePatterns: string[] = ['**/*.{ts,tsx,js,jsx}']): Promise<void> {
     const files = await this.findFiles(includePatterns);
-    
+
     // 第一遍：创建节点
     for (const filePath of files) {
       await this.addFileToGraph(filePath);
@@ -101,8 +102,8 @@ export class DependencyAnalyzer {
           '**/dist/**',
           '**/build/**',
           '**/.next/**',
-          '**/coverage/**'
-        ]
+          '**/coverage/**',
+        ],
       });
       files.push(...matches);
     }
@@ -116,13 +117,13 @@ export class DependencyAnalyzer {
   private async addFileToGraph(filePath: string): Promise<void> {
     const relativePath = path.relative(this.projectRoot, filePath);
     const stats = fs.statSync(filePath);
-    
+
     const dependency: FileDependency = {
       filePath: relativePath,
       dependencies: [],
       dependents: [],
       type: this.determineFileType(relativePath),
-      lastModified: stats.mtime
+      lastModified: stats.mtime,
     };
 
     this.dependencyGraph.nodes.set(relativePath, dependency);
@@ -137,15 +138,15 @@ export class DependencyAnalyzer {
     if (this.isTestFile(filePath)) {
       return 'test';
     }
-    
+
     if (this.isConfigFile(filePath)) {
       return 'config';
     }
-    
+
     if (this.isAssetFile(filePath)) {
       return 'asset';
     }
-    
+
     return 'source';
   }
 
@@ -158,7 +159,7 @@ export class DependencyAnalyzer {
       /\.spec\.(ts|tsx|js|jsx)$/,
       /\/__tests__\//,
       /\/test\//,
-      /\/tests\//
+      /\/tests\//,
     ];
 
     return testPatterns.some(pattern => pattern.test(filePath));
@@ -174,7 +175,7 @@ export class DependencyAnalyzer {
       /^package\.json$/,
       /^\.env/,
       /^\.eslintrc/,
-      /^\.prettierrc/
+      /^\.prettierrc/,
     ];
 
     const fileName = path.basename(filePath);
@@ -200,7 +201,7 @@ export class DependencyAnalyzer {
     try {
       const content = fs.readFileSync(absolutePath, 'utf8');
       const dependencies = this.extractDependencies(content, relativePath);
-      
+
       const node = this.dependencyGraph.nodes.get(relativePath);
       if (node) {
         node.dependencies = dependencies;
@@ -219,7 +220,7 @@ export class DependencyAnalyzer {
         if (reverseEdges) {
           reverseEdges.add(relativePath);
         }
-        
+
         const depNode = this.dependencyGraph.nodes.get(dep);
         if (depNode && !depNode.dependents.includes(relativePath)) {
           depNode.dependents.push(relativePath);
@@ -236,7 +237,7 @@ export class DependencyAnalyzer {
    */
   private extractDependencies(content: string, filePath: string): string[] {
     const dependencies: string[] = [];
-    
+
     // 使用TypeScript AST解析
     if (this.isTypeScriptFile(filePath)) {
       dependencies.push(...this.extractTypeScriptDependencies(content, filePath));
@@ -260,13 +261,13 @@ export class DependencyAnalyzer {
    */
   private extractTypeScriptDependencies(content: string, filePath: string): string[] {
     const dependencies: string[] = [];
-    
+
     try {
       const sourceFile = ts.createSourceFile(
         filePath,
         content,
         ts.ScriptTarget.Latest,
-        true
+        true,
       );
 
       const visit = (node: ts.Node) => {
@@ -285,7 +286,7 @@ export class DependencyAnalyzer {
             }
           }
         }
-        
+
         ts.forEachChild(node, visit);
       };
 
@@ -302,7 +303,7 @@ export class DependencyAnalyzer {
    */
   private extractDependenciesWithRegex(content: string, filePath: string): string[] {
     const dependencies: string[] = [];
-    
+
     // ES6 imports
     const importRegex = /import\s+(?:[\w\s{},*]+\s+from\s+)?['"]([^'"]+)['"]/g;
     let match;
@@ -346,7 +347,7 @@ export class DependencyAnalyzer {
 
       try {
         let resolvedPath: string;
-        
+
         if (dep.startsWith('.')) {
           // 相对路径
           resolvedPath = path.resolve(this.projectRoot, fromDir, dep);
@@ -403,8 +404,8 @@ export class DependencyAnalyzer {
     const testCoverage = new Map<string, string[]>();
 
     // 标准化文件路径
-    const normalizedChangedFiles = changedFiles.map(file => 
-      path.relative(this.projectRoot, path.resolve(this.projectRoot, file))
+    const normalizedChangedFiles = changedFiles.map(file =>
+      path.relative(this.projectRoot, path.resolve(this.projectRoot, file)),
     );
 
     // 找到直接受影响的文件
@@ -439,13 +440,13 @@ export class DependencyAnalyzer {
     const allAffectedFiles = new Set([
       ...normalizedChangedFiles,
       ...directlyAffectedFiles,
-      ...transitivelyAffectedFiles
+      ...transitivelyAffectedFiles,
     ]);
 
     for (const file of allAffectedFiles) {
       if (this.isTestFile(file)) {
         affectedTestFiles.add(file);
-        
+
         // 分析测试覆盖的源文件
         const coveredFiles = this.getTestCoverage(file);
         testCoverage.set(file, coveredFiles);
@@ -477,7 +478,7 @@ export class DependencyAnalyzer {
       directlyAffectedFiles: Array.from(directlyAffectedFiles),
       transitivelyAffectedFiles: Array.from(transitivelyAffectedFiles),
       affectedTestFiles: Array.from(affectedTestFiles),
-      testCoverage
+      testCoverage,
     };
   }
 
@@ -511,7 +512,7 @@ export class DependencyAnalyzer {
       path.join(dirName, '__tests__', `${baseName}.test.ts`),
       path.join(dirName, '__tests__', `${baseName}.test.tsx`),
       path.join(dirName, '__tests__', `${baseName}.spec.ts`),
-      path.join(dirName, '__tests__', `${baseName}.spec.tsx`)
+      path.join(dirName, '__tests__', `${baseName}.spec.tsx`),
     ];
 
     for (const pattern of testPatterns) {
@@ -561,7 +562,7 @@ export class DependencyAnalyzer {
       configFiles,
       assetFiles,
       totalDependencies,
-      averageDependencies
+      averageDependencies,
     };
   }
 
@@ -572,18 +573,18 @@ export class DependencyAnalyzer {
     const nodes = Array.from(this.dependencyGraph.nodes.entries()).map(([path, node]) => ({
       path,
       ...node,
-      lastModified: node.lastModified.toISOString()
+      lastModified: node.lastModified.toISOString(),
     }));
 
     const edges = Array.from(this.dependencyGraph.edges.entries()).map(([from, toSet]) => ({
       from,
-      to: Array.from(toSet)
+      to: Array.from(toSet),
     }));
 
     return {
       nodes,
       edges,
-      stats: this.getGraphStats()
+      stats: this.getGraphStats(),
     };
   }
 
@@ -599,7 +600,7 @@ export class DependencyAnalyzer {
     for (const nodeData of data.nodes) {
       const node: FileDependency = {
         ...nodeData,
-        lastModified: new Date(nodeData.lastModified)
+        lastModified: new Date(nodeData.lastModified),
       };
       this.dependencyGraph.nodes.set(nodeData.path, node);
     }
@@ -607,7 +608,7 @@ export class DependencyAnalyzer {
     // 导入边
     for (const edgeData of data.edges) {
       this.dependencyGraph.edges.set(edgeData.from, new Set(edgeData.to));
-      
+
       // 重建反向边
       for (const to of edgeData.to) {
         if (!this.dependencyGraph.reverseEdges.has(to)) {

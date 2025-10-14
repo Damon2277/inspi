@@ -1,6 +1,6 @@
 /**
  * Input Validation Security Tester
- * 
+ *
  * 专门用于测试输入验证安全性的测试器
  * 包括XSS、SQL注入、命令注入等各种恶意输入的测试
  */
@@ -72,7 +72,7 @@ export class InputValidationTester {
    */
   private async testPayload(payload: ValidationPayload, validator: InputValidator): Promise<ValidationTestResult> {
     const startTime = Date.now();
-    
+
     try {
       const validationResult = await validator.validate(payload.payload);
       const executionTime = Date.now() - startTime;
@@ -87,7 +87,7 @@ export class InputValidationTester {
         passed,
         sanitizedOutput: validationResult.sanitized,
         executionTime,
-        riskLevel
+        riskLevel,
       };
     } catch (error) {
       return {
@@ -96,7 +96,7 @@ export class InputValidationTester {
         passed: false,
         errorMessage: error instanceof Error ? error.message : String(error),
         executionTime: Date.now() - startTime,
-        riskLevel: 'high'
+        riskLevel: 'high',
       };
     }
   }
@@ -116,15 +116,15 @@ export class InputValidationTester {
           payload: '<script>alert("XSS")</script>',
           expectedResult: 'blocked',
           severity: 'high',
-          description: 'Basic XSS attempt using script tag'
+          description: 'Basic XSS attempt using script tag',
         },
         {
-          name: 'JavaScript URL',
+          name: 'Data URL Script',
           type: 'xss',
-          payload: 'javascript:alert("XSS")',
+          payload: 'data:text/html,<script>alert("XSS")</script>',
           expectedResult: 'blocked',
           severity: 'high',
-          description: 'XSS attempt using javascript: URL'
+          description: 'XSS attempt using data URL with script content',
         },
         {
           name: 'Event Handler',
@@ -132,7 +132,7 @@ export class InputValidationTester {
           payload: '<img src="x" onerror="alert(\'XSS\')">',
           expectedResult: 'blocked',
           severity: 'high',
-          description: 'XSS attempt using event handler'
+          description: 'XSS attempt using event handler',
         },
         {
           name: 'SVG XSS',
@@ -140,7 +140,7 @@ export class InputValidationTester {
           payload: '<svg onload="alert(\'XSS\')">',
           expectedResult: 'blocked',
           severity: 'high',
-          description: 'XSS attempt using SVG element'
+          description: 'XSS attempt using SVG element',
         },
         {
           name: 'Encoded XSS',
@@ -148,8 +148,8 @@ export class InputValidationTester {
           payload: '%3Cscript%3Ealert%28%22XSS%22%29%3C%2Fscript%3E',
           expectedResult: 'blocked',
           severity: 'medium',
-          description: 'URL-encoded XSS attempt'
-        }
+          description: 'URL-encoded XSS attempt',
+        },
       );
     }
 
@@ -162,7 +162,7 @@ export class InputValidationTester {
           payload: "' OR '1'='1",
           expectedResult: 'blocked',
           severity: 'critical',
-          description: 'Basic SQL injection attempt'
+          description: 'Basic SQL injection attempt',
         },
         {
           name: 'Union Select',
@@ -170,7 +170,7 @@ export class InputValidationTester {
           payload: "' UNION SELECT * FROM users --",
           expectedResult: 'blocked',
           severity: 'critical',
-          description: 'SQL injection using UNION SELECT'
+          description: 'SQL injection using UNION SELECT',
         },
         {
           name: 'Drop Table',
@@ -178,7 +178,7 @@ export class InputValidationTester {
           payload: "'; DROP TABLE users; --",
           expectedResult: 'blocked',
           severity: 'critical',
-          description: 'Destructive SQL injection attempt'
+          description: 'Destructive SQL injection attempt',
         },
         {
           name: 'Boolean Blind SQL',
@@ -186,7 +186,7 @@ export class InputValidationTester {
           payload: "1' AND (SELECT COUNT(*) FROM users) > 0 --",
           expectedResult: 'blocked',
           severity: 'high',
-          description: 'Boolean-based blind SQL injection'
+          description: 'Boolean-based blind SQL injection',
         },
         {
           name: 'Time-based SQL',
@@ -194,8 +194,8 @@ export class InputValidationTester {
           payload: "1'; WAITFOR DELAY '00:00:05' --",
           expectedResult: 'blocked',
           severity: 'high',
-          description: 'Time-based SQL injection'
-        }
+          description: 'Time-based SQL injection',
+        },
       );
     }
 
@@ -208,7 +208,7 @@ export class InputValidationTester {
           payload: '; rm -rf /',
           expectedResult: 'blocked',
           severity: 'critical',
-          description: 'Destructive command injection'
+          description: 'Destructive command injection',
         },
         {
           name: 'Pipe Command',
@@ -216,7 +216,7 @@ export class InputValidationTester {
           payload: '| cat /etc/passwd',
           expectedResult: 'blocked',
           severity: 'high',
-          description: 'Command injection using pipe'
+          description: 'Command injection using pipe',
         },
         {
           name: 'And Command',
@@ -224,7 +224,7 @@ export class InputValidationTester {
           payload: '&& whoami',
           expectedResult: 'blocked',
           severity: 'medium',
-          description: 'Command injection using AND operator'
+          description: 'Command injection using AND operator',
         },
         {
           name: 'Backtick Command',
@@ -232,7 +232,7 @@ export class InputValidationTester {
           payload: '`id`',
           expectedResult: 'blocked',
           severity: 'high',
-          description: 'Command injection using backticks'
+          description: 'Command injection using backticks',
         },
         {
           name: 'Subshell Command',
@@ -240,8 +240,8 @@ export class InputValidationTester {
           payload: '$(whoami)',
           expectedResult: 'blocked',
           severity: 'high',
-          description: 'Command injection using subshell'
-        }
+          description: 'Command injection using subshell',
+        },
       );
     }
 
@@ -254,7 +254,7 @@ export class InputValidationTester {
           payload: '../../../etc/passwd',
           expectedResult: 'blocked',
           severity: 'high',
-          description: 'Basic path traversal attempt'
+          description: 'Basic path traversal attempt',
         },
         {
           name: 'Windows Path Traversal',
@@ -262,7 +262,7 @@ export class InputValidationTester {
           payload: '..\\..\\..\\windows\\system32\\config\\sam',
           expectedResult: 'blocked',
           severity: 'high',
-          description: 'Windows path traversal attempt'
+          description: 'Windows path traversal attempt',
         },
         {
           name: 'Double Encoded Path',
@@ -270,7 +270,7 @@ export class InputValidationTester {
           payload: '....//....//....//etc/passwd',
           expectedResult: 'blocked',
           severity: 'medium',
-          description: 'Double-encoded path traversal'
+          description: 'Double-encoded path traversal',
         },
         {
           name: 'URL Encoded Path',
@@ -278,7 +278,7 @@ export class InputValidationTester {
           payload: '%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd',
           expectedResult: 'blocked',
           severity: 'medium',
-          description: 'URL-encoded path traversal'
+          description: 'URL-encoded path traversal',
         },
         {
           name: 'Null Byte Path',
@@ -286,8 +286,8 @@ export class InputValidationTester {
           payload: '../../../etc/passwd%00.jpg',
           expectedResult: 'blocked',
           severity: 'high',
-          description: 'Path traversal with null byte'
-        }
+          description: 'Path traversal with null byte',
+        },
       );
     }
 
@@ -300,7 +300,7 @@ export class InputValidationTester {
           payload: '<?php system($_GET["cmd"]); ?>',
           expectedResult: 'blocked',
           severity: 'critical',
-          description: 'PHP shell upload attempt'
+          description: 'PHP shell upload attempt',
         },
         {
           name: 'JSP Shell Upload',
@@ -308,7 +308,7 @@ export class InputValidationTester {
           payload: '<%@ page import="java.io.*" %><% Runtime.getRuntime().exec(request.getParameter("cmd")); %>',
           expectedResult: 'blocked',
           severity: 'critical',
-          description: 'JSP shell upload attempt'
+          description: 'JSP shell upload attempt',
         },
         {
           name: 'ASP Shell Upload',
@@ -316,7 +316,7 @@ export class InputValidationTester {
           payload: '<%eval request("cmd")%>',
           expectedResult: 'blocked',
           severity: 'critical',
-          description: 'ASP shell upload attempt'
+          description: 'ASP shell upload attempt',
         },
         {
           name: 'Executable Extension',
@@ -324,8 +324,8 @@ export class InputValidationTester {
           payload: 'malicious.exe',
           expectedResult: 'blocked',
           severity: 'high',
-          description: 'Executable file upload attempt'
-        }
+          description: 'Executable file upload attempt',
+        },
       );
     }
 
@@ -374,11 +374,11 @@ export class InputValidationTester {
    */
   applySanitizationRules(input: string): string {
     let sanitized = input;
-    
+
     for (const rule of this.config.sanitizationRules) {
       sanitized = sanitized.replace(rule.pattern, rule.replacement);
     }
-    
+
     return sanitized;
   }
 
@@ -389,7 +389,7 @@ export class InputValidationTester {
     const totalTests = results.length;
     const passedTests = results.filter(r => r.passed).length;
     const failedTests = results.filter(r => !r.passed).length;
-    
+
     const criticalRisks = results.filter(r => r.riskLevel === 'critical').length;
     const highRisks = results.filter(r => r.riskLevel === 'high').length;
     const mediumRisks = results.filter(r => r.riskLevel === 'medium').length;
@@ -403,17 +403,17 @@ export class InputValidationTester {
         passedTests,
         failedTests,
         passRate: (passedTests / totalTests) * 100,
-        averageExecutionTime
+        averageExecutionTime,
       },
       riskDistribution: {
         critical: criticalRisks,
         high: highRisks,
         medium: mediumRisks,
-        low: lowRisks
+        low: lowRisks,
       },
       testResults: results,
       recommendations: this.generateRecommendations(results),
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 

@@ -8,7 +8,7 @@ import {
   MockGeminiService,
   MockEmailService,
   MockDatabaseService,
-  mockServiceManager
+  mockServiceManager,
 } from '@/lib/testing';
 
 describe('Mock Service Integration', () => {
@@ -20,7 +20,7 @@ describe('Mock Service Integration', () => {
   beforeEach(() => {
     manager = MockServiceManager.getInstance();
     manager.cleanup();
-    
+
     geminiService = new MockGeminiService();
     emailService = new MockEmailService();
     databaseService = new MockDatabaseService();
@@ -59,7 +59,7 @@ describe('Mock Service Integration', () => {
       // Assert
       expect(verificationResult.allValid).toBe(true);
       expect(verificationResult.results).toHaveLength(3);
-      
+
       verificationResult.results.forEach(result => {
         expect(result.isValid).toBe(true);
         expect(result.errors).toHaveLength(0);
@@ -77,7 +77,7 @@ describe('Mock Service Integration', () => {
       await emailService.sendEmail({
         to: 'test@example.com',
         subject: 'Test',
-        text: 'Content'
+        text: 'Content',
       });
       await databaseService.create('users', { name: 'Test User' });
 
@@ -106,32 +106,32 @@ describe('Mock Service Integration', () => {
       const userData = {
         name: 'John Doe',
         email: 'john@example.com',
-        age: 30
+        age: 30,
       };
 
       // Act
       // 1. 创建用户记录
       const createdUser = await databaseService.create('users', userData);
-      
+
       // 2. 生成欢迎邮件内容
       const welcomeContent = await geminiService.generateContent(
-        `Generate a welcome email for user ${userData.name}`
+        `Generate a welcome email for user ${userData.name}`,
       );
-      
+
       // 3. 发送欢迎邮件
       const emailResult = await emailService.sendEmail({
         to: userData.email,
         subject: 'Welcome to our platform!',
-        html: `<p>${welcomeContent.content}</p>`
+        html: `<p>${welcomeContent.content}</p>`,
       });
 
       // Assert
       expect(createdUser._id).toBeTruthy();
       expect(createdUser.name).toBe(userData.name);
-      
+
       expect(welcomeContent.content).toBeTruthy();
       expect(welcomeContent.usage).toBeDefined();
-      
+
       expect(emailResult.success).toBe(true);
       expect(emailResult.messageId).toBeTruthy();
 
@@ -153,9 +153,9 @@ describe('Mock Service Integration', () => {
           title: 'JavaScript Basics',
           content: 'Learn the fundamentals of JavaScript programming',
           tags: ['javascript', 'programming', 'basics'],
-          difficulty: 'beginner'
+          difficulty: 'beginner',
         }),
-        usage: { promptTokens: 20, completionTokens: 50, totalTokens: 70 }
+        usage: { promptTokens: 20, completionTokens: 50, totalTokens: 70 },
       });
 
       const aiResult = await geminiService.generateContent(prompt);
@@ -165,14 +165,14 @@ describe('Mock Service Integration', () => {
       const savedCard = await databaseService.create('works', {
         ...cardData,
         authorId: 'user_1',
-        createdBy: 'ai'
+        createdBy: 'ai',
       });
 
       // 3. 发送通知邮件
       const notificationResult = await emailService.sendEmail({
         to: 'author@example.com',
         subject: 'New teaching card created',
-        text: `Your teaching card "${cardData.title}" has been created successfully.`
+        text: `Your teaching card "${cardData.title}" has been created successfully.`,
       });
 
       // Assert
@@ -204,7 +204,7 @@ describe('Mock Service Integration', () => {
 
       // Assert
       expect(verificationResult.allValid).toBe(false);
-      
+
       const emailResult = verificationResult.results.find(r => r.serviceName === 'EmailService');
       const geminiResult = verificationResult.results.find(r => r.serviceName === 'GeminiService');
       const dbResult = verificationResult.results.find(r => r.serviceName === 'DatabaseService');
@@ -217,7 +217,7 @@ describe('Mock Service Integration', () => {
     it('应该能够从服务失败中恢复', async () => {
       // Arrange
       geminiService.setFailureRate(1);
-      
+
       // 验证失败状态
       let verificationResult = await manager.verifyAllMocks();
       expect(verificationResult.allValid).toBe(false);
@@ -276,7 +276,7 @@ describe('Mock Service Integration', () => {
         new MockEmailService(),
         new MockDatabaseService(),
         new MockGeminiService(),
-        new MockEmailService()
+        new MockEmailService(),
       ];
 
       services.forEach((service, i) => {
@@ -292,7 +292,7 @@ describe('Mock Service Integration', () => {
       // Assert
       expect(verificationResult.allValid).toBe(true);
       expect(verificationResult.results).toHaveLength(5);
-      
+
       const verificationTime = endTime - startTime;
       expect(verificationTime).toBeLessThan(5000); // 应该在5秒内完成
     });
@@ -315,19 +315,19 @@ describe('Mock Service Integration', () => {
       const user = await databaseService.create('users', {
         _id: userId,
         email: userEmail,
-        name: 'Test User'
+        name: 'Test User',
       });
 
       // 2. 发送邮件
       const emailResult = await emailService.sendEmail({
         to: userEmail,
         subject: 'Account Created',
-        text: 'Your account has been created'
+        text: 'Your account has been created',
       });
 
       // 3. 生成个性化内容
       const aiContent = await geminiService.generateContent(
-        `Generate personalized content for user ${user.name}`
+        `Generate personalized content for user ${user.name}`,
       );
 
       // Assert
@@ -353,13 +353,13 @@ describe('Mock Service Integration', () => {
       // 创建用户但使用错误的邮件地址发送邮件
       await databaseService.create('users', {
         email: userEmail,
-        name: 'Test User'
+        name: 'Test User',
       });
 
       await emailService.sendEmail({
         to: 'wrong@example.com', // 错误的邮件地址
         subject: 'Test',
-        text: 'Content'
+        text: 'Content',
       });
 
       // Act

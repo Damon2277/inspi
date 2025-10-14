@@ -30,7 +30,8 @@ async function createPNGIcons() {
     // For simplicity, let's use a known working PNG
     // This is a 1x1 orange PNG in base64
     const orangePNG = Buffer.from(
-      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+
+        hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
       'base64'
     );
     

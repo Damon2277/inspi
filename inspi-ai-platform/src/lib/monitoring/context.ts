@@ -2,8 +2,8 @@
  * 监控上下文管理
  */
 
-import { sentry } from './sentry';
 import { MONITORING_TAGS } from './config';
+import { sentry } from './sentry';
 
 /**
  * 用户上下文接口
@@ -97,20 +97,20 @@ class MonitoringContextManager {
    */
   setUser(user: UserContext) {
     this.userContext = { ...this.userContext, ...user };
-    
+
     // 同步到Sentry
     sentry.setUser({
-      id: user.id,
+      id: (user.id || (user as any)._id),
       email: user.email,
-      username: user.username
+      username: user.username,
     });
 
     // 设置标签
     if (user.role) {
-      sentry.setTag(MONITORING_TAGS.USER_ID, user.id || 'anonymous');
+      sentry.setTag(MONITORING_TAGS.USER_ID, (user.id || (user as any)._id) || 'anonymous');
       sentry.setTag('user.role', user.role);
     }
-    
+
     if (user.subscription) {
       sentry.setTag('user.subscription', user.subscription);
     }
@@ -121,7 +121,7 @@ class MonitoringContextManager {
    */
   setRequest(request: RequestContext) {
     this.requestContext = { ...this.requestContext, ...request };
-    
+
     // 同步到Sentry
     sentry.setContext('request', {
       id: request.id,
@@ -130,22 +130,22 @@ class MonitoringContextManager {
       headers: this.sanitizeHeaders(request.headers),
       query: request.query,
       duration: request.duration,
-      statusCode: request.statusCode
+      statusCode: request.statusCode,
     });
 
     // 设置标签
     if (request.id) {
       sentry.setTag(MONITORING_TAGS.REQUEST_ID, request.id);
     }
-    
+
     if (request.method) {
       sentry.setTag(MONITORING_TAGS.METHOD, request.method);
     }
-    
+
     if (request.url) {
       sentry.setTag(MONITORING_TAGS.ENDPOINT, this.extractEndpoint(request.url));
     }
-    
+
     if (request.statusCode) {
       sentry.setTag(MONITORING_TAGS.STATUS_CODE, request.statusCode.toString());
     }
@@ -156,7 +156,7 @@ class MonitoringContextManager {
    */
   setDevice(device: DeviceContext) {
     this.deviceContext = { ...this.deviceContext, ...device };
-    
+
     // 同步到Sentry
     sentry.setContext('device', {
       type: device.type,
@@ -164,18 +164,18 @@ class MonitoringContextManager {
       browser: device.browser,
       version: device.version,
       viewport: device.viewport,
-      connection: device.connection
+      connection: device.connection,
     });
 
     // 设置标签
     if (device.os) {
       sentry.setTag(MONITORING_TAGS.OS, device.os);
     }
-    
+
     if (device.browser) {
       sentry.setTag(MONITORING_TAGS.BROWSER, device.browser);
     }
-    
+
     if (device.type) {
       sentry.setTag(MONITORING_TAGS.DEVICE, device.type);
     }
@@ -186,7 +186,7 @@ class MonitoringContextManager {
    */
   setApp(app: AppContext) {
     this.appContext = { ...this.appContext, ...app };
-    
+
     // 同步到Sentry
     sentry.setContext('app', {
       version: app.version,
@@ -195,18 +195,18 @@ class MonitoringContextManager {
       feature: app.feature,
       component: app.component,
       route: app.route,
-      action: app.action
+      action: app.action,
     });
 
     // 设置标签
     if (app.version) {
       sentry.setTag(MONITORING_TAGS.VERSION, app.version);
     }
-    
+
     if (app.environment) {
       sentry.setTag(MONITORING_TAGS.ENVIRONMENT, app.environment);
     }
-    
+
     if (app.feature) {
       sentry.setTag('app.feature', app.feature);
     }
@@ -217,7 +217,7 @@ class MonitoringContextManager {
    */
   setBusiness(business: BusinessContext) {
     this.businessContext = { ...this.businessContext, ...business };
-    
+
     // 同步到Sentry
     sentry.setContext('business', {
       workId: business.workId,
@@ -226,18 +226,18 @@ class MonitoringContextManager {
       experimentId: business.experimentId,
       feature: business.feature,
       action: business.action,
-      metadata: business.metadata
+      metadata: business.metadata,
     });
 
     // 设置标签
     if (business.workId) {
       sentry.setTag('business.workId', business.workId);
     }
-    
+
     if (business.sessionId) {
       sentry.setTag('business.sessionId', business.sessionId);
     }
-    
+
     if (business.feature) {
       sentry.setTag('business.feature', business.feature);
     }
@@ -252,7 +252,7 @@ class MonitoringContextManager {
       category: category || 'custom',
       level: level || 'info',
       data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -265,7 +265,7 @@ class MonitoringContextManager {
       request: this.requestContext,
       device: this.deviceContext,
       app: this.appContext,
-      business: this.businessContext
+      business: this.businessContext,
     };
   }
 
@@ -333,7 +333,7 @@ class MonitoringContextManager {
     // 获取视口信息
     device.viewport = {
       width: window.innerWidth,
-      height: window.innerHeight
+      height: window.innerHeight,
     };
 
     // 获取网络连接信息
@@ -343,7 +343,7 @@ class MonitoringContextManager {
         type: connection.type,
         effectiveType: connection.effectiveType,
         downlink: connection.downlink,
-        rtt: connection.rtt
+        rtt: connection.rtt,
       };
     }
 
@@ -402,7 +402,7 @@ export function useMonitoringContext() {
     getCurrentContext: monitoringContext.getCurrentContext.bind(monitoringContext),
     clearContext: monitoringContext.clearContext.bind(monitoringContext),
     clearUser: monitoringContext.clearUser.bind(monitoringContext),
-    autoSetDeviceContext: monitoringContext.autoSetDeviceContext.bind(monitoringContext)
+    autoSetDeviceContext: monitoringContext.autoSetDeviceContext.bind(monitoringContext),
   };
 }
 
@@ -414,7 +414,7 @@ export function initializeMonitoringContext() {
   monitoringContext.setApp({
     version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
     environment: process.env.NODE_ENV || 'development',
-    buildId: process.env.NEXT_PUBLIC_BUILD_ID
+    buildId: process.env.NEXT_PUBLIC_BUILD_ID,
   });
 
   // 在浏览器环境中自动设置设备上下文

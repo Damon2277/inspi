@@ -2,11 +2,11 @@
  * 内容验证器 - 统一的内容安全验证服务
  */
 
-import { ValidationResult, ValidationIssue, ContentFilterOptions } from './types';
-import { defaultSensitiveWordDetector } from './sensitiveWords';
-import { defaultXSSFilter } from './xssFilter';
 import { defaultAIContentFilter } from './aiContentFilter';
+import { defaultSensitiveWordDetector } from './sensitiveWords';
 import { defaultThirdPartyFilterManager } from './thirdPartyFilters';
+import { ValidationResult, ValidationIssue, ContentFilterOptions } from './types';
+import { defaultXSSFilter } from './xssFilter';
 
 export class ContentValidator {
   private options: Required<ContentFilterOptions>;
@@ -20,7 +20,7 @@ export class ContentValidator {
       enableAIFilter: false, // 默认关闭，需要明确启用
       enableThirdPartyFilter: false, // 默认关闭，需要明确启用
       customValidators: [],
-      ...options
+      ...options,
     };
   }
 
@@ -37,7 +37,7 @@ export class ContentValidator {
       issues.push({
         type: 'length_limit',
         message: `内容长度超出限制，最大允许${this.options.maxLength}字符`,
-        severity: 'error'
+        severity: 'error',
       });
       riskLevel = 'medium';
     }
@@ -50,7 +50,7 @@ export class ContentValidator {
     if (this.options.enableXssFilter) {
       const xssIssues = defaultXSSFilter.detect(content);
       issues.push(...xssIssues);
-      
+
       if (xssIssues.length > 0) {
         cleanContent = defaultXSSFilter.sanitize(cleanContent);
         riskLevel = 'high';
@@ -61,7 +61,7 @@ export class ContentValidator {
     if (this.options.enableSensitiveWordFilter) {
       const sensitiveIssues = defaultSensitiveWordDetector.detect(content);
       issues.push(...sensitiveIssues);
-      
+
       if (sensitiveIssues.length > 0) {
         cleanContent = defaultSensitiveWordDetector.filter(cleanContent);
         if (riskLevel === 'low') riskLevel = 'medium';
@@ -73,7 +73,7 @@ export class ContentValidator {
       try {
         const aiIssues = await defaultAIContentFilter.detect(content);
         issues.push(...aiIssues);
-        
+
         if (aiIssues.some(issue => issue.severity === 'error')) {
           riskLevel = 'high';
         } else if (aiIssues.length > 0 && riskLevel === 'low') {
@@ -89,7 +89,7 @@ export class ContentValidator {
       try {
         const thirdPartyIssues = await defaultThirdPartyFilterManager.detectAll(content);
         issues.push(...thirdPartyIssues);
-        
+
         if (thirdPartyIssues.some(issue => issue.severity === 'error')) {
           riskLevel = 'high';
         } else if (thirdPartyIssues.length > 0 && riskLevel === 'low') {
@@ -118,7 +118,7 @@ export class ContentValidator {
       isValid: !issues.some(issue => issue.severity === 'error'),
       cleanContent,
       issues,
-      riskLevel
+      riskLevel,
     };
   }
 
@@ -151,7 +151,7 @@ export class ContentValidator {
       issues.push({
         type: 'length_limit',
         message: `内容长度超出限制，最大允许${this.options.maxLength}字符`,
-        severity: 'error'
+        severity: 'error',
       });
       riskLevel = 'medium';
     }
@@ -164,7 +164,7 @@ export class ContentValidator {
     if (this.options.enableXssFilter) {
       const xssIssues = defaultXSSFilter.detect(content);
       issues.push(...xssIssues);
-      
+
       if (xssIssues.length > 0) {
         cleanContent = defaultXSSFilter.sanitize(cleanContent);
         riskLevel = 'high';
@@ -175,7 +175,7 @@ export class ContentValidator {
     if (this.options.enableSensitiveWordFilter) {
       const sensitiveIssues = defaultSensitiveWordDetector.detect(content);
       issues.push(...sensitiveIssues);
-      
+
       if (sensitiveIssues.length > 0) {
         cleanContent = defaultSensitiveWordDetector.filter(cleanContent);
         if (riskLevel === 'low') riskLevel = 'medium';
@@ -200,7 +200,7 @@ export class ContentValidator {
       isValid: !issues.some(issue => issue.severity === 'error'),
       cleanContent,
       issues,
-      riskLevel
+      riskLevel,
     };
   }
 
@@ -215,7 +215,7 @@ export class ContentValidator {
       issues.push({
         type: 'format_error',
         message: '内容不能为空',
-        severity: 'error'
+        severity: 'error',
       });
       return issues;
     }
@@ -223,12 +223,12 @@ export class ContentValidator {
     // 检查是否包含过多的特殊字符
     const specialCharCount = (content.match(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g) || []).length;
     const specialCharRatio = specialCharCount / content.length;
-    
+
     if (specialCharRatio > 0.3) {
       issues.push({
         type: 'format_error',
         message: '内容包含过多特殊字符',
-        severity: 'warning'
+        severity: 'warning',
       });
     }
 
@@ -238,7 +238,7 @@ export class ContentValidator {
       issues.push({
         type: 'format_error',
         message: '内容包含过多重复字符',
-        severity: 'warning'
+        severity: 'warning',
       });
     }
 
@@ -249,7 +249,7 @@ export class ContentValidator {
       issues.push({
         type: 'format_error',
         message: '内容包含过多链接',
-        severity: 'warning'
+        severity: 'warning',
       });
     }
 
@@ -263,7 +263,7 @@ export class ContentValidator {
     // 保留一些安全的标签
     const allowedTags = ['b', 'i', 'u', 'strong', 'em', 'br', 'p'];
     const tagRegex = /<\/?(\w+)[^>]*>/gi;
-    
+
     return content.replace(tagRegex, (match, tagName) => {
       if (allowedTags.includes(tagName.toLowerCase())) {
         return match;
@@ -300,9 +300,9 @@ export const VALIDATOR_PRESETS = {
     enableSensitiveWordFilter: true,
     enableHtmlFilter: true,
     enableAIFilter: true,
-    enableThirdPartyFilter: true
+    enableThirdPartyFilter: true,
   },
-  
+
   // 标准模式 - 用于一般用户内容
   STANDARD: {
     maxLength: 1000,
@@ -310,9 +310,9 @@ export const VALIDATOR_PRESETS = {
     enableSensitiveWordFilter: true,
     enableHtmlFilter: false,
     enableAIFilter: false,
-    enableThirdPartyFilter: false
+    enableThirdPartyFilter: false,
   },
-  
+
   // 宽松模式 - 用于管理员或特殊场景
   RELAXED: {
     maxLength: 2000,
@@ -320,7 +320,7 @@ export const VALIDATOR_PRESETS = {
     enableSensitiveWordFilter: false,
     enableHtmlFilter: false,
     enableAIFilter: false,
-    enableThirdPartyFilter: false
+    enableThirdPartyFilter: false,
   },
 
   // AI增强模式 - 使用AI辅助过滤
@@ -330,7 +330,7 @@ export const VALIDATOR_PRESETS = {
     enableSensitiveWordFilter: true,
     enableHtmlFilter: false,
     enableAIFilter: true,
-    enableThirdPartyFilter: false
+    enableThirdPartyFilter: false,
   },
 
   // 企业级模式 - 使用所有过滤手段
@@ -340,8 +340,8 @@ export const VALIDATOR_PRESETS = {
     enableSensitiveWordFilter: true,
     enableHtmlFilter: false,
     enableAIFilter: true,
-    enableThirdPartyFilter: true
-  }
+    enableThirdPartyFilter: true,
+  },
 };
 
 // 导出默认实例

@@ -3,8 +3,8 @@
  * 测试使用分析的数据准确性和一致性
  */
 
-import { QuotaManager, UserQuota } from '@/lib/quota/quotaManager';
 import { redis } from '@/lib/cache/redis';
+import { QuotaManager, UserQuota } from '@/lib/quota/quotaManager';
 
 // Mock dependencies
 jest.mock('@/lib/cache/redis');
@@ -18,7 +18,7 @@ describe('QuotaManager Data Accuracy Tests', () => {
     jest.clearAllMocks();
     quotaManager = new QuotaManager();
     mockRedis = redis as jest.Mocked<typeof redis>;
-    
+
     // Mock Redis methods
     mockRedis.get = jest.fn();
     mockRedis.set = jest.fn();
@@ -39,20 +39,20 @@ describe('QuotaManager Data Accuracy Tests', () => {
         { plan: 'pro', usage: 50, expected: 50 },
         { plan: 'pro', usage: 100, expected: 0 },
         { plan: 'super', usage: 500, expected: 500 },
-        { plan: 'super', usage: 1000, expected: 0 }
+        { plan: 'super', usage: 1000, expected: 0 },
       ] as const;
 
       // Act & Assert
       for (const testCase of testCases) {
         mockRedis.get.mockResolvedValue(testCase.usage.toString());
-        
+
         const quota = await quotaManager.checkQuota('test-user', testCase.plan);
-        
+
         expect(quota.remaining).toBe(testCase.expected);
         expect(quota.currentUsage).toBe(testCase.usage);
         expect(quota.dailyLimit).toBe(
-          testCase.plan === 'free' ? 10 : 
-          testCase.plan === 'pro' ? 100 : 1000
+          testCase.plan === 'free' ? 10 :
+          testCase.plan === 'pro' ? 100 : 1000,
         );
       }
     });
@@ -61,7 +61,7 @@ describe('QuotaManager Data Accuracy Tests', () => {
       // Arrange
       const userId = 'float-user';
       const plan = 'pro';
-      
+
       // Redis可能返回浮点数字符串
       mockRedis.get.mockResolvedValue('25.7');
 
@@ -77,7 +77,7 @@ describe('QuotaManager Data Accuracy Tests', () => {
       // Arrange
       const userId = 'scientific-user';
       const plan = 'super';
-      
+
       mockRedis.get.mockResolvedValue('1e2'); // 100的科学计数法
 
       // Act
@@ -92,7 +92,7 @@ describe('QuotaManager Data Accuracy Tests', () => {
       // Arrange
       const userId = 'leading-zero-user';
       const plan = 'free';
-      
+
       mockRedis.get.mockResolvedValue('007'); // 带前导零
 
       // Act
@@ -111,8 +111,8 @@ describe('QuotaManager Data Accuracy Tests', () => {
       const plan = 'pro';
       let currentUsage = 45;
 
-      mockRedis.get.mockImplementation(() => 
-        Promise.resolve(currentUsage.toString())
+      mockRedis.get.mockImplementation(() =>
+        Promise.resolve(currentUsage.toString()),
       );
 
       mockRedis.increment.mockImplementation(() => {
@@ -140,8 +140,8 @@ describe('QuotaManager Data Accuracy Tests', () => {
       const batchSize = 25;
       let currentUsage = 100;
 
-      mockRedis.get.mockImplementation(() => 
-        Promise.resolve(currentUsage.toString())
+      mockRedis.get.mockImplementation(() =>
+        Promise.resolve(currentUsage.toString()),
       );
 
       mockRedis.increment.mockImplementation(() => {
@@ -160,7 +160,7 @@ describe('QuotaManager Data Accuracy Tests', () => {
       expect(consumeResult).toBe(true);
       expect(afterQuota.currentUsage).toBe(125);
       expect(afterQuota.remaining).toBe(875);
-      
+
       // 验证变化量
       expect(afterQuota.currentUsage - beforeQuota.currentUsage).toBe(batchSize);
       expect(beforeQuota.remaining - afterQuota.remaining).toBe(batchSize);
@@ -195,7 +195,7 @@ describe('QuotaManager Data Accuracy Tests', () => {
       // Arrange
       const userId = 'history-user';
       const plan = 'pro';
-      
+
       // Mock 7天的精确数据
       const expectedHistory = [
         { date: '2024-01-01', usage: 15 },
@@ -204,7 +204,7 @@ describe('QuotaManager Data Accuracy Tests', () => {
         { date: '2024-01-04', usage: 42 },
         { date: '2024-01-05', usage: 19 },
         { date: '2024-01-06', usage: 31 },
-        { date: '2024-01-07', usage: 27 }
+        { date: '2024-01-07', usage: 27 },
       ];
 
       // Mock当前日期为2024-01-07
@@ -226,7 +226,7 @@ describe('QuotaManager Data Accuracy Tests', () => {
 
       // Assert
       expect(stats.history).toHaveLength(7);
-      
+
       stats.history.forEach((day, index) => {
         expect(day.date).toBe(expectedHistory[index].date);
         expect(day.usage).toBe(expectedHistory[index].usage);
@@ -258,7 +258,7 @@ describe('QuotaManager Data Accuracy Tests', () => {
         '2024-01-31': '7',  // 上月
         '2024-02-01': '4',  // 本月
         '2024-02-02': '6',  // 本月
-        '2024-02-03': '2'   // 今天
+        '2024-02-03': '2',   // 今天
       };
 
       mockRedis.get.mockImplementation((key) => {
@@ -275,16 +275,16 @@ describe('QuotaManager Data Accuracy Tests', () => {
 
       // Assert
       expect(stats.history).toHaveLength(7);
-      
+
       // 验证日期顺序和数据准确性
       const expectedDates = [
         '2024-01-28', '2024-01-29', '2024-01-30', '2024-01-31',
-        '2024-02-01', '2024-02-02', '2024-02-03'
+        '2024-02-01', '2024-02-02', '2024-02-03',
       ];
 
       stats.history.forEach((day, index) => {
         expect(day.date).toBe(expectedDates[index]);
-        expect(day.usage).toBe(parseInt(crossMonthData[expectedDates[index]]));
+        expect(day.usage).toBe(parseInt(crossMonthData[expectedDates[index]], 10));
       });
 
       jest.restoreAllMocks();
@@ -311,7 +311,7 @@ describe('QuotaManager Data Accuracy Tests', () => {
 
       // Assert
       expect(stats.history).toHaveLength(7);
-      
+
       // 应该包含2月29日的数据
       const feb29Data = stats.history.find(day => day.date === '2024-02-29');
       expect(feb29Data).toBeDefined();
@@ -348,7 +348,7 @@ describe('QuotaManager Data Accuracy Tests', () => {
       // Act & Assert
       for (const plan of plans) {
         const quota = await quotaManager.checkQuota(userId, plan);
-        
+
         expect(quota.currentUsage).toBe(0);
         expect(quota.remaining).toBe(quota.dailyLimit);
         expect(quota.currentUsage + quota.remaining).toBe(quota.dailyLimit);
@@ -380,18 +380,18 @@ describe('QuotaManager Data Accuracy Tests', () => {
         { usage: 10, limit: 10, expectedRemaining: 0 },
         { usage: 11, limit: 10, expectedRemaining: 0 },
         { usage: 50, limit: 100, expectedRemaining: 50 },
-        { usage: 999, limit: 1000, expectedRemaining: 1 }
+        { usage: 999, limit: 1000, expectedRemaining: 1 },
       ];
 
       // Act & Assert
       for (const testCase of testCases) {
         mockRedis.get.mockResolvedValue(testCase.usage.toString());
-        
+
         // 临时更新限制
         quotaManager.updateQuotaLimits({ free: testCase.limit });
-        
+
         const quota = await quotaManager.checkQuota('math-test-user', 'free');
-        
+
         expect(quota.currentUsage).toBe(testCase.usage);
         expect(quota.remaining).toBe(testCase.expectedRemaining);
         expect(quota.currentUsage + quota.remaining).toBeGreaterThanOrEqual(testCase.limit);
@@ -468,8 +468,8 @@ describe('QuotaManager Data Accuracy Tests', () => {
       expect(mockRedis.increment).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          ttl: 90 // 应该是90秒（1分30秒到午夜）
-        })
+          ttl: 90, // 应该是90秒（1分30秒到午夜）
+        }),
       );
 
       jest.restoreAllMocks();
@@ -568,7 +568,7 @@ describe('QuotaManager Data Accuracy Tests', () => {
       // 第二次调用应该返回正确的数据，不受第一次修改影响
       expect(quota2.currentUsage).toBe(7);
       expect(quota2.remaining).toBe(3);
-      
+
       // 验证对象是独立的
       expect(quota1).not.toBe(quota2);
     });

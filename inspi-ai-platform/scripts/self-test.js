@@ -306,7 +306,8 @@ const invitationTests = [
   {
     name: '反欺诈系统功能',
     test: () => {
-      const filePath = path.join(__dirname, '../src/lib/invitation/services/FraudDetectionService.ts');
+      const filePath = path.join(__dirname,
+        '../src/lib/invitation/services/FraudDetectionService.ts');
       const content = fs.readFileSync(filePath, 'utf8');
       
       if (!content.includes('FraudDetectionService')) {
@@ -324,7 +325,8 @@ const invitationTests = [
   {
     name: '通知系统功能',
     test: () => {
-      const filePath = path.join(__dirname, '../src/lib/invitation/services/NotificationService.ts');
+      const filePath = path.join(__dirname,
+        '../src/lib/invitation/services/NotificationService.ts');
       const content = fs.readFileSync(filePath, 'utf8');
       
       if (!content.includes('NotificationService')) {

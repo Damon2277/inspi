@@ -1,6 +1,7 @@
 'use client';
 
 import React, { ErrorInfo } from 'react';
+
 import { ErrorBoundary } from './ErrorBoundary';
 
 /**
@@ -89,7 +90,7 @@ const GlobalErrorFallback: React.FC<{
             >
               刷新页面
             </button>
-            
+
             <button
               onClick={() => window.location.href = '/'}
               className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
@@ -125,14 +126,14 @@ const GlobalErrorFallback: React.FC<{
 
 /**
  * 全局错误边界组件
- * 
+ *
  * 用于包裹整个应用的错误边界组件，捕获应用级别的错误，
  * 提供全局错误处理和友好的错误UI。
- * 
+ *
  * 使用场景：
  * - 在应用的根组件中使用，作为最后的错误防线
  * - 通常在_app.tsx或layout.tsx中包裹整个应用
- * 
+ *
  * @example
  * // 在应用根组件中使用
  * export default function App() {
@@ -150,7 +151,7 @@ export const GlobalErrorBoundary: React.FC<GlobalErrorBoundaryProps> = ({ childr
       level: 'global',
       componentStack: errorInfo.componentStack,
       errorBoundary: true,
-      critical: true
+      critical: true,
     });
 
     // 在生产环境中，可以发送错误报告到监控服务
@@ -175,14 +176,14 @@ export const GlobalErrorBoundary: React.FC<GlobalErrorBoundaryProps> = ({ childr
 
 /**
  * 页面级错误边界组件
- * 
+ *
  * 用于包裹单个页面组件的错误边界，捕获页面级别的错误，
  * 提供页面级错误处理和友好的错误UI，不影响应用其他部分。
- * 
+ *
  * 使用场景：
  * - 在页面组件中使用，隔离单个页面的错误
  * - 适用于路由级别的错误隔离
- * 
+ *
  * @example
  * // 在页面组件中使用
  * export default function ProductPage() {
@@ -199,7 +200,7 @@ export const PageErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ chi
       level: 'page',
       componentStack: errorInfo.componentStack,
       errorBoundary: true,
-      url: typeof window !== 'undefined' ? window.location.href : 'unknown'
+      url: typeof window !== 'undefined' ? window.location.href : 'unknown',
     });
   };
 
@@ -216,15 +217,15 @@ export const PageErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ chi
 
 /**
  * 组件级错误边界组件
- * 
+ *
  * 用于包裹单个UI组件的错误边界，捕获组件级别的错误，
  * 提供组件级错误处理和友好的错误UI，不影响页面其他部分。
- * 
+ *
  * 使用场景：
  * - 包裹复杂的UI组件，隔离组件内部错误
  * - 包裹第三方组件，防止其错误影响应用
  * - 包裹数据可视化或交互密集型组件
- * 
+ *
  * @example
  * // 在组件中使用
  * function Dashboard() {
@@ -239,7 +240,7 @@ export const PageErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ chi
  *   );
  * }
  */
-export const ComponentErrorBoundary: React.FC<{ 
+export const ComponentErrorBoundary: React.FC<{
   children: React.ReactNode;
   componentName?: string;
 }> = ({ children, componentName }) => {
@@ -248,7 +249,7 @@ export const ComponentErrorBoundary: React.FC<{
       level: 'component',
       componentName,
       componentStack: errorInfo.componentStack,
-      errorBoundary: true
+      errorBoundary: true,
     });
   };
 
@@ -265,14 +266,14 @@ export const ComponentErrorBoundary: React.FC<{
 
 /**
  * 错误边界提供者组件 - 为整个应用提供错误边界
- * 
+ *
  * 这是一个便捷的包装组件，用于在应用根部提供全局错误边界。
  * 它是GlobalErrorBoundary的别名，提供更语义化的API。
- * 
+ *
  * 使用场景：
  * - 在应用根组件中使用，作为Provider模式的一部分
  * - 与其他Provider组件一起使用
- * 
+ *
  * @example
  * // 在应用根组件中与其他Provider一起使用
  * export default function App({ Component, pageProps }) {

@@ -2,6 +2,7 @@
  * 数据库性能监控
  */
 import { EventEmitter } from 'events';
+
 import { logger } from '@/lib/logging/logger';
 
 /**
@@ -97,7 +98,7 @@ export const DEFAULT_ALERT_CONFIG: AlertConfig = {
   memoryThreshold: 85,
   diskThreshold: 90,
   errorRateThreshold: 5,
-  enabled: true
+  enabled: true,
 };
 
 /**
@@ -151,7 +152,7 @@ export class DatabaseMonitor extends EventEmitter {
     }
 
     this.isMonitoring = false;
-    
+
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = undefined;
@@ -182,10 +183,10 @@ export class DatabaseMonitor extends EventEmitter {
   private async gatherDatabaseMetrics(): Promise<DatabaseMetrics> {
     // 获取服务器状态
     const serverStatus = await this.db.admin().serverStatus();
-    
+
     // 获取数据库统计
     const dbStats = await this.db.stats();
-    
+
     // 获取集合指标
     const collections = await this.gatherCollectionMetrics();
 
@@ -195,29 +196,29 @@ export class DatabaseMonitor extends EventEmitter {
         available: serverStatus.connections?.available || 0,
         total: serverStatus.connections?.totalCreated || 0,
         created: serverStatus.connections?.totalCreated || 0,
-        destroyed: 0 // 需要计算
+        destroyed: 0, // 需要计算
       },
       operations: {
         queries: serverStatus.opcounters?.query || 0,
         inserts: serverStatus.opcounters?.insert || 0,
         updates: serverStatus.opcounters?.update || 0,
         deletes: serverStatus.opcounters?.delete || 0,
-        commands: serverStatus.opcounters?.command || 0
+        commands: serverStatus.opcounters?.command || 0,
       },
       performance: {
         avgQueryTime: 0, // 需要从慢查询日志计算
         slowQueries: this.slowQueries.length,
         failedQueries: 0, // 需要从错误日志获取
-        cacheHitRatio: this.calculateCacheHitRatio(serverStatus)
+        cacheHitRatio: this.calculateCacheHitRatio(serverStatus),
       },
       resources: {
         memoryUsage: serverStatus.mem?.resident || 0,
         diskUsage: dbStats.dataSize || 0,
         cpuUsage: 0, // 需要从系统指标获取
-        networkIO: serverStatus.network?.bytesIn + serverStatus.network?.bytesOut || 0
+        networkIO: serverStatus.network?.bytesIn + serverStatus.network?.bytesOut || 0,
       },
       collections,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     return metrics;
@@ -228,17 +229,17 @@ export class DatabaseMonitor extends EventEmitter {
    */
   private async gatherCollectionMetrics(): Promise<CollectionMetrics[]> {
     const collections: CollectionMetrics[] = [];
-    
+
     try {
       const collectionNames = await this.db.listCollections().toArray();
-      
+
       for (const collInfo of collectionNames) {
         const collName = collInfo.name;
-        
+
         try {
           const collection = this.db.collection(collName);
           const stats = await collection.stats();
-          
+
           const metrics: CollectionMetrics = {
             name: collName,
             documentCount: stats.count || 0,
@@ -249,26 +250,26 @@ export class DatabaseMonitor extends EventEmitter {
               reads: 0, // 需要从操作日志获取
               writes: 0,
               updates: 0,
-              deletes: 0
+              deletes: 0,
             },
             performance: {
               avgReadTime: 0, // 需要从性能日志计算
               avgWriteTime: 0,
-              slowOperations: 0
-            }
+              slowOperations: 0,
+            },
           };
-          
+
           collections.push(metrics);
         } catch (error) {
           logger.warn(`Failed to get stats for collection: ${collName}`, {
-            error: error instanceof Error ? error.message : String(error)
+            error: error instanceof Error ? error.message : String(error),
           });
         }
       }
     } catch (error) {
       logger.error('Failed to gather collection metrics', error instanceof Error ? error : new Error(String(error)));
     }
-    
+
     return collections;
   }
 
@@ -294,7 +295,7 @@ export class DatabaseMonitor extends EventEmitter {
    */
   private recordMetrics(metrics: DatabaseMetrics): void {
     this.metrics.push(metrics);
-    
+
     // 限制历史记录大小
     if (this.metrics.length > this.maxHistorySize) {
       this.metrics.shift();
@@ -333,9 +334,9 @@ export class DatabaseMonitor extends EventEmitter {
         type: 'performance',
         alerts,
         metrics,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
-      
+
       logger.warn('Database performance alerts', { alerts });
     }
   }
@@ -345,7 +346,7 @@ export class DatabaseMonitor extends EventEmitter {
    */
   recordSlowQuery(record: SlowQueryRecord): void {
     this.slowQueries.push(record);
-    
+
     // 限制慢查询记录大小
     if (this.slowQueries.length > this.maxSlowQuerySize) {
       this.slowQueries.shift();
@@ -354,12 +355,12 @@ export class DatabaseMonitor extends EventEmitter {
     // 发送慢查询告警
     if (record.executionTime > this.config.slowQueryThreshold) {
       this.emit('slowQuery', record);
-      
+
       logger.warn('Slow query detected', {
         collection: record.collection,
         operation: record.operation,
         executionTime: record.executionTime,
-        query: JSON.stringify(record.query)
+        query: JSON.stringify(record.query),
       });
     }
   }
@@ -403,10 +404,10 @@ export class DatabaseMonitor extends EventEmitter {
     memoryUtilization: number;
   } {
     let relevantMetrics = this.metrics;
-    
+
     if (timeRange) {
       relevantMetrics = this.metrics.filter(
-        m => m.timestamp >= timeRange.start && m.timestamp <= timeRange.end
+        m => m.timestamp >= timeRange.start && m.timestamp <= timeRange.end,
       );
     }
 
@@ -417,7 +418,7 @@ export class DatabaseMonitor extends EventEmitter {
         slowQueryRate: 0,
         errorRate: 0,
         connectionUtilization: 0,
-        memoryUtilization: 0
+        memoryUtilization: 0,
       };
     }
 
@@ -426,7 +427,7 @@ export class DatabaseMonitor extends EventEmitter {
 
     const totalQueries = latest.operations.queries - earliest.operations.queries;
     const slowQueries = this.slowQueries.filter(
-      q => !timeRange || (q.timestamp >= timeRange.start && q.timestamp <= timeRange.end)
+      q => !timeRange || (q.timestamp >= timeRange.start && q.timestamp <= timeRange.end),
     ).length;
 
     return {
@@ -435,7 +436,7 @@ export class DatabaseMonitor extends EventEmitter {
       slowQueryRate: totalQueries > 0 ? (slowQueries / totalQueries) * 100 : 0,
       errorRate: latest.performance.failedQueries,
       connectionUtilization: (latest.connections.active / latest.connections.available) * 100,
-      memoryUtilization: latest.resources.memoryUsage
+      memoryUtilization: latest.resources.memoryUsage,
     };
   }
 
@@ -456,11 +457,11 @@ export class DatabaseMonitor extends EventEmitter {
       summary: {
         ...stats,
         reportPeriod: timeRange || { start: this.metrics[0]?.timestamp, end: new Date() },
-        totalCollections: this.getCurrentMetrics()?.collections.length || 0
+        totalCollections: this.getCurrentMetrics()?.collections.length || 0,
       },
       slowQueries,
       recommendations,
-      charts: this.generateChartData(timeRange)
+      charts: this.generateChartData(timeRange),
     };
   }
 
@@ -469,7 +470,7 @@ export class DatabaseMonitor extends EventEmitter {
    */
   private generateRecommendations(
     stats: any,
-    slowQueries: SlowQueryRecord[]
+    slowQueries: SlowQueryRecord[],
   ): string[] {
     const recommendations: string[] = [];
 
@@ -502,10 +503,10 @@ export class DatabaseMonitor extends EventEmitter {
    */
   private generateChartData(timeRange?: { start: Date; end: Date }): any[] {
     let relevantMetrics = this.metrics;
-    
+
     if (timeRange) {
       relevantMetrics = this.metrics.filter(
-        m => m.timestamp >= timeRange.start && m.timestamp <= timeRange.end
+        m => m.timestamp >= timeRange.start && m.timestamp <= timeRange.end,
       );
     }
 
@@ -516,8 +517,8 @@ export class DatabaseMonitor extends EventEmitter {
         data: relevantMetrics.map(m => ({
           timestamp: m.timestamp,
           avgQueryTime: m.performance.avgQueryTime,
-          slowQueries: m.performance.slowQueries
-        }))
+          slowQueries: m.performance.slowQueries,
+        })),
       },
       {
         type: 'line',
@@ -525,8 +526,8 @@ export class DatabaseMonitor extends EventEmitter {
         data: relevantMetrics.map(m => ({
           timestamp: m.timestamp,
           active: m.connections.active,
-          available: m.connections.available
-        }))
+          available: m.connections.available,
+        })),
       },
       {
         type: 'line',
@@ -534,9 +535,9 @@ export class DatabaseMonitor extends EventEmitter {
         data: relevantMetrics.map(m => ({
           timestamp: m.timestamp,
           memory: m.resources.memoryUsage,
-          disk: m.resources.diskUsage
-        }))
-      }
+          disk: m.resources.diskUsage,
+        })),
+      },
     ];
   }
 
@@ -572,7 +573,7 @@ export class DatabaseMonitor extends EventEmitter {
       metricsCount: this.metrics.length,
       slowQueriesCount: this.slowQueries.length,
       lastCollection: this.metrics[this.metrics.length - 1]?.timestamp,
-      config: this.config
+      config: this.config,
     };
   }
 }
@@ -591,7 +592,7 @@ export class DatabaseMonitorUtils {
     executionTime: number,
     documentsExamined: number = 0,
     documentsReturned: number = 0,
-    indexUsed: boolean = false
+    indexUsed: boolean = false,
   ): SlowQueryRecord {
     return {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -603,7 +604,7 @@ export class DatabaseMonitorUtils {
       documentsReturned,
       indexUsed,
       timestamp: new Date(),
-      stackTrace: new Error().stack
+      stackTrace: new Error().stack,
     };
   }
 
@@ -641,7 +642,7 @@ export class DatabaseMonitorUtils {
     // 检查慢查询
     if (metrics.performance.slowQueries > 20) {
       issues.push(`慢查询过多: ${metrics.performance.slowQueries}`);
-      status = status === 'critical' ? 'critical' : 'warning';
+      status = 'warning';
     }
 
     // 检查内存使用

@@ -4,7 +4,8 @@
  */
 
 import { renderHook } from '@testing-library/react';
-import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
+
+import { usePerformanceMonitor } from '@/shared/hooks/usePerformanceMonitor';
 
 // Mock console methods
 const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
@@ -31,7 +32,7 @@ class MockPerformanceObserver {
   // 模拟触发性能条目
   triggerEntries(entries: any[]) {
     const mockList = {
-      getEntries: () => entries
+      getEntries: () => entries,
     };
     this.callback(mockList);
   }
@@ -80,7 +81,7 @@ describe('usePerformanceMonitor Hook Tests', () => {
       renderHook(() => usePerformanceMonitor());
 
       expect(mockObserve).toHaveBeenCalledWith({
-        entryTypes: ['paint', 'largest-contentful-paint', 'first-input', 'layout-shift']
+        entryTypes: ['paint', 'largest-contentful-paint', 'first-input', 'layout-shift'],
       });
     });
 
@@ -103,7 +104,7 @@ describe('usePerformanceMonitor Hook Tests', () => {
       const fcpEntry = {
         entryType: 'paint',
         name: 'first-contentful-paint',
-        startTime: 1500.5
+        startTime: 1500.5,
       };
 
       // 触发FCP条目
@@ -112,8 +113,8 @@ describe('usePerformanceMonitor Hook Tests', () => {
       expect(mockConsoleLog).toHaveBeenCalledWith(
         'Performance Metrics:',
         expect.objectContaining({
-          FCP: 1500.5
-        })
+          FCP: 1500.5,
+        }),
       );
     });
 
@@ -122,7 +123,7 @@ describe('usePerformanceMonitor Hook Tests', () => {
 
       const lcpEntry = {
         entryType: 'largest-contentful-paint',
-        startTime: 2500.8
+        startTime: 2500.8,
       };
 
       mockObserverInstances[0].triggerEntries([lcpEntry]);
@@ -130,8 +131,8 @@ describe('usePerformanceMonitor Hook Tests', () => {
       expect(mockConsoleLog).toHaveBeenCalledWith(
         'Performance Metrics:',
         expect.objectContaining({
-          LCP: 2500.8
-        })
+          LCP: 2500.8,
+        }),
       );
     });
 
@@ -141,7 +142,7 @@ describe('usePerformanceMonitor Hook Tests', () => {
       const fidEntry = {
         entryType: 'first-input',
         startTime: 100.2,
-        processingStart: 108.7
+        processingStart: 108.7,
       };
 
       mockObserverInstances[0].triggerEntries([fidEntry]);
@@ -149,8 +150,8 @@ describe('usePerformanceMonitor Hook Tests', () => {
       expect(mockConsoleLog).toHaveBeenCalledWith(
         'Performance Metrics:',
         expect.objectContaining({
-          FID: 8.5 // processingStart - startTime
-        })
+          FID: 8.5, // processingStart - startTime
+        }),
       );
     });
 
@@ -161,18 +162,18 @@ describe('usePerformanceMonitor Hook Tests', () => {
         {
           entryType: 'layout-shift',
           value: 0.1,
-          hadRecentInput: false
+          hadRecentInput: false,
         },
         {
           entryType: 'layout-shift',
           value: 0.05,
-          hadRecentInput: false
+          hadRecentInput: false,
         },
         {
           entryType: 'layout-shift',
           value: 0.2,
-          hadRecentInput: true // 应该被忽略
-        }
+          hadRecentInput: true, // 应该被忽略
+        },
       ];
 
       mockObserverInstances[0].triggerEntries(clsEntries);
@@ -180,8 +181,8 @@ describe('usePerformanceMonitor Hook Tests', () => {
       expect(mockConsoleLog).toHaveBeenCalledWith(
         'Performance Metrics:',
         expect.objectContaining({
-          CLS: 0.15 // 0.1 + 0.05，忽略有用户输入的
-        })
+          CLS: 0.15, // 0.1 + 0.05，忽略有用户输入的
+        }),
       );
     });
 
@@ -191,7 +192,7 @@ describe('usePerformanceMonitor Hook Tests', () => {
       const clsEntry = {
         entryType: 'layout-shift',
         value: 0.3,
-        hadRecentInput: true
+        hadRecentInput: true,
       };
 
       mockObserverInstances[0].triggerEntries([clsEntry]);
@@ -207,13 +208,13 @@ describe('usePerformanceMonitor Hook Tests', () => {
         {
           entryType: 'paint',
           name: 'first-paint', // 不是FCP
-          startTime: 1200.3
+          startTime: 1200.3,
         },
         {
           entryType: 'paint',
           name: 'first-contentful-paint',
-          startTime: 1500.5
-        }
+          startTime: 1500.5,
+        },
       ];
 
       mockObserverInstances[0].triggerEntries(paintEntries);
@@ -221,16 +222,16 @@ describe('usePerformanceMonitor Hook Tests', () => {
       expect(mockConsoleLog).toHaveBeenCalledWith(
         'Performance Metrics:',
         expect.objectContaining({
-          FCP: 1500.5
-        })
+          FCP: 1500.5,
+        }),
       );
 
       // 不应该包含first-paint
       expect(mockConsoleLog).not.toHaveBeenCalledWith(
         'Performance Metrics:',
         expect.objectContaining({
-          FP: expect.any(Number)
-        })
+          FP: expect.any(Number),
+        }),
       );
     });
   });
@@ -243,22 +244,22 @@ describe('usePerformanceMonitor Hook Tests', () => {
         {
           entryType: 'paint',
           name: 'first-contentful-paint',
-          startTime: 1500.5
+          startTime: 1500.5,
         },
         {
           entryType: 'largest-contentful-paint',
-          startTime: 2500.8
+          startTime: 2500.8,
         },
         {
           entryType: 'first-input',
           startTime: 100.2,
-          processingStart: 108.7
+          processingStart: 108.7,
         },
         {
           entryType: 'layout-shift',
           value: 0.1,
-          hadRecentInput: false
-        }
+          hadRecentInput: false,
+        },
       ];
 
       mockObserverInstances[0].triggerEntries(mixedEntries);
@@ -269,8 +270,8 @@ describe('usePerformanceMonitor Hook Tests', () => {
           FCP: 1500.5,
           LCP: 2500.8,
           FID: 8.5,
-          CLS: 0.1
-        })
+          CLS: 0.1,
+        }),
       );
     });
 
@@ -282,8 +283,8 @@ describe('usePerformanceMonitor Hook Tests', () => {
         {
           entryType: 'layout-shift',
           value: 0.1,
-          hadRecentInput: false
-        }
+          hadRecentInput: false,
+        },
       ]);
 
       // 第二批CLS条目
@@ -291,18 +292,18 @@ describe('usePerformanceMonitor Hook Tests', () => {
         {
           entryType: 'layout-shift',
           value: 0.05,
-          hadRecentInput: false
-        }
+          hadRecentInput: false,
+        },
       ]);
 
       expect(mockConsoleLog).toHaveBeenCalledTimes(2);
       expect(mockConsoleLog).toHaveBeenNthCalledWith(1,
         'Performance Metrics:',
-        expect.objectContaining({ CLS: 0.1 })
+        expect.objectContaining({ CLS: 0.1 }),
       );
       expect(mockConsoleLog).toHaveBeenNthCalledWith(2,
         'Performance Metrics:',
-        expect.objectContaining({ CLS: 0.05 })
+        expect.objectContaining({ CLS: 0.05 }),
       );
     });
   });
@@ -318,7 +319,7 @@ describe('usePerformanceMonitor Hook Tests', () => {
 
       expect(mockConsoleWarn).toHaveBeenCalledWith(
         'Performance Observer not fully supported:',
-        expect.any(Error)
+        expect.any(Error),
       );
     });
 
@@ -332,7 +333,7 @@ describe('usePerformanceMonitor Hook Tests', () => {
 
       expect(mockConsoleWarn).toHaveBeenCalledWith(
         'Performance Observer not fully supported:',
-        expect.any(Error)
+        expect.any(Error),
       );
     });
 
@@ -351,18 +352,18 @@ describe('usePerformanceMonitor Hook Tests', () => {
       const invalidEntries = [
         {
           entryType: 'unknown-type',
-          startTime: 1000
+          startTime: 1000,
         },
         {
           entryType: 'paint',
           name: 'unknown-paint',
-          startTime: 1500
+          startTime: 1500,
         },
         {
           entryType: 'first-input',
-          startTime: 100
+          startTime: 100,
           // 缺少processingStart
-        }
+        },
       ];
 
       mockObserverInstances[0].triggerEntries(invalidEntries);
@@ -379,7 +380,7 @@ describe('usePerformanceMonitor Hook Tests', () => {
       const goodFcpEntry = {
         entryType: 'paint',
         name: 'first-contentful-paint',
-        startTime: 1200 // < 1800ms，良好
+        startTime: 1200, // < 1800ms，良好
       };
 
       mockObserverInstances[0].triggerEntries([goodFcpEntry]);
@@ -387,8 +388,8 @@ describe('usePerformanceMonitor Hook Tests', () => {
       expect(mockConsoleLog).toHaveBeenCalledWith(
         'Performance Metrics:',
         expect.objectContaining({
-          FCP: 1200
-        })
+          FCP: 1200,
+        }),
       );
     });
 
@@ -397,7 +398,7 @@ describe('usePerformanceMonitor Hook Tests', () => {
 
       const poorLcpEntry = {
         entryType: 'largest-contentful-paint',
-        startTime: 3000 // > 2500ms，需要改进
+        startTime: 3000, // > 2500ms，需要改进
       };
 
       mockObserverInstances[0].triggerEntries([poorLcpEntry]);
@@ -405,8 +406,8 @@ describe('usePerformanceMonitor Hook Tests', () => {
       expect(mockConsoleLog).toHaveBeenCalledWith(
         'Performance Metrics:',
         expect.objectContaining({
-          LCP: 3000
-        })
+          LCP: 3000,
+        }),
       );
     });
 
@@ -416,7 +417,7 @@ describe('usePerformanceMonitor Hook Tests', () => {
       const goodFidEntry = {
         entryType: 'first-input',
         startTime: 100,
-        processingStart: 150 // 50ms < 100ms，良好
+        processingStart: 150, // 50ms < 100ms，良好
       };
 
       mockObserverInstances[0].triggerEntries([goodFidEntry]);
@@ -424,8 +425,8 @@ describe('usePerformanceMonitor Hook Tests', () => {
       expect(mockConsoleLog).toHaveBeenCalledWith(
         'Performance Metrics:',
         expect.objectContaining({
-          FID: 50
-        })
+          FID: 50,
+        }),
       );
     });
 
@@ -435,7 +436,7 @@ describe('usePerformanceMonitor Hook Tests', () => {
       const poorClsEntry = {
         entryType: 'layout-shift',
         value: 0.25, // > 0.1，需要改进
-        hadRecentInput: false
+        hadRecentInput: false,
       };
 
       mockObserverInstances[0].triggerEntries([poorClsEntry]);
@@ -443,8 +444,8 @@ describe('usePerformanceMonitor Hook Tests', () => {
       expect(mockConsoleLog).toHaveBeenCalledWith(
         'Performance Metrics:',
         expect.objectContaining({
-          CLS: 0.25
-        })
+          CLS: 0.25,
+        }),
       );
     });
   });
@@ -491,31 +492,31 @@ describe('usePerformanceMonitor Hook Tests', () => {
         {
           entryType: 'paint',
           name: 'first-contentful-paint',
-          startTime: 1234.5
+          startTime: 1234.5,
         },
         // LCP - 最大内容绘制
         {
           entryType: 'largest-contentful-paint',
-          startTime: 2456.7
+          startTime: 2456.7,
         },
         // 用户交互
         {
           entryType: 'first-input',
           startTime: 3000.1,
-          processingStart: 3012.3
+          processingStart: 3012.3,
         },
         // 布局偏移
         {
           entryType: 'layout-shift',
           value: 0.05,
-          hadRecentInput: false
+          hadRecentInput: false,
         },
         // 另一个布局偏移
         {
           entryType: 'layout-shift',
           value: 0.03,
-          hadRecentInput: false
-        }
+          hadRecentInput: false,
+        },
       ];
 
       mockObserverInstances[0].triggerEntries(realWorldEntries);
@@ -526,8 +527,8 @@ describe('usePerformanceMonitor Hook Tests', () => {
           FCP: 1234.5,
           LCP: 2456.7,
           FID: 12.2, // 3012.3 - 3000.1
-          CLS: 0.08  // 0.05 + 0.03
-        }
+          CLS: 0.08,  // 0.05 + 0.03
+        },
       );
     });
 
@@ -539,26 +540,26 @@ describe('usePerformanceMonitor Hook Tests', () => {
         {
           entryType: 'paint',
           name: 'first-contentful-paint',
-          startTime: 1500
-        }
+          startTime: 1500,
+        },
       ]);
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
         'Performance Metrics:',
-        expect.objectContaining({ FCP: 1500 })
+        expect.objectContaining({ FCP: 1500 }),
       );
 
       // 模拟路由变化后的新性能指标
       mockObserverInstances[0].triggerEntries([
         {
           entryType: 'largest-contentful-paint',
-          startTime: 800 // 路由变化后更快
-        }
+          startTime: 800, // 路由变化后更快
+        },
       ]);
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
         'Performance Metrics:',
-        expect.objectContaining({ LCP: 800 })
+        expect.objectContaining({ LCP: 800 }),
       );
     });
   });
@@ -593,7 +594,7 @@ describe('usePerformanceMonitor Hook Tests', () => {
 
       expect(mockConsoleWarn).toHaveBeenCalledWith(
         'Performance Observer not fully supported:',
-        expect.any(Error)
+        expect.any(Error),
       );
     });
   });

@@ -21,7 +21,7 @@ interface ChartData {
 const ContributionChart: React.FC<ContributionChartProps> = ({
   userId,
   className = '',
-  period = 'weekly'
+  period = 'weekly',
 }) => {
   const [data, setData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,14 +37,14 @@ const ContributionChart: React.FC<ContributionChartProps> = ({
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      
+
       const points = Math.floor(Math.random() * 50) + 10;
       cumulative += points;
-      
+
       mockData.push({
         date: date.toISOString().split('T')[0],
         points,
-        cumulative
+        cumulative,
       });
     }
 
@@ -60,10 +60,10 @@ const ContributionChart: React.FC<ContributionChartProps> = ({
         // TODO: 实际的API调用
         // const response = await fetch(`/api/contribution/trends?userId=${userId}&period=${period}`);
         // const result = await response.json();
-        
+
         // 模拟API延迟
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         const mockData = generateMockData();
         setData(mockData);
       } catch (err) {
@@ -101,7 +101,7 @@ const ContributionChart: React.FC<ContributionChartProps> = ({
     // 绘制背景网格
     ctx.strokeStyle = '#f0f0f0';
     ctx.lineWidth = 1;
-    
+
     // 垂直网格线
     for (let i = 0; i <= data.length; i++) {
       const x = padding + (i * chartWidth) / data.length;

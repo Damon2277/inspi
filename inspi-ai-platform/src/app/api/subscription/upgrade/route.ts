@@ -1,117 +1,163 @@
 /**
- * 订阅升级API
+ * 订阅升级API路由
+ * 处理订阅升级和降级请求
  */
-
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth/jwt';
-import { SubscriptionService } from '@/lib/services/subscriptionService';
-import connectDB from '@/lib/mongodb';
-import { SubscriptionPlan, PaymentMethod, SubscriptionError } from '@/types/subscription';
+import { getServerSession } from 'next-auth';
 
-interface UpgradeRequest {
-  plan: SubscriptionPlan;
-  billingCycle?: 'monthly' | 'yearly';
-  paymentMethod?: PaymentMethod;
-}
+import { authOptions } from '@/core/auth/auth-service';
+import { subscriptionManager } from '@/core/subscription/subscription-manager';
+import { upgradeRecommendationEngine } from '@/core/subscription/upgrade-recommendation';
+import { logger } from '@/shared/utils/logger';
 
+/**
+ * POST /api/subscription/upgrade
+ * 升级订阅
+ */
 export async function POST(request: NextRequest) {
   try {
-    await connectDB();
-
-    // 验证用户身份
-    const token = request.cookies.get('token')?.value || 
-                  request.headers.get('authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+        { error: '未授权访问' },
+        { status: 401 },
       );
     }
 
-    const payload = verifyToken(token) as any;
-    if (!payload || !payload.userId) {
+    const body = await request.json();
+    const { subscriptionId, newPlanId, effectiveDate = 'immediate', prorationMode = 'immediate' } = body;
+
+    // 验证请求参数
+    if (!subscriptionId) {
       return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
+        { error: '订阅ID不能为空' },
+        { status: 400 },
       );
     }
 
-    const userId = payload.userId;
-
-    // 解析请求体
-    const body: UpgradeRequest = await request.json();
-    const { plan, billingCycle = 'monthly', paymentMethod = 'wechat' } = body;
-
-    // 验证计划类型
-    if (!['free', 'pro', 'super'].includes(plan)) {
+    if (!newPlanId) {
       return NextResponse.json(
-        { error: 'Invalid subscription plan' },
-        { status: 400 }
+        { error: '新套餐ID不能为空' },
+        { status: 400 },
       );
     }
 
-    // 验证计费周期
-    if (!['monthly', 'yearly'].includes(billingCycle)) {
+    if (!['immediate', 'next_cycle'].includes(effectiveDate)) {
       return NextResponse.json(
-        { error: 'Invalid billing cycle' },
-        { status: 400 }
+        { error: '无效的生效时间' },
+        { status: 400 },
       );
     }
 
-    // 创建或升级订阅
-    const subscription = await SubscriptionService.createSubscription(
-      userId,
-      plan,
-      billingCycle,
-      paymentMethod
-    );
-
-    // 获取更新后的使用情况
-    const todayUsage = await SubscriptionService.getTodayUsage(userId);
-
-    const responseData = {
-      success: true,
-      message: `成功${plan === 'free' ? '切换到' : '升级到'}${plan.toUpperCase()}计划`,
-      subscription: {
-        id: subscription._id,
-        plan: subscription.plan,
-        status: subscription.status,
-        startDate: subscription.startDate,
-        endDate: subscription.endDate,
-        autoRenew: subscription.autoRenew,
-        paymentMethod: subscription.paymentMethod
-      },
-      usage: {
-        date: todayUsage.date,
-        generations: {
-          current: todayUsage.generations,
-          limit: todayUsage.limits.maxGenerations,
-          remaining: Math.max(0, todayUsage.limits.maxGenerations - todayUsage.generations)
-        },
-        reuses: {
-          current: todayUsage.reuses,
-          limit: todayUsage.limits.maxReuses,
-          remaining: Math.max(0, todayUsage.limits.maxReuses - todayUsage.reuses)
-        }
-      }
+    // 升级订阅
+    const upgradeRequest = {
+      subscriptionId,
+      newPlanId,
+      effectiveDate,
+      prorationMode,
     };
 
-    return NextResponse.json(responseData);
+    const result = await subscriptionManager.upgradeSubscription(upgradeRequest);
 
+    logger.info('Subscription upgraded', {
+      subscriptionId,
+      newPlanId,
+      userId: session.user.email,
+      prorationAmount: result.prorationAmount,
+    });
+
+    return NextResponse.json({
+      success: true,
+      subscription: result.subscription,
+      prorationAmount: result.prorationAmount,
+      paymentRequired: result.paymentRequired,
+      paymentInfo: result.paymentInfo,
+    });
   } catch (error) {
-    console.error('Subscription upgrade error:', error);
+    logger.error('Failed to upgrade subscription', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
 
-    if (error instanceof SubscriptionError) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : '升级订阅失败',
+      },
+      { status: 500 },
+    );
+  }
+}
+
+/**
+ * GET /api/subscription/upgrade/recommendation
+ * 获取升级推荐
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
       return NextResponse.json(
-        { error: error.message, code: error.code },
-        { status: 400 }
+        { error: '未授权访问' },
+        { status: 401 },
       );
     }
 
+    const { searchParams } = new URL(request.url);
+    const includePrompt = searchParams.get('includePrompt') === 'true';
+    const currentAction = searchParams.get('currentAction');
+    const blockedByQuota = searchParams.get('blockedByQuota') === 'true';
+
+    // 构建上下文
+    const context = {
+      sessionContext: currentAction ? {
+        currentAction,
+        blockedByQuota,
+      } : undefined,
+    };
+
+    // 生成升级推荐
+    const recommendation = await upgradeRecommendationEngine.generateUpgradeRecommendation(
+      session.user.email,
+      context,
+    );
+
+    if (!recommendation) {
+      return NextResponse.json({
+        success: true,
+        recommendation: null,
+        message: '暂无升级推荐',
+      });
+    }
+
+    const response: any = {
+      success: true,
+      recommendation,
+    };
+
+    // 如果需要升级提示
+    if (includePrompt) {
+      const promptResult = await upgradeRecommendationEngine.shouldShowUpgradePrompt(
+        session.user.email,
+        context,
+      );
+
+      response.shouldShowPrompt = promptResult.shouldShow;
+      response.prompt = promptResult.prompt;
+      response.promptReason = promptResult.reason;
+    }
+
+    return NextResponse.json(response);
+  } catch (error) {
+    logger.error('Failed to get upgrade recommendation', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      {
+        success: false,
+        error: '获取升级推荐失败',
+      },
+      { status: 500 },
     );
   }
 }

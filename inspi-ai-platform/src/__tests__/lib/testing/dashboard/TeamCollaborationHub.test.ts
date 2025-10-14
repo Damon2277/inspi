@@ -1,6 +1,6 @@
 /**
  * TeamCollaborationHub Unit Tests
- * 
+ *
  * Comprehensive test suite for the team collaboration system,
  * covering team member management, shared state, activities,
  * and collaborative metrics.
@@ -53,8 +53,8 @@ describe('TeamCollaborationHub', () => {
         runTests: true,
         modifyTests: true,
         viewReports: true,
-        manageTeam: false
-      }
+        manageTeam: false,
+      },
     };
 
     it('should add team member', () => {
@@ -70,7 +70,7 @@ describe('TeamCollaborationHub', () => {
     it('should add team member with current tests', () => {
       collaborationHub.addMember({
         ...sampleMember,
-        currentTests: ['test1', 'test2']
+        currentTests: ['test1', 'test2'],
       });
 
       const member = collaborationHub.getMember('user1');
@@ -79,12 +79,12 @@ describe('TeamCollaborationHub', () => {
 
     it('should update existing team member', () => {
       collaborationHub.addMember(sampleMember);
-      
+
       // Add same member again with different data
       collaborationHub.addMember({
         ...sampleMember,
         name: 'Alice Updated',
-        currentTests: ['test3']
+        currentTests: ['test3'],
       });
 
       const members = collaborationHub.getAllMembers();
@@ -95,7 +95,7 @@ describe('TeamCollaborationHub', () => {
 
     it('should remove team member', () => {
       collaborationHub.addMember(sampleMember);
-      
+
       const removed = collaborationHub.removeMember('user1');
       expect(removed).toBe(true);
 
@@ -151,8 +151,8 @@ describe('TeamCollaborationHub', () => {
           runTests: true,
           modifyTests: true,
           viewReports: true,
-          manageTeam: false
-        }
+          manageTeam: false,
+        },
       });
     });
 
@@ -201,8 +201,8 @@ describe('TeamCollaborationHub', () => {
           runTests: true,
           modifyTests: false,
           viewReports: true,
-          manageTeam: false
-        }
+          manageTeam: false,
+        },
       });
 
       const activeMembers = collaborationHub.getActiveMembers();
@@ -215,7 +215,7 @@ describe('TeamCollaborationHub', () => {
     it('should update shared state', () => {
       const updates: Partial<SharedTestState> = {
         currentBranch: 'feature/new-feature',
-        testSuiteVersion: '2.0.0'
+        testSuiteVersion: '2.0.0',
       };
 
       collaborationHub.updateSharedState(updates);
@@ -232,7 +232,7 @@ describe('TeamCollaborationHub', () => {
       });
 
       collaborationHub.updateSharedState({
-        currentBranch: 'develop'
+        currentBranch: 'develop',
       });
     });
   });
@@ -249,8 +249,8 @@ describe('TeamCollaborationHub', () => {
           runTests: true,
           modifyTests: true,
           viewReports: true,
-          manageTeam: false
-        }
+          manageTeam: false,
+        },
       });
     });
 
@@ -301,7 +301,7 @@ describe('TeamCollaborationHub', () => {
 
     it('should not complete test run for wrong user', () => {
       collaborationHub.startTestRun('user1', 'test1');
-      
+
       // Try to complete with different user
       collaborationHub.completeTestRun('user2', 'test1', 'passed');
 
@@ -322,8 +322,8 @@ describe('TeamCollaborationHub', () => {
           runTests: true,
           modifyTests: true,
           viewReports: true,
-          manageTeam: false
-        }
+          manageTeam: false,
+        },
       });
     });
 
@@ -332,7 +332,7 @@ describe('TeamCollaborationHub', () => {
         'user1',
         'This is a test note',
         'test1',
-        ['bug', 'investigation']
+        ['bug', 'investigation'],
       );
 
       expect(noteId).toBeDefined();
@@ -376,8 +376,8 @@ describe('TeamCollaborationHub', () => {
           runTests: true,
           modifyTests: true,
           viewReports: true,
-          manageTeam: false
-        }
+          manageTeam: false,
+        },
       });
     });
 
@@ -386,7 +386,7 @@ describe('TeamCollaborationHub', () => {
         'user1',
         'test1',
         'Important Test',
-        'This test is critical for the feature'
+        'This test is critical for the feature',
       );
 
       expect(bookmarkId).toBeDefined();
@@ -408,8 +408,8 @@ describe('TeamCollaborationHub', () => {
           runTests: true,
           modifyTests: false,
           viewReports: true,
-          manageTeam: false
-        }
+          manageTeam: false,
+        },
       });
 
       collaborationHub.addBookmark('user1', 'test1', 'Alice Bookmark');
@@ -442,9 +442,9 @@ describe('TeamCollaborationHub', () => {
         action: 'test_started',
         details: {
           testId: 'test1',
-          testName: 'Sample Test'
+          testName: 'Sample Test',
         },
-        visibility: 'public'
+        visibility: 'public',
       });
 
       const activities = collaborationHub.getRecentActivities(10);
@@ -461,7 +461,7 @@ describe('TeamCollaborationHub', () => {
           type: 'test_run',
           action: `action_${i}`,
           details: {},
-          visibility: 'public'
+          visibility: 'public',
         });
       }
 
@@ -476,7 +476,7 @@ describe('TeamCollaborationHub', () => {
         type: 'test_run',
         action: 'user1_action',
         details: {},
-        visibility: 'public'
+        visibility: 'public',
       });
 
       collaborationHub.logActivity({
@@ -484,7 +484,7 @@ describe('TeamCollaborationHub', () => {
         type: 'test_run',
         action: 'user2_action',
         details: {},
-        visibility: 'public'
+        visibility: 'public',
       });
 
       const user1Activities = collaborationHub.getRecentActivities(10, 'user1');
@@ -503,7 +503,7 @@ describe('TeamCollaborationHub', () => {
         type: 'test_run',
         action: 'event_test_action',
         details: {},
-        visibility: 'public'
+        visibility: 'public',
       });
     });
   });
@@ -522,8 +522,8 @@ describe('TeamCollaborationHub', () => {
           runTests: true,
           modifyTests: true,
           viewReports: true,
-          manageTeam: false
-        }
+          manageTeam: false,
+        },
       });
 
       collaborationHub.addMember({
@@ -537,8 +537,8 @@ describe('TeamCollaborationHub', () => {
           runTests: true,
           modifyTests: false,
           viewReports: true,
-          manageTeam: false
-        }
+          manageTeam: false,
+        },
       });
 
       // Add some activities
@@ -547,7 +547,7 @@ describe('TeamCollaborationHub', () => {
         type: 'test_run',
         action: 'test_completed',
         details: {},
-        visibility: 'public'
+        visibility: 'public',
       });
 
       collaborationHub.logActivity({
@@ -555,7 +555,7 @@ describe('TeamCollaborationHub', () => {
         type: 'test_comment',
         action: 'note_added',
         details: {},
-        visibility: 'team'
+        visibility: 'team',
       });
 
       // Add shared content
@@ -597,8 +597,8 @@ describe('TeamCollaborationHub', () => {
           runTests: true,
           modifyTests: true,
           viewReports: true,
-          manageTeam: false
-        }
+          manageTeam: false,
+        },
       });
 
       const notifications = collaborationHub.getTeamNotifications();
@@ -616,8 +616,8 @@ describe('TeamCollaborationHub', () => {
           runTests: true,
           modifyTests: true,
           viewReports: true,
-          manageTeam: false
-        }
+          manageTeam: false,
+        },
       });
 
       const userNotifications = collaborationHub.getTeamNotifications('user2');
@@ -641,8 +641,8 @@ describe('TeamCollaborationHub', () => {
           runTests: true,
           modifyTests: true,
           viewReports: true,
-          manageTeam: false
-        }
+          manageTeam: false,
+        },
       });
     });
   });
@@ -659,8 +659,8 @@ describe('TeamCollaborationHub', () => {
           runTests: true,
           modifyTests: true,
           viewReports: true,
-          manageTeam: false
-        }
+          manageTeam: false,
+        },
       });
 
       collaborationHub.addSharedNote('user1', 'Test note');
@@ -669,7 +669,7 @@ describe('TeamCollaborationHub', () => {
         type: 'test_run',
         action: 'test_completed',
         details: {},
-        visibility: 'public'
+        visibility: 'public',
       });
     });
 
@@ -697,12 +697,12 @@ describe('TeamCollaborationHub', () => {
               runTests: true,
               modifyTests: true,
               viewReports: true,
-              manageTeam: false
-            }
-          }
+              manageTeam: false,
+            },
+          },
         ],
         sharedState: {
-          currentBranch: 'imported-branch'
+          currentBranch: 'imported-branch',
         },
         activities: [
           {
@@ -712,9 +712,9 @@ describe('TeamCollaborationHub', () => {
             action: 'imported_action',
             timestamp: new Date(),
             details: {},
-            visibility: 'public' as const
-          }
-        ]
+            visibility: 'public' as const,
+          },
+        ],
       };
 
       collaborationHub.importData(importData);
@@ -735,7 +735,7 @@ describe('TeamCollaborationHub', () => {
       });
 
       collaborationHub.importData({
-        members: []
+        members: [],
       });
     });
   });

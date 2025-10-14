@@ -22,22 +22,22 @@ describe('PipelineAnalyzer', () => {
           status: 'success',
           duration: 600000, // 10 minutes
           startTime: new Date('2024-01-01T10:00:00Z'),
-          endTime: new Date('2024-01-01T10:10:00Z')
+          endTime: new Date('2024-01-01T10:10:00Z'),
         },
         {
           name: 'test',
           status: 'success',
           duration: 900000, // 15 minutes
           startTime: new Date('2024-01-01T10:10:00Z'),
-          endTime: new Date('2024-01-01T10:25:00Z')
+          endTime: new Date('2024-01-01T10:25:00Z'),
         },
         {
           name: 'deploy',
           status: 'success',
           duration: 300000, // 5 minutes
           startTime: new Date('2024-01-01T10:25:00Z'),
-          endTime: new Date('2024-01-01T10:30:00Z')
-        }
+          endTime: new Date('2024-01-01T10:30:00Z'),
+        },
       ],
       testResults: {
         total: 150,
@@ -49,15 +49,15 @@ describe('PipelineAnalyzer', () => {
           statements: 85,
           branches: 80,
           functions: 90,
-          lines: 85
-        }
+          lines: 85,
+        },
       },
       qualityGates: {
         total: 5,
         passed: 4,
         failed: 1,
         warnings: 0,
-        blocking: 1
+        blocking: 1,
       },
       artifacts: {
         total: 3,
@@ -65,8 +65,8 @@ describe('PipelineAnalyzer', () => {
         types: {
           'build': 1,
           'test-results': 1,
-          'coverage': 1
-        }
+          'coverage': 1,
+        },
       },
       performance: {
         buildTime: 600000,
@@ -77,9 +77,9 @@ describe('PipelineAnalyzer', () => {
           cpu: 75,
           memory: 60,
           disk: 40,
-          network: 30
-        }
-      }
+          network: 30,
+        },
+      },
     };
   });
 
@@ -103,23 +103,23 @@ describe('PipelineAnalyzer', () => {
             status: 'success',
             duration: 300000, // 5 minutes
             startTime: new Date(),
-            endTime: new Date()
+            endTime: new Date(),
           },
           {
             name: 'slow-test',
             status: 'success',
             duration: 1200000, // 20 minutes (66% of total)
             startTime: new Date(),
-            endTime: new Date()
+            endTime: new Date(),
           },
           {
             name: 'deploy',
             status: 'success',
             duration: 300000, // 5 minutes
             startTime: new Date(),
-            endTime: new Date()
-          }
-        ]
+            endTime: new Date(),
+          },
+        ],
       };
 
       const analysis = await analyzer.analyzePipeline(metricsWithBottleneck);
@@ -136,9 +136,9 @@ describe('PipelineAnalyzer', () => {
           ...mockMetrics.performance,
           resourceUsage: {
             ...mockMetrics.performance.resourceUsage,
-            cpu: 85 // High CPU usage
-          }
-        }
+            cpu: 85, // High CPU usage
+          },
+        },
       };
 
       const analysis = await analyzer.analyzePipeline(highCpuMetrics);
@@ -155,9 +155,9 @@ describe('PipelineAnalyzer', () => {
           ...mockMetrics.performance,
           resourceUsage: {
             ...mockMetrics.performance.resourceUsage,
-            memory: 90 // High memory usage
-          }
-        }
+            memory: 90, // High memory usage
+          },
+        },
       };
 
       const analysis = await analyzer.analyzePipeline(highMemoryMetrics);
@@ -172,8 +172,8 @@ describe('PipelineAnalyzer', () => {
         ...mockMetrics,
         performance: {
           ...mockMetrics.performance,
-          queueTime: 600000 // 10 minutes queue time
-        }
+          queueTime: 600000, // 10 minutes queue time
+        },
       };
 
       const analysis = await analyzer.analyzePipeline(highQueueMetrics);
@@ -195,9 +195,9 @@ describe('PipelineAnalyzer', () => {
             status: 'success',
             duration: 300000,
             startTime: new Date(),
-            endTime: new Date()
-          }
-        ]
+            endTime: new Date(),
+          },
+        ],
       };
 
       const analysis = await analyzer.analyzePipeline(redundantMetrics);
@@ -216,23 +216,23 @@ describe('PipelineAnalyzer', () => {
             status: 'success',
             duration: 120000,
             startTime: new Date(),
-            endTime: new Date()
+            endTime: new Date(),
           },
           {
             name: 'type-check',
             status: 'success',
             duration: 180000,
             startTime: new Date(),
-            endTime: new Date()
+            endTime: new Date(),
           },
           {
             name: 'unit-test',
             status: 'success',
             duration: 300000,
             startTime: new Date(),
-            endTime: new Date()
-          }
-        ]
+            endTime: new Date(),
+          },
+        ],
       };
 
       const analysis = await analyzer.analyzePipeline(sequentialMetrics);
@@ -247,8 +247,8 @@ describe('PipelineAnalyzer', () => {
         ...mockMetrics,
         artifacts: {
           ...mockMetrics.artifacts,
-          size: 2000000000 // 2GB
-        }
+          size: 2000000000, // 2GB
+        },
       };
 
       const analysis = await analyzer.analyzePipeline(oversizedMetrics);
@@ -272,14 +272,14 @@ describe('PipelineAnalyzer', () => {
         ...mockMetrics,
         testResults: {
           ...mockMetrics.testResults,
-          failed: 5
-        }
+          failed: 5,
+        },
       };
 
       const analysis = await analyzer.analyzePipeline(failingTestMetrics);
 
-      const testRecommendation = analysis.recommendations.find(r => 
-        r.includes('Fix 5 failing tests')
+      const testRecommendation = analysis.recommendations.find(r =>
+        r.includes('Fix 5 failing tests'),
       );
       expect(testRecommendation).toBeDefined();
     });
@@ -287,13 +287,13 @@ describe('PipelineAnalyzer', () => {
     it('should recommend optimization for long pipelines', async () => {
       const longPipelineMetrics = {
         ...mockMetrics,
-        duration: 2400000 // 40 minutes
+        duration: 2400000, // 40 minutes
       };
 
       const analysis = await analyzer.analyzePipeline(longPipelineMetrics);
 
-      const durationRecommendation = analysis.recommendations.find(r => 
-        r.includes('Pipeline duration exceeds 30 minutes')
+      const durationRecommendation = analysis.recommendations.find(r =>
+        r.includes('Pipeline duration exceeds 30 minutes'),
       );
       expect(durationRecommendation).toBeDefined();
     });
@@ -314,7 +314,7 @@ describe('PipelineAnalyzer', () => {
           ...mockMetrics,
           pipelineId: `pipeline-${i}`,
           buildNumber: i,
-          duration: 1800000 + (i * 60000) // Increasing duration
+          duration: 1800000 + (i * 60000), // Increasing duration
         });
       }
 
@@ -345,8 +345,8 @@ describe('PipelineAnalyzer', () => {
             statements: 95,
             branches: 90,
             functions: 95,
-            lines: 95
-          }
+            lines: 95,
+          },
         },
         performance: {
           ...mockMetrics.performance,
@@ -354,9 +354,9 @@ describe('PipelineAnalyzer', () => {
             cpu: 50,
             memory: 40,
             disk: 30,
-            network: 20
-          }
-        }
+            network: 20,
+          },
+        },
       };
 
       const healthScore = analyzer.getPipelineHealthScore(successfulMetrics);
@@ -375,8 +375,8 @@ describe('PipelineAnalyzer', () => {
             statements: 40,
             branches: 35,
             functions: 45,
-            lines: 40
-          }
+            lines: 40,
+          },
         },
         performance: {
           ...mockMetrics.performance,
@@ -384,9 +384,9 @@ describe('PipelineAnalyzer', () => {
             cpu: 95,
             memory: 90,
             disk: 85,
-            network: 80
-          }
-        }
+            network: 80,
+          },
+        },
       };
 
       const healthScore = analyzer.getPipelineHealthScore(failedMetrics);
@@ -398,7 +398,7 @@ describe('PipelineAnalyzer', () => {
   describe('clearCache', () => {
     it('should clear cache and history', async () => {
       await analyzer.analyzePipeline(mockMetrics);
-      
+
       const statsBefore = analyzer.getAnalysisStats();
       expect(statsBefore.historySize).toBe(1);
 
@@ -416,7 +416,7 @@ describe('PipelineAnalyzer', () => {
       await analyzer.analyzePipeline({
         ...mockMetrics,
         pipelineId: 'pipeline-2',
-        buildNumber: 43
+        buildNumber: 43,
       });
 
       const stats = analyzer.getAnalysisStats();
@@ -432,7 +432,7 @@ describe('PipelineAnalyzer', () => {
         ...mockMetrics,
         status: 'failure',
         pipelineId: 'pipeline-2',
-        buildNumber: 43
+        buildNumber: 43,
       });
 
       const stats = analyzer.getAnalysisStats();
@@ -451,9 +451,9 @@ describe('PipelineAnalyzer', () => {
             status: 'success',
             duration: 1200000, // 20 minutes (major bottleneck)
             startTime: new Date(),
-            endTime: new Date()
-          }
-        ]
+            endTime: new Date(),
+          },
+        ],
       };
 
       const analysis = await analyzer.analyzePipeline(buildMetrics);
@@ -471,9 +471,9 @@ describe('PipelineAnalyzer', () => {
             status: 'success',
             duration: 1200000, // 20 minutes (major bottleneck)
             startTime: new Date(),
-            endTime: new Date()
-          }
-        ]
+            endTime: new Date(),
+          },
+        ],
       };
 
       const analysis = await analyzer.analyzePipeline(testMetrics);
@@ -487,7 +487,7 @@ describe('PipelineAnalyzer', () => {
     it('should handle empty stages array', async () => {
       const emptyStagesMetrics = {
         ...mockMetrics,
-        stages: []
+        stages: [],
       };
 
       const analysis = await analyzer.analyzePipeline(emptyStagesMetrics);
@@ -505,9 +505,9 @@ describe('PipelineAnalyzer', () => {
             status: 'success',
             duration: 0,
             startTime: new Date(),
-            endTime: new Date()
-          }
-        ]
+            endTime: new Date(),
+          },
+        ],
       };
 
       const analysis = await analyzer.analyzePipeline(zeroDurationMetrics);
@@ -521,8 +521,8 @@ describe('PipelineAnalyzer', () => {
         ...mockMetrics,
         testResults: {
           ...mockMetrics.testResults,
-          coverage: undefined
-        }
+          coverage: undefined,
+        },
       };
 
       const analysis = await analyzer.analyzePipeline(noCoverageMetrics);

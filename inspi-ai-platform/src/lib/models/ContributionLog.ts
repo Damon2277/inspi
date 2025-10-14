@@ -1,14 +1,24 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
-import { ContributionType } from '@/types/contribution';
+import mongoose, { Schema, Document, Model, Types } from 'mongoose';
+
+import { ContributionType } from '@/shared/types/contribution';
+
+interface ContributionTarget {
+  type: string;
+  id: string;
+  title?: string;
+}
 
 // 贡献度记录接口
 export interface IContributionLog {
-  userId: mongoose.Types.ObjectId;
-  type: ContributionType;
+  userId?: mongoose.Types.ObjectId;
+  user?: mongoose.Types.ObjectId;
+  type?: ContributionType;
+  action?: string;
   points: number;
   workId?: mongoose.Types.ObjectId;
   relatedUserId?: mongoose.Types.ObjectId; // 复用时的原作者
-  description: string;
+  description?: string;
+  target?: ContributionTarget;
   metadata?: {
     workTitle?: string;
     originalAuthor?: string;
@@ -20,50 +30,73 @@ export interface IContributionLog {
 }
 
 // 贡献度记录文档接口
-export interface ContributionLogDocument extends IContributionLog, Document {}
+export interface ContributionLogDocument extends IContributionLog, Document<Types.ObjectId, any, IContributionLog> {
+  _id: Types.ObjectId;
+}
+
+export interface ContributionLogModel extends Model<ContributionLogDocument> {
+  getUserTotalContribution(userId: string): Promise<number>;
+  getUserContributionByPeriod(userId: string, startDate: Date, endDate: Date): Promise<number>;
+  getLeaderboard(limit?: number): Promise<any[]>;
+}
 
 // 贡献度记录Schema
-const ContributionLogSchema = new Schema<ContributionLogDocument>({
+const ContributionLogSchema = new Schema<ContributionLogDocument, ContributionLogModel>({
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    index: true,
+  },
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    index: true,
   },
   type: {
     type: String,
     enum: ['creation', 'reuse', 'bonus', 'penalty'],
-    required: true,
-    index: true
+    index: true,
+  },
+  action: {
+    type: String,
+    trim: true,
+    index: true,
   },
   points: {
     type: Number,
     required: true,
     min: -1000,
-    max: 1000
+    max: 1000,
   },
   workId: {
     type: Schema.Types.ObjectId,
     ref: 'Work',
-    index: true
+    index: true,
   },
   relatedUserId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    index: true
+    index: true,
   },
   description: {
     type: String,
-    required: true,
-    maxlength: 500
+    maxlength: 500,
+  },
+  target: {
+    type: new Schema<ContributionTarget>({
+      type: { type: String, trim: true },
+      id: { type: String, trim: true },
+      title: { type: String, trim: true },
+    }, { _id: false }),
+    default: undefined,
   },
   metadata: {
     type: Schema.Types.Mixed,
-    default: {}
-  }
+    default: {},
+  },
 }, {
   timestamps: true,
-  collection: 'contribution_logs'
+  collection: 'contribution_logs',
 });
 
 // 复合索引优化查询
@@ -72,47 +105,63 @@ ContributionLogSchema.index({ type: 1, createdAt: -1 });
 ContributionLogSchema.index({ workId: 1, type: 1 });
 
 // 静态方法：获取用户总贡献度
-ContributionLogSchema.statics.getUserTotalContribution = async function(userId: string) {
-  const result = await this.aggregate([
-    { $match: { userId: new mongoose.Types.ObjectId(userId) } },
-    { $group: { _id: null, totalPoints: { $sum: '$points' } } }
+ContributionLogSchema.statics.getUserTotalContribution = async function (this: ContributionLogModel, userId: string) {
+  const result = await (this.aggregate as any)([
+    {
+      $match: {
+        $or: [
+          { userId: new mongoose.Types.ObjectId(userId) },
+          { user: new mongoose.Types.ObjectId(userId) },
+        ],
+      },
+    },
+    { $group: { _id: null, totalPoints: { $sum: '$points' } } },
   ]);
   return result[0]?.totalPoints || 0;
 };
 
 // 静态方法：获取用户时间段内贡献度
-ContributionLogSchema.statics.getUserContributionByPeriod = async function(
-  userId: string, 
-  startDate: Date, 
-  endDate: Date
+ContributionLogSchema.statics.getUserContributionByPeriod = async function (
+  this: ContributionLogModel,
+  userId: string,
+  startDate: Date,
+  endDate: Date,
 ) {
-  const result = await this.aggregate([
-    { 
-      $match: { 
-        userId: new mongoose.Types.ObjectId(userId),
-        createdAt: { $gte: startDate, $lte: endDate }
-      } 
+  const result = await (this.aggregate as any)([
+    {
+      $match: {
+        $or: [
+          { userId: new mongoose.Types.ObjectId(userId) },
+          { user: new mongoose.Types.ObjectId(userId) },
+        ],
+        createdAt: { $gte: startDate, $lte: endDate },
+      },
     },
-    { $group: { _id: null, totalPoints: { $sum: '$points' } } }
+    { $group: { _id: null, totalPoints: { $sum: '$points' } } },
   ]);
   return result[0]?.totalPoints || 0;
 };
 
 // 静态方法：获取排行榜数据
-ContributionLogSchema.statics.getLeaderboard = async function(limit = 50) {
-  return await this.aggregate([
+ContributionLogSchema.statics.getLeaderboard = async function (this: ContributionLogModel, limit = 50) {
+  return await (this.aggregate as any)([
+    {
+      $addFields: {
+        resolvedUser: { $ifNull: ['$userId', '$user'] },
+      },
+    },
     {
       $group: {
-        _id: '$userId',
+        _id: '$resolvedUser',
         totalPoints: { $sum: '$points' },
         creationCount: {
-          $sum: { $cond: [{ $eq: ['$type', 'creation'] }, 1, 0] }
+          $sum: { $cond: [{ $eq: ['$type', 'creation'] }, 1, 0] },
         },
         reuseCount: {
-          $sum: { $cond: [{ $eq: ['$type', 'reuse'] }, 1, 0] }
+          $sum: { $cond: [{ $eq: ['$type', 'reuse'] }, 1, 0] },
         },
-        lastActivity: { $max: '$createdAt' }
-      }
+        lastActivity: { $max: '$createdAt' },
+      },
     },
     { $sort: { totalPoints: -1 } },
     { $limit: limit },
@@ -121,8 +170,8 @@ ContributionLogSchema.statics.getLeaderboard = async function(limit = 50) {
         from: 'users',
         localField: '_id',
         foreignField: '_id',
-        as: 'user'
-      }
+        as: 'user',
+      },
     },
     { $unwind: '$user' },
     {
@@ -133,14 +182,14 @@ ContributionLogSchema.statics.getLeaderboard = async function(limit = 50) {
         reuseCount: 1,
         lastActivity: 1,
         userName: '$user.name',
-        userAvatar: '$user.avatar'
-      }
-    }
+        userAvatar: '$user.avatar',
+      },
+    },
   ]);
 };
 
 // 实例方法：格式化显示
-ContributionLogSchema.methods.getDisplayText = function(): string {
+ContributionLogSchema.methods.getDisplayText = function (): string {
   switch (this.type) {
     case 'creation':
       return `发布作品《${this.metadata?.workTitle || '未知作品'}》获得 ${this.points} 分`;
@@ -155,7 +204,7 @@ ContributionLogSchema.methods.getDisplayText = function(): string {
   }
 };
 
-// 创建模型
-const ContributionLog = mongoose.model<ContributionLogDocument>('ContributionLog', ContributionLogSchema);
+const ContributionLog = (mongoose.models.ContributionLog as ContributionLogModel | undefined) ||
+  mongoose.model<ContributionLogDocument, ContributionLogModel>('ContributionLog', ContributionLogSchema);
 
 export default ContributionLog;

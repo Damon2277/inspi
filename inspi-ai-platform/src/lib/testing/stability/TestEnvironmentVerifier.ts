@@ -1,6 +1,6 @@
 /**
  * Test Environment Verifier
- * 
+ *
  * Ensures consistency across different test environments and detects
  * environment-specific issues that could cause test instability.
  */
@@ -51,13 +51,13 @@ export class TestEnvironmentVerifier {
   private criticalFields = [
     'nodeVersion',
     'platform',
-    'architecture'
+    'architecture',
   ];
   private warningFields = [
     'memory.total',
     'cpu.cores',
     'environment.timezone',
-    'environment.locale'
+    'environment.locale',
   ];
 
   /**
@@ -74,14 +74,14 @@ export class TestEnvironmentVerifier {
         ci: this.isCIEnvironment(),
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         locale: Intl.DateTimeFormat().resolvedOptions().locale,
-        env: this.getRelevantEnvVars()
+        env: this.getRelevantEnvVars(),
       },
       dependencies: this.getDependencyVersions(),
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     this.snapshots.push(snapshot);
-    
+
     // Keep only recent snapshots
     if (this.snapshots.length > 100) {
       this.snapshots.splice(0, this.snapshots.length - 100);
@@ -102,7 +102,7 @@ export class TestEnvironmentVerifier {
    */
   async verifyEnvironment(): Promise<EnvironmentConsistencyReport> {
     const currentSnapshot = await this.captureSnapshot();
-    
+
     if (!this.baselineSnapshot) {
       this.setBaseline(currentSnapshot);
       return {
@@ -110,7 +110,7 @@ export class TestEnvironmentVerifier {
         score: 1,
         differences: [],
         riskLevel: 'low',
-        recommendations: ['Baseline environment established']
+        recommendations: ['Baseline environment established'],
       };
     }
 
@@ -122,7 +122,7 @@ export class TestEnvironmentVerifier {
    */
   compareSnapshots(
     baseline: EnvironmentSnapshot,
-    current: EnvironmentSnapshot
+    current: EnvironmentSnapshot,
   ): EnvironmentConsistencyReport {
     const differences: EnvironmentDifference[] = [];
 
@@ -130,7 +130,7 @@ export class TestEnvironmentVerifier {
     this.criticalFields.forEach(field => {
       const baselineValue = this.getNestedValue(baseline, field);
       const currentValue = this.getNestedValue(current, field);
-      
+
       if (baselineValue !== currentValue) {
         differences.push({
           category: 'critical',
@@ -138,7 +138,7 @@ export class TestEnvironmentVerifier {
           expected: baselineValue,
           actual: currentValue,
           impact: 'May cause test failures or inconsistent behavior',
-          recommendation: `Ensure ${field} matches baseline environment`
+          recommendation: `Ensure ${field} matches baseline environment`,
         });
       }
     });
@@ -147,7 +147,7 @@ export class TestEnvironmentVerifier {
     this.warningFields.forEach(field => {
       const baselineValue = this.getNestedValue(baseline, field);
       const currentValue = this.getNestedValue(current, field);
-      
+
       if (baselineValue !== currentValue) {
         differences.push({
           category: 'warning',
@@ -155,7 +155,7 @@ export class TestEnvironmentVerifier {
           expected: baselineValue,
           actual: currentValue,
           impact: 'May affect test performance or timing',
-          recommendation: `Consider standardizing ${field} across environments`
+          recommendation: `Consider standardizing ${field} across environments`,
         });
       }
     });
@@ -163,14 +163,14 @@ export class TestEnvironmentVerifier {
     // Check dependencies
     const depDifferences = this.compareDependencies(
       baseline.dependencies,
-      current.dependencies
+      current.dependencies,
     );
     differences.push(...depDifferences);
 
     // Check environment variables
     const envDifferences = this.compareEnvironmentVars(
       baseline.environment.env,
-      current.environment.env
+      current.environment.env,
     );
     differences.push(...envDifferences);
 
@@ -184,7 +184,7 @@ export class TestEnvironmentVerifier {
       score,
       differences,
       riskLevel,
-      recommendations
+      recommendations,
     };
   }
 
@@ -200,29 +200,29 @@ export class TestEnvironmentVerifier {
       return {
         snapshots: this.snapshots,
         consistencyTrend: 'stable',
-        averageScore: 1
+        averageScore: 1,
       };
     }
 
     const scores: number[] = [];
-    
+
     for (let i = 1; i < this.snapshots.length; i++) {
       const report = this.compareSnapshots(this.snapshots[i - 1], this.snapshots[i]);
       scores.push(report.score);
     }
 
     const averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-    
+
     // Calculate trend
     const recentScores = scores.slice(-5);
     const olderScores = scores.slice(0, -5);
-    
+
     let trend: 'improving' | 'degrading' | 'stable' = 'stable';
-    
+
     if (recentScores.length > 0 && olderScores.length > 0) {
       const recentAvg = recentScores.reduce((sum, s) => sum + s, 0) / recentScores.length;
       const olderAvg = olderScores.reduce((sum, s) => sum + s, 0) / olderScores.length;
-      
+
       if (recentAvg > olderAvg + 0.1) trend = 'improving';
       else if (recentAvg < olderAvg - 0.1) trend = 'degrading';
     }
@@ -230,7 +230,7 @@ export class TestEnvironmentVerifier {
     return {
       snapshots: this.snapshots,
       consistencyTrend: trend,
-      averageScore
+      averageScore,
     };
   }
 
@@ -244,7 +244,7 @@ export class TestEnvironmentVerifier {
       '# Generated automatically to ensure environment consistency',
       '',
       'echo "Setting up test environment..."',
-      ''
+      '',
     ];
 
     // Node version
@@ -288,13 +288,13 @@ export class TestEnvironmentVerifier {
         return {
           total: usage.heapTotal,
           free: usage.heapTotal - usage.heapUsed,
-          used: usage.heapUsed
+          used: usage.heapUsed,
         };
       }
     } catch (error) {
       // Handle cases where memory info is not available
     }
-    
+
     return { total: 0, free: 0, used: 0 };
   }
 
@@ -304,10 +304,10 @@ export class TestEnvironmentVerifier {
       if (typeof navigator !== 'undefined' && 'hardwareConcurrency' in navigator) {
         return {
           cores: navigator.hardwareConcurrency,
-          model: 'Unknown'
+          model: 'Unknown',
         };
       }
-      
+
       // Node.js environment
       if (typeof require !== 'undefined') {
         try {
@@ -315,7 +315,7 @@ export class TestEnvironmentVerifier {
           const cpus = os.cpus();
           return {
             cores: cpus.length,
-            model: cpus[0]?.model || 'Unknown'
+            model: cpus[0]?.model || 'Unknown',
           };
         } catch {
           // Fallback
@@ -324,7 +324,7 @@ export class TestEnvironmentVerifier {
     } catch {
       // Fallback for any errors
     }
-    
+
     return { cores: 1, model: 'Unknown' };
   }
 
@@ -342,16 +342,16 @@ export class TestEnvironmentVerifier {
       'CIRCLECI',
       'TZ',
       'LANG',
-      'LC_ALL'
+      'LC_ALL',
     ];
-    
+
     const result: Record<string, string> = {};
     relevantVars.forEach(varName => {
       if (process.env[varName]) {
         result[varName] = process.env[varName]!;
       }
     });
-    
+
     return result;
   }
 
@@ -360,10 +360,10 @@ export class TestEnvironmentVerifier {
       // Try to read package.json if available
       if (typeof require !== 'undefined') {
         try {
-          const packageJson = require('../../../../package.json');
+          const packageJson = require('../../../package.json');
           return {
             ...packageJson.dependencies,
-            ...packageJson.devDependencies
+            ...packageJson.devDependencies,
           };
         } catch {
           // Fallback
@@ -372,7 +372,7 @@ export class TestEnvironmentVerifier {
     } catch {
       // Fallback for any errors
     }
-    
+
     return {};
   }
 
@@ -382,11 +382,11 @@ export class TestEnvironmentVerifier {
 
   private compareDependencies(
     baseline: Record<string, string>,
-    current: Record<string, string>
+    current: Record<string, string>,
   ): EnvironmentDifference[] {
     const differences: EnvironmentDifference[] = [];
     const criticalDeps = ['jest', 'vitest', '@testing-library/jest-dom', 'typescript'];
-    
+
     // Check for version differences in critical dependencies
     criticalDeps.forEach(dep => {
       if (baseline[dep] && current[dep] && baseline[dep] !== current[dep]) {
@@ -396,7 +396,7 @@ export class TestEnvironmentVerifier {
           expected: baseline[dep],
           actual: current[dep],
           impact: 'May cause test framework incompatibilities',
-          recommendation: `Update ${dep} to version ${baseline[dep]}`
+          recommendation: `Update ${dep} to version ${baseline[dep]}`,
         });
       }
     });
@@ -410,7 +410,7 @@ export class TestEnvironmentVerifier {
           expected: baseline[dep],
           actual: 'missing',
           impact: 'Dependency not found in current environment',
-          recommendation: `Install ${dep}@${baseline[dep]}`
+          recommendation: `Install ${dep}@${baseline[dep]}`,
         });
       }
     });
@@ -420,11 +420,11 @@ export class TestEnvironmentVerifier {
 
   private compareEnvironmentVars(
     baseline: Record<string, string>,
-    current: Record<string, string>
+    current: Record<string, string>,
   ): EnvironmentDifference[] {
     const differences: EnvironmentDifference[] = [];
     const criticalVars = ['NODE_ENV'];
-    
+
     criticalVars.forEach(varName => {
       if (baseline[varName] !== current[varName]) {
         differences.push({
@@ -433,7 +433,7 @@ export class TestEnvironmentVerifier {
           expected: baseline[varName] || 'undefined',
           actual: current[varName] || 'undefined',
           impact: 'May affect test behavior and results',
-          recommendation: `Set ${varName}=${baseline[varName] || 'undefined'}`
+          recommendation: `Set ${varName}=${baseline[varName] || 'undefined'}`,
         });
       }
     });
@@ -443,7 +443,7 @@ export class TestEnvironmentVerifier {
 
   private calculateConsistencyScore(differences: EnvironmentDifference[]): number {
     if (differences.length === 0) return 1;
-    
+
     let penalty = 0;
     differences.forEach(diff => {
       switch (diff.category) {
@@ -458,14 +458,14 @@ export class TestEnvironmentVerifier {
           break;
       }
     });
-    
+
     return Math.max(0, 1 - penalty);
   }
 
   private calculateRiskLevel(differences: EnvironmentDifference[]): 'low' | 'medium' | 'high' | 'critical' {
     const criticalCount = differences.filter(d => d.category === 'critical').length;
     const warningCount = differences.filter(d => d.category === 'warning').length;
-    
+
     if (criticalCount > 2) return 'critical';
     if (criticalCount > 0 || warningCount > 5) return 'high';
     if (warningCount > 2) return 'medium';
@@ -474,22 +474,22 @@ export class TestEnvironmentVerifier {
 
   private generateRecommendations(differences: EnvironmentDifference[]): string[] {
     const recommendations = new Set<string>();
-    
+
     differences.forEach(diff => {
       recommendations.add(diff.recommendation);
     });
-    
+
     // Add general recommendations
     if (differences.some(d => d.category === 'critical')) {
       recommendations.add('Consider using containerized test environments for consistency');
       recommendations.add('Document environment requirements in README');
     }
-    
+
     if (differences.some(d => d.field.includes('dependencies'))) {
       recommendations.add('Use exact version pinning in package.json');
       recommendations.add('Consider using package-lock.json or yarn.lock');
     }
-    
+
     return Array.from(recommendations);
   }
 
@@ -499,7 +499,7 @@ export class TestEnvironmentVerifier {
       'CI',
       'TZ',
       'LANG',
-      'LC_ALL'
+      'LC_ALL',
     ];
     return importantVars.includes(key);
   }

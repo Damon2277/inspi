@@ -3,11 +3,11 @@
  * 验证新的测试配置和管理系统是否正常工作
  */
 
-import { 
-  TestConfigManager, 
-  TestEnvironment, 
-  TestDatabaseManager, 
-  JestConfigGenerator 
+import {
+  TestConfigManager,
+  TestEnvironment,
+  TestDatabaseManager,
+  JestConfigGenerator,
 } from '@/lib/testing';
 
 describe('Test Configuration System', () => {
@@ -26,7 +26,7 @@ describe('Test Configuration System', () => {
 
     it('should load default configuration', () => {
       const config = configManager.getConfig();
-      
+
       expect(config).toBeDefined();
       expect(config.coverage.threshold.statements).toBe(95);
       expect(config.execution.timeout).toBe(60000);
@@ -35,7 +35,7 @@ describe('Test Configuration System', () => {
 
     it('should validate configuration', () => {
       const validation = configManager.validateConfig();
-      
+
       expect(validation.valid).toBe(true);
       expect(validation.errors).toHaveLength(0);
     });
@@ -56,7 +56,7 @@ describe('Test Configuration System', () => {
 
     it('should generate Jest configuration', () => {
       const jestConfig = configManager.getJestConfig('unit');
-      
+
       expect(jestConfig).toBeDefined();
       expect(jestConfig.displayName).toBe('Unit Tests');
       expect(jestConfig.testEnvironment).toBe('jsdom');
@@ -81,7 +81,7 @@ describe('Test Configuration System', () => {
 
     it('should detect environment information', () => {
       const envInfo = testEnvironment.detectEnvironment();
-      
+
       expect(envInfo).toBeDefined();
       expect(envInfo.type).toMatch(/^(unit|integration|e2e)$/);
       expect(envInfo.nodeVersion).toBeDefined();
@@ -94,7 +94,7 @@ describe('Test Configuration System', () => {
 
     it('should get status', () => {
       const status = testEnvironment.getStatus();
-      
+
       expect(status).toBeDefined();
       expect(typeof status.initialized).toBe('boolean');
       expect(status.environment).toBeDefined();
@@ -117,7 +117,7 @@ describe('Test Configuration System', () => {
 
     it('should get database status', () => {
       const status = dbManager.getStatus();
-      
+
       expect(status).toBeDefined();
       expect(status.mongodb).toBeDefined();
       expect(status.redis).toBeDefined();
@@ -127,10 +127,10 @@ describe('Test Configuration System', () => {
 
     it('should perform health check', async () => {
       const health = await dbManager.healthCheck();
-      
+
       expect(health).toBeDefined();
       expect(typeof health.healthy).toBe('boolean');
-      
+
       if (!health.healthy) {
         expect(health.message).toBeDefined();
       }
@@ -149,7 +149,7 @@ describe('Test Configuration System', () => {
         type: 'unit',
         coverage: true,
       });
-      
+
       expect(config).toBeDefined();
       expect(config.displayName).toBe('Unit Tests');
       expect(config.testEnvironment).toBe('jsdom');
@@ -161,7 +161,7 @@ describe('Test Configuration System', () => {
         type: 'integration',
         coverage: false,
       });
-      
+
       expect(config).toBeDefined();
       expect(config.displayName).toBe('Integration Tests');
       expect(config.testEnvironment).toBe('node');
@@ -173,7 +173,7 @@ describe('Test Configuration System', () => {
         type: 'e2e',
         ci: true,
       });
-      
+
       expect(config).toBeDefined();
       expect(config.displayName).toBe('E2E Tests');
       expect(config.testEnvironment).toBe('node');
@@ -186,9 +186,9 @@ describe('Test Configuration System', () => {
         type: 'unit',
         coverage: true,
       });
-      
+
       const validation = generator.validateConfig(config);
-      
+
       expect(validation.valid).toBe(true);
       expect(validation.errors).toHaveLength(0);
     });
@@ -199,16 +199,16 @@ describe('Test Configuration System', () => {
         testMatch: [],
         testTimeout: -1,
       };
-      
+
       const validation = generator.validateConfig(invalidConfig);
-      
+
       expect(validation.valid).toBe(false);
       expect(validation.errors.length).toBeGreaterThan(0);
     });
 
     it('should get recommended configuration', () => {
       const config = generator.getRecommendedConfig('unit');
-      
+
       expect(config).toBeDefined();
       expect(config.displayName).toBe('Unit Tests');
       expect(config.collectCoverage).toBe(true);
@@ -218,7 +218,7 @@ describe('Test Configuration System', () => {
   describe('Global Test Utils', () => {
     it('should have global test utilities available', () => {
       expect(global.testUtils).toBeDefined();
-      
+
       if (global.testUtils) {
         expect(typeof global.testUtils.createTestId).toBe('function');
         expect(typeof global.testUtils.wait).toBe('function');
@@ -230,7 +230,7 @@ describe('Test Configuration System', () => {
       if (global.testUtils?.createTestId) {
         const id1 = global.testUtils.createTestId();
         const id2 = global.testUtils.createTestId();
-        
+
         expect(id1).toBeDefined();
         expect(id2).toBeDefined();
         expect(id1).not.toBe(id2);
@@ -243,7 +243,7 @@ describe('Test Configuration System', () => {
         const start = Date.now();
         await global.testUtils.wait(100);
         const elapsed = Date.now() - start;
-        
+
         expect(elapsed).toBeGreaterThanOrEqual(90);
         expect(elapsed).toBeLessThan(200);
       }
@@ -252,7 +252,7 @@ describe('Test Configuration System', () => {
     it('should provide retry functionality', async () => {
       if (global.testUtils?.retry) {
         let attempts = 0;
-        
+
         const result = await global.testUtils.retry(async () => {
           attempts++;
           if (attempts < 3) {
@@ -260,7 +260,7 @@ describe('Test Configuration System', () => {
           }
           return 'success';
         }, 3, 10);
-        
+
         expect(result).toBe('success');
         expect(attempts).toBe(3);
       }

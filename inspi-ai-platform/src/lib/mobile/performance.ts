@@ -49,13 +49,13 @@ export class MobilePerformanceMonitor {
 
     // 监控Web Vitals
     this.observeWebVitals();
-    
+
     // 监控移动端特定指标
     this.observeMobileMetrics();
-    
+
     // 监控用户体验指标
     this.observeUserExperience();
-    
+
     // 监控内存使用
     this.observeMemoryUsage();
   }
@@ -114,7 +114,7 @@ export class MobilePerformanceMonitor {
     // FCP (First Contentful Paint)
     if (performance.getEntriesByType) {
       const paintEntries = performance.getEntriesByType('paint');
-      const fcpEntry = paintEntries.find(entry => entry.name === 'first-contentful-paint');
+      const fcpEntry = (paintEntries.find as any)(entry => entry.name === 'first-contentful-paint');
       if (fcpEntry) {
         this.metrics.fcp = fcpEntry.startTime;
       }
@@ -170,14 +170,14 @@ export class MobilePerformanceMonitor {
       if (touchStartTime > 0) {
         const responseTime = performance.now() - touchStartTime;
         touchResponseTimes.push(responseTime);
-        
+
         // 保持最近100次的记录
         if (touchResponseTimes.length > 100) {
           touchResponseTimes.shift();
         }
-        
+
         // 计算平均响应时间
-        this.mobileMetrics.touchResponseTime = 
+        this.mobileMetrics.touchResponseTime =
           touchResponseTimes.reduce((sum, time) => sum + time, 0) / touchResponseTimes.length;
       }
     }, { passive: true });
@@ -196,11 +196,11 @@ export class MobilePerformanceMonitor {
         frameCount++;
         const currentTime = performance.now();
         totalFrameTime += currentTime - scrollStartTime;
-        
+
         // 计算平均帧时间
         const avgFrameTime = totalFrameTime / frameCount;
         this.mobileMetrics.scrollPerformance = 1000 / avgFrameTime; // FPS
-        
+
         scrollStartTime = currentTime;
       }
     };
@@ -239,12 +239,12 @@ export class MobilePerformanceMonitor {
         if (interactionStartTime > 0) {
           const interactionTime = performance.now() - interactionStartTime;
           interactionTimes.push(interactionTime);
-          
+
           if (interactionTimes.length > 50) {
             interactionTimes.shift();
           }
-          
-          this.uxMetrics.interactionTime = 
+
+          this.uxMetrics.interactionTime =
             interactionTimes.reduce((sum, time) => sum + time, 0) / interactionTimes.length;
         }
       }, { passive: true });
@@ -289,7 +289,7 @@ export class MobilePerformanceMonitor {
     return {
       webVitals: { ...this.metrics },
       mobile: { ...this.mobileMetrics },
-      userExperience: { ...this.uxMetrics }
+      userExperience: { ...this.uxMetrics },
     };
   }
 
@@ -305,14 +305,14 @@ export class MobilePerformanceMonitor {
     const webVitalsScore = this.calculateWebVitalsScore();
     const mobileScore = this.calculateMobileScore();
     const uxScore = this.calculateUXScore();
-    
+
     const overall = (webVitalsScore + mobileScore + uxScore) / 3;
 
     return {
       overall: Math.round(overall),
       webVitals: Math.round(webVitalsScore),
       mobile: Math.round(mobileScore),
-      userExperience: Math.round(uxScore)
+      userExperience: Math.round(uxScore),
     };
   }
 
@@ -487,6 +487,6 @@ export const useMobilePerformance = () => {
   return {
     getMetrics: () => mobilePerformanceMonitor.getMetrics(),
     getScore: () => mobilePerformanceMonitor.getPerformanceScore(),
-    generateReport: () => mobilePerformanceMonitor.generateReport()
+    generateReport: () => mobilePerformanceMonitor.generateReport(),
   };
 };

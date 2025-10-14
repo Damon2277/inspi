@@ -3,7 +3,7 @@
  * 实现基础的防作弊检测机制，包括IP频率限制、设备指纹检测、自我邀请检测等
  */
 
-import { DatabaseService } from '../database'
+import { DatabaseService } from '../database';
 
 export interface FraudDetectionResult {
   isValid: boolean
@@ -40,31 +40,31 @@ export interface RegistrationAttempt {
 export interface FraudDetectionService {
   // IP频率检测
   checkIPFrequency(ip: string): Promise<FraudDetectionResult>
-  
+
   // 设备指纹检测
   checkDeviceFingerprint(fingerprint: DeviceFingerprint): Promise<FraudDetectionResult>
-  
+
   // 自我邀请检测
   checkSelfInvitation(inviterId: string, inviteeEmail: string, ip: string): Promise<FraudDetectionResult>
-  
+
   // 批量注册检测
   checkBatchRegistration(attempt: RegistrationAttempt): Promise<FraudDetectionResult>
-  
+
   // 综合风险评估
   assessRegistrationRisk(attempt: RegistrationAttempt, inviterId?: string): Promise<FraudDetectionResult>
-  
+
   // 记录可疑行为
   recordSuspiciousActivity(activity: SuspiciousActivity): Promise<void>
-  
+
   // 获取用户风险等级
   getUserRiskLevel(userId: string): Promise<'low' | 'medium' | 'high'>
-  
+
   // 更新用户风险等级
   updateUserRiskLevel(userId: string, level: 'low' | 'medium' | 'high', reason: string): Promise<void>
-  
+
   // 检查用户是否被禁止
   isUserBanned(userId: string): Promise<boolean>
-  
+
   // 禁止用户参与邀请活动
   banUser(userId: string, reason: string, duration?: number): Promise<void>
 }
@@ -80,10 +80,10 @@ export interface SuspiciousActivity {
 }
 
 export class FraudDetectionServiceImpl implements FraudDetectionService {
-  private readonly IP_FREQUENCY_LIMIT = 5 // 每小时最多5次注册
-  private readonly DEVICE_REUSE_LIMIT = 3 // 同一设备最多3次注册
-  private readonly BATCH_TIME_WINDOW = 300 // 5分钟内的批量检测窗口
-  private readonly BATCH_COUNT_THRESHOLD = 3 // 批量注册阈值
+  private readonly IP_FREQUENCY_LIMIT = 5; // 每小时最多5次注册
+  private readonly DEVICE_REUSE_LIMIT = 3; // 同一设备最多3次注册
+  private readonly BATCH_TIME_WINDOW = 300; // 5分钟内的批量检测窗口
+  private readonly BATCH_COUNT_THRESHOLD = 3; // 批量注册阈值
 
   constructor(private db: DatabaseService) {}
 
@@ -92,18 +92,18 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
    */
   async checkIPFrequency(ip: string): Promise<FraudDetectionResult> {
     try {
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
-      
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+
       // 查询过去1小时内该IP的注册次数
       const query = `
         SELECT COUNT(*) as count
         FROM users 
         WHERE registration_ip = ? 
         AND created_at > ?
-      `
-      
-      const result = await this.db.queryOne(query, [ip, oneHourAgo])
-      const registrationCount = parseInt(result?.count) || 0
+      `;
+
+      const result = await this.db.queryOne<{ count: number | string }>(query, [ip, oneHourAgo]);
+      const registrationCount = Number(result?.count) || 0;
 
       if (registrationCount >= this.IP_FREQUENCY_LIMIT) {
         return {
@@ -113,9 +113,9 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
           actions: [{
             type: 'block',
             description: '暂时阻止该IP注册',
-            duration: 60 // 1小时
-          }]
-        }
+            duration: 60, // 1小时
+          }],
+        };
       } else if (registrationCount >= Math.floor(this.IP_FREQUENCY_LIMIT * 0.7)) {
         return {
           isValid: true,
@@ -123,25 +123,25 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
           reasons: [`IP ${ip} 注册频率较高 (${registrationCount}次)`],
           actions: [{
             type: 'monitor',
-            description: '监控该IP的后续行为'
-          }]
-        }
+            description: '监控该IP的后续行为',
+          }],
+        };
       }
 
       return {
         isValid: true,
         riskLevel: 'low',
         reasons: [],
-        actions: []
-      }
+        actions: [],
+      };
     } catch (error) {
-      console.error('Failed to check IP frequency:', error)
+      console.error('Failed to check IP frequency:', error);
       return {
         isValid: true,
         riskLevel: 'low',
         reasons: ['检测失败，默认通过'],
-        actions: []
-      }
+        actions: [],
+      };
     }
   }
 
@@ -155,10 +155,10 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
         SELECT COUNT(DISTINCT user_id) as user_count
         FROM device_fingerprints 
         WHERE fingerprint_hash = ?
-      `
-      
-      const result = await this.db.queryOne(query, [fingerprint.hash])
-      const userCount = parseInt(result?.user_count) || 0
+      `;
+
+      const result = await this.db.queryOne<{ user_count: number | string }>(query, [fingerprint.hash]);
+      const userCount = Number(result?.user_count) || 0;
 
       if (userCount >= this.DEVICE_REUSE_LIMIT) {
         return {
@@ -167,9 +167,9 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
           reasons: [`设备指纹已被${userCount}个用户使用，超过限制`],
           actions: [{
             type: 'block',
-            description: '阻止该设备注册新账户'
-          }]
-        }
+            description: '阻止该设备注册新账户',
+          }],
+        };
       } else if (userCount >= Math.floor(this.DEVICE_REUSE_LIMIT * 0.7)) {
         return {
           isValid: true,
@@ -177,25 +177,25 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
           reasons: [`设备指纹已被${userCount}个用户使用`],
           actions: [{
             type: 'review',
-            description: '需要人工审核'
-          }]
-        }
+            description: '需要人工审核',
+          }],
+        };
       }
 
       return {
         isValid: true,
         riskLevel: 'low',
         reasons: [],
-        actions: []
-      }
+        actions: [],
+      };
     } catch (error) {
-      console.error('Failed to check device fingerprint:', error)
+      console.error('Failed to check device fingerprint:', error);
       return {
         isValid: true,
         riskLevel: 'low',
         reasons: ['检测失败，默认通过'],
-        actions: []
-      }
+        actions: [],
+      };
     }
   }
 
@@ -209,10 +209,10 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
         SELECT email, registration_ip 
         FROM users 
         WHERE id = ?
-      `
-      
-      const inviter = await this.db.queryOne(inviterQuery, [inviterId])
-      
+      `;
+
+      const inviter = await this.db.queryOne<{ email: string; registration_ip: string | null }>(inviterQuery, [inviterId]);
+
       if (!inviter) {
         return {
           isValid: false,
@@ -220,9 +220,9 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
           reasons: ['邀请人不存在'],
           actions: [{
             type: 'block',
-            description: '阻止无效邀请'
-          }]
-        }
+            description: '阻止无效邀请',
+          }],
+        };
       }
 
       // 检查是否为自我邀请（相同邮箱）
@@ -233,9 +233,9 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
           reasons: ['检测到自我邀请行为'],
           actions: [{
             type: 'block',
-            description: '阻止自我邀请并记录违规行为'
-          }]
-        }
+            description: '阻止自我邀请并记录违规行为',
+          }],
+        };
       }
 
       // 检查是否来自相同IP
@@ -246,19 +246,19 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
           reasons: ['邀请人和被邀请人来自相同IP'],
           actions: [{
             type: 'block',
-            description: '阻止相同IP邀请'
-          }]
-        }
+            description: '阻止相同IP邀请',
+          }],
+        };
       }
 
       // 检查邮箱域名相似性（可能的变体邮箱）
-      const inviterDomain = inviter.email.split('@')[1]
-      const inviteeDomain = inviteeEmail.split('@')[1]
-      
+      const inviterDomain = inviter.email.split('@')[1];
+      const inviteeDomain = inviteeEmail.split('@')[1];
+
       if (inviterDomain === inviteeDomain) {
-        const inviterLocal = inviter.email.split('@')[0]
-        const inviteeLocal = inviteeEmail.split('@')[0]
-        
+        const inviterLocal = inviter.email.split('@')[0];
+        const inviteeLocal = inviteeEmail.split('@')[0];
+
         // 检查是否为相似的邮箱前缀（如添加数字、点等）
         if (this.isSimilarEmailPrefix(inviterLocal, inviteeLocal)) {
           return {
@@ -267,9 +267,9 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
             reasons: ['检测到相似邮箱模式'],
             actions: [{
               type: 'review',
-              description: '需要人工审核相似邮箱'
-            }]
-          }
+              description: '需要人工审核相似邮箱',
+            }],
+          };
         }
       }
 
@@ -277,16 +277,16 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
         isValid: true,
         riskLevel: 'low',
         reasons: [],
-        actions: []
-      }
+        actions: [],
+      };
     } catch (error) {
-      console.error('Failed to check self invitation:', error)
+      console.error('Failed to check self invitation:', error);
       return {
         isValid: true,
         riskLevel: 'low',
         reasons: ['检测失败，默认通过'],
-        actions: []
-      }
+        actions: [],
+      };
     }
   }
 
@@ -295,17 +295,17 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
    */
   async checkBatchRegistration(attempt: RegistrationAttempt): Promise<FraudDetectionResult> {
     try {
-      const timeWindow = new Date(attempt.timestamp.getTime() - this.BATCH_TIME_WINDOW * 1000)
-      
+      const timeWindow = new Date(attempt.timestamp.getTime() - this.BATCH_TIME_WINDOW * 1000);
+
       // 检查时间窗口内的注册模式
       const patterns = await Promise.all([
         this.checkIPBatchPattern(attempt.ip, timeWindow),
         this.checkUserAgentBatchPattern(attempt.userAgent, timeWindow),
-        this.checkEmailBatchPattern(attempt.email, timeWindow)
-      ])
+        this.checkEmailBatchPattern(attempt.email, timeWindow),
+      ]);
 
-      const suspiciousPatterns = patterns.filter(p => p.isSuspicious)
-      
+      const suspiciousPatterns = patterns.filter(p => p.isSuspicious);
+
       if (suspiciousPatterns.length >= 2) {
         return {
           isValid: false,
@@ -313,9 +313,9 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
           reasons: suspiciousPatterns.map(p => p.reason),
           actions: [{
             type: 'block',
-            description: '检测到批量注册模式，暂时阻止'
-          }]
-        }
+            description: '检测到批量注册模式，暂时阻止',
+          }],
+        };
       } else if (suspiciousPatterns.length === 1) {
         return {
           isValid: true,
@@ -323,25 +323,25 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
           reasons: suspiciousPatterns.map(p => p.reason),
           actions: [{
             type: 'monitor',
-            description: '监控可能的批量注册行为'
-          }]
-        }
+            description: '监控可能的批量注册行为',
+          }],
+        };
       }
 
       return {
         isValid: true,
         riskLevel: 'low',
         reasons: [],
-        actions: []
-      }
+        actions: [],
+      };
     } catch (error) {
-      console.error('Failed to check batch registration:', error)
+      console.error('Failed to check batch registration:', error);
       return {
         isValid: true,
         riskLevel: 'low',
         reasons: ['检测失败，默认通过'],
-        actions: []
-      }
+        actions: [],
+      };
     }
   }
 
@@ -354,36 +354,36 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
         this.checkIPFrequency(attempt.ip),
         attempt.deviceFingerprint ? this.checkDeviceFingerprint(attempt.deviceFingerprint) : null,
         inviterId ? this.checkSelfInvitation(inviterId, attempt.email, attempt.ip) : null,
-        this.checkBatchRegistration(attempt)
-      ])
+        this.checkBatchRegistration(attempt),
+      ]);
 
-      const validChecks = checks.filter(check => check !== null) as FraudDetectionResult[]
-      
+      const validChecks = checks.filter(check => check !== null) as FraudDetectionResult[];
+
       // 计算综合风险等级
-      const highRiskChecks = validChecks.filter(check => check.riskLevel === 'high')
-      const mediumRiskChecks = validChecks.filter(check => check.riskLevel === 'medium')
-      const invalidChecks = validChecks.filter(check => !check.isValid)
+      const highRiskChecks = validChecks.filter(check => check.riskLevel === 'high');
+      const mediumRiskChecks = validChecks.filter(check => check.riskLevel === 'medium');
+      const invalidChecks = validChecks.filter(check => !check.isValid);
 
-      let finalRiskLevel: 'low' | 'medium' | 'high' = 'low'
-      let isValid = true
-      const allReasons: string[] = []
-      const allActions: FraudAction[] = []
+      let finalRiskLevel: 'low' | 'medium' | 'high' = 'low';
+      let isValid = true;
+      const allReasons: string[] = [];
+      const allActions: FraudAction[] = [];
 
       // 收集所有原因和行动
       validChecks.forEach(check => {
-        allReasons.push(...check.reasons)
-        allActions.push(...check.actions)
-      })
+        allReasons.push(...check.reasons);
+        allActions.push(...check.actions);
+      });
 
       // 确定最终风险等级和有效性
       if (invalidChecks.length > 0 || highRiskChecks.length > 0) {
-        isValid = false
-        finalRiskLevel = 'high'
+        isValid = false;
+        finalRiskLevel = 'high';
       } else if (mediumRiskChecks.length >= 2) {
-        isValid = false
-        finalRiskLevel = 'high'
+        isValid = false;
+        finalRiskLevel = 'high';
       } else if (mediumRiskChecks.length === 1) {
-        finalRiskLevel = 'medium'
+        finalRiskLevel = 'medium';
       }
 
       // 记录可疑活动
@@ -396,26 +396,26 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
           metadata: {
             attempt,
             inviterId,
-            checks: validChecks
+            checks: validChecks,
           },
-          timestamp: new Date()
-        })
+          timestamp: new Date(),
+        });
       }
 
       return {
         isValid,
         riskLevel: finalRiskLevel,
         reasons: allReasons,
-        actions: allActions
-      }
+        actions: allActions,
+      };
     } catch (error) {
-      console.error('Failed to assess registration risk:', error)
+      console.error('Failed to assess registration risk:', error);
       return {
         isValid: true,
         riskLevel: 'low',
         reasons: ['风险评估失败，默认通过'],
-        actions: []
-      }
+        actions: [],
+      };
     }
   }
 
@@ -428,8 +428,8 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
         INSERT INTO suspicious_activities (
           user_id, ip, type, description, severity, metadata, created_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?)
-      `
-      
+      `;
+
       await this.db.execute(query, [
         activity.userId || null,
         activity.ip,
@@ -437,10 +437,10 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
         activity.description,
         activity.severity,
         JSON.stringify(activity.metadata || {}),
-        activity.timestamp
-      ])
+        activity.timestamp,
+      ]);
     } catch (error) {
-      console.error('Failed to record suspicious activity:', error)
+      console.error('Failed to record suspicious activity:', error);
     }
   }
 
@@ -453,13 +453,13 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
         SELECT risk_level 
         FROM user_risk_profiles 
         WHERE user_id = ?
-      `
-      
-      const result = await this.db.queryOne(query, [userId])
-      return (result?.risk_level as 'low' | 'medium' | 'high') || 'low'
+      `;
+
+      const result = await this.db.queryOne<{ risk_level: 'low' | 'medium' | 'high' }>(query, [userId]);
+      return result?.risk_level || 'low';
     } catch (error) {
-      console.error('Failed to get user risk level:', error)
-      return 'low'
+      console.error('Failed to get user risk level:', error);
+      return 'low';
     }
   }
 
@@ -475,11 +475,11 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
           risk_level = VALUES(risk_level),
           reason = VALUES(reason),
           updated_at = VALUES(updated_at)
-      `
-      
-      await this.db.execute(query, [userId, level, reason])
+      `;
+
+      await this.db.execute(query, [userId, level, reason]);
     } catch (error) {
-      console.error('Failed to update user risk level:', error)
+      console.error('Failed to update user risk level:', error);
     }
   }
 
@@ -494,13 +494,13 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
         WHERE user_id = ? 
         AND (expires_at IS NULL OR expires_at > NOW())
         AND is_active = 1
-      `
-      
-      const result = await this.db.queryOne(query, [userId])
-      return !!result
+      `;
+
+      const result = await this.db.queryOne(query, [userId]);
+      return !!result;
     } catch (error) {
-      console.error('Failed to check user ban status:', error)
-      return false
+      console.error('Failed to check user ban status:', error);
+      return false;
     }
   }
 
@@ -509,19 +509,19 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
    */
   async banUser(userId: string, reason: string, duration?: number): Promise<void> {
     try {
-      const expiresAt = duration ? new Date(Date.now() + duration * 60 * 1000) : null
-      
+      const expiresAt = duration ? new Date(Date.now() + duration * 60 * 1000) : null;
+
       const query = `
         INSERT INTO user_bans (user_id, reason, expires_at, created_at, is_active)
         VALUES (?, ?, ?, NOW(), 1)
-      `
-      
-      await this.db.execute(query, [userId, reason, expiresAt])
-      
+      `;
+
+      await this.db.execute(query, [userId, reason, expiresAt]);
+
       // 同时更新用户风险等级
-      await this.updateUserRiskLevel(userId, 'high', `被禁止: ${reason}`)
+      await this.updateUserRiskLevel(userId, 'high', `被禁止: ${reason}`);
     } catch (error) {
-      console.error('Failed to ban user:', error)
+      console.error('Failed to ban user:', error);
     }
   }
 
@@ -532,43 +532,43 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
    */
   private isSimilarEmailPrefix(prefix1: string, prefix2: string): boolean {
     // 移除数字和特殊字符后比较
-    const clean1 = prefix1.replace(/[0-9._-]/g, '').toLowerCase()
-    const clean2 = prefix2.replace(/[0-9._-]/g, '').toLowerCase()
-    
+    const clean1 = prefix1.replace(/[0-9._-]/g, '').toLowerCase();
+    const clean2 = prefix2.replace(/[0-9._-]/g, '').toLowerCase();
+
     if (clean1 === clean2 && clean1.length > 0) {
-      return true
+      return true;
     }
-    
+
     // 检查编辑距离
-    return this.calculateEditDistance(prefix1, prefix2) <= 2
+    return this.calculateEditDistance(prefix1, prefix2) <= 2;
   }
 
   /**
    * 计算编辑距离
    */
   private calculateEditDistance(str1: string, str2: string): number {
-    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null))
-    
+    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+
     for (let i = 0; i <= str1.length; i++) {
-      matrix[0][i] = i
+      matrix[0][i] = i;
     }
-    
+
     for (let j = 0; j <= str2.length; j++) {
-      matrix[j][0] = j
+      matrix[j][0] = j;
     }
-    
+
     for (let j = 1; j <= str2.length; j++) {
       for (let i = 1; i <= str1.length; i++) {
-        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1
+        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
         matrix[j][i] = Math.min(
           matrix[j][i - 1] + 1,
           matrix[j - 1][i] + 1,
-          matrix[j - 1][i - 1] + indicator
-        )
+          matrix[j - 1][i - 1] + indicator,
+        );
       }
     }
-    
-    return matrix[str2.length][str1.length]
+
+    return matrix[str2.length][str1.length];
   }
 
   /**
@@ -580,19 +580,19 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
       FROM users 
       WHERE registration_ip = ? 
       AND created_at > ?
-    `
-    
-    const result = await this.db.queryOne(query, [ip, timeWindow])
-    const count = parseInt(result?.count) || 0
-    
+    `;
+
+    const result = await this.db.queryOne<{ count: number | string }>(query, [ip, timeWindow]);
+    const count = Number(result?.count) || 0;
+
     if (count >= this.BATCH_COUNT_THRESHOLD) {
       return {
         isSuspicious: true,
-        reason: `IP ${ip} 在短时间内注册${count}个账户`
-      }
+        reason: `IP ${ip} 在短时间内注册${count}个账户`,
+      };
     }
-    
-    return { isSuspicious: false, reason: '' }
+
+    return { isSuspicious: false, reason: '' };
   }
 
   /**
@@ -604,44 +604,44 @@ export class FraudDetectionServiceImpl implements FraudDetectionService {
       FROM users 
       WHERE user_agent = ? 
       AND created_at > ?
-    `
-    
-    const result = await this.db.queryOne(query, [userAgent, timeWindow])
-    const count = parseInt(result?.count) || 0
-    
+    `;
+
+    const result = await this.db.queryOne<{ count: number | string }>(query, [userAgent, timeWindow]);
+    const count = Number(result?.count) || 0;
+
     if (count >= this.BATCH_COUNT_THRESHOLD) {
       return {
         isSuspicious: true,
-        reason: `相同User-Agent在短时间内注册${count}个账户`
-      }
+        reason: `相同User-Agent在短时间内注册${count}个账户`,
+      };
     }
-    
-    return { isSuspicious: false, reason: '' }
+
+    return { isSuspicious: false, reason: '' };
   }
 
   /**
    * 检查邮箱批量模式
    */
   private async checkEmailBatchPattern(email: string, timeWindow: Date): Promise<{isSuspicious: boolean, reason: string}> {
-    const domain = email.split('@')[1]
-    
+    const domain = email.split('@')[1];
+
     const query = `
       SELECT COUNT(*) as count
       FROM users 
       WHERE email LIKE ? 
       AND created_at > ?
-    `
-    
-    const result = await this.db.queryOne(query, [`%@${domain}`, timeWindow])
-    const count = parseInt(result?.count) || 0
-    
+    `;
+
+    const result = await this.db.queryOne<{ count: number | string }>(query, [`%@${domain}`, timeWindow]);
+    const count = Number(result?.count) || 0;
+
     if (count >= this.BATCH_COUNT_THRESHOLD * 2) {
       return {
         isSuspicious: true,
-        reason: `域名 ${domain} 在短时间内注册${count}个账户`
-      }
+        reason: `域名 ${domain} 在短时间内注册${count}个账户`,
+      };
     }
-    
-    return { isSuspicious: false, reason: '' }
+
+    return { isSuspicious: false, reason: '' };
   }
 }

@@ -3,16 +3,17 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { useContentValidation } from '@/hooks/useContentValidation';
+
+import { validateContent, cleanUserContent, createValidationSummary } from '@/lib/security';
+
+import { useContentValidation } from '@/shared/hooks/useContentValidation';
 
 // Mock 安全模块
 jest.mock('@/lib/security', () => ({
     validateContent: jest.fn(),
     cleanUserContent: jest.fn(),
-    createValidationSummary: jest.fn()
+    createValidationSummary: jest.fn(),
 }));
-
-import { validateContent, cleanUserContent, createValidationSummary } from '@/lib/security';
 
 const mockValidateContent = validateContent as jest.MockedFunction<typeof validateContent>;
 const mockCleanUserContent = cleanUserContent as jest.MockedFunction<typeof cleanUserContent>;
@@ -27,7 +28,7 @@ describe('useContentValidation', () => {
             isValid: true,
             cleanContent: 'test content',
             issues: [],
-            riskLevel: 'low'
+            riskLevel: 'low',
         });
 
         mockCreateValidationSummary.mockReturnValue({
@@ -39,7 +40,7 @@ describe('useContentValidation', () => {
             warningCount: 0,
             errors: [],
             warnings: [],
-            cleanContent: 'test content'
+            cleanContent: 'test content',
         });
 
         mockCleanUserContent.mockReturnValue('cleaned content');
@@ -69,7 +70,7 @@ describe('useContentValidation', () => {
 
     test('应该在实时验证模式下自动验证', async () => {
         const { result } = renderHook(() =>
-            useContentValidation({ realTimeValidation: true, debounceDelay: 0 })
+            useContentValidation({ realTimeValidation: true, debounceDelay: 0 }),
         );
 
         act(() => {
@@ -89,9 +90,9 @@ describe('useContentValidation', () => {
             isValid: false,
             cleanContent: 'test content',
             issues: [
-                { type: 'sensitive_word', message: '包含敏感词', severity: 'error' }
+                { type: 'sensitive_word', message: '包含敏感词', severity: 'error' },
             ],
-            riskLevel: 'high'
+            riskLevel: 'high',
         });
 
         mockCreateValidationSummary.mockReturnValue({
@@ -103,11 +104,11 @@ describe('useContentValidation', () => {
             warningCount: 0,
             errors: ['包含敏感词'],
             warnings: [],
-            cleanContent: 'test content'
+            cleanContent: 'test content',
         });
 
         const { result } = renderHook(() =>
-            useContentValidation({ realTimeValidation: true, debounceDelay: 0 })
+            useContentValidation({ realTimeValidation: true, debounceDelay: 0 }),
         );
 
         act(() => {
@@ -129,9 +130,9 @@ describe('useContentValidation', () => {
             isValid: true,
             cleanContent: 'test content',
             issues: [
-                { type: 'format_error', message: '格式警告', severity: 'warning' }
+                { type: 'format_error', message: '格式警告', severity: 'warning' },
             ],
-            riskLevel: 'medium'
+            riskLevel: 'medium',
         });
 
         mockCreateValidationSummary.mockReturnValue({
@@ -143,11 +144,11 @@ describe('useContentValidation', () => {
             warningCount: 1,
             errors: [],
             warnings: ['格式警告'],
-            cleanContent: 'test content'
+            cleanContent: 'test content',
         });
 
         const { result } = renderHook(() =>
-            useContentValidation({ realTimeValidation: true, debounceDelay: 0 })
+            useContentValidation({ realTimeValidation: true, debounceDelay: 0 }),
         );
 
         act(() => {
@@ -165,7 +166,7 @@ describe('useContentValidation', () => {
 
     test('应该支持手动验证', () => {
         const { result } = renderHook(() =>
-            useContentValidation({ realTimeValidation: false })
+            useContentValidation({ realTimeValidation: false }),
         );
 
         act(() => {
@@ -199,8 +200,8 @@ describe('useContentValidation', () => {
             useContentValidation({
                 realTimeValidation: true,
                 autoClean: true,
-                debounceDelay: 0
-            })
+                debounceDelay: 0,
+            }),
         );
 
         act(() => {
@@ -232,7 +233,7 @@ describe('useContentValidation', () => {
 
     test('应该正确计算canSubmit状态', async () => {
         const { result } = renderHook(() =>
-            useContentValidation({ realTimeValidation: true, debounceDelay: 0 })
+            useContentValidation({ realTimeValidation: true, debounceDelay: 0 }),
         );
 
         // 空内容不能提交
@@ -254,7 +255,7 @@ describe('useContentValidation', () => {
             isValid: false,
             cleanContent: 'test content',
             issues: [{ type: 'sensitive_word', message: '错误', severity: 'error' }],
-            riskLevel: 'high'
+            riskLevel: 'high',
         });
 
         mockCreateValidationSummary.mockReturnValue({
@@ -266,7 +267,7 @@ describe('useContentValidation', () => {
             warningCount: 0,
             errors: ['错误'],
             warnings: [],
-            cleanContent: 'test content'
+            cleanContent: 'test content',
         });
 
         act(() => {
@@ -286,9 +287,9 @@ describe('useContentValidation', () => {
             cleanContent: 'test content',
             issues: [
                 { type: 'sensitive_word', message: '第一个错误', severity: 'error' },
-                { type: 'format_error', message: '第一个警告', severity: 'warning' }
+                { type: 'format_error', message: '第一个警告', severity: 'warning' },
             ],
-            riskLevel: 'high'
+            riskLevel: 'high',
         });
 
         mockCreateValidationSummary.mockReturnValue({
@@ -300,11 +301,11 @@ describe('useContentValidation', () => {
             warningCount: 1,
             errors: ['第一个错误'],
             warnings: ['第一个警告'],
-            cleanContent: 'test content'
+            cleanContent: 'test content',
         });
 
         const { result } = renderHook(() =>
-            useContentValidation({ realTimeValidation: true, debounceDelay: 0 })
+            useContentValidation({ realTimeValidation: true, debounceDelay: 0 }),
         );
 
         act(() => {

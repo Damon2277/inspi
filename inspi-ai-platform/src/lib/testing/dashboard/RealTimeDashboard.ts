@@ -1,6 +1,6 @@
 /**
  * Real-Time Test Monitoring Dashboard
- * 
+ *
  * Provides real-time monitoring of test execution status, coverage changes,
  * instant failure notifications, and team collaboration features.
  */
@@ -110,24 +110,24 @@ export class RealTimeDashboard extends EventEmitter {
 
   constructor(
     notificationConfig: Partial<NotificationConfig> = {},
-    updateIntervalMs: number = 1000
+    updateIntervalMs: number = 1000,
   ) {
     super();
-    
+
     this.notificationConfig = {
       enabled: true,
       channels: ['console'],
       thresholds: {
         failureRate: 10, // 10% failure rate threshold
         coverageDropThreshold: 5, // 5% coverage drop threshold
-        performanceDegradation: 50 // 50% performance degradation threshold
+        performanceDegradation: 50, // 50% performance degradation threshold
       },
-      ...notificationConfig
+      ...notificationConfig,
     };
 
     this.metrics = this.initializeMetrics();
     this.collaborationData = this.initializeCollaborationData();
-    
+
     // Start real-time updates
     this.startRealTimeUpdates(updateIntervalMs);
   }
@@ -150,7 +150,7 @@ export class RealTimeDashboard extends EventEmitter {
         branches: 0,
         functions: 0,
         lines: 0,
-        files: {}
+        files: {},
       },
       recentFailures: [],
       performanceMetrics: {
@@ -158,9 +158,9 @@ export class RealTimeDashboard extends EventEmitter {
         slowestTests: [],
         memoryUsage: {
           current: 0,
-          peak: 0
-        }
-      }
+          peak: 0,
+        },
+      },
     };
   }
 
@@ -173,13 +173,13 @@ export class RealTimeDashboard extends EventEmitter {
       sharedState: {
         currentBranch: 'main',
         lastCommit: '',
-        testSuiteVersion: '1.0.0'
+        testSuiteVersion: '1.0.0',
       },
       collaborativeMetrics: {
         totalContributors: 0,
         testsPerContributor: {},
-        recentActivity: []
-      }
+        recentActivity: [],
+      },
     };
   }
 
@@ -284,12 +284,12 @@ export class RealTimeDashboard extends EventEmitter {
     name: string;
     currentTests?: string[];
   }): void {
-    const existingUserIndex = this.collaborationData.activeUsers.findIndex(u => u.id === user.id);
-    
+    const existingUserIndex = this.collaborationData.activeUsers.findIndex(u => u.id === (user.id || (user as any)._id));
+
     const userData = {
       ...user,
       lastActivity: new Date(),
-      currentTests: user.currentTests || []
+      currentTests: user.currentTests || [],
     };
 
     if (existingUserIndex >= 0) {
@@ -306,8 +306,8 @@ export class RealTimeDashboard extends EventEmitter {
    */
   public removeTeamMember(userId: string): void {
     this.collaborationData.activeUsers = this.collaborationData.activeUsers
-      .filter(user => user.id !== userId);
-    
+      .filter(user => (user.id || (user as any)._id) !== userId);
+
     this.emit('teamMemberRemoved', userId);
   }
 
@@ -317,7 +317,7 @@ export class RealTimeDashboard extends EventEmitter {
   public updateSharedState(state: Partial<TeamCollaborationData['sharedState']>): void {
     this.collaborationData.sharedState = {
       ...this.collaborationData.sharedState,
-      ...state
+      ...state,
     };
 
     this.emit('sharedStateUpdated', this.collaborationData.sharedState);
@@ -336,7 +336,7 @@ export class RealTimeDashboard extends EventEmitter {
   public configureNotifications(config: Partial<NotificationConfig>): void {
     this.notificationConfig = {
       ...this.notificationConfig,
-      ...config
+      ...config,
     };
   }
 
@@ -346,7 +346,7 @@ export class RealTimeDashboard extends EventEmitter {
   private async sendNotification(
     type: 'failure' | 'coverage_drop' | 'performance_issue',
     message: string,
-    data?: any
+    data?: any,
   ): Promise<void> {
     if (!this.notificationConfig.enabled) {
       return;
@@ -356,7 +356,7 @@ export class RealTimeDashboard extends EventEmitter {
       type,
       message,
       timestamp: new Date(),
-      data
+      data,
     };
 
     for (const channel of this.notificationConfig.channels) {
@@ -375,26 +375,26 @@ export class RealTimeDashboard extends EventEmitter {
    */
   private async sendToChannel(
     channel: string,
-    notification: any
+    notification: any,
   ): Promise<void> {
     switch (channel) {
       case 'console':
         console.log(`[${notification.type.toUpperCase()}] ${notification.message}`);
         break;
-      
+
       case 'webhook':
         if (this.notificationConfig.webhookUrl) {
           // In a real implementation, you would use fetch or axios
           console.log(`Webhook notification: ${JSON.stringify(notification)}`);
         }
         break;
-      
+
       case 'email':
         if (this.notificationConfig.emailRecipients?.length) {
           console.log(`Email notification to ${this.notificationConfig.emailRecipients.join(', ')}: ${notification.message}`);
         }
         break;
-      
+
       case 'slack':
         if (this.notificationConfig.slackChannel) {
           console.log(`Slack notification to ${this.notificationConfig.slackChannel}: ${notification.message}`);
@@ -408,7 +408,7 @@ export class RealTimeDashboard extends EventEmitter {
    */
   private handleStatusTransition(
     previous: TestExecutionStatus | undefined,
-    current: TestExecutionStatus
+    current: TestExecutionStatus,
   ): void {
     // Log status changes
     this.collaborationData.collaborativeMetrics.recentActivity.push({
@@ -418,13 +418,13 @@ export class RealTimeDashboard extends EventEmitter {
       details: {
         testId: current.id,
         from: previous?.status,
-        to: current.status
-      }
+        to: current.status,
+      },
     });
 
     // Keep only last 50 activities
     if (this.collaborationData.collaborativeMetrics.recentActivity.length > 50) {
-      this.collaborationData.collaborativeMetrics.recentActivity = 
+      this.collaborationData.collaborativeMetrics.recentActivity =
         this.collaborationData.collaborativeMetrics.recentActivity.slice(-50);
     }
   }
@@ -445,7 +445,7 @@ export class RealTimeDashboard extends EventEmitter {
       await this.sendNotification(
         'failure',
         `High failure rate detected: ${failureRate.toFixed(1)}% (${this.metrics.failedTests}/${this.metrics.totalTests})`,
-        { failureRate, testStatus }
+        { failureRate, testStatus },
       );
     }
   }
@@ -455,7 +455,7 @@ export class RealTimeDashboard extends EventEmitter {
    */
   private async checkCoverageDrop(
     previous: CoverageSnapshot,
-    current: CoverageSnapshot
+    current: CoverageSnapshot,
   ): Promise<void> {
     const statementsDrop = previous.statements - current.statements;
     const branchesDrop = previous.branches - current.branches;
@@ -468,7 +468,7 @@ export class RealTimeDashboard extends EventEmitter {
       await this.sendNotification(
         'coverage_drop',
         `Coverage drop detected: ${maxDrop.toFixed(1)}% decrease`,
-        { previous, current, drop: maxDrop }
+        { previous, current, drop: maxDrop },
       );
     }
   }
@@ -478,7 +478,7 @@ export class RealTimeDashboard extends EventEmitter {
    */
   private updateMetrics(): void {
     const statuses = Array.from(this.testStatuses.values());
-    
+
     this.metrics.totalTests = statuses.length;
     this.metrics.runningTests = statuses.filter(t => t.status === 'running').length;
     this.metrics.passedTests = statuses.filter(t => t.status === 'passed').length;
@@ -501,7 +501,7 @@ export class RealTimeDashboard extends EventEmitter {
       this.metrics.performanceMetrics.memoryUsage.current = memUsage.heapUsed / 1024 / 1024; // MB
       this.metrics.performanceMetrics.memoryUsage.peak = Math.max(
         this.metrics.performanceMetrics.memoryUsage.peak,
-        this.metrics.performanceMetrics.memoryUsage.current
+        this.metrics.performanceMetrics.memoryUsage.current,
       );
     }
   }
@@ -524,7 +524,7 @@ export class RealTimeDashboard extends EventEmitter {
       .map(test => ({
         name: test.name,
         duration: test.duration || 0,
-        file: test.file
+        file: test.file,
       }));
   }
 
@@ -541,7 +541,7 @@ export class RealTimeDashboard extends EventEmitter {
       metrics: this.getMetrics(),
       testStatuses: this.getTestTimeline(),
       coverageHistory: this.getCoverageHistory(),
-      collaborationData: this.getCollaborationData()
+      collaborationData: this.getCollaborationData(),
     };
   }
 
@@ -567,7 +567,7 @@ export class RealTimeDashboard extends EventEmitter {
     if (data.collaborationData) {
       this.collaborationData = {
         ...this.collaborationData,
-        ...data.collaborationData
+        ...data.collaborationData,
       };
     }
 
@@ -583,7 +583,7 @@ export class RealTimeDashboard extends EventEmitter {
     this.coverageHistory = [];
     this.metrics = this.initializeMetrics();
     this.collaborationData = this.initializeCollaborationData();
-    
+
     this.emit('dashboardReset');
   }
 
@@ -600,7 +600,7 @@ export class RealTimeDashboard extends EventEmitter {
       isRunning: this.isRunning,
       totalTests: this.metrics.totalTests,
       activeUsers: this.collaborationData.activeUsers.length,
-      lastUpdate: new Date()
+      lastUpdate: new Date(),
     };
   }
 }

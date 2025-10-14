@@ -182,7 +182,7 @@ async function quickCompatibilityCheck(command) {
 
   // Check Node.js version
   const nodeVersion = process.version;
-  const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0]);
+  const majorVersion = parseInt(nodeVersion.slice(1, 10).split('.')[0]);
   
   if (majorVersion < 18) {
     issues.push(`Node.js version ${nodeVersion} is below recommended minimum (18.0.0)`);
@@ -298,7 +298,8 @@ async function main() {
     }
 
     console.log('✅ Compatibility testing completed!');
-    console.log('\n💡 Note: This is a simplified version. For full functionality, use the TypeScript modules directly.');
+    console.log('\n💡 Note: This is a simplified version. For full functionality,
+      use the TypeScript modules directly.');
 
     // Exit with appropriate code
     process.exit(failedTests > 0 ? 1 : 0);

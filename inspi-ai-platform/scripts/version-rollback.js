@@ -213,7 +213,8 @@ class VersionRollbackManager {
       console.log('\n✅ 版本回滚完成!');
       console.log(`   版本: ${currentVersion} → ${targetVersion}`);
       console.log(`   当前分支: ${execSync('git branch --show-current', { encoding: 'utf8' }).trim()}`);
-      console.log(`   当前提交: ${execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim()}`);
+      console.log(`   当前提交: ${execSync('git rev-parse --short HEAD',
+        { encoding: 'utf8' }).trim()}`);
       
       if (backupInfo) {
         console.log(`   备份位置: ${backupInfo.backupPath}`);
@@ -424,7 +425,8 @@ class VersionRollbackManager {
     if (fs.existsSync(nodeModulesPath)) {
       checks.push({ name: 'node_modules', status: 'ok', message: '依赖已安装' });
     } else {
-      checks.push({ name: 'node_modules', status: 'warning', message: '依赖未安装，回滚后需要运行 npm install' });
+      checks.push({ name: 'node_modules', status: 'warning',
+        message: '依赖未安装，回滚后需要运行 npm install' });
     }
     
     return checks;
@@ -470,7 +472,7 @@ async function main() {
 
     case 'history':
       const historyLimit = args.includes('--limit') 
-        ? parseInt(args[args.indexOf('--limit') + 1]) || 10 
+        ? parseInt(args[args.indexOf('--limit', 10) + 1]) || 10 
         : 10;
       manager.showRollbackHistory(historyLimit);
       break;

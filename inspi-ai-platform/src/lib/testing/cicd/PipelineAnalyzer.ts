@@ -17,7 +17,7 @@ export class PipelineAnalyzer {
 
     // Store metrics for trend analysis
     this.metricsHistory.push(metrics);
-    
+
     // Keep only last 50 builds for analysis
     if (this.metricsHistory.length > 50) {
       this.metricsHistory = this.metricsHistory.slice(-50);
@@ -32,7 +32,7 @@ export class PipelineAnalyzer {
       bottlenecks,
       inefficiencies,
       recommendations,
-      trends
+      trends,
     };
   }
 
@@ -46,14 +46,14 @@ export class PipelineAnalyzer {
     // Analyze stage durations
     metrics.stages.forEach(stage => {
       const stagePercentage = (stage.duration / totalDuration) * 100;
-      
+
       if (stagePercentage > 30) { // Stage takes more than 30% of total time
         bottlenecks.push({
           stage: stage.name,
           type: this.categorizeBottleneck(stage),
           impact: stagePercentage / 100,
           frequency: this.calculateStageFrequency(stage.name),
-          suggestions: this.generateBottleneckSuggestions(stage)
+          suggestions: this.generateBottleneckSuggestions(stage),
         });
       }
     });
@@ -68,8 +68,8 @@ export class PipelineAnalyzer {
         suggestions: [
           'Consider using more powerful runners',
           'Optimize CPU-intensive operations',
-          'Implement parallel processing where possible'
-        ]
+          'Implement parallel processing where possible',
+        ],
       });
     }
 
@@ -82,8 +82,8 @@ export class PipelineAnalyzer {
         suggestions: [
           'Increase memory allocation for runners',
           'Optimize memory usage in applications',
-          'Clear unused objects and caches'
-        ]
+          'Clear unused objects and caches',
+        ],
       });
     }
 
@@ -97,8 +97,8 @@ export class PipelineAnalyzer {
         suggestions: [
           'Add more runners to reduce queue time',
           'Optimize runner allocation',
-          'Consider using spot instances for cost-effective scaling'
-        ]
+          'Consider using spot instances for cost-effective scaling',
+        ],
       });
     }
 
@@ -110,7 +110,7 @@ export class PipelineAnalyzer {
    */
   private categorizeBottleneck(stage: any): 'cpu' | 'memory' | 'io' | 'network' | 'dependency' {
     const stageName = stage.name.toLowerCase();
-    
+
     if (stageName.includes('build') || stageName.includes('compile')) {
       return 'cpu';
     } else if (stageName.includes('test')) {
@@ -135,25 +135,25 @@ export class PipelineAnalyzer {
       suggestions.push(
         'Enable build caching to avoid rebuilding unchanged code',
         'Use incremental builds where possible',
-        'Optimize build tools configuration'
+        'Optimize build tools configuration',
       );
     } else if (stageName.includes('test')) {
       suggestions.push(
         'Run tests in parallel',
         'Use test result caching',
-        'Optimize slow test cases'
+        'Optimize slow test cases',
       );
     } else if (stageName.includes('deploy')) {
       suggestions.push(
         'Use deployment artifacts caching',
         'Optimize deployment scripts',
-        'Consider blue-green deployment for faster rollbacks'
+        'Consider blue-green deployment for faster rollbacks',
       );
     } else {
       suggestions.push(
         'Analyze stage logs for performance issues',
         'Consider breaking down into smaller stages',
-        'Optimize stage dependencies'
+        'Optimize stage dependencies',
       );
     }
 
@@ -168,8 +168,8 @@ export class PipelineAnalyzer {
 
     // Check for redundant stages
     const stageNames = metrics.stages.map(s => s.name);
-    const duplicates = stageNames.filter((name, index) => 
-      stageNames.indexOf(name) !== index
+    const duplicates = stageNames.filter((name, index) =>
+      stageNames.indexOf(name) !== index,
     );
 
     if (duplicates.length > 0) {
@@ -177,14 +177,14 @@ export class PipelineAnalyzer {
         type: 'redundant',
         description: `Duplicate stages detected: ${duplicates.join(', ')}`,
         impact: 'Medium - increases pipeline duration unnecessarily',
-        solution: 'Consolidate or remove duplicate stages'
+        solution: 'Consolidate or remove duplicate stages',
       });
     }
 
     // Check for sequential stages that could be parallel
-    const independentStages = metrics.stages.filter(stage => 
-      !stage.logs?.includes('depends on') && 
-      stage.name !== 'deploy' // Deploy usually needs to be sequential
+    const independentStages = metrics.stages.filter(stage =>
+      !stage.logs?.includes('depends on') &&
+      stage.name !== 'deploy', // Deploy usually needs to be sequential
     );
 
     if (independentStages.length > 2) {
@@ -192,7 +192,7 @@ export class PipelineAnalyzer {
         type: 'sequential',
         description: `${independentStages.length} independent stages running sequentially`,
         impact: 'High - significant time savings possible with parallelization',
-        solution: 'Configure parallel execution for independent stages'
+        solution: 'Configure parallel execution for independent stages',
       });
     }
 
@@ -202,14 +202,14 @@ export class PipelineAnalyzer {
         type: 'oversized',
         description: `Large artifacts (${Math.round(metrics.artifacts.size / 1000000)}MB) slow down pipeline`,
         impact: 'Medium - affects upload/download times',
-        solution: 'Optimize artifact size or use artifact compression'
+        solution: 'Optimize artifact size or use artifact compression',
       });
     }
 
     // Check for misconfigured timeouts
-    const longTimeouts = metrics.stages.filter(stage => 
+    const longTimeouts = metrics.stages.filter(stage =>
       stage.duration < 60000 && // Stage completes in under 1 minute
-      stage.logs?.includes('timeout: 30m') // But has 30 minute timeout
+      stage.logs?.includes('timeout: 30m'), // But has 30 minute timeout
     );
 
     if (longTimeouts.length > 0) {
@@ -217,7 +217,7 @@ export class PipelineAnalyzer {
         type: 'misconfigured',
         description: 'Stages with unnecessarily long timeouts detected',
         impact: 'Low - may delay failure detection',
-        solution: 'Adjust timeouts to match actual stage duration needs'
+        solution: 'Adjust timeouts to match actual stage duration needs',
       });
     }
 
@@ -230,7 +230,7 @@ export class PipelineAnalyzer {
   private generateRecommendations(
     metrics: CICDMetrics,
     bottlenecks: Bottleneck[],
-    inefficiencies: Inefficiency[]
+    inefficiencies: Inefficiency[],
   ): string[] {
     const recommendations: string[] = [];
 
@@ -238,9 +238,9 @@ export class PipelineAnalyzer {
     if (bottlenecks.length > 0) {
       const topBottleneck = bottlenecks[0];
       recommendations.push(
-        `Address primary bottleneck in ${topBottleneck.stage} stage (${Math.round(topBottleneck.impact * 100)}% impact)`
+        `Address primary bottleneck in ${topBottleneck.stage} stage (${Math.round(topBottleneck.impact * 100)}% impact)`,
       );
-      
+
       if (topBottleneck.suggestions.length > 0) {
         recommendations.push(topBottleneck.suggestions[0]);
       }
@@ -288,20 +288,20 @@ export class PipelineAnalyzer {
     return {
       duration: this.analyzeTrendData(
         recent.map(m => m.duration),
-        previous.map(m => m.duration)
+        previous.map(m => m.duration),
       ),
       successRate: this.analyzeTrendData(
         recent.map(m => m.status === 'success' ? 1 : 0),
-        previous.map(m => m.status === 'success' ? 1 : 0)
+        previous.map(m => m.status === 'success' ? 1 : 0),
       ),
       resourceUsage: this.analyzeTrendData(
         recent.map(m => m.performance.resourceUsage.cpu),
-        previous.map(m => m.performance.resourceUsage.cpu)
+        previous.map(m => m.performance.resourceUsage.cpu),
       ),
       testCoverage: this.analyzeTrendData(
         recent.map(m => m.testResults.coverage?.statements || 0),
-        previous.map(m => m.testResults.coverage?.statements || 0)
-      )
+        previous.map(m => m.testResults.coverage?.statements || 0),
+      ),
     };
   }
 
@@ -316,7 +316,7 @@ export class PipelineAnalyzer {
   } {
     const currentAvg = recent.reduce((sum, val) => sum + val, 0) / recent.length;
     const previousAvg = previous.reduce((sum, val) => sum + val, 0) / previous.length;
-    
+
     const change = previousAvg !== 0 ? ((currentAvg - previousAvg) / previousAvg) * 100 : 0;
     const threshold = 5; // 5% change threshold
 
@@ -335,7 +335,7 @@ export class PipelineAnalyzer {
       current: currentAvg,
       previous: previousAvg,
       trend,
-      change: Math.abs(change)
+      change: Math.abs(change),
     };
   }
 
@@ -346,7 +346,7 @@ export class PipelineAnalyzer {
     if (this.metricsHistory.length === 0) return 1.0;
 
     const occurrences = this.metricsHistory.filter(metrics =>
-      metrics.stages.some(stage => stage.name === stageName)
+      metrics.stages.some(stage => stage.name === stageName),
     ).length;
 
     return occurrences / this.metricsHistory.length;
@@ -359,7 +359,7 @@ export class PipelineAnalyzer {
     if (this.metricsHistory.length === 0) return 1.0;
 
     const highQueueBuilds = this.metricsHistory.filter(metrics =>
-      metrics.performance.queueTime > 300000
+      metrics.performance.queueTime > 300000,
     ).length;
 
     return highQueueBuilds / this.metricsHistory.length;
@@ -373,14 +373,14 @@ export class PipelineAnalyzer {
       current: 0,
       previous: 0,
       trend: 'stable' as const,
-      change: 0
+      change: 0,
     };
 
     return {
       duration: emptyTrend,
       successRate: emptyTrend,
       resourceUsage: emptyTrend,
-      testCoverage: emptyTrend
+      testCoverage: emptyTrend,
     };
   }
 
@@ -401,7 +401,7 @@ export class PipelineAnalyzer {
       name: 'Success Rate',
       score: successRate,
       weight: 30,
-      impact: successRate * 0.3
+      impact: successRate * 0.3,
     });
     totalScore += successRate * 0.3;
     maxScore += 100 * 0.3;
@@ -412,7 +412,7 @@ export class PipelineAnalyzer {
       name: 'Duration',
       score: durationScore,
       weight: 25,
-      impact: durationScore * 0.25
+      impact: durationScore * 0.25,
     });
     totalScore += durationScore * 0.25;
     maxScore += 100 * 0.25;
@@ -423,7 +423,7 @@ export class PipelineAnalyzer {
       name: 'Test Coverage',
       score: coverageScore,
       weight: 20,
-      impact: coverageScore * 0.2
+      impact: coverageScore * 0.2,
     });
     totalScore += coverageScore * 0.2;
     maxScore += 100 * 0.2;
@@ -431,32 +431,32 @@ export class PipelineAnalyzer {
     // Resource efficiency factor (15% weight)
     const resourceScore = Math.max(0, 100 - Math.max(
       metrics.performance.resourceUsage.cpu,
-      metrics.performance.resourceUsage.memory
+      metrics.performance.resourceUsage.memory,
     ));
     factors.push({
       name: 'Resource Efficiency',
       score: resourceScore,
       weight: 15,
-      impact: resourceScore * 0.15
+      impact: resourceScore * 0.15,
     });
     totalScore += resourceScore * 0.15;
     maxScore += 100 * 0.15;
 
     // Quality gates factor (10% weight)
-    const qualityScore = metrics.qualityGates ? 
+    const qualityScore = metrics.qualityGates ?
       (metrics.qualityGates.passed / metrics.qualityGates.total) * 100 : 100;
     factors.push({
       name: 'Quality Gates',
       score: qualityScore,
       weight: 10,
-      impact: qualityScore * 0.1
+      impact: qualityScore * 0.1,
     });
     totalScore += qualityScore * 0.1;
     maxScore += 100 * 0.1;
 
     return {
       score: Math.round((totalScore / maxScore) * 100),
-      factors
+      factors,
     };
   }
 
@@ -475,12 +475,12 @@ export class PipelineAnalyzer {
     return {
       cacheSize: this.analysisCache.size,
       historySize: this.metricsHistory.length,
-      avgDuration: this.metricsHistory.length > 0 
+      avgDuration: this.metricsHistory.length > 0
         ? this.metricsHistory.reduce((sum, m) => sum + m.duration, 0) / this.metricsHistory.length
         : 0,
       successRate: this.metricsHistory.length > 0
         ? this.metricsHistory.filter(m => m.status === 'success').length / this.metricsHistory.length
-        : 0
+        : 0,
     };
   }
 }

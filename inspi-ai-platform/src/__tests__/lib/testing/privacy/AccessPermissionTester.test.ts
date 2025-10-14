@@ -16,7 +16,7 @@ describe('AccessPermissionTester', () => {
       const rule: AccessRule = {
         resource: 'user',
         action: 'read',
-        roles: ['admin']
+        roles: ['admin'],
       };
 
       expect(() => tester.registerRule(rule)).not.toThrow();
@@ -27,13 +27,13 @@ describe('AccessPermissionTester', () => {
         {
           resource: 'user',
           action: 'read',
-          roles: ['admin']
+          roles: ['admin'],
         },
         {
           resource: 'user',
           action: 'write',
-          roles: ['admin']
-        }
+          roles: ['admin'],
+        },
       ];
 
       expect(() => tester.registerRules(rules)).not.toThrow();
@@ -46,11 +46,11 @@ describe('AccessPermissionTester', () => {
         name: '管理员读取用户数据',
         user: {
           id: 'admin-1',
-          roles: ['admin']
+          roles: ['admin'],
         },
         resource: 'user',
         action: 'read',
-        expectedResult: true
+        expectedResult: true,
       };
 
       expect(() => tester.addTestCase(testCase)).not.toThrow();
@@ -63,15 +63,15 @@ describe('AccessPermissionTester', () => {
           user: { id: 'admin-1', roles: ['admin'] },
           resource: 'user',
           action: 'read',
-          expectedResult: true
+          expectedResult: true,
         },
         {
           name: '普通用户读取用户数据',
           user: { id: 'user-1', roles: ['user'] },
           resource: 'user',
           action: 'read',
-          expectedResult: false
-        }
+          expectedResult: false,
+        },
       ];
 
       expect(() => tester.addTestCases(testCases)).not.toThrow();
@@ -85,16 +85,16 @@ describe('AccessPermissionTester', () => {
         {
           resource: 'user',
           action: 'read',
-          roles: ['admin']
+          roles: ['admin'],
         },
         {
           resource: 'user',
           action: 'read',
           roles: ['user'],
           conditions: {
-            'context.userId': { $eq: '${user.id}' }
-          }
-        }
+            'context.userId': { $eq: '${(user.id || (user as any)._id)}' },
+          },
+        },
       ]);
     });
 
@@ -102,7 +102,7 @@ describe('AccessPermissionTester', () => {
       const hasAccess = await tester.checkAccess(
         { id: 'admin-1', roles: ['admin'] },
         'user',
-        'read'
+        'read',
       );
 
       expect(hasAccess).toBe(true);
@@ -112,7 +112,7 @@ describe('AccessPermissionTester', () => {
       const hasAccess = await tester.checkAccess(
         { id: 'user-1', roles: ['guest'] },
         'user',
-        'read'
+        'read',
       );
 
       expect(hasAccess).toBe(false);
@@ -123,7 +123,7 @@ describe('AccessPermissionTester', () => {
         { id: 'user-1', roles: ['user'] },
         'user',
         'read',
-        { userId: 'user-1' }
+        { userId: 'user-1' },
       );
 
       expect(hasAccess).toBe(true);
@@ -134,7 +134,7 @@ describe('AccessPermissionTester', () => {
         { id: 'user-1', roles: ['user'] },
         'user',
         'read',
-        { userId: 'user-2' }
+        { userId: 'user-2' },
       );
 
       expect(hasAccess).toBe(false);
@@ -150,24 +150,24 @@ describe('AccessPermissionTester', () => {
         conditions: {
           'user.department': 'engineering',
           'context.classification': { $in: ['public', 'internal'] },
-          'context.createdBy': { $eq: '${user.id}' }
-        }
+          'context.createdBy': { $eq: '${(user.id || (user as any)._id)}' },
+        },
       });
     });
 
     it('应该正确评估用户属性条件', async () => {
       const hasAccess = await tester.checkAccess(
-        { 
-          id: 'user-1', 
+        {
+          id: 'user-1',
           roles: ['user'],
-          attributes: { department: 'engineering' }
+          attributes: { department: 'engineering' },
         },
         'document',
         'read',
-        { 
+        {
           classification: 'public',
-          createdBy: 'user-1'
-        }
+          createdBy: 'user-1',
+        },
       );
 
       expect(hasAccess).toBe(true);
@@ -175,17 +175,17 @@ describe('AccessPermissionTester', () => {
 
     it('应该拒绝不满足条件的访问', async () => {
       const hasAccess = await tester.checkAccess(
-        { 
-          id: 'user-1', 
+        {
+          id: 'user-1',
           roles: ['user'],
-          attributes: { department: 'marketing' } // 不是engineering部门
+          attributes: { department: 'marketing' }, // 不是engineering部门
         },
         'document',
         'read',
-        { 
+        {
           classification: 'public',
-          createdBy: 'user-1'
-        }
+          createdBy: 'user-1',
+        },
       );
 
       expect(hasAccess).toBe(false);
@@ -193,17 +193,17 @@ describe('AccessPermissionTester', () => {
 
     it('应该正确处理$in操作符', async () => {
       const hasAccess = await tester.checkAccess(
-        { 
-          id: 'user-1', 
+        {
+          id: 'user-1',
           roles: ['user'],
-          attributes: { department: 'engineering' }
+          attributes: { department: 'engineering' },
         },
         'document',
         'read',
-        { 
+        {
           classification: 'internal', // 在允许的列表中
-          createdBy: 'user-1'
-        }
+          createdBy: 'user-1',
+        },
       );
 
       expect(hasAccess).toBe(true);
@@ -211,17 +211,17 @@ describe('AccessPermissionTester', () => {
 
     it('应该拒绝不在$in列表中的值', async () => {
       const hasAccess = await tester.checkAccess(
-        { 
-          id: 'user-1', 
+        {
+          id: 'user-1',
           roles: ['user'],
-          attributes: { department: 'engineering' }
+          attributes: { department: 'engineering' },
         },
         'document',
         'read',
-        { 
+        {
           classification: 'confidential', // 不在允许的列表中
-          createdBy: 'user-1'
-        }
+          createdBy: 'user-1',
+        },
       );
 
       expect(hasAccess).toBe(false);
@@ -260,7 +260,7 @@ describe('AccessPermissionTester', () => {
 
       expect(results).toBeDefined();
       expect(Array.isArray(results)).toBe(true);
-      
+
       results.forEach(result => {
         expect(result).toHaveProperty('testCase');
         expect(result).toHaveProperty('passed');
@@ -286,7 +286,7 @@ describe('AccessPermissionTester', () => {
         user: { id: 'invalid', roles: [] },
         resource: 'nonexistent',
         action: 'invalid',
-        expectedResult: false
+        expectedResult: false,
       });
 
       const results = await tester.runPermissionTests();
@@ -318,7 +318,7 @@ describe('AccessPermissionTester', () => {
       tester.registerRule({
         resource: 'test',
         action: 'read',
-        roles: ['admin']
+        roles: ['admin'],
       });
 
       tester.addTestCase({
@@ -326,7 +326,7 @@ describe('AccessPermissionTester', () => {
         user: { id: 'user-1', roles: ['user'] }, // 没有admin权限
         resource: 'test',
         action: 'read',
-        expectedResult: true // 期望通过但实际会失败
+        expectedResult: true, // 期望通过但实际会失败
       });
 
       const results = await tester.runPermissionTests();
@@ -345,19 +345,19 @@ describe('AccessPermissionTester', () => {
         roles: ['user'],
         conditions: {
           'user.subscriptionLevel': { $gte: 2 },
-          'context.contentLevel': { $lte: 3 }
-        }
+          'context.contentLevel': { $lte: 3 },
+        },
       });
 
       const hasAccess = await tester.checkAccess(
-        { 
-          id: 'user-1', 
+        {
+          id: 'user-1',
           roles: ['user'],
-          attributes: { subscriptionLevel: 3 }
+          attributes: { subscriptionLevel: 3 },
         },
         'premium-content',
         'read',
-        { contentLevel: 2 }
+        { contentLevel: 2 },
       );
 
       expect(hasAccess).toBe(true);
@@ -369,15 +369,15 @@ describe('AccessPermissionTester', () => {
         action: 'read',
         roles: ['user'],
         conditions: {
-          'context.status': { $ne: 'deleted' }
-        }
+          'context.status': { $ne: 'deleted' },
+        },
       });
 
       const hasAccess = await tester.checkAccess(
         { id: 'user-1', roles: ['user'] },
         'content',
         'read',
-        { status: 'published' }
+        { status: 'published' },
       );
 
       expect(hasAccess).toBe(true);
@@ -386,7 +386,7 @@ describe('AccessPermissionTester', () => {
         { id: 'user-1', roles: ['user'] },
         'content',
         'read',
-        { status: 'deleted' }
+        { status: 'deleted' },
       );
 
       expect(hasAccessDeleted).toBe(false);
@@ -398,15 +398,15 @@ describe('AccessPermissionTester', () => {
         action: 'read',
         roles: ['user'],
         conditions: {
-          'context.category': { $nin: ['adult', 'restricted'] }
-        }
+          'context.category': { $nin: ['adult', 'restricted'] },
+        },
       });
 
       const hasAccess = await tester.checkAccess(
         { id: 'user-1', roles: ['user'] },
         'content',
         'read',
-        { category: 'general' }
+        { category: 'general' },
       );
 
       expect(hasAccess).toBe(true);
@@ -415,7 +415,7 @@ describe('AccessPermissionTester', () => {
         { id: 'user-1', roles: ['user'] },
         'content',
         'read',
-        { category: 'adult' }
+        { category: 'adult' },
       );
 
       expect(hasAccessRestricted).toBe(false);
@@ -435,7 +435,7 @@ describe('AccessPermissionTester', () => {
           resource: 'user',
           action: 'read',
           context: { userId: `user-${i}` },
-          expectedResult: true
+          expectedResult: true,
         });
       }
 

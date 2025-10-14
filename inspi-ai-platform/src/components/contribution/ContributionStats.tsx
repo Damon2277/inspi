@@ -5,7 +5,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ContributionStats } from '@/types/contribution';
+
+import { ContributionStats } from '@/shared/types/contribution';
 
 interface ContributionStatsProps {
   userId: string;
@@ -39,9 +40,9 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, value, icon, color, descri
   );
 };
 
-const ContributionStatsComponent: React.FC<ContributionStatsProps> = ({ 
-  userId, 
-  className = '' 
+const ContributionStatsComponent: React.FC<ContributionStatsProps> = ({
+  userId,
+  className = '',
 }) => {
   const [stats, setStats] = useState<ContributionStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -139,29 +140,29 @@ const ContributionStatsComponent: React.FC<ContributionStatsProps> = ({
       value: stats.totalPoints,
       icon: '🏆',
       color: 'blue',
-      description: '累计获得的贡献度积分'
+      description: '累计获得的贡献度积分',
     },
     {
       title: '创作作品',
       value: stats.worksCount,
       icon: '📝',
       color: 'green',
-      description: '发布的原创作品数量'
+      description: '发布的原创作品数量',
     },
     {
       title: '被复用次数',
       value: stats.reuseCount,
       icon: '🔄',
       color: 'purple',
-      description: '作品被他人复用的总次数'
+      description: '作品被他人复用的总次数',
     },
     {
       title: '当前排名',
       value: stats.rank || 0,
       icon: '📊',
       color: 'orange',
-      description: '在贡献度排行榜中的位置'
-    }
+      description: '在贡献度排行榜中的位置',
+    },
   ];
 
   return (

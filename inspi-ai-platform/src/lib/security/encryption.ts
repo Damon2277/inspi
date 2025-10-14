@@ -17,13 +17,13 @@ function getEncryptionKey(): Buffer {
   if (!key) {
     throw new Error('ENCRYPTION_KEY environment variable is required');
   }
-  
+
   // 如果密钥长度不足，使用PBKDF2派生
   if (key.length < KEY_LENGTH) {
     const salt = process.env.ENCRYPTION_SALT || 'inspi-ai-default-salt';
     return crypto.pbkdf2Sync(key, salt, 100000, KEY_LENGTH, 'sha256');
   }
-  
+
   return Buffer.from(key.slice(0, KEY_LENGTH));
 }
 
@@ -34,13 +34,13 @@ export function encryptSensitiveData(data: string): string {
   try {
     const key = getEncryptionKey();
     const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipherGCM(ALGORITHM, key, iv);
-    
+    const cipher = crypto.createCipheriv(ALGORITHM, key, iv, { authTagLength: TAG_LENGTH });
+
     let encrypted = cipher.update(data, 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    
+
     const tag = cipher.getAuthTag();
-    
+
     // 组合IV、tag和加密数据
     const result = iv.toString('hex') + ':' + tag.toString('hex') + ':' + encrypted;
     return result;
@@ -57,21 +57,21 @@ export function decryptSensitiveData(encryptedData: string): string {
   try {
     const key = getEncryptionKey();
     const parts = encryptedData.split(':');
-    
+
     if (parts.length !== 3) {
       throw new Error('Invalid encrypted data format');
     }
-    
+
     const iv = Buffer.from(parts[0], 'hex');
     const tag = Buffer.from(parts[1], 'hex');
     const encrypted = parts[2];
-    
-    const decipher = crypto.createDecipherGCM(ALGORITHM, key, iv);
+
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv, { authTagLength: TAG_LENGTH });
     decipher.setAuthTag(tag);
-    
+
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
-    
+
     return decrypted;
   } catch (error) {
     console.error('Decryption failed:', error);
@@ -85,12 +85,12 @@ export function decryptSensitiveData(encryptedData: string): string {
 export function generateSecurePassword(length: number = 16): string {
   const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
   let password = '';
-  
+
   for (let i = 0; i < length; i++) {
     const randomIndex = crypto.randomInt(0, charset.length);
     password += charset[randomIndex];
   }
-  
+
   return password;
 }
 
@@ -142,7 +142,7 @@ export function verifyDataSignature(data: string, signature: string): boolean {
     const expectedSignature = createDataSignature(data);
     return crypto.timingSafeEqual(
       Buffer.from(signature, 'hex'),
-      Buffer.from(expectedSignature, 'hex')
+      Buffer.from(expectedSignature, 'hex'),
     );
   } catch (error) {
     console.error('Signature verification failed:', error);
@@ -160,13 +160,13 @@ export function encryptPersonalInfo(info: {
   idCard?: string;
 }): Record<string, string> {
   const encrypted: Record<string, string> = {};
-  
+
   Object.entries(info).forEach(([key, value]) => {
     if (value && typeof value === 'string') {
       encrypted[key] = encryptSensitiveData(value);
     }
   });
-  
+
   return encrypted;
 }
 
@@ -175,7 +175,7 @@ export function encryptPersonalInfo(info: {
  */
 export function decryptPersonalInfo(encryptedInfo: Record<string, string>): Record<string, string> {
   const decrypted: Record<string, string> = {};
-  
+
   Object.entries(encryptedInfo).forEach(([key, value]) => {
     if (value && typeof value === 'string') {
       try {
@@ -186,7 +186,7 @@ export function decryptPersonalInfo(encryptedInfo: Record<string, string>): Reco
       }
     }
   });
-  
+
   return decrypted;
 }
 
@@ -195,29 +195,29 @@ export function decryptPersonalInfo(encryptedInfo: Record<string, string>): Reco
  */
 export function maskSensitiveData(data: string, type: 'email' | 'phone' | 'idCard' | 'name'): string {
   if (!data) return '';
-  
+
   switch (type) {
     case 'email':
       const [username, domain] = data.split('@');
       if (!username || !domain) return data;
-      const maskedUsername = username.length > 2 
+      const maskedUsername = username.length > 2
         ? username[0] + '*'.repeat(username.length - 2) + username[username.length - 1]
         : username;
       return `${maskedUsername}@${domain}`;
-      
+
     case 'phone':
       if (data.length < 7) return data;
       return data.slice(0, 3) + '****' + data.slice(-3);
-      
+
     case 'idCard':
       if (data.length < 8) return data;
       return data.slice(0, 4) + '*'.repeat(data.length - 8) + data.slice(-4);
-      
+
     case 'name':
       if (data.length <= 1) return data;
       if (data.length === 2) return data[0] + '*';
       return data[0] + '*'.repeat(data.length - 2) + data[data.length - 1];
-      
+
     default:
       return data;
   }
@@ -232,7 +232,7 @@ export function secureDelete(data: string): void {
     // JavaScript中字符串是不可变的，但我们可以尝试清理引用
     data = '';
   }
-  
+
   // 触发垃圾回收（如果可能）
   if (global.gc) {
     global.gc();

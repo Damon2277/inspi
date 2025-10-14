@@ -1,70 +1,17 @@
-/* 应用布局样式 */
+/* 桌面端应用布局 */
 
 .app-layout {
   @apply min-h-screen bg-gray-50;
-}
-
-.app-layout.mobile {
-  @apply mobile-optimized;
 }
 
 .app-main {
   @apply min-h-screen;
 }
 
-/* 移动端布局 */
-.app-layout.mobile .app-main {
-  @apply pb-16; /* 为底部导航留出空间 */
-}
-
-.app-layout.mobile .app-main.with-navigation {
-  @apply pb-20; /* 底部导航高度 + 安全区域 */
-}
-
-/* 桌面端布局 */
-.app-layout.desktop .app-main {
-  @apply pt-0;
-}
-
-.app-layout.desktop .app-main.with-navigation {
-  @apply pt-16; /* 顶部导航高度 */
-}
-
 .app-container {
-  @apply w-full max-w-7xl mx-auto;
+  @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
 }
 
-/* 移动端容器 */
-.app-layout.mobile .app-container {
-  @apply px-4;
-}
-
-/* 桌面端容器 */
-.app-layout.desktop .app-container {
-  @apply px-4 sm:px-6 lg:px-8;
-}
-
-/* 焦点管理 */
 .app-main:focus {
   @apply outline-none;
-}
-
-/* 安全区域适配 */
-@supports (padding: max(0px)) {
-  .app-layout.mobile .app-main.with-navigation {
-    padding-bottom: max(80px, calc(80px + env(safe-area-inset-bottom)));
-  }
-}
-
-/* 响应式断点 */
-@media (max-width: 768px) {
-  .app-layout.desktop {
-    @apply hidden;
-  }
-}
-
-@media (min-width: 769px) {
-  .app-layout.mobile {
-    @apply hidden;
-  }
 }

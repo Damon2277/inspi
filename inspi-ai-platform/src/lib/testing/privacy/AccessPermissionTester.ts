@@ -76,34 +76,34 @@ export class AccessPermissionTester {
 
     for (const testCase of this.testCases) {
       const startTime = Date.now();
-      
+
       try {
         const actual = await this.checkAccess(
           testCase.user,
           testCase.resource,
           testCase.action,
-          testCase.context
+          testCase.context,
         );
-        
+
         const executionTime = Date.now() - startTime;
-        
+
         results.push({
           testCase: testCase.name,
           passed: actual === testCase.expectedResult,
           expected: testCase.expectedResult,
           actual,
-          executionTime
+          executionTime,
         });
       } catch (error) {
         const executionTime = Date.now() - startTime;
-        
+
         results.push({
           testCase: testCase.name,
           passed: false,
           expected: testCase.expectedResult,
           actual: false,
           error: error instanceof Error ? error.message : String(error),
-          executionTime
+          executionTime,
         });
       }
     }
@@ -118,7 +118,7 @@ export class AccessPermissionTester {
     user: { id: string; roles: string[]; attributes?: Record<string, any> },
     resource: string,
     action: string,
-    context?: Record<string, any>
+    context?: Record<string, any>,
   ): Promise<boolean> {
     const key = `${resource}:${action}`;
     const rules = this.rules.get(key) || [];
@@ -144,7 +144,7 @@ export class AccessPermissionTester {
   private matchesRule(
     user: { id: string; roles: string[]; attributes?: Record<string, any> },
     rule: AccessRule,
-    context?: Record<string, any>
+    context?: Record<string, any>,
   ): boolean {
     // 检查角色
     const hasRequiredRole = rule.roles.some(role => user.roles.includes(role));
@@ -166,26 +166,26 @@ export class AccessPermissionTester {
   private evaluateConditions(
     conditions: Record<string, any>,
     user: { id: string; roles: string[]; attributes?: Record<string, any> },
-    context?: Record<string, any>
+    context?: Record<string, any>,
   ): boolean {
     for (const [key, value] of Object.entries(conditions)) {
       if (key.startsWith('user.')) {
         const userKey = key.substring(5);
         const userValue = user.attributes?.[userKey];
-        
+
         if (!this.compareValues(userValue, value)) {
           return false;
         }
       } else if (key.startsWith('context.')) {
         const contextKey = key.substring(8);
         const contextValue = context?.[contextKey];
-        
+
         if (!this.compareValues(contextValue, value)) {
           return false;
         }
       } else if (key === 'userId') {
         // 特殊处理用户ID匹配
-        if (context?.userId && user.id !== context.userId) {
+        if (context?.userId && (user.id || (user as any)._id) !== context.userId) {
           return false;
         }
       }
@@ -237,12 +237,12 @@ export class AccessPermissionTester {
       name: '管理员应该能够访问所有用户数据',
       user: {
         id: 'admin-1',
-        roles: ['admin']
+        roles: ['admin'],
       },
       resource: 'user',
       action: 'read',
       expectedResult: true,
-      reason: '管理员拥有所有权限'
+      reason: '管理员拥有所有权限',
     });
 
     // 普通用户权限测试
@@ -250,26 +250,26 @@ export class AccessPermissionTester {
       name: '普通用户只能访问自己的数据',
       user: {
         id: 'user-1',
-        roles: ['user']
+        roles: ['user'],
       },
       resource: 'user',
       action: 'read',
       context: { userId: 'user-1' },
       expectedResult: true,
-      reason: '用户可以访问自己的数据'
+      reason: '用户可以访问自己的数据',
     });
 
     this.addTestCase({
       name: '普通用户不能访问其他用户的数据',
       user: {
         id: 'user-1',
-        roles: ['user']
+        roles: ['user'],
       },
       resource: 'user',
       action: 'read',
       context: { userId: 'user-2' },
       expectedResult: false,
-      reason: '用户不能访问其他用户的数据'
+      reason: '用户不能访问其他用户的数据',
     });
 
     // 匿名用户权限测试
@@ -277,12 +277,12 @@ export class AccessPermissionTester {
       name: '匿名用户不能访问受保护的资源',
       user: {
         id: 'anonymous',
-        roles: ['anonymous']
+        roles: ['anonymous'],
       },
       resource: 'user',
       action: 'read',
       expectedResult: false,
-      reason: '匿名用户没有访问权限'
+      reason: '匿名用户没有访问权限',
     });
 
     // 删除权限测试
@@ -290,24 +290,24 @@ export class AccessPermissionTester {
       name: '普通用户不能删除数据',
       user: {
         id: 'user-1',
-        roles: ['user']
+        roles: ['user'],
       },
       resource: 'user',
       action: 'delete',
       expectedResult: false,
-      reason: '普通用户没有删除权限'
+      reason: '普通用户没有删除权限',
     });
 
     this.addTestCase({
       name: '管理员可以删除数据',
       user: {
         id: 'admin-1',
-        roles: ['admin']
+        roles: ['admin'],
       },
       resource: 'user',
       action: 'delete',
       expectedResult: true,
-      reason: '管理员拥有删除权限'
+      reason: '管理员拥有删除权限',
     });
   }
 
@@ -319,19 +319,19 @@ export class AccessPermissionTester {
     this.registerRule({
       resource: 'user',
       action: 'read',
-      roles: ['admin']
+      roles: ['admin'],
     });
 
     this.registerRule({
       resource: 'user',
       action: 'write',
-      roles: ['admin']
+      roles: ['admin'],
     });
 
     this.registerRule({
       resource: 'user',
       action: 'delete',
-      roles: ['admin']
+      roles: ['admin'],
     });
 
     // 用户自己的数据访问规则
@@ -340,8 +340,8 @@ export class AccessPermissionTester {
       action: 'read',
       roles: ['user'],
       conditions: {
-        userId: true
-      }
+        userId: true,
+      },
     });
 
     this.registerRule({
@@ -349,15 +349,15 @@ export class AccessPermissionTester {
       action: 'update',
       roles: ['user'],
       conditions: {
-        userId: true
-      }
+        userId: true,
+      },
     });
 
     // 作品访问规则
     this.registerRule({
       resource: 'work',
       action: 'read',
-      roles: ['user', 'admin']
+      roles: ['user', 'admin'],
     });
 
     this.registerRule({
@@ -365,8 +365,8 @@ export class AccessPermissionTester {
       action: 'write',
       roles: ['user'],
       conditions: {
-        'context.ownerId': user => user.id
-      }
+        'context.ownerId': user => (user.id || (user as any)._id),
+      },
     });
   }
 
@@ -379,8 +379,8 @@ export class AccessPermissionTester {
     const failedTests = totalTests - passedTests;
     const avgExecutionTime = results.reduce((sum, r) => sum + r.executionTime, 0) / totalTests;
 
-    let report = `数据访问权限测试报告\n`;
-    report += `========================\n`;
+    let report = '数据访问权限测试报告\n';
+    report += '========================\n';
     report += `总测试数: ${totalTests}\n`;
     report += `通过: ${passedTests}\n`;
     report += `失败: ${failedTests}\n`;
@@ -388,9 +388,9 @@ export class AccessPermissionTester {
     report += `平均执行时间: ${avgExecutionTime.toFixed(2)}ms\n\n`;
 
     if (failedTests > 0) {
-      report += `失败详情:\n`;
-      report += `----------\n`;
-      
+      report += '失败详情:\n';
+      report += '----------\n';
+
       for (const result of results) {
         if (!result.passed) {
           report += `测试用例: ${result.testCase}\n`;
@@ -400,7 +400,7 @@ export class AccessPermissionTester {
           if (result.error) {
             report += `  错误信息: ${result.error}\n`;
           }
-          report += `\n`;
+          report += '\n';
         }
       }
     }

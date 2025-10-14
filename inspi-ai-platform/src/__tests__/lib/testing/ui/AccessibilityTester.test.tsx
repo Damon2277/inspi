@@ -1,20 +1,21 @@
 /**
  * Accessibility Tester Tests
- * 
+ *
  * Tests for the comprehensive accessibility testing framework
  */
-import React from 'react';
 import { render, screen } from '@testing-library/react';
+import React from 'react';
+
 import {
   AccessibilityTester,
   createAccessibilityTester,
-  AccessibilityTestConfig
+  AccessibilityTestConfig,
 } from '../../../../lib/testing/ui/AccessibilityTester';
 
 // Mock axe-core for testing
 jest.mock('jest-axe', () => ({
   axe: jest.fn(),
-  toHaveNoViolations: {}
+  toHaveNoViolations: {},
 }));
 
 // Mock components for testing
@@ -89,6 +90,7 @@ const AccessiblePage: React.FC = () => (
     <main role="main" id="main">
       <h2>Main Content</h2>
       <p>This is the main content area.</p>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="test.jpg" alt="Test image description" />
     </main>
     <aside role="complementary">
@@ -113,7 +115,8 @@ const InaccessiblePage: React.FC = () => (
     <div>
       <h1>Main Content</h1>
       <p>This is the main content area.</p>
-      <img src="test.jpg" />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="test.jpg" alt="Test image" />
     </div>
     <div>
       <h2>Sidebar</h2>
@@ -122,16 +125,16 @@ const InaccessiblePage: React.FC = () => (
   </div>
 );
 
-const ColorContrastComponent: React.FC<{ 
-  textColor?: string; 
+const ColorContrastComponent: React.FC<{
+  textColor?: string;
   backgroundColor?: string;
   fontSize?: string;
   fontWeight?: string;
-}> = ({ 
-  textColor = '#000000', 
+}> = ({
+  textColor = '#000000',
   backgroundColor = '#ffffff',
   fontSize = '16px',
-  fontWeight = 'normal'
+  fontWeight = 'normal',
 }) => (
   <div
     data-testid="color-contrast-component"
@@ -140,7 +143,7 @@ const ColorContrastComponent: React.FC<{
       backgroundColor,
       fontSize,
       fontWeight,
-      padding: '16px'
+      padding: '16px',
     }}
   >
     This text should have sufficient contrast
@@ -174,15 +177,15 @@ describe('AccessibilityTester', () => {
       keyboardNavigation: true,
       screenReaderTesting: true,
       colorContrastTesting: true,
-      focusManagement: true
+      focusManagement: true,
     };
-    
+
     tester = createAccessibilityTester(config);
 
     // Mock axe results
     const { axe } = require('jest-axe');
     axe.mockResolvedValue({
-      violations: []
+      violations: [],
     });
   });
 
@@ -194,9 +197,9 @@ describe('AccessibilityTester', () => {
   describe('Basic Accessibility Testing', () => {
     it('should pass accessibility test for accessible button', async () => {
       const { container } = render(<AccessibleButton />);
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result.passed).toBe(true);
       expect(result.score).toBeGreaterThan(80);
       expect(result.violations).toHaveLength(0);
@@ -204,7 +207,7 @@ describe('AccessibilityTester', () => {
 
     it('should detect accessibility violations in inaccessible button', async () => {
       const { container } = render(<InaccessibleButton />);
-      
+
       // Mock axe to return violations
       const { axe } = require('jest-axe');
       axe.mockResolvedValue({
@@ -219,15 +222,15 @@ describe('AccessibilityTester', () => {
             nodes: [
               {
                 element: container.querySelector('[data-testid="inaccessible-button"]'),
-                target: ['[data-testid="inaccessible-button"]']
-              }
-            ]
-          }
-        ]
+                target: ['[data-testid="inaccessible-button"]'],
+              },
+            ],
+          },
+        ],
       });
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result.passed).toBe(false);
       expect(result.violations.length).toBeGreaterThan(0);
       expect(result.violations[0].ruleId).toBe('button-name');
@@ -236,21 +239,21 @@ describe('AccessibilityTester', () => {
 
     it('should test accessible form', async () => {
       const { container } = render(<AccessibleForm />);
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result.passed).toBe(true);
       expect(result.screenReader?.ariaLabels).toBeGreaterThan(0);
     });
 
     it('should detect form accessibility issues', async () => {
       const { container } = render(<InaccessibleForm />);
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       // Should detect missing labels
       expect(result.screenReader?.issues.some(
-        issue => issue.type === 'missing-label'
+        issue => issue.type === 'missing-label',
       )).toBe(true);
     });
   });
@@ -262,11 +265,11 @@ describe('AccessibilityTester', () => {
           <button data-testid="button1">Button 1</button>
           <button data-testid="button2">Button 2</button>
           <a href="#" data-testid="link1">Link 1</a>
-        </div>
+        </div>,
       );
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result.keyboardNavigation?.focusableElements).toBe(3);
       expect(result.keyboardNavigation?.tabbableElements).toBe(3);
       expect(result.keyboardNavigation?.passed).toBe(true);
@@ -281,21 +284,21 @@ describe('AccessibilityTester', () => {
           <button tabIndex={-1} data-testid="non-tabbable">
             Non-tabbable button
           </button>
-        </div>
+        </div>,
       );
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result.keyboardNavigation?.issues.some(
-        issue => issue.type === 'missing-focus'
+        issue => issue.type === 'missing-focus',
       )).toBe(true);
     });
 
     it('should test focus trapping in modals', async () => {
       const { container } = render(<ModalComponent isOpen={true} />);
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result.focusManagement?.focusTrapping).toBeDefined();
     });
   });
@@ -303,9 +306,9 @@ describe('AccessibilityTester', () => {
   describe('Screen Reader Testing', () => {
     it('should validate accessible page structure', async () => {
       const { container } = render(<AccessiblePage />);
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result.screenReader?.landmarks).toBeGreaterThan(0);
       expect(result.screenReader?.headingStructure).toBe(true);
       expect(result.screenReader?.altTexts).toBeGreaterThan(0);
@@ -314,19 +317,19 @@ describe('AccessibilityTester', () => {
 
     it('should detect screen reader issues', async () => {
       const { container } = render(<InaccessiblePage />);
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result.screenReader?.issues.some(
-        issue => issue.type === 'missing-landmark'
+        issue => issue.type === 'missing-landmark',
       )).toBe(true);
-      
+
       expect(result.screenReader?.issues.some(
-        issue => issue.type === 'missing-alt'
+        issue => issue.type === 'missing-alt',
       )).toBe(true);
-      
+
       expect(result.screenReader?.issues.some(
-        issue => issue.type === 'heading-structure'
+        issue => issue.type === 'heading-structure',
       )).toBe(true);
     });
 
@@ -338,11 +341,11 @@ describe('AccessibilityTester', () => {
           <div id="label1">Input label</div>
           <div aria-describedby="desc1">Content</div>
           <div id="desc1">Description</div>
-        </div>
+        </div>,
       );
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result.screenReader?.ariaLabels).toBeGreaterThan(0);
     });
   });
@@ -350,44 +353,44 @@ describe('AccessibilityTester', () => {
   describe('Color Contrast Testing', () => {
     it('should pass color contrast test for sufficient contrast', async () => {
       const { container } = render(
-        <ColorContrastComponent 
-          textColor="#000000" 
-          backgroundColor="#ffffff" 
-        />
+        <ColorContrastComponent
+          textColor="#000000"
+          backgroundColor="#ffffff"
+        />,
       );
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result.colorContrast?.passed).toBe(true);
       expect(result.colorContrast?.failedChecks).toBe(0);
     });
 
     it('should detect insufficient color contrast', async () => {
       const { container } = render(
-        <ColorContrastComponent 
-          textColor="#cccccc" 
-          backgroundColor="#ffffff" 
-        />
+        <ColorContrastComponent
+          textColor="#cccccc"
+          backgroundColor="#ffffff"
+        />,
       );
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result.colorContrast?.failedChecks).toBeGreaterThan(0);
       expect(result.colorContrast?.issues.length).toBeGreaterThan(0);
     });
 
     it('should handle large text contrast requirements', async () => {
       const { container } = render(
-        <ColorContrastComponent 
-          textColor="#767676" 
+        <ColorContrastComponent
+          textColor="#767676"
           backgroundColor="#ffffff"
           fontSize="18px"
           fontWeight="bold"
-        />
+        />,
       );
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       // Large text has lower contrast requirements
       expect(result.colorContrast?.issues[0]?.size).toBe('large');
     });
@@ -403,11 +406,11 @@ describe('AccessibilityTester', () => {
           <a href="#" style={{ outline: 'none' }}>
             Link without focus indicator
           </a>
-        </div>
+        </div>,
       );
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result.focusManagement?.focusIndicators).toBeDefined();
     });
 
@@ -417,11 +420,11 @@ describe('AccessibilityTester', () => {
           <button tabIndex={3}>Third</button>
           <button tabIndex={1}>First</button>
           <button tabIndex={2}>Second</button>
-        </div>
+        </div>,
       );
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result.focusManagement?.focusOrder).toBeDefined();
     });
   });
@@ -443,15 +446,15 @@ describe('AccessibilityTester', () => {
             selector: 'div',
             help: 'Fix custom issue',
             suggestion: 'Apply custom fix',
-            wcagCriteria: ['custom']
-          }
-        ]
+            wcagCriteria: ['custom'],
+          },
+        ],
       });
 
       const { container } = render(<div>Test content</div>);
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result.violations.some(v => v.ruleId === 'custom-test-rule')).toBe(true);
     });
 
@@ -464,14 +467,14 @@ describe('AccessibilityTester', () => {
         tags: ['error'],
         check: (container) => {
           throw new Error('Custom rule error');
-        }
+        },
       });
 
       const { container } = render(<div>Test content</div>);
-      
+
       // Should not throw, should handle error gracefully
       const result = await tester.testAccessibility(container);
-      
+
       expect(result).toBeDefined();
     });
 
@@ -482,7 +485,7 @@ describe('AccessibilityTester', () => {
         description: 'Test rule',
         impact: 'minor' as const,
         tags: ['test'],
-        check: () => []
+        check: () => [],
       };
 
       tester.addRule(rule);
@@ -498,11 +501,11 @@ describe('AccessibilityTester', () => {
     it('should respect WCAG level configuration', async () => {
       const aaaTester = createAccessibilityTester({ wcagLevel: 'AAA' });
       const { container } = render(<AccessibleButton />);
-      
+
       const result = await aaaTester.testAccessibility(container);
-      
+
       expect(result.summary.wcagLevel).toBe('AAA');
-      
+
       aaaTester.cleanup();
     });
 
@@ -511,25 +514,25 @@ describe('AccessibilityTester', () => {
         keyboardNavigation: false,
         screenReaderTesting: false,
         colorContrastTesting: false,
-        focusManagement: false
+        focusManagement: false,
       });
-      
+
       const { container } = render(<AccessibleButton />);
-      
+
       const result = await limitedTester.testAccessibility(container);
-      
+
       expect(result.keyboardNavigation).toBeUndefined();
       expect(result.screenReader).toBeUndefined();
       expect(result.colorContrast).toBeUndefined();
       expect(result.focusManagement).toBeUndefined();
-      
+
       limitedTester.cleanup();
     });
 
     it('should allow configuration updates', () => {
       tester.updateConfig({
         wcagLevel: 'AAA',
-        includeRules: ['color-contrast', 'keyboard']
+        includeRules: ['color-contrast', 'keyboard'],
       });
 
       const config = tester.getConfig();
@@ -541,7 +544,7 @@ describe('AccessibilityTester', () => {
   describe('Report Generation', () => {
     it('should generate comprehensive accessibility report', async () => {
       const { container } = render(<InaccessibleButton />);
-      
+
       // Mock violations for report
       const { axe } = require('jest-axe');
       axe.mockResolvedValue({
@@ -556,16 +559,16 @@ describe('AccessibilityTester', () => {
             nodes: [
               {
                 element: container.querySelector('[data-testid="inaccessible-button"]'),
-                target: ['[data-testid="inaccessible-button"]']
-              }
-            ]
-          }
-        ]
+                target: ['[data-testid="inaccessible-button"]'],
+              },
+            ],
+          },
+        ],
       });
-      
+
       const result = await tester.testAccessibility(container);
       const report = tester.generateReport(result);
-      
+
       expect(report).toContain('# Accessibility Test Report');
       expect(report).toContain('Overall Score:');
       expect(report).toContain('WCAG Level:');
@@ -576,10 +579,10 @@ describe('AccessibilityTester', () => {
 
     it('should generate report for passing tests', async () => {
       const { container } = render(<AccessibleButton />);
-      
+
       const result = await tester.testAccessibility(container);
       const report = tester.generateReport(result);
-      
+
       expect(report).toContain('# Accessibility Test Report');
       expect(report).toContain('PASSED');
       expect(report).not.toContain('## Violations');
@@ -592,22 +595,22 @@ describe('AccessibilityTester', () => {
         <form>
           <input type="text" required />
           <button type="submit">Submit</button>
-        </form>
+        </form>,
       );
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       // Should detect missing validation attributes
       expect(result.violations.some(v => v.ruleId === 'form-validation')).toBe(true);
     });
 
     it('should test interactive elements accessibility', async () => {
       const { container } = render(
-        <div onClick={() => {}}>Clickable div without role</div>
+        <div onClick={() => {}}>Clickable div without role</div>,
       );
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       // Should detect missing role for interactive element
       expect(result.violations.some(v => v.ruleId === 'interactive-elements')).toBe(true);
     });
@@ -616,18 +619,18 @@ describe('AccessibilityTester', () => {
   describe('Edge Cases', () => {
     it('should handle empty containers', async () => {
       const { container } = render(<div></div>);
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result).toBeDefined();
       expect(result.summary.totalElements).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle containers with only text', async () => {
       const { container } = render(<div>Just some text</div>);
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result).toBeDefined();
       expect(result.passed).toBe(true);
     });
@@ -642,11 +645,11 @@ describe('AccessibilityTester', () => {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
       );
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result).toBeDefined();
       expect(result.keyboardNavigation?.focusableElements).toBe(1);
     });

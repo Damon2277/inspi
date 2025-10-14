@@ -6,7 +6,7 @@ import { logger } from '@/lib/logging/logger';
 /**
  * 聚合管道阶段类型
  */
-export type PipelineStage = 
+export type PipelineStage =
   | { $match: any }
   | { $group: any }
   | { $sort: any }
@@ -201,7 +201,7 @@ export class AggregationBuilder {
   private moveMatchStagesForward(pipeline: PipelineStage[]): PipelineStage[] {
     const result: PipelineStage[] = [];
     const matchStages: PipelineStage[] = [];
-    
+
     for (const stage of pipeline) {
       if ('$match' in stage) {
         matchStages.push(stage);
@@ -212,10 +212,10 @@ export class AggregationBuilder {
         result.push(stage);
       }
     }
-    
+
     // 添加剩余的 $match 阶段
     result.push(...matchStages);
-    
+
     return result;
   }
 
@@ -257,21 +257,21 @@ export class AggregationBuilder {
    */
   private optimizeSortLimit(pipeline: PipelineStage[]): PipelineStage[] {
     const result: PipelineStage[] = [];
-    
+
     for (let i = 0; i < pipeline.length; i++) {
       const stage = pipeline[i];
-      
+
       if ('$sort' in stage) {
         result.push(stage);
-        
+
         // 查找后续的 $limit 阶段
         for (let j = i + 1; j < pipeline.length; j++) {
           const nextStage = pipeline[j];
-          
+
           if ('$limit' in nextStage) {
             // 将 $limit 移到 $sort 之后
             result.push(nextStage);
-            
+
             // 跳过已处理的 $limit
             pipeline.splice(j, 1);
             break;
@@ -329,7 +329,7 @@ export class AggregationBuilder {
     return pipeline.map(stage => {
       if ('$lookup' in stage) {
         const lookup = stage.$lookup;
-        
+
         // 如果有 pipeline，尝试优化子管道
         if (lookup.pipeline) {
           lookup.pipeline = this.optimizePipeline(lookup.pipeline);
@@ -354,7 +354,7 @@ export class AggregationTemplates {
         _id: '$subscription.type',
         count: { $sum: 1 },
         avgContribution: { $avg: '$stats.contributionScore' },
-        totalWorks: { $sum: '$stats.worksCount' }
+        totalWorks: { $sum: '$stats.worksCount' },
       })
       .sort({ count: -1 });
   }
@@ -364,18 +364,18 @@ export class AggregationTemplates {
    */
   static popularWorks(limit: number = 20): AggregationBuilder {
     return new AggregationBuilder('works')
-      .match({ 
-        status: 'published', 
-        visibility: 'public' 
+      .match({
+        status: 'published',
+        visibility: 'public',
       })
       .addFields({
         popularityScore: {
           $add: [
             { $multiply: ['$stats.views', 1] },
             { $multiply: ['$stats.likes', 5] },
-            { $multiply: ['$stats.reuses', 10] }
-          ]
-        }
+            { $multiply: ['$stats.reuses', 10] },
+          ],
+        },
       })
       .sort({ popularityScore: -1 })
       .limit(limit)
@@ -385,7 +385,7 @@ export class AggregationTemplates {
         subject: 1,
         grade: 1,
         stats: 1,
-        popularityScore: 1
+        popularityScore: 1,
       });
   }
 
@@ -394,12 +394,12 @@ export class AggregationTemplates {
    */
   static contributionRanking(period: 'day' | 'week' | 'month' | 'all' = 'all'): AggregationBuilder {
     const builder = new AggregationBuilder('users');
-    
+
     // 根据时间段添加匹配条件
     if (period !== 'all') {
       const now = new Date();
       let startDate: Date;
-      
+
       switch (period) {
         case 'day':
           startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -411,7 +411,7 @@ export class AggregationTemplates {
           startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
           break;
       }
-      
+
       builder.match({ 'stats.lastActiveAt': { $gte: startDate } });
     }
 
@@ -424,7 +424,7 @@ export class AggregationTemplates {
         avatar: 1,
         contributionScore: '$stats.contributionScore',
         worksCount: '$stats.worksCount',
-        reusedCount: '$stats.reusedCount'
+        reusedCount: '$stats.reusedCount',
       });
   }
 
@@ -433,18 +433,18 @@ export class AggregationTemplates {
    */
   static subjectDistribution(): AggregationBuilder {
     return new AggregationBuilder('works')
-      .match({ 
-        status: 'published', 
-        visibility: 'public' 
+      .match({
+        status: 'published',
+        visibility: 'public',
       })
       .group({
         _id: {
           subject: '$subject',
-          grade: '$grade'
+          grade: '$grade',
         },
         count: { $sum: 1 },
         avgRating: { $avg: '$stats.rating' },
-        totalViews: { $sum: '$stats.views' }
+        totalViews: { $sum: '$stats.views' },
       })
       .sort({ count: -1 })
       .project({
@@ -452,7 +452,7 @@ export class AggregationTemplates {
         grade: '$_id.grade',
         count: 1,
         avgRating: { $round: ['$avgRating', 2] },
-        totalViews: 1
+        totalViews: 1,
       });
   }
 
@@ -461,7 +461,7 @@ export class AggregationTemplates {
    */
   static userActivityAnalysis(): AggregationBuilder {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    
+
     return new AggregationBuilder('users')
       .addFields({
         activityLevel: {
@@ -469,25 +469,25 @@ export class AggregationTemplates {
             branches: [
               {
                 case: { $gte: ['$stats.lastActiveAt', new Date(Date.now() - 24 * 60 * 60 * 1000)] },
-                then: 'daily'
+                then: 'daily',
               },
               {
                 case: { $gte: ['$stats.lastActiveAt', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)] },
-                then: 'weekly'
+                then: 'weekly',
               },
               {
                 case: { $gte: ['$stats.lastActiveAt', thirtyDaysAgo] },
-                then: 'monthly'
-              }
+                then: 'monthly',
+              },
             ],
-            default: 'inactive'
-          }
-        }
+            default: 'inactive',
+          },
+        },
       })
       .group({
         _id: '$activityLevel',
         count: { $sum: 1 },
-        avgContribution: { $avg: '$stats.contributionScore' }
+        avgContribution: { $avg: '$stats.contributionScore' },
       })
       .sort({ count: -1 });
   }
@@ -501,7 +501,7 @@ export class AggregationTemplates {
         from: 'graphNodes',
         localField: '_id',
         foreignField: 'graphId',
-        as: 'nodes'
+        as: 'nodes',
       })
       .addFields({
         nodeCount: { $size: '$nodes' },
@@ -510,17 +510,17 @@ export class AggregationTemplates {
             $map: {
               input: '$nodes',
               as: 'node',
-              in: { $size: '$$node.works' }
-            }
-          }
-        }
+              in: { $size: '$$node.works' },
+            },
+          },
+        },
       })
       .group({
         _id: '$subject',
         graphCount: { $sum: 1 },
         totalNodes: { $sum: '$nodeCount' },
         totalWorks: { $sum: '$workCount' },
-        avgNodesPerGraph: { $avg: '$nodeCount' }
+        avgNodesPerGraph: { $avg: '$nodeCount' },
       })
       .sort({ totalWorks: -1 })
       .project({
@@ -528,7 +528,7 @@ export class AggregationTemplates {
         graphCount: 1,
         totalNodes: 1,
         totalWorks: 1,
-        avgNodesPerGraph: { $round: ['$avgNodesPerGraph', 1] }
+        avgNodesPerGraph: { $round: ['$avgNodesPerGraph', 1] },
       });
   }
 }
@@ -549,13 +549,13 @@ export class AggregationOptimizer {
   async executeOptimized(
     collection: string,
     pipeline: PipelineStage[],
-    options: any = {}
+    options: any = {},
   ): Promise<{
     results: any[];
     performance: AggregationPerformance;
   }> {
     const startTime = Date.now();
-    
+
     try {
       // 优化管道
       const builder = new AggregationBuilder(collection);
@@ -564,9 +564,9 @@ export class AggregationOptimizer {
 
       // 执行聚合查询
       const coll = this.db.collection(collection);
-      const cursor = coll.aggregate(optimizedPipeline, {
+      const cursor = (coll.aggregate as any)(optimizedPipeline, {
         ...options,
-        explain: false
+        explain: false,
       });
 
       const results = await cursor.toArray();
@@ -583,14 +583,14 @@ export class AggregationOptimizer {
         memoryUsage: 0, // 需要从explain结果获取
         indexesUsed: [], // 需要从explain结果获取
         optimizations: this.getOptimizationMessages(pipeline, optimizedPipeline),
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       return { results, performance };
     } catch (error) {
       logger.error('Aggregation execution failed', error instanceof Error ? error : new Error(String(error)), {
         collection,
-        pipeline: JSON.stringify(pipeline)
+        pipeline: JSON.stringify(pipeline),
       });
       throw error;
     }
@@ -601,15 +601,15 @@ export class AggregationOptimizer {
    */
   async explainAggregation(
     collection: string,
-    pipeline: PipelineStage[]
+    pipeline: PipelineStage[],
   ): Promise<any> {
     try {
       const coll = this.db.collection(collection);
-      return await coll.aggregate(pipeline, { explain: true }).toArray();
+      return await (coll.aggregate as any)(pipeline, { explain: true }).toArray();
     } catch (error) {
       logger.error('Aggregation explain failed', error instanceof Error ? error : new Error(String(error)), {
         collection,
-        pipeline: JSON.stringify(pipeline)
+        pipeline: JSON.stringify(pipeline),
       });
       throw error;
     }
@@ -620,7 +620,7 @@ export class AggregationOptimizer {
    */
   private getOptimizationMessages(
     original: PipelineStage[],
-    optimized: PipelineStage[]
+    optimized: PipelineStage[],
   ): string[] {
     const messages: string[] = [];
 
@@ -631,7 +631,7 @@ export class AggregationOptimizer {
     // 检查 $match 前移
     const originalFirstMatch = original.findIndex(stage => '$match' in stage);
     const optimizedFirstMatch = optimized.findIndex(stage => '$match' in stage);
-    
+
     if (originalFirstMatch > 0 && optimizedFirstMatch === 0) {
       messages.push('$match 阶段已前移以提高性能');
     }
@@ -639,7 +639,7 @@ export class AggregationOptimizer {
     // 检查阶段合并
     const originalMatches = original.filter(stage => '$match' in stage).length;
     const optimizedMatches = optimized.filter(stage => '$match' in stage).length;
-    
+
     if (originalMatches > optimizedMatches) {
       messages.push(`${originalMatches - optimizedMatches} 个 $match 阶段已合并`);
     }

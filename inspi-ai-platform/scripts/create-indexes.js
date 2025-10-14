@@ -8,8 +8,7 @@ const { MongoClient } = require('mongodb');
 const path = require('path');
 
 // 导入索引定义（需要编译后的JS文件）
-const { ALL_INDEXES, IndexManager } = require('../dist/src/lib/database/indexes');
-
+const { ALL_INDEXES, IndexManager } = 
 /**
  * 数据库连接配置
  */
@@ -28,10 +27,12 @@ const DB_CONFIG = {
  */
 const log = {
   info: (message, data = {}) => {
-    console.log(`[INFO] ${message}`, Object.keys(data).length > 0 ? JSON.stringify(data, null, 2) : '');
+    console.log(`[INFO] ${message}`,
+      Object.keys(data).length > 0 ? JSON.stringify(data, null, 2) : '');
   },
   warn: (message, data = {}) => {
-    console.warn(`[WARN] ${message}`, Object.keys(data).length > 0 ? JSON.stringify(data, null, 2) : '');
+    console.warn(`[WARN] ${message}`,
+      Object.keys(data).length > 0 ? JSON.stringify(data, null, 2) : '');
   },
   error: (message, error = null) => {
     console.error(`[ERROR] ${message}`);
@@ -40,7 +41,8 @@ const log = {
     }
   },
   success: (message, data = {}) => {
-    console.log(`[SUCCESS] ${message}`, Object.keys(data).length > 0 ? JSON.stringify(data, null, 2) : '');
+    console.log(`[SUCCESS] ${message}`,
+      Object.keys(data).length > 0 ? JSON.stringify(data, null, 2) : '');
   }
 };
 

@@ -19,12 +19,12 @@ export const mockNextRouter = (overrides: any = {}) => ({
   isReady: true,
   isPreview: false,
   ...overrides,
-})
+});
 
 // 模拟fetch API
 export const mockFetch = (response: any, options: { ok?: boolean; status?: number } = {}) => {
-  const { ok = true, status = 200 } = options
-  
+  const { ok = true, status = 200 } = options;
+
   global.fetch = jest.fn().mockResolvedValue({
     ok,
     status,
@@ -41,8 +41,8 @@ export const mockFetch = (response: any, options: { ok?: boolean; status?: numbe
     arrayBuffer: jest.fn(),
     blob: jest.fn(),
     formData: jest.fn(),
-  })
-}
+  });
+};
 
 // 模拟API响应
 export const createMockApiResponse = <T>(data: T, success: boolean = true) => ({
@@ -50,7 +50,7 @@ export const createMockApiResponse = <T>(data: T, success: boolean = true) => ({
   data: success ? data : null,
   error: success ? null : 'Mock error',
   message: success ? 'Success' : 'Error occurred',
-})
+});
 
 // 模拟用户数据
 export const createMockUser = (overrides: any = {}) => ({
@@ -62,7 +62,7 @@ export const createMockUser = (overrides: any = {}) => ({
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   ...overrides,
-})
+});
 
 // 模拟作品数据
 export const createMockWork = (overrides: any = {}) => ({
@@ -82,7 +82,7 @@ export const createMockWork = (overrides: any = {}) => ({
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   ...overrides,
-})
+});
 
 // 模拟知识图谱数据
 export const createMockKnowledgeGraph = (overrides: any = {}) => ({
@@ -99,7 +99,7 @@ export const createMockKnowledgeGraph = (overrides: any = {}) => ({
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   ...overrides,
-})
+});
 
 // 模拟贡献度数据
 export const createMockContribution = (overrides: any = {}) => ({
@@ -111,7 +111,7 @@ export const createMockContribution = (overrides: any = {}) => ({
   weeklyScore: 20,
   monthlyScore: 80,
   ...overrides,
-})
+});
 
 // 模拟订阅数据
 export const createMockSubscription = (overrides: any = {}) => ({
@@ -127,7 +127,7 @@ export const createMockSubscription = (overrides: any = {}) => ({
     maxWorksCreated: 5,
   },
   ...overrides,
-})
+});
 
 // 模拟AI生成的卡片
 export const createMockCard = (type: string, overrides: any = {}) => ({
@@ -137,115 +137,115 @@ export const createMockCard = (type: string, overrides: any = {}) => ({
   content: `Test content for ${type} card`,
   order: 0,
   ...overrides,
-})
+});
 
 // 模拟错误对象
 export const createMockError = (message: string = 'Test error', code?: string) => {
-  const error = new Error(message)
+  const error = new Error(message);
   if (code) {
-    (error as any).code = code
+    (error as any).code = code;
   }
-  return error
-}
+  return error;
+};
 
 // 模拟Promise
 export const createMockPromise = <T>(value: T, shouldReject: boolean = false) => {
-  return shouldReject 
+  return shouldReject
     ? Promise.reject(createMockError('Mock promise rejected'))
-    : Promise.resolve(value)
-}
+    : Promise.resolve(value);
+};
 
 // 模拟异步函数
 export const createMockAsyncFunction = <T>(
-  returnValue: T, 
+  returnValue: T,
   delay: number = 100,
-  shouldReject: boolean = false
+  shouldReject: boolean = false,
 ) => {
-  return jest.fn().mockImplementation(() => 
-    new Promise((resolve, reject) => 
+  return jest.fn().mockImplementation(() =>
+    new Promise((resolve, reject) =>
       setTimeout(() => {
         if (shouldReject) {
-          reject(createMockError('Mock async function failed'))
+          reject(createMockError('Mock async function failed'));
         } else {
-          resolve(returnValue)
+          resolve(returnValue);
         }
-      }, delay)
-    )
-  )
-}
+      }, delay),
+    ),
+  );
+};
 
 // 模拟文件对象
 export const createMockFile = (
   name: string = 'test.txt',
   content: string = 'test content',
-  type: string = 'text/plain'
+  type: string = 'text/plain',
 ) => {
-  const file = new File([content], name, { type })
-  return file
-}
+  const file = new File([content], name, { type });
+  return file;
+};
 
 // 模拟FormData
 export const createMockFormData = (data: Record<string, any> = {}) => {
-  const formData = new FormData()
+  const formData = new FormData();
   Object.entries(data).forEach(([key, value]) => {
-    formData.append(key, value)
-  })
-  return formData
-}
+    formData.append(key, value);
+  });
+  return formData;
+};
 
 // 模拟环境变量
 export const mockEnvVars = (vars: Record<string, string>) => {
-  const originalEnv = process.env
-  process.env = { ...originalEnv, ...vars }
-  
+  const originalEnv = process.env;
+  process.env = { ...originalEnv, ...vars };
+
   return () => {
-    process.env = originalEnv
-  }
-}
+    process.env = originalEnv;
+  };
+};
 
 // 模拟日期
 export const mockDate = (date: string | Date) => {
-  const mockDate = new Date(date)
-  const originalDate = Date
-  
-  global.Date = jest.fn(() => mockDate) as any
-  global.Date.now = jest.fn(() => mockDate.getTime())
-  global.Date.UTC = originalDate.UTC
-  global.Date.parse = originalDate.parse
-  
+  const mockDate = new Date(date);
+  const originalDate = Date;
+
+  global.Date = jest.fn(() => mockDate) as any;
+  global.Date.now = jest.fn(() => mockDate.getTime());
+  global.Date.UTC = originalDate.UTC;
+  global.Date.parse = originalDate.parse;
+
   return () => {
-    global.Date = originalDate
-  }
-}
+    global.Date = originalDate;
+  };
+};
 
 // 模拟控制台方法
 export const mockConsole = () => {
-  const originalConsole = console
+  const originalConsole = console;
   const mockMethods = {
     log: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
     info: jest.fn(),
     debug: jest.fn(),
-  }
-  
-  Object.assign(console, mockMethods)
-  
+  };
+
+  Object.assign(console, mockMethods);
+
   return {
     ...mockMethods,
     restore: () => {
-      Object.assign(console, originalConsole)
-    }
-  }
-}
+      Object.assign(console, originalConsole);
+    },
+  };
+};
 
 // 清理所有模拟
 export const cleanupAllMocks = () => {
-  jest.clearAllMocks()
-  jest.restoreAllMocks()
-  
+  jest.clearAllMocks();
+  jest.restoreAllMocks();
+
   // 清理全局模拟
   if (global.fetch && jest.isMockFunction(global.fetch)) {
-    (global.fetch as jest.Mock).mockRestore()
+    (global.fetch as jest.Mock).mockRestore();
   }
-}
+};

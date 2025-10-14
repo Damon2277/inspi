@@ -2,100 +2,100 @@
  * 邀请管理服务实现
  */
 
-import { 
-  InviteCode, 
-  InviteValidation, 
-  InviteResult, 
-  InviteStats, 
-  InviteHistory, 
+import { logger } from '../../utils/logger';
+import { DatabaseFactory } from '../database';
+import {
+  InviteCodeModel,
+  InviteRegistrationModel,
+  InviteStatsModel,
+  ModelConverter,
+} from '../models';
+import {
+  InviteCode,
+  InviteValidation,
+  InviteResult,
+  InviteStats,
+  InviteHistory,
   Pagination,
   InviteErrorCode,
   InviteError,
-  InviteRegistration
-} from '../types'
-import { 
-  InviteCodeModel, 
-  InviteRegistrationModel, 
-  InviteStatsModel,
-  ModelConverter 
-} from '../models'
-import { DatabaseFactory } from '../database'
-import { 
-  generateInviteCode as generateCode, 
-  generateUUID, 
+  InviteRegistration,
+} from '../types';
+import {
+  generateInviteCode as generateCode,
+  generateUUID,
   validateInviteCodeFormat,
   calculateExpiryDate,
   isInviteCodeExpired,
-  createInviteError
-} from '../utils'
-import { logger } from '../../utils/logger'
+  createInviteError,
+} from '../utils';
 
 export interface InvitationService {
   // 生成邀请码
   generateInviteCode(userId: string): Promise<InviteCode>
-  
+
   // 验证邀请码
   validateInviteCode(code: string): Promise<InviteValidation>
-  
+
   // 处理邀请注册
   processInviteRegistration(code: string, newUserId: string): Promise<InviteResult>
-  
+
   // 获取用户邀请统计
   getUserInviteStats(userId: string): Promise<InviteStats>
-  
+
   // 获取邀请历史
   getInviteHistory(userId: string, pagination: Pagination): Promise<InviteHistory[]>
-  
+
   // 获取用户的邀请码列表
   getUserInviteCodes(userId: string): Promise<InviteCode[]>
-  
+
   // 停用邀请码
   deactivateInviteCode(codeId: string, userId: string): Promise<boolean>
 }
 
 export class InvitationServiceImpl implements InvitationService {
-  private db = DatabaseFactory.getInstance()
+  private db = DatabaseFactory.getInstance();
 
   async generateInviteCode(userId: string): Promise<InviteCode> {
     try {
       // 生成唯一邀请码
-      let code: string
-      let isUnique = false
-      let attempts = 0
-      const maxAttempts = 10
+      let code: string;
+      let isUnique = false;
+      let attempts = 0;
+      const maxAttempts = 10;
 
       do {
-        code = generateCode()
-        attempts++
-        
+        code = generateCode();
+        attempts++;
+
         // 检查邀请码是否已存在
         const existing = await this.db.query<InviteCodeModel>(
           'SELECT id FROM invite_codes WHERE code = ?',
-          [code]
-        )
-        
-        isUnique = existing.length === 0
-        
+          [code],
+        );
+
+        isUnique = existing.length === 0;
+
         if (attempts >= maxAttempts) {
           throw createInviteError(
             InviteErrorCode.REWARD_CALCULATION_ERROR,
-            'Failed to generate unique invite code after multiple attempts'
-          )
+            'Failed to generate unique invite code after multiple attempts',
+          );
         }
-      } while (!isUnique)
+      } while (!isUnique);
 
       // 创建邀请码记录
-      const inviteCodeId = generateUUID()
-      const expiresAt = calculateExpiryDate(6) // 6个月过期
-      
+      const inviteCodeId = generateUUID();
+      const expiresAt = calculateExpiryDate(6); // 6个月过期
+
       await this.db.execute(
         `INSERT INTO invite_codes (id, code, inviter_id, expires_at, is_active, usage_count, max_usage) 
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [inviteCodeId, code, userId, expiresAt, true, 0, 100]
-      )
+        [inviteCodeId, code, userId, expiresAt, true, 0, 100],
+      );
 
       // 更新用户统计
-      await this.updateUserInviteStats(userId)
+      await this.updateUserInviteStats(userId);
 
       const inviteCode: InviteCode = {
         id: inviteCodeId,
@@ -105,15 +105,15 @@ export class InvitationServiceImpl implements InvitationService {
         expiresAt,
         isActive: true,
         usageCount: 0,
-        maxUsage: 100
-      }
+        maxUsage: 100,
+      };
 
-      logger.info('Invite code generated successfully', { userId, code })
-      return inviteCode
+      logger.info('Invite code generated successfully', { userId, code });
+      return inviteCode;
 
     } catch (error) {
-      logger.error('Failed to generate invite code', { userId, error })
-      throw error
+      logger.error('Failed to generate invite code', { userId, error });
+      throw error;
     }
   }
 
@@ -124,26 +124,26 @@ export class InvitationServiceImpl implements InvitationService {
         return {
           isValid: false,
           error: 'Invalid invite code format',
-          errorCode: InviteErrorCode.INVALID_INVITE_CODE
-        }
+          errorCode: InviteErrorCode.INVALID_INVITE_CODE,
+        };
       }
 
       // 查询邀请码
       const results = await this.db.query<InviteCodeModel>(
         'SELECT * FROM invite_codes WHERE code = ?',
-        [code]
-      )
+        [code],
+      );
 
       if (results.length === 0) {
         return {
           isValid: false,
           error: 'Invite code not found',
-          errorCode: InviteErrorCode.INVALID_INVITE_CODE
-        }
+          errorCode: InviteErrorCode.INVALID_INVITE_CODE,
+        };
       }
 
-      const inviteCodeModel = results[0]
-      const inviteCode = ModelConverter.toInviteCode(inviteCodeModel)
+      const inviteCodeModel = results[0];
+      const inviteCode = ModelConverter.toInviteCode(inviteCodeModel);
 
       // 检查邀请码是否过期
       if (isInviteCodeExpired(inviteCode.expiresAt)) {
@@ -151,8 +151,8 @@ export class InvitationServiceImpl implements InvitationService {
           isValid: false,
           code: inviteCode,
           error: 'Invite code has expired',
-          errorCode: InviteErrorCode.EXPIRED_INVITE_CODE
-        }
+          errorCode: InviteErrorCode.EXPIRED_INVITE_CODE,
+        };
       }
 
       // 检查邀请码是否激活
@@ -161,8 +161,8 @@ export class InvitationServiceImpl implements InvitationService {
           isValid: false,
           code: inviteCode,
           error: 'Invite code is inactive',
-          errorCode: InviteErrorCode.INVALID_INVITE_CODE
-        }
+          errorCode: InviteErrorCode.INVALID_INVITE_CODE,
+        };
       }
 
       // 检查使用次数限制
@@ -171,18 +171,18 @@ export class InvitationServiceImpl implements InvitationService {
           isValid: false,
           code: inviteCode,
           error: 'Invite code usage limit exceeded',
-          errorCode: InviteErrorCode.USAGE_LIMIT_EXCEEDED
-        }
+          errorCode: InviteErrorCode.USAGE_LIMIT_EXCEEDED,
+        };
       }
 
       return {
         isValid: true,
-        code: inviteCode
-      }
+        code: inviteCode,
+      };
 
     } catch (error) {
-      logger.error('Failed to validate invite code', { code, error })
-      throw error
+      logger.error('Failed to validate invite code', { code, error });
+      throw error;
     }
   }
 
@@ -190,59 +190,59 @@ export class InvitationServiceImpl implements InvitationService {
     return await this.db.transaction(async (connection) => {
       try {
         // 验证邀请码
-        const validation = await this.validateInviteCode(code)
+        const validation = await this.validateInviteCode(code);
         if (!validation.isValid || !validation.code) {
           return {
             success: false,
             error: validation.error,
-            errorCode: validation.errorCode
-          }
+            errorCode: validation.errorCode,
+          };
         }
 
-        const inviteCode = validation.code
+        const inviteCode = validation.code;
 
         // 检查是否自我邀请
         if (inviteCode.inviterId === newUserId) {
           return {
             success: false,
             error: 'Cannot use your own invite code',
-            errorCode: InviteErrorCode.SELF_INVITE_ATTEMPT
-          }
+            errorCode: InviteErrorCode.SELF_INVITE_ATTEMPT,
+          };
         }
 
         // 检查用户是否已经通过邀请注册过
         const existingRegistration = await connection.query<InviteRegistrationModel>(
           'SELECT id FROM invite_registrations WHERE invitee_id = ?',
-          [newUserId]
-        )
+          [newUserId],
+        );
 
         if (existingRegistration.length > 0) {
           return {
             success: false,
             error: 'User has already been invited',
-            errorCode: InviteErrorCode.ALREADY_REGISTERED
-          }
+            errorCode: InviteErrorCode.ALREADY_REGISTERED,
+          };
         }
 
         // 创建邀请注册记录
-        const registrationId = generateUUID()
-        const registeredAt = new Date()
+        const registrationId = generateUUID();
+        const registeredAt = new Date();
 
         await connection.execute(
           `INSERT INTO invite_registrations 
            (id, invite_code_id, inviter_id, invitee_id, registered_at, is_activated, rewards_claimed) 
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [registrationId, inviteCode.id, inviteCode.inviterId, newUserId, registeredAt, false, false]
-        )
+          [registrationId, inviteCode.id, inviteCode.inviterId, newUserId, registeredAt, false, false],
+        );
 
         // 更新邀请码使用次数
         await connection.execute(
           'UPDATE invite_codes SET usage_count = usage_count + 1 WHERE id = ?',
-          [inviteCode.id]
-        )
+          [inviteCode.id],
+        );
 
         // 更新邀请人统计
-        await this.updateUserInviteStats(inviteCode.inviterId)
+        await this.updateUserInviteStats(inviteCode.inviterId);
 
         const registration: InviteRegistration = {
           id: registrationId,
@@ -251,33 +251,33 @@ export class InvitationServiceImpl implements InvitationService {
           inviteeId: newUserId,
           registeredAt,
           isActivated: false,
-          rewardsClaimed: false
-        }
+          rewardsClaimed: false,
+        };
 
         logger.info('Invite registration processed successfully', {
           inviteCode: code,
           inviterId: inviteCode.inviterId,
-          inviteeId: newUserId
-        })
+          inviteeId: newUserId,
+        });
 
         return {
           success: true,
-          registration
-        }
+          registration,
+        };
 
       } catch (error) {
-        logger.error('Failed to process invite registration', { code, newUserId, error })
-        throw error
+        logger.error('Failed to process invite registration', { code, newUserId, error });
+        throw error;
       }
-    })
+    });
   }
 
   async getUserInviteStats(userId: string): Promise<InviteStats> {
     try {
       const results = await this.db.query<InviteStatsModel>(
         'SELECT * FROM invite_stats WHERE user_id = ?',
-        [userId]
-      )
+        [userId],
+      );
 
       if (results.length === 0) {
         // 如果没有统计记录，创建一个默认的
@@ -287,26 +287,26 @@ export class InvitationServiceImpl implements InvitationService {
           successfulRegistrations: 0,
           activeInvitees: 0,
           totalRewardsEarned: 0,
-          lastUpdated: new Date()
-        }
+          lastUpdated: new Date(),
+        };
 
-        await this.createUserInviteStats(userId)
-        return defaultStats
+        await this.createUserInviteStats(userId);
+        return defaultStats;
       }
 
-      return ModelConverter.toInviteStats(results[0])
+      return ModelConverter.toInviteStats(results[0]);
 
     } catch (error) {
-      logger.error('Failed to get user invite stats', { userId, error })
-      throw error
+      logger.error('Failed to get user invite stats', { userId, error });
+      throw error;
     }
   }
 
   async getInviteHistory(userId: string, pagination: Pagination): Promise<InviteHistory[]> {
     try {
-      const offset = (pagination.page - 1) * pagination.limit
-      const sortBy = pagination.sortBy || 'registered_at'
-      const sortOrder = pagination.sortOrder || 'desc'
+      const offset = (pagination.page - 1) * pagination.limit;
+      const sortBy = pagination.sortBy || 'registered_at';
+      const sortOrder = pagination.sortOrder || 'desc';
 
       const results = await this.db.query<any>(
         `SELECT 
@@ -324,8 +324,8 @@ export class InvitationServiceImpl implements InvitationService {
          WHERE ir.inviter_id = ?
          ORDER BY ${sortBy} ${sortOrder}
          LIMIT ? OFFSET ?`,
-        [userId, pagination.limit, offset]
-      )
+        [userId, pagination.limit, offset],
+      );
 
       return results.map(row => ({
         id: row.id,
@@ -335,12 +335,12 @@ export class InvitationServiceImpl implements InvitationService {
         registeredAt: row.registered_at,
         isActivated: row.is_activated,
         activatedAt: row.activated_at,
-        rewardsClaimed: row.rewards_claimed
-      }))
+        rewardsClaimed: row.rewards_claimed,
+      }));
 
     } catch (error) {
-      logger.error('Failed to get invite history', { userId, pagination, error })
-      throw error
+      logger.error('Failed to get invite history', { userId, pagination, error });
+      throw error;
     }
   }
 
@@ -348,14 +348,14 @@ export class InvitationServiceImpl implements InvitationService {
     try {
       const results = await this.db.query<InviteCodeModel>(
         'SELECT * FROM invite_codes WHERE inviter_id = ? ORDER BY created_at DESC',
-        [userId]
-      )
+        [userId],
+      );
 
-      return results.map(model => ModelConverter.toInviteCode(model))
+      return results.map(model => ModelConverter.toInviteCode(model));
 
     } catch (error) {
-      logger.error('Failed to get user invite codes', { userId, error })
-      throw error
+      logger.error('Failed to get user invite codes', { userId, error });
+      throw error;
     }
   }
 
@@ -363,22 +363,22 @@ export class InvitationServiceImpl implements InvitationService {
     try {
       const result = await this.db.execute(
         'UPDATE invite_codes SET is_active = false WHERE id = ? AND inviter_id = ?',
-        [codeId, userId]
-      )
+        [codeId, userId],
+      );
 
-      const success = result.affectedRows > 0
-      
+      const success = result.affectedRows > 0;
+
       if (success) {
-        logger.info('Invite code deactivated', { codeId, userId })
+        logger.info('Invite code deactivated', { codeId, userId });
       } else {
-        logger.warn('Failed to deactivate invite code - not found or unauthorized', { codeId, userId })
+        logger.warn('Failed to deactivate invite code - not found or unauthorized', { codeId, userId });
       }
 
-      return success
+      return success;
 
     } catch (error) {
-      logger.error('Failed to deactivate invite code', { codeId, userId, error })
-      throw error
+      logger.error('Failed to deactivate invite code', { codeId, userId, error });
+      throw error;
     }
   }
 
@@ -388,23 +388,23 @@ export class InvitationServiceImpl implements InvitationService {
       // 计算统计数据
       const [inviteCount] = await this.db.query<{ count: number }>(
         'SELECT COUNT(*) as count FROM invite_codes WHERE inviter_id = ?',
-        [userId]
-      )
+        [userId],
+      );
 
       const [registrationCount] = await this.db.query<{ count: number }>(
         'SELECT COUNT(*) as count FROM invite_registrations WHERE inviter_id = ?',
-        [userId]
-      )
+        [userId],
+      );
 
       const [activeCount] = await this.db.query<{ count: number }>(
         'SELECT COUNT(*) as count FROM invite_registrations WHERE inviter_id = ? AND is_activated = true',
-        [userId]
-      )
+        [userId],
+      );
 
       const [rewardCount] = await this.db.query<{ total: number }>(
         'SELECT COALESCE(SUM(amount), 0) as total FROM reward_records WHERE user_id = ? AND reward_type = "ai_credits"',
-        [userId]
-      )
+        [userId],
+      );
 
       // 更新或插入统计记录
       await this.db.execute(
@@ -422,12 +422,12 @@ export class InvitationServiceImpl implements InvitationService {
           inviteCount.count,
           registrationCount.count,
           activeCount.count,
-          rewardCount.total
-        ]
-      )
+          rewardCount.total,
+        ],
+      );
 
     } catch (error) {
-      logger.error('Failed to update user invite stats', { userId, error })
+      logger.error('Failed to update user invite stats', { userId, error });
       // 不抛出错误，避免影响主流程
     }
   }
@@ -438,13 +438,10 @@ export class InvitationServiceImpl implements InvitationService {
       await this.db.execute(
         `INSERT IGNORE INTO invite_stats (id, user_id, total_invites, successful_registrations, active_invitees, total_rewards_earned)
          VALUES (?, ?, 0, 0, 0, 0)`,
-        [generateUUID(), userId]
-      )
+        [generateUUID(), userId],
+      );
     } catch (error) {
-      logger.error('Failed to create user invite stats', { userId, error })
+      logger.error('Failed to create user invite stats', { userId, error });
     }
   }
 }
-
-// 导出默认实现
-export { InvitationServiceImpl as InvitationService }

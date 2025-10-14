@@ -87,7 +87,7 @@ export class MemoryUsageTracker extends EventEmitter {
       maxSnapshots: 2000,
       enableGCTracking: true,
       enableHeapProfiling: false,
-      ...options
+      ...options,
     };
   }
 
@@ -162,9 +162,9 @@ export class MemoryUsageTracker extends EventEmitter {
         spaceSize: space.space_size,
         spaceUsedSize: space.space_used_size,
         spaceAvailableSize: space.space_available_size,
-        physicalSpaceSize: space.physical_space_size
+        physicalSpaceSize: space.physical_space_size,
       })),
-      heapStatistics: heapStats
+      heapStatistics: heapStats,
     };
 
     this.snapshots.push(snapshot);
@@ -184,28 +184,28 @@ export class MemoryUsageTracker extends EventEmitter {
     try {
       // 使用性能观察器跟踪GC事件
       const { PerformanceObserver } = require('perf_hooks');
-      
+
       this.gcObserver = new PerformanceObserver((list: any) => {
         const entries = list.getEntries();
         entries.forEach((entry: any) => {
           if (entry.entryType === 'gc') {
             const memoryBefore = this.getLastSnapshot()?.heapUsed || 0;
-            
+
             // 捕获GC后的内存快照
             setTimeout(() => {
               const memoryAfter = process.memoryUsage().heapUsed;
-              
+
               const gcEvent: GCEvent = {
                 timestamp: entry.startTime + entry.duration,
                 type: this.getGCType(entry.kind),
                 duration: entry.duration,
                 memoryBefore,
                 memoryAfter,
-                memoryFreed: Math.max(0, memoryBefore - memoryAfter)
+                memoryFreed: Math.max(0, memoryBefore - memoryAfter),
               };
 
               this.gcEvents.push(gcEvent);
-              
+
               // 保持GC事件数量在限制内
               if (this.gcEvents.length > this.options.maxSnapshots) {
                 this.gcEvents = this.gcEvents.slice(-this.options.maxSnapshots);
@@ -232,7 +232,7 @@ export class MemoryUsageTracker extends EventEmitter {
       2: 'Mark-Sweep-Compact',
       4: 'Incremental Marking',
       8: 'Weak Phantom Callback Processing',
-      15: 'All'
+      15: 'All',
     };
     return gcTypes[kind] || `Unknown(${kind})`;
   }
@@ -265,7 +265,7 @@ export class MemoryUsageTracker extends EventEmitter {
         timestamp: Date.now(),
         heapStatistics: heapStats,
         heapSpaces: heapSpaces,
-        fragmentation: this.calculateFragmentation(heapStats, heapSpaces)
+        fragmentation: this.calculateFragmentation(heapStats, heapSpaces),
       };
 
       this.emit('heap:analysis', analysis);
@@ -339,9 +339,9 @@ export class MemoryUsageTracker extends EventEmitter {
         spaceSize: space.space_size,
         spaceUsedSize: space.space_used_size,
         spaceAvailableSize: space.space_available_size,
-        physicalSpaceSize: space.physical_space_size
+        physicalSpaceSize: space.physical_space_size,
       })),
-      heapStatistics: heapStats
+      heapStatistics: heapStats,
     };
   }
 
@@ -355,7 +355,7 @@ export class MemoryUsageTracker extends EventEmitter {
 
     if (memoryGrowth > this.options.leakThreshold) {
       let severity: MemoryLeak['severity'] = 'low';
-      
+
       if (memoryGrowth > this.options.leakThreshold * 5) {
         severity = 'critical';
       } else if (memoryGrowth > this.options.leakThreshold * 3) {
@@ -372,7 +372,7 @@ export class MemoryUsageTracker extends EventEmitter {
         leakSize: memoryGrowth,
         leakRate,
         duration,
-        severity
+        severity,
       };
     }
 
@@ -392,7 +392,7 @@ export class MemoryUsageTracker extends EventEmitter {
   analyzeMemoryUsage(timeWindow?: number): MemoryAnalysis {
     const cutoffTime = timeWindow ? Date.now() - timeWindow : 0;
     const relevantSnapshots = this.snapshots.filter(s => s.timestamp > cutoffTime);
-    
+
     if (relevantSnapshots.length === 0) {
       return {
         totalSnapshots: 0,
@@ -405,15 +405,15 @@ export class MemoryUsageTracker extends EventEmitter {
           totalCollections: 0,
           totalTime: 0,
           averageTime: 0,
-          collections: []
+          collections: [],
         },
-        recommendations: []
+        recommendations: [],
       };
     }
 
     const startSnapshot = relevantSnapshots[0];
     const endSnapshot = relevantSnapshots[relevantSnapshots.length - 1];
-    
+
     const memoryGrowth = endSnapshot.heapUsed - startSnapshot.heapUsed;
     const averageMemoryUsage = relevantSnapshots.reduce((sum, s) => sum + s.heapUsed, 0) / relevantSnapshots.length;
     const peakMemoryUsage = Math.max(...relevantSnapshots.map(s => s.heapUsed));
@@ -435,7 +435,7 @@ export class MemoryUsageTracker extends EventEmitter {
       peakMemoryUsage,
       memoryLeaks,
       garbageCollectionStats: gcStats,
-      recommendations
+      recommendations,
     };
   }
 
@@ -444,7 +444,7 @@ export class MemoryUsageTracker extends EventEmitter {
    */
   private analyzeMemoryLeaks(): MemoryLeak[] {
     const leaks: MemoryLeak[] = [];
-    
+
     for (const [testId, testMemory] of this.testMemoryMap.entries()) {
       if (testMemory.end) {
         const leak = this.detectMemoryLeak(testId, testMemory.start, testMemory.end);
@@ -462,7 +462,7 @@ export class MemoryUsageTracker extends EventEmitter {
    */
   private analyzeGCStats(cutoffTime: number): GCStats {
     const relevantGCEvents = this.gcEvents.filter(gc => gc.timestamp > cutoffTime);
-    
+
     const totalCollections = relevantGCEvents.length;
     const totalTime = relevantGCEvents.reduce((sum, gc) => sum + gc.duration, 0);
     const averageTime = totalCollections > 0 ? totalTime / totalCollections : 0;
@@ -471,7 +471,7 @@ export class MemoryUsageTracker extends EventEmitter {
       totalCollections,
       totalTime,
       averageTime,
-      collections: relevantGCEvents
+      collections: relevantGCEvents,
     };
   }
 
@@ -483,7 +483,7 @@ export class MemoryUsageTracker extends EventEmitter {
     averageMemoryUsage: number,
     peakMemoryUsage: number,
     memoryLeaks: MemoryLeak[],
-    gcStats: GCStats
+    gcStats: GCStats,
   ): string[] {
     const recommendations: string[] = [];
 
@@ -495,7 +495,7 @@ export class MemoryUsageTracker extends EventEmitter {
     // 内存泄漏建议
     if (memoryLeaks.length > 0) {
       recommendations.push(`${memoryLeaks.length} potential memory leaks detected. Review test cleanup procedures.`);
-      
+
       const criticalLeaks = memoryLeaks.filter(l => l.severity === 'critical');
       if (criticalLeaks.length > 0) {
         recommendations.push(`${criticalLeaks.length} critical memory leaks require immediate attention.`);
@@ -551,7 +551,7 @@ export class MemoryUsageTracker extends EventEmitter {
       heapUsed: relevantSnapshots.map(s => s.heapUsed),
       heapTotal: relevantSnapshots.map(s => s.heapTotal),
       rss: relevantSnapshots.map(s => s.rss),
-      external: relevantSnapshots.map(s => s.external)
+      external: relevantSnapshots.map(s => s.external),
     };
   }
 

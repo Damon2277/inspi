@@ -16,7 +16,7 @@ describe('Cache Strategy Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Mock Redis client
     mockRedisClient = {
       get: jest.fn(),
@@ -43,12 +43,12 @@ describe('Cache Strategy Tests', () => {
       zrange: jest.fn(),
       isReady: true,
       on: jest.fn(),
-      quit: jest.fn()
+      quit: jest.fn(),
     };
 
     // Mock redis module
     (redis as any).createClient = jest.fn().mockReturnValue(mockRedisClient);
-    
+
     simpleRedis = new SimpleRedis();
   });
 
@@ -57,15 +57,15 @@ describe('Cache Strategy Tests', () => {
       // Arrange
       const maxSize = 3;
       const lruCache = new LRUCache(maxSize);
-      
+
       // Act
       await lruCache.set('key1', 'value1');
       await lruCache.set('key2', 'value2');
       await lruCache.set('key3', 'value3');
-      
+
       // 访问key1，使其成为最近使用
       await lruCache.get('key1');
-      
+
       // 添加新key，应该淘汰key2（最少使用）
       await lruCache.set('key4', 'value4');
 
@@ -79,13 +79,13 @@ describe('Cache Strategy Tests', () => {
     it('应该正确更新访问顺序', async () => {
       // Arrange
       const lruCache = new LRUCache(2);
-      
+
       await lruCache.set('a', '1');
       await lruCache.set('b', '2');
-      
+
       // Act - 访问a，使其成为最近使用
       await lruCache.get('a');
-      
+
       // 添加新key，应该淘汰b
       await lruCache.set('c', '3');
 
@@ -98,7 +98,7 @@ describe('Cache Strategy Tests', () => {
     it('应该处理重复设置相同key的情况', async () => {
       // Arrange
       const lruCache = new LRUCache(2);
-      
+
       // Act
       await lruCache.set('key1', 'value1');
       await lruCache.set('key2', 'value2');
@@ -147,10 +147,10 @@ describe('Cache Strategy Tests', () => {
       // Act
       await simpleRedis.set(key, value, { ttl: shortTtl });
       const immediateValue = await simpleRedis.get(key);
-      
+
       // 模拟时间过去
       jest.advanceTimersByTime(shortTtl * 1000 + 100);
-      
+
       const expiredValue = await simpleRedis.get(key);
 
       // Assert
@@ -164,7 +164,7 @@ describe('Cache Strategy Tests', () => {
         { ttl: 60, unit: 'seconds', expectedSeconds: 60 },
         { ttl: 5, unit: 'minutes', expectedSeconds: 300 },
         { ttl: 2, unit: 'hours', expectedSeconds: 7200 },
-        { ttl: 1, unit: 'days', expectedSeconds: 86400 }
+        { ttl: 1, unit: 'days', expectedSeconds: 86400 },
       ];
 
       mockRedisClient.set.mockResolvedValue('OK');
@@ -173,14 +173,14 @@ describe('Cache Strategy Tests', () => {
       // Act & Assert
       for (const testCase of testCases) {
         await simpleRedis.set(
-          `key_${testCase.unit}`, 
-          'value', 
-          { ttl: testCase.ttl, unit: testCase.unit as any }
+          `key_${testCase.unit}`,
+          'value',
+          { ttl: testCase.ttl, unit: testCase.unit as any },
         );
-        
+
         expect(mockRedisClient.expire).toHaveBeenCalledWith(
-          `key_${testCase.unit}`, 
-          testCase.expectedSeconds
+          `key_${testCase.unit}`,
+          testCase.expectedSeconds,
         );
       }
     });
@@ -192,7 +192,7 @@ describe('Cache Strategy Tests', () => {
       const key = 'write_through_key';
       const value = { id: 1, name: 'test' };
       const mockDataSource = {
-        save: jest.fn().mockResolvedValue(value)
+        save: jest.fn().mockResolvedValue(value),
       };
 
       mockRedisClient.set.mockResolvedValue('OK');
@@ -211,12 +211,12 @@ describe('Cache Strategy Tests', () => {
       const key = 'failed_write_key';
       const value = { id: 2, name: 'test2' };
       const mockDataSource = {
-        save: jest.fn().mockRejectedValue(new Error('Database error'))
+        save: jest.fn().mockRejectedValue(new Error('Database error')),
       };
 
       // Act & Assert
       await expect(
-        simpleRedis.writeThrough(key, value, mockDataSource.save)
+        simpleRedis.writeThrough(key, value, mockDataSource.save),
       ).rejects.toThrow('Database error');
 
       expect(mockDataSource.save).toHaveBeenCalledWith(value);
@@ -229,7 +229,7 @@ describe('Cache Strategy Tests', () => {
       const value = { id: 3, name: 'test3' };
       const mockDataSource = {
         save: jest.fn().mockResolvedValue(value),
-        rollback: jest.fn().mockResolvedValue(true)
+        rollback: jest.fn().mockResolvedValue(true),
       };
 
       mockRedisClient.set.mockRejectedValue(new Error('Redis error'));
@@ -238,8 +238,8 @@ describe('Cache Strategy Tests', () => {
       await expect(
         simpleRedis.writeThrough(key, value, mockDataSource.save, {
           rollbackOnCacheFailure: true,
-          rollbackFn: mockDataSource.rollback
-        })
+          rollbackFn: mockDataSource.rollback,
+        }),
       ).rejects.toThrow('Redis error');
 
       expect(mockDataSource.save).toHaveBeenCalledWith(value);
@@ -253,7 +253,7 @@ describe('Cache Strategy Tests', () => {
       const key = 'write_behind_key';
       const value = { id: 4, name: 'test4' };
       const mockDataSource = {
-        save: jest.fn().mockResolvedValue(value)
+        save: jest.fn().mockResolvedValue(value),
       };
 
       mockRedisClient.set.mockResolvedValue('OK');
@@ -264,7 +264,7 @@ describe('Cache Strategy Tests', () => {
       // Assert
       expect(mockRedisClient.set).toHaveBeenCalledWith(key, JSON.stringify(value));
       expect(result).toEqual(value);
-      
+
       // 数据源写入应该是异步的
       await new Promise(resolve => setTimeout(resolve, 100));
       expect(mockDataSource.save).toHaveBeenCalledWith(value);
@@ -275,33 +275,33 @@ describe('Cache Strategy Tests', () => {
       const items = [
         { key: 'batch1', value: { id: 1, name: 'item1' } },
         { key: 'batch2', value: { id: 2, name: 'item2' } },
-        { key: 'batch3', value: { id: 3, name: 'item3' } }
+        { key: 'batch3', value: { id: 3, name: 'item3' } },
       ];
-      
+
       const mockDataSource = {
-        batchSave: jest.fn().mockResolvedValue(items.map(i => i.value))
+        batchSave: jest.fn().mockResolvedValue(items.map(i => i.value)),
       };
 
       mockRedisClient.set.mockResolvedValue('OK');
 
       // Act
       const results = await Promise.all(
-        items.map(item => 
+        items.map(item =>
           simpleRedis.writeBehind(item.key, item.value, mockDataSource.batchSave, {
             batchSize: 3,
-            batchDelay: 100
-          })
-        )
+            batchDelay: 100,
+          }),
+        ),
       );
 
       // Assert
       expect(results).toHaveLength(3);
       expect(mockRedisClient.set).toHaveBeenCalledTimes(3);
-      
+
       // 等待批量写入完成
       await new Promise(resolve => setTimeout(resolve, 200));
       expect(mockDataSource.batchSave).toHaveBeenCalledWith(
-        items.map(i => i.value)
+        items.map(i => i.value),
       );
     });
 
@@ -313,7 +313,7 @@ describe('Cache Strategy Tests', () => {
         save: jest.fn()
           .mockRejectedValueOnce(new Error('Temporary failure'))
           .mockRejectedValueOnce(new Error('Another failure'))
-          .mockResolvedValueOnce(value)
+          .mockResolvedValueOnce(value),
       };
 
       mockRedisClient.set.mockResolvedValue('OK');
@@ -321,12 +321,12 @@ describe('Cache Strategy Tests', () => {
       // Act
       await simpleRedis.writeBehind(key, value, mockDataSource.save, {
         retryAttempts: 3,
-        retryDelay: 50
+        retryDelay: 50,
       });
 
       // Assert
       expect(mockRedisClient.set).toHaveBeenCalledWith(key, JSON.stringify(value));
-      
+
       // 等待重试完成
       await new Promise(resolve => setTimeout(resolve, 300));
       expect(mockDataSource.save).toHaveBeenCalledTimes(3);
@@ -339,7 +339,7 @@ describe('Cache Strategy Tests', () => {
       const key = 'read_through_key';
       const value = { id: 6, name: 'test6' };
       const mockDataSource = {
-        load: jest.fn().mockResolvedValue(value)
+        load: jest.fn().mockResolvedValue(value),
       };
 
       mockRedisClient.get.mockResolvedValue(null); // 缓存未命中
@@ -360,7 +360,7 @@ describe('Cache Strategy Tests', () => {
       const key = 'cached_key';
       const cachedValue = { id: 7, name: 'cached' };
       const mockDataSource = {
-        load: jest.fn()
+        load: jest.fn(),
       };
 
       mockRedisClient.get.mockResolvedValue(JSON.stringify(cachedValue));
@@ -378,14 +378,14 @@ describe('Cache Strategy Tests', () => {
       // Arrange
       const key = 'load_fail_key';
       const mockDataSource = {
-        load: jest.fn().mockRejectedValue(new Error('Data source error'))
+        load: jest.fn().mockRejectedValue(new Error('Data source error')),
       };
 
       mockRedisClient.get.mockResolvedValue(null);
 
       // Act & Assert
       await expect(
-        simpleRedis.readThrough(key, mockDataSource.load)
+        simpleRedis.readThrough(key, mockDataSource.load),
       ).rejects.toThrow('Data source error');
 
       expect(mockRedisClient.get).toHaveBeenCalledWith(key);
@@ -400,17 +400,17 @@ describe('Cache Strategy Tests', () => {
       const key = 'manual_key';
       const value = { id: 8, name: 'manual' };
       const updatedValue = { id: 8, name: 'updated' };
-      
+
       const mockDataSource = {
         load: jest.fn().mockResolvedValue(value),
-        save: jest.fn().mockResolvedValue(updatedValue)
+        save: jest.fn().mockResolvedValue(updatedValue),
       };
 
       mockRedisClient.get
         .mockResolvedValueOnce(null) // 首次未命中
         .mockResolvedValueOnce(JSON.stringify(value)) // 缓存后命中
         .mockResolvedValueOnce(null); // 删除后未命中
-      
+
       mockRedisClient.set.mockResolvedValue('OK');
       mockRedisClient.del.mockResolvedValue(1);
 
@@ -418,21 +418,21 @@ describe('Cache Strategy Tests', () => {
       // 1. 首次读取，缓存未命中
       let result = await simpleRedis.get(key);
       expect(result).toBeNull();
-      
+
       // 手动从数据源加载并缓存
       const loadedValue = await mockDataSource.load(key);
       await simpleRedis.set(key, loadedValue);
-      
+
       // 2. 再次读取，缓存命中
       result = await simpleRedis.get(key);
       expect(result).toEqual(value);
-      
+
       // 3. 更新数据源
       await mockDataSource.save(key, updatedValue);
-      
+
       // 4. 手动删除缓存
       await simpleRedis.del(key);
-      
+
       // 5. 读取时缓存未命中
       result = await simpleRedis.get(key);
       expect(result).toBeNull();
@@ -444,11 +444,11 @@ describe('Cache Strategy Tests', () => {
       const values = [
         { id: 1, name: 'warm1' },
         { id: 2, name: 'warm2' },
-        { id: 3, name: 'warm3' }
+        { id: 3, name: 'warm3' },
       ];
-      
+
       const mockDataSource = {
-        loadMultiple: jest.fn().mockResolvedValue(values)
+        loadMultiple: jest.fn().mockResolvedValue(values),
       };
 
       mockRedisClient.mset.mockResolvedValue('OK');
@@ -459,7 +459,7 @@ describe('Cache Strategy Tests', () => {
       // Assert
       expect(mockDataSource.loadMultiple).toHaveBeenCalledWith(keys);
       expect(mockRedisClient.mset).toHaveBeenCalledWith(
-        keys.flatMap((key, index) => [key, JSON.stringify(values[index])])
+        keys.flatMap((key, index) => [key, JSON.stringify(values[index])]),
       );
     });
   });
@@ -469,7 +469,7 @@ describe('Cache Strategy Tests', () => {
       // Arrange
       const key = 'multi_level_key';
       const value = { id: 9, name: 'multi_level' };
-      
+
       const l1Cache = new Map(); // 模拟内存缓存
       const multiLevelCache = new MultiLevelCache(l1Cache, simpleRedis);
 
@@ -479,7 +479,7 @@ describe('Cache Strategy Tests', () => {
       // Act
       // 首次读取，L1未命中，L2命中
       const result1 = await multiLevelCache.get(key);
-      
+
       // 再次读取，L1命中
       const result2 = await multiLevelCache.get(key);
 
@@ -494,7 +494,7 @@ describe('Cache Strategy Tests', () => {
       // Arrange
       const key = 'multi_write_key';
       const value = { id: 10, name: 'multi_write' };
-      
+
       const l1Cache = new Map();
       const multiLevelCache = new MultiLevelCache(l1Cache, simpleRedis);
 
@@ -513,7 +513,7 @@ describe('Cache Strategy Tests', () => {
       const key = 'consistency_key';
       const value = { id: 11, name: 'consistency' };
       const updatedValue = { id: 11, name: 'updated_consistency' };
-      
+
       const l1Cache = new Map();
       const multiLevelCache = new MultiLevelCache(l1Cache, simpleRedis);
 
@@ -523,10 +523,10 @@ describe('Cache Strategy Tests', () => {
       // Act
       // 设置初始值
       await multiLevelCache.set(key, value);
-      
+
       // 更新值
       await multiLevelCache.set(key, updatedValue);
-      
+
       // 删除缓存
       await multiLevelCache.del(key);
 
@@ -576,7 +576,7 @@ class LRUCache {
 class MultiLevelCache {
   constructor(
     private l1Cache: Map<string, any>,
-    private l2Cache: SimpleRedis
+    private l2Cache: SimpleRedis,
   ) {}
 
   async get(key: string): Promise<any> {

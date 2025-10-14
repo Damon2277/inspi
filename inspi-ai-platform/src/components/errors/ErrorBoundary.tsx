@@ -1,13 +1,13 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-// import { CustomError } from '@/lib/errors/CustomError';
-// import { ErrorCode } from '@/lib/errors/types';
+// import { CustomError } from '@/shared/errors/CustomError';
+// import { ErrorCode } from '@/shared/errors/types';
 // import { logger } from '@/lib/logging/logger';
 
 /**
  * 错误边界属性接口
- * 
+ *
  * @property children - 子组件，将被错误边界包裹
  * @property fallback - 自定义错误回退UI渲染函数，接收错误对象和错误信息
  * @property onError - 错误发生时的回调函数，可用于日志记录或错误报告
@@ -29,7 +29,7 @@ interface ErrorBoundaryProps {
 
 /**
  * 错误边界状态接口
- * 
+ *
  * @property hasError - 是否捕获到错误
  * @property error - 捕获到的错误对象
  * @property errorInfo - React提供的错误信息，包含组件堆栈
@@ -44,21 +44,21 @@ interface ErrorBoundaryState {
 
 /**
  * React错误边界组件
- * 
+ *
  * 这是基础错误边界组件，用于捕获子组件树中的JavaScript错误，记录错误信息，
  * 并显示备用UI，防止整个应用崩溃。
- * 
+ *
  * 使用场景：
  * 1. 作为其他错误边界组件的基础组件
  * 2. 直接用于包裹可能出错的组件
  * 3. 通过withErrorBoundary高阶组件应用于函数组件
- * 
+ *
  * @example
  * // 基本用法
  * <ErrorBoundary>
  *   <MyComponent />
  * </ErrorBoundary>
- * 
+ *
  * @example
  * // 自定义错误UI
  * <ErrorBoundary
@@ -73,12 +73,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    
+
     this.state = {
       hasError: false,
       error: null,
       errorInfo: null,
-      errorId: null
+      errorId: null,
     };
   }
 
@@ -87,11 +87,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
    */
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     const errorId = `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     return {
       hasError: true,
       error,
-      errorId
+      errorId,
     };
   }
 
@@ -100,10 +100,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
    */
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ errorInfo });
-    
+
     // 记录错误日志
     this.logError(error, errorInfo);
-    
+
     // 调用自定义错误处理函数
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
@@ -116,14 +116,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   componentDidUpdate(prevProps: ErrorBoundaryProps) {
     const { resetOnPropsChange, resetKeys } = this.props;
     const { hasError } = this.state;
-    
+
     if (hasError && resetOnPropsChange) {
       if (resetKeys) {
         // 检查重置键是否发生变化
         const hasResetKeyChanged = resetKeys.some(
-          (resetKey, idx) => prevProps.resetKeys?.[idx] !== resetKey
+          (resetKey, idx) => prevProps.resetKeys?.[idx] !== resetKey,
         );
-        
+
         if (hasResetKeyChanged) {
           this.resetErrorBoundary();
         }
@@ -148,7 +148,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       errorId: this.state.errorId,
       level: this.props.level,
       componentStack: errorInfo.componentStack,
-      errorBoundary: true
+      errorBoundary: true,
     });
   }
 
@@ -159,12 +159,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (this.resetTimeoutId) {
       clearTimeout(this.resetTimeoutId);
     }
-    
+
     this.setState({
       hasError: false,
       error: null,
       errorInfo: null,
-      errorId: null
+      errorId: null,
     });
   };
 
@@ -231,7 +231,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
   errorId,
   level,
   onReset,
-  onAutoReset
+  onAutoReset,
 }) => {
   const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -263,7 +263,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
 
           {/* 错误描述 */}
           <p className="text-sm text-gray-600 text-center mb-6">
-            {level === 'page' 
+            {level === 'page'
               ? '页面在加载过程中遇到了问题，请尝试刷新页面或稍后再试。'
               : '页面的某个部分出现了问题，但不影响其他功能的使用。'
             }
@@ -308,7 +308,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
             >
               重试
             </button>
-            
+
             {level === 'page' && (
               <button
                 onClick={() => window.location.reload()}
@@ -317,7 +317,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
                 刷新页面
               </button>
             )}
-            
+
             <button
               onClick={onAutoReset}
               className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors text-sm font-medium"
@@ -346,7 +346,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
  */
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
+  errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>,
 ) {
   const WrappedComponent = (props: P) => (
     <ErrorBoundary {...errorBoundaryProps}>
@@ -355,7 +355,7 @@ export function withErrorBoundary<P extends object>(
   );
 
   WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
-  
+
   return WrappedComponent;
 }
 

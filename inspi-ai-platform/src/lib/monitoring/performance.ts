@@ -2,10 +2,10 @@
  * 性能监控系统
  */
 
-import { sentry } from './sentry';
+import { getMonitoringConfig } from './config';
 import { monitoringContext } from './context';
 import { performanceFilter } from './filters';
-import { getMonitoringConfig } from './config';
+import { sentry } from './sentry';
 
 /**
  * 性能指标接口
@@ -88,9 +88,9 @@ class PerformanceMonitor {
   private initWebVitals() {
     // 模拟web-vitals库的功能
     // 实际使用时需要安装: npm install web-vitals
-    
+
     // import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals';
-    
+
     const reportWebVital = (metric: WebVitalsMetric) => {
       const performanceMetric: PerformanceMetric = {
         name: metric.name,
@@ -100,8 +100,8 @@ class PerformanceMonitor {
         url: window.location.href,
         tags: {
           navigationType: metric.navigationType,
-          metricId: metric.id
-        }
+          metricId: metric.id,
+        },
       };
 
       this.recordMetric(performanceMetric);
@@ -126,7 +126,7 @@ class PerformanceMonitor {
               value: entry.startTime,
               delta: entry.startTime,
               id: 'fcp-' + Date.now(),
-              navigationType: 'navigate'
+              navigationType: 'navigate',
             });
           }
         });
@@ -145,7 +145,7 @@ class PerformanceMonitor {
             value: lastEntry.startTime,
             delta: lastEntry.startTime,
             id: 'lcp-' + Date.now(),
-            navigationType: 'navigate'
+            navigationType: 'navigate',
           });
         }
       });
@@ -162,13 +162,13 @@ class PerformanceMonitor {
             clsValue += entry.value;
           }
         });
-        
+
         callback({
           name: 'CLS',
           value: clsValue,
           delta: clsValue,
           id: 'cls-' + Date.now(),
-          navigationType: 'navigate'
+          navigationType: 'navigate',
         });
       });
       observer.observe({ entryTypes: ['layout-shift'] });
@@ -208,7 +208,7 @@ class PerformanceMonitor {
       duration: entry.duration,
       startTime: entry.startTime,
       endTime: entry.responseEnd,
-      url: entry.name
+      url: entry.name,
     };
 
     // 只记录慢资源或大资源
@@ -222,8 +222,8 @@ class PerformanceMonitor {
         tags: {
           resource_name: metric.name,
           resource_type: metric.type,
-          resource_size: metric.size.toString()
-        }
+          resource_size: metric.size.toString(),
+        },
       };
 
       this.recordMetric(performanceMetric);
@@ -244,7 +244,7 @@ class PerformanceMonitor {
         used: memory.usedJSHeapSize,
         total: memory.totalJSHeapSize,
         limit: memory.jsHeapSizeLimit,
-        percentage: (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100
+        percentage: (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100,
       };
 
       // 只在内存使用率较高时记录
@@ -257,8 +257,8 @@ class PerformanceMonitor {
           url: window.location.href,
           tags: {
             used_mb: Math.round(memoryMetric.used / 1024 / 1024).toString(),
-            total_mb: Math.round(memoryMetric.total / 1024 / 1024).toString()
-          }
+            total_mb: Math.round(memoryMetric.total / 1024 / 1024).toString(),
+          },
         };
 
         this.recordMetric(performanceMetric);
@@ -294,50 +294,118 @@ class PerformanceMonitor {
    * 记录导航性能指标
    */
   private recordNavigationMetrics(entry: PerformanceNavigationTiming) {
+    const navigationStart = this.getNavigationStart(entry);
+    const loadEventEnd = this.getLoadEventEnd(entry);
+    const domLoading = this.getDomLoading(entry, navigationStart);
+    const domComplete = this.getDomComplete(entry, loadEventEnd);
+
     const metrics = [
       {
         name: 'dns_lookup',
         value: entry.domainLookupEnd - entry.domainLookupStart,
-        unit: 'ms'
+        unit: 'ms',
       },
       {
         name: 'tcp_connect',
         value: entry.connectEnd - entry.connectStart,
-        unit: 'ms'
+        unit: 'ms',
       },
       {
         name: 'request_response',
         value: entry.responseEnd - entry.requestStart,
-        unit: 'ms'
+        unit: 'ms',
       },
       {
         name: 'dom_processing',
-        value: entry.domComplete - entry.domLoading,
-        unit: 'ms'
+        value: domLoading !== undefined && domComplete !== undefined
+          ? domComplete - domLoading
+          : undefined,
+        unit: 'ms',
       },
       {
         name: 'page_load',
-        value: entry.loadEventEnd - entry.navigationStart,
-        unit: 'ms'
-      }
+        value: loadEventEnd - navigationStart,
+        unit: 'ms',
+      },
     ];
 
     metrics.forEach(metric => {
-      if (metric.value > 0) {
+      const value = typeof metric.value === 'number' ? metric.value : undefined;
+      if (value !== undefined && value > 0) {
         const performanceMetric: PerformanceMetric = {
           name: metric.name,
-          value: metric.value,
+          value,
           unit: metric.unit,
           timestamp: Date.now(),
           url: window.location.href,
           tags: {
-            navigation_type: entry.type.toString()
-          }
+            navigation_type: entry.type.toString(),
+          },
         };
 
         this.recordMetric(performanceMetric);
       }
     });
+  }
+
+  private getNavigationStart(entry: PerformanceNavigationTiming): number {
+    if ('navigationStart' in entry) {
+      const value = (entry as PerformanceNavigationTiming & { navigationStart?: number }).navigationStart;
+      if (typeof value === 'number') {
+        return value;
+      }
+    }
+    const legacy = this.getLegacyTiming();
+    if (legacy) {
+      return legacy.navigationStart;
+    }
+    return entry.startTime;
+  }
+
+  private getLoadEventEnd(entry: PerformanceNavigationTiming): number {
+    const value = entry.loadEventEnd;
+    if (typeof value === 'number' && value > 0) {
+      return value;
+    }
+    const legacy = this.getLegacyTiming();
+    if (legacy) {
+      return legacy.loadEventEnd;
+    }
+    return entry.responseEnd;
+  }
+
+  private getDomLoading(entry: PerformanceNavigationTiming, fallback: number): number | undefined {
+    if ('domLoading' in entry) {
+      const value = (entry as PerformanceNavigationTiming & { domLoading?: number }).domLoading;
+      if (typeof value === 'number' && value > 0) {
+        return value;
+      }
+    }
+    const legacy = this.getLegacyTiming();
+    if (legacy && typeof legacy.domLoading === 'number') {
+      return legacy.domLoading;
+    }
+    return fallback;
+  }
+
+  private getDomComplete(entry: PerformanceNavigationTiming, fallback: number): number | undefined {
+    const value = entry.domComplete;
+    if (typeof value === 'number' && value > 0) {
+      return value;
+    }
+    const legacy = this.getLegacyTiming();
+    if (legacy && typeof legacy.domComplete === 'number') {
+      return legacy.domComplete;
+    }
+    return fallback;
+  }
+
+  private getLegacyTiming(): PerformanceTiming | undefined {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+    const timing = window.performance?.timing;
+    return timing && timing.navigationStart > 0 ? timing : undefined;
   }
 
   /**
@@ -359,8 +427,8 @@ class PerformanceMonitor {
             timestamp: Date.now(),
             url: window.location.href,
             tags: {
-              task_name: entry.name
-            }
+              task_name: entry.name,
+            },
           };
 
           this.recordMetric(performanceMetric);
@@ -395,15 +463,15 @@ class PerformanceMonitor {
       data: {
         value: metric.value,
         unit: metric.unit,
-        tags: metric.tags
-      }
+        tags: metric.tags,
+      },
     });
 
     // 如果是关键性能问题，发送事件
     if (this.isCriticalPerformanceIssue(metric)) {
       sentry.captureMessage(
         `Critical performance issue: ${metric.name} = ${metric.value}${metric.unit}`,
-        'warning'
+        'warning',
       );
     }
 
@@ -498,7 +566,7 @@ export function recordPerformanceMetric(
   name: string,
   value: number,
   unit: string = 'ms',
-  tags?: Record<string, string>
+  tags?: Record<string, string>,
 ) {
   const metric: PerformanceMetric = {
     name,
@@ -506,7 +574,7 @@ export function recordPerformanceMetric(
     unit,
     timestamp: Date.now(),
     url: typeof window !== 'undefined' ? window.location.href : undefined,
-    tags
+    tags,
   };
 
   performanceMonitor.recordMetric(metric);
@@ -539,17 +607,17 @@ export class PerformanceTimer {
 /**
  * 性能装饰器
  */
-export function withPerformanceMonitoring<T extends (...args: any[]) => any>(
+export function withPerformanceMonitoring<T extends(...args: any[]) => any>(
   fn: T,
   name: string,
-  tags?: Record<string, string>
+  tags?: Record<string, string>,
 ): T {
   return ((...args: any[]) => {
     const timer = new PerformanceTimer(name, tags);
-    
+
     try {
       const result = fn(...args);
-      
+
       if (result instanceof Promise) {
         return result
           .then((res) => {
@@ -561,7 +629,7 @@ export function withPerformanceMonitoring<T extends (...args: any[]) => any>(
             throw error;
           });
       }
-      
+
       timer.end();
       return result;
     } catch (error) {

@@ -1,8 +1,10 @@
 import { NextRequest } from 'next/server';
-import { authMiddleware } from '@/lib/auth/middleware';
-import { verifyToken } from '@/lib/auth/jwt';
+
 import { User } from '@/lib/models/User';
 import connectDB from '@/lib/mongodb';
+
+import { verifyToken } from '@/lib/auth/jwt';
+import { authMiddleware } from '@/lib/auth/middleware';
 
 // Mock dependencies
 jest.mock('@/lib/auth/jwt');
@@ -29,25 +31,25 @@ describe('Auth Middleware', () => {
 
     it('should allow access to public routes without authentication', async () => {
       const request = createMockRequest('https://example.com/');
-      
+
       const response = await authMiddleware(request);
-      
+
       expect(response).toBeUndefined(); // NextResponse.next() returns undefined in tests
     });
 
     it('should allow access to API routes without authentication', async () => {
       const request = createMockRequest('https://example.com/api/public');
-      
+
       const response = await authMiddleware(request);
-      
+
       expect(response).toBeUndefined();
     });
 
     it('should redirect to login for protected routes without token', async () => {
       const request = createMockRequest('https://example.com/dashboard');
-      
+
       const response = await authMiddleware(request);
-      
+
       expect(response?.status).toBe(307); // Redirect status
       expect(response?.headers.get('location')).toContain('/auth/signin');
     });
@@ -65,7 +67,7 @@ describe('Auth Middleware', () => {
       } as any);
 
       const response = await authMiddleware(request);
-      
+
       expect(response).toBeUndefined(); // Allowed to proceed
     });
 
@@ -79,7 +81,7 @@ describe('Auth Middleware', () => {
       });
 
       const response = await authMiddleware(request);
-      
+
       expect(response?.status).toBe(307); // Redirect status
       expect(response?.headers.get('location')).toContain('/auth/signin');
     });
@@ -97,7 +99,7 @@ describe('Auth Middleware', () => {
       } as any);
 
       const response = await authMiddleware(request);
-      
+
       expect(response?.status).toBe(307); // Redirect status
       expect(response?.headers.get('location')).toContain('/dashboard');
     });
@@ -119,7 +121,7 @@ describe('Auth Middleware', () => {
       } as any);
 
       const response = await authMiddleware(request);
-      
+
       expect(response).toBeUndefined(); // Allowed to proceed
     });
 
@@ -132,7 +134,7 @@ describe('Auth Middleware', () => {
       mockConnectDB.mockRejectedValue(new Error('Database connection failed'));
 
       const response = await authMiddleware(request);
-      
+
       expect(response?.status).toBe(307); // Redirect to login on error
     });
 
@@ -146,7 +148,7 @@ describe('Auth Middleware', () => {
       mockUser.findById.mockResolvedValue(null);
 
       const response = await authMiddleware(request);
-      
+
       expect(response?.status).toBe(307); // Redirect to login if user not found
     });
   });

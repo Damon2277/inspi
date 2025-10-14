@@ -111,9 +111,9 @@ export class PrivacyComplianceChecker {
           passed: false,
           findings: [{
             type: 'violation',
-            message: `Rule execution failed: ${error instanceof Error ? error.message : String(error)}`
+            message: `Rule execution failed: ${error instanceof Error ? error.message : String(error)}`,
           }],
-          score: 0
+          score: 0,
         });
       }
     }
@@ -128,7 +128,7 @@ export class PrivacyComplianceChecker {
     const totalRules = results.length;
     const passedRules = results.filter(r => r.passed).length;
     const failedRules = totalRules - passedRules;
-    
+
     let criticalViolations = 0;
     let highViolations = 0;
     let mediumViolations = 0;
@@ -156,7 +156,7 @@ export class PrivacyComplianceChecker {
       }
     }
 
-    const overallScore = totalRules > 0 
+    const overallScore = totalRules > 0
       ? Math.round((results.reduce((sum, r) => sum + r.score, 0) / totalRules))
       : 0;
 
@@ -173,7 +173,7 @@ export class PrivacyComplianceChecker {
       mediumViolations,
       lowViolations,
       results,
-      recommendations
+      recommendations,
     };
   }
 
@@ -241,12 +241,12 @@ export class PrivacyComplianceChecker {
         for (const model of context.dataModels) {
           const sensitiveFields = model.fields.filter(f => f.sensitive || f.pii);
           const totalFields = model.fields.length;
-          
+
           if (sensitiveFields.length / totalFields > 0.5) {
             findings.push({
               type: 'warning',
               message: `模型 ${model.name} 包含过多敏感字段 (${sensitiveFields.length}/${totalFields})`,
-              suggestion: '考虑是否所有敏感字段都是必需的，实施数据最小化原则'
+              suggestion: '考虑是否所有敏感字段都是必需的，实施数据最小化原则',
             });
             score -= 20;
           }
@@ -256,9 +256,9 @@ export class PrivacyComplianceChecker {
           ruleId: 'gdpr-data-minimization',
           passed: findings.length === 0,
           findings,
-          score: Math.max(0, score)
+          score: Math.max(0, score),
         };
-      }
+      },
     });
 
     // 数据加密检查
@@ -275,17 +275,17 @@ export class PrivacyComplianceChecker {
 
         // 检查配置中的加密设置
         const encryptionSettings = context.configuration.encryptionSettings;
-        
+
         for (const model of context.dataModels) {
           const sensitiveFields = model.fields.filter(f => f.sensitive || f.pii);
-          
+
           for (const field of sensitiveFields) {
             const encryptionKey = `${model.name}.${field.name}`;
             if (!encryptionSettings[encryptionKey]) {
               findings.push({
                 type: 'violation',
                 message: `敏感字段 ${model.name}.${field.name} 未启用加密`,
-                suggestion: '为所有敏感数据字段启用静态加密'
+                suggestion: '为所有敏感数据字段启用静态加密',
               });
               score -= 25;
             }
@@ -296,9 +296,9 @@ export class PrivacyComplianceChecker {
           ruleId: 'encryption-at-rest',
           passed: findings.length === 0,
           findings,
-          score: Math.max(0, score)
+          score: Math.max(0, score),
         };
-      }
+      },
     });
 
     // 用户同意检查
@@ -319,24 +319,24 @@ export class PrivacyComplianceChecker {
             findings.push({
               type: 'violation',
               message: `API端点 ${endpoint.method} ${endpoint.path} 收集个人数据但未要求用户同意`,
-              suggestion: '为收集个人数据的API端点实施同意检查机制'
+              suggestion: '为收集个人数据的API端点实施同意检查机制',
             });
             score -= 30;
           }
         }
 
         // 检查代码中是否有同意管理逻辑
-        const hasConsentManagement = context.codebase.files.some(file => 
-          file.content.includes('consent') || 
+        const hasConsentManagement = context.codebase.files.some(file =>
+          file.content.includes('consent') ||
           file.content.includes('agreement') ||
-          file.content.includes('permission')
+          file.content.includes('permission'),
         );
 
         if (!hasConsentManagement) {
           findings.push({
             type: 'warning',
             message: '代码库中未发现同意管理相关代码',
-            suggestion: '实施完整的用户同意收集和管理系统'
+            suggestion: '实施完整的用户同意收集和管理系统',
           });
           score -= 20;
         }
@@ -345,9 +345,9 @@ export class PrivacyComplianceChecker {
           ruleId: 'user-consent',
           passed: findings.length === 0,
           findings,
-          score: Math.max(0, score)
+          score: Math.max(0, score),
         };
-      }
+      },
     });
 
     // 数据保留期限检查
@@ -369,7 +369,7 @@ export class PrivacyComplianceChecker {
             findings.push({
               type: 'warning',
               message: `模型 ${model.name} 未设置数据保留期限`,
-              suggestion: '为所有包含个人数据的模型设置适当的保留期限'
+              suggestion: '为所有包含个人数据的模型设置适当的保留期限',
             });
             score -= 15;
           } else {
@@ -379,7 +379,7 @@ export class PrivacyComplianceChecker {
               findings.push({
                 type: 'warning',
                 message: `模型 ${model.name} 的数据保留期限过长 (${retentionDays} 天)`,
-                suggestion: '考虑缩短数据保留期限，仅保留业务必需的时间'
+                suggestion: '考虑缩短数据保留期限，仅保留业务必需的时间',
               });
               score -= 10;
             }
@@ -390,9 +390,9 @@ export class PrivacyComplianceChecker {
           ruleId: 'data-retention',
           passed: findings.filter(f => f.type === 'violation').length === 0,
           findings,
-          score: Math.max(0, score)
+          score: Math.max(0, score),
         };
-      }
+      },
     });
 
     // 审计日志检查
@@ -411,23 +411,23 @@ export class PrivacyComplianceChecker {
           findings.push({
             type: 'violation',
             message: '系统未启用审计日志记录',
-            suggestion: '启用审计日志以跟踪个人数据的访问和处理'
+            suggestion: '启用审计日志以跟踪个人数据的访问和处理',
           });
           score -= 40;
         }
 
         // 检查代码中是否有审计日志相关代码
-        const hasAuditLogging = context.codebase.files.some(file => 
-          file.content.includes('audit') || 
+        const hasAuditLogging = context.codebase.files.some(file =>
+          file.content.includes('audit') ||
           file.content.includes('log') ||
-          file.content.includes('track')
+          file.content.includes('track'),
         );
 
         if (!hasAuditLogging) {
           findings.push({
             type: 'warning',
             message: '代码库中未发现审计日志相关代码',
-            suggestion: '实施全面的审计日志记录机制'
+            suggestion: '实施全面的审计日志记录机制',
           });
           score -= 20;
         }
@@ -436,9 +436,9 @@ export class PrivacyComplianceChecker {
           ruleId: 'audit-logging',
           passed: findings.filter(f => f.type === 'violation').length === 0,
           findings,
-          score: Math.max(0, score)
+          score: Math.max(0, score),
         };
-      }
+      },
     });
 
     // 数据传输安全检查
@@ -456,10 +456,10 @@ export class PrivacyComplianceChecker {
         // 检查代码中是否有不安全的HTTP请求
         for (const file of context.codebase.files) {
           const lines = file.content.split('\n');
-          
+
           for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            
+
             // 检查HTTP URL（非HTTPS）
             if (line.includes('http://') && !line.includes('localhost') && !line.includes('127.0.0.1')) {
               findings.push({
@@ -467,13 +467,13 @@ export class PrivacyComplianceChecker {
                 message: '发现不安全的HTTP连接',
                 location: {
                   file: file.path,
-                  line: i + 1
+                  line: i + 1,
                 },
-                suggestion: '使用HTTPS协议进行所有数据传输'
+                suggestion: '使用HTTPS协议进行所有数据传输',
               });
               score -= 25;
             }
-            
+
             // 检查未加密的数据库连接
             if (line.includes('sslmode=disable') || line.includes('ssl=false')) {
               findings.push({
@@ -481,9 +481,9 @@ export class PrivacyComplianceChecker {
                 message: '发现未加密的数据库连接',
                 location: {
                   file: file.path,
-                  line: i + 1
+                  line: i + 1,
                 },
-                suggestion: '启用数据库连接的SSL/TLS加密'
+                suggestion: '启用数据库连接的SSL/TLS加密',
               });
               score -= 30;
             }
@@ -494,9 +494,9 @@ export class PrivacyComplianceChecker {
           ruleId: 'secure-data-transfer',
           passed: findings.length === 0,
           findings,
-          score: Math.max(0, score)
+          score: Math.max(0, score),
         };
-      }
+      },
     });
 
     // 用户权利实施检查
@@ -516,7 +516,7 @@ export class PrivacyComplianceChecker {
           'rectification', // 更正权
           'erasure', // 删除权
           'portability', // 数据可携权
-          'restriction' // 限制处理权
+          'restriction', // 限制处理权
         ];
 
         const implementedRights: string[] = [];
@@ -547,7 +547,7 @@ export class PrivacyComplianceChecker {
           findings.push({
             type: 'violation',
             message: `未实施用户${right}权利`,
-            suggestion: `实施GDPR要求的用户${right}权利功能`
+            suggestion: `实施GDPR要求的用户${right}权利功能`,
           });
           score -= 20;
         }
@@ -556,9 +556,9 @@ export class PrivacyComplianceChecker {
           ruleId: 'user-rights-implementation',
           passed: findings.length === 0,
           findings,
-          score: Math.max(0, score)
+          score: Math.max(0, score),
         };
-      }
+      },
     });
   }
 
@@ -566,8 +566,8 @@ export class PrivacyComplianceChecker {
    * 生成合规报告文本
    */
   generateComplianceReportText(report: ComplianceReport): string {
-    let text = `隐私合规检查报告\n`;
-    text += `====================\n`;
+    let text = '隐私合规检查报告\n';
+    text += '====================\n';
     text += `检查时间: ${report.timestamp.toISOString()}\n`;
     text += `总体评分: ${report.overallScore}/100\n`;
     text += `总规则数: ${report.totalRules}\n`;
@@ -579,15 +579,15 @@ export class PrivacyComplianceChecker {
     text += `低级违规: ${report.lowViolations}\n\n`;
 
     if (report.results.some(r => !r.passed)) {
-      text += `违规详情:\n`;
-      text += `----------\n`;
-      
+      text += '违规详情:\n';
+      text += '----------\n';
+
       for (const result of report.results) {
         if (!result.passed) {
           const rule = this.rules.get(result.ruleId);
           text += `规则: ${rule?.name || result.ruleId}\n`;
           text += `评分: ${result.score}/100\n`;
-          
+
           for (const finding of result.findings) {
             text += `  ${finding.type.toUpperCase()}: ${finding.message}\n`;
             if (finding.location) {
@@ -595,20 +595,20 @@ export class PrivacyComplianceChecker {
               if (finding.location.line) {
                 text += `:${finding.location.line}`;
               }
-              text += `\n`;
+              text += '\n';
             }
             if (finding.suggestion) {
               text += `    建议: ${finding.suggestion}\n`;
             }
           }
-          text += `\n`;
+          text += '\n';
         }
       }
     }
 
     if (report.recommendations.length > 0) {
-      text += `改进建议:\n`;
-      text += `----------\n`;
+      text += '改进建议:\n';
+      text += '----------\n';
       for (const recommendation of report.recommendations) {
         text += `- ${recommendation}\n`;
       }
@@ -636,7 +636,7 @@ export class PrivacyComplianceChecker {
       'data-retention',
       'audit-logging',
       'secure-data-transfer',
-      'user-rights-implementation'
+      'user-rights-implementation',
     ];
 
     for (const [id] of this.rules) {

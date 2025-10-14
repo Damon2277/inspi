@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+
 import connectDB from './mongodb';
 import redisClient, { getRedisClient } from './redis';
 
@@ -66,7 +67,7 @@ export class DatabaseUtils {
    */
   static async createIndexes() {
     await this.ensureConnection();
-    
+
     // 这里可以添加额外的索引创建逻辑
     // 大部分索引已在模型定义中创建
     console.log('Database indexes created successfully');
@@ -82,11 +83,11 @@ export class DatabaseUtils {
   }> {
     const mongodb = this.isMongoConnected();
     const redis = await this.isRedisConnected();
-    
+
     return {
       mongodb,
       redis,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 }
@@ -101,7 +102,7 @@ export class CacheUtils {
   static async set(key: string, value: any, ttl?: number): Promise<void> {
     const client = await getRedisClient();
     const serializedValue = JSON.stringify(value);
-    
+
     if (ttl) {
       await client.setex(key, ttl, serializedValue);
     } else {
@@ -115,11 +116,11 @@ export class CacheUtils {
   static async get<T = any>(key: string): Promise<T | null> {
     const client = await getRedisClient();
     const value = await client.get(key);
-    
+
     if (!value) {
       return null;
     }
-    
+
     try {
       return JSON.parse(value) as T;
     } catch (error) {
@@ -177,12 +178,12 @@ export class TransactionUtils {
    * 执行MongoDB事务
    */
   static async executeTransaction<T>(
-    operations: (session: mongoose.ClientSession) => Promise<T>
+    operations: (session: mongoose.ClientSession) => Promise<T>,
   ): Promise<T> {
     await DatabaseUtils.ensureConnection();
-    
+
     const session = await mongoose.startSession();
-    
+
     try {
       session.startTransaction();
       const result = await operations(session);
@@ -201,5 +202,5 @@ export class TransactionUtils {
 export default {
   DatabaseUtils,
   CacheUtils,
-  TransactionUtils
+  TransactionUtils,
 };

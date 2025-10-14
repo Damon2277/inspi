@@ -1,14 +1,14 @@
 /**
  * Recommendation Engine Tests
- * 
+ *
  * Comprehensive tests for the recommendation generation system,
  * covering recommendation creation, prioritization, and management.
  */
 
-import { RecommendationEngine, Recommendation, RecommendationReport } from '../../../../lib/testing/analytics/RecommendationEngine';
 import { HistoricalDataManager, TestSuiteRecord } from '../../../../lib/testing/analytics/HistoricalDataManager';
-import { TrendAnalyzer } from '../../../../lib/testing/analytics/TrendAnalyzer';
 import { QualityPredictor } from '../../../../lib/testing/analytics/QualityPredictor';
+import { RecommendationEngine, Recommendation, RecommendationReport } from '../../../../lib/testing/analytics/RecommendationEngine';
+import { TrendAnalyzer } from '../../../../lib/testing/analytics/TrendAnalyzer';
 
 describe('RecommendationEngine', () => {
   let dataManager: HistoricalDataManager;
@@ -30,8 +30,8 @@ describe('RecommendationEngine', () => {
         testingMaturity: 'intermediate',
         availableResources: 'moderate',
         timeConstraints: 'moderate',
-        riskTolerance: 'medium'
-      }
+        riskTolerance: 'medium',
+      },
     );
   });
 
@@ -46,22 +46,22 @@ describe('RecommendationEngine', () => {
       for (let i = 0; i < 20; i++) {
         const date = new Date('2024-01-01');
         date.setDate(date.getDate() + i);
-        
+
         // Simulate declining quality to trigger recommendations
         const decline = i * 0.02;
-        
+
         records.push(createTestRecord(date, {
-          coverage: { 
+          coverage: {
             statements: Math.max(70, 90 - decline * 25),
             branches: Math.max(65, 85 - decline * 25),
             functions: Math.max(75, 95 - decline * 20),
-            lines: Math.max(68, 88 - decline * 23)
+            lines: Math.max(68, 88 - decline * 23),
           },
           duration: 30 + decline * 40,
           performance: { peakMemory: 128 + decline * 80 },
           totalTests: 100 + i,
           passedTests: Math.max(80, 95 + i - decline * 20),
-          failedTests: Math.min(20, Math.floor(decline * 20))
+          failedTests: Math.min(20, Math.floor(decline * 20)),
         }));
       }
 
@@ -90,7 +90,7 @@ describe('RecommendationEngine', () => {
 
       // Should have various types
       expect(types.some(t => ['improvement', 'optimization', 'maintenance', 'prevention'].includes(t))).toBe(true);
-      
+
       // Should have various categories
       expect(categories.some(c => ['coverage', 'performance', 'stability', 'maintenance', 'process'].includes(c))).toBe(true);
     });
@@ -102,11 +102,11 @@ describe('RecommendationEngine', () => {
         for (let i = 1; i < report.recommendations.length; i++) {
           const current = report.recommendations[i];
           const previous = report.recommendations[i - 1];
-          
+
           const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
           const currentPriority = priorityOrder[current.priority];
           const previousPriority = priorityOrder[previous.priority];
-          
+
           if (previousPriority !== currentPriority) {
             expect(previousPriority).toBeGreaterThanOrEqual(currentPriority);
           } else {
@@ -127,11 +127,11 @@ describe('RecommendationEngine', () => {
         expect(recommendation.title).toBeDefined();
         expect(recommendation.description).toBeDefined();
         expect(recommendation.rationale).toBeDefined();
-        
+
         // Action items
         expect(recommendation.actionItems).toBeDefined();
         expect(Array.isArray(recommendation.actionItems)).toBe(true);
-        
+
         for (const actionItem of recommendation.actionItems) {
           expect(actionItem.id).toBeDefined();
           expect(actionItem.description).toBeDefined();
@@ -140,7 +140,7 @@ describe('RecommendationEngine', () => {
           expect(['pending', 'in_progress', 'completed']).toContain(actionItem.status);
           expect(Array.isArray(actionItem.dependencies)).toBe(true);
         }
-        
+
         // Metadata
         expect(recommendation.estimatedImpact).toBeGreaterThanOrEqual(0);
         expect(recommendation.estimatedImpact).toBeLessThanOrEqual(100);
@@ -160,10 +160,10 @@ describe('RecommendationEngine', () => {
 
       expect(report.summary.totalRecommendations).toBe(report.recommendations.length);
       expect(report.summary.criticalCount).toBe(
-        report.recommendations.filter(r => r.priority === 'critical').length
+        report.recommendations.filter(r => r.priority === 'critical').length,
       );
       expect(report.summary.highPriorityCount).toBe(
-        report.recommendations.filter(r => r.priority === 'high').length
+        report.recommendations.filter(r => r.priority === 'high').length,
       );
       expect(report.summary.estimatedTotalImpact).toBeGreaterThanOrEqual(0);
       expect(report.summary.estimatedTotalEffort).toBeGreaterThanOrEqual(0);
@@ -174,7 +174,7 @@ describe('RecommendationEngine', () => {
 
       expect(report.insights).toBeDefined();
       expect(Array.isArray(report.insights)).toBe(true);
-      
+
       for (const insight of report.insights) {
         expect(typeof insight).toBe('string');
         expect(insight.length).toBeGreaterThan(0);
@@ -186,7 +186,7 @@ describe('RecommendationEngine', () => {
 
       expect(report.nextSteps).toBeDefined();
       expect(Array.isArray(report.nextSteps)).toBe(true);
-      
+
       for (const step of report.nextSteps) {
         expect(typeof step).toBe('string');
         expect(step.length).toBeGreaterThan(0);
@@ -208,7 +208,7 @@ describe('RecommendationEngine', () => {
       // Generate some recommendations first
       const records = [
         createTestRecord(new Date('2024-01-01'), { coverage: { statements: 70 } }),
-        createTestRecord(new Date('2024-01-02'), { duration: 60 })
+        createTestRecord(new Date('2024-01-02'), { duration: 60 }),
       ];
 
       for (const record of records) {
@@ -243,11 +243,11 @@ describe('RecommendationEngine', () => {
         for (let i = 1; i < recommendations.length; i++) {
           const current = recommendations[i];
           const previous = recommendations[i - 1];
-          
+
           const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
           const currentPriority = priorityOrder[current.priority];
           const previousPriority = priorityOrder[previous.priority];
-          
+
           if (previousPriority !== currentPriority) {
             expect(previousPriority).toBeGreaterThanOrEqual(currentPriority);
           } else {
@@ -283,10 +283,10 @@ describe('RecommendationEngine', () => {
 
       if (recommendationId) {
         await recommendationEngine.updateRecommendationStatus(recommendationId, 'in_progress');
-        
+
         const recommendations = await recommendationEngine.getPersonalizedRecommendations('developer', 10);
         const updatedRec = recommendations.find(r => r.id === recommendationId);
-        
+
         expect(updatedRec?.status).toBe('in_progress');
         expect(updatedRec?.updatedAt).toBeInstanceOf(Date);
       }
@@ -295,10 +295,10 @@ describe('RecommendationEngine', () => {
     it('should set completion date when completed', async () => {
       if (recommendationId) {
         await recommendationEngine.updateRecommendationStatus(recommendationId, 'completed');
-        
+
         const recommendations = await recommendationEngine.getPersonalizedRecommendations('developer', 10);
         const completedRec = recommendations.find(r => r.id === recommendationId);
-        
+
         expect(completedRec?.status).toBe('completed');
         expect(completedRec?.completedAt).toBeInstanceOf(Date);
       }
@@ -314,14 +314,14 @@ describe('RecommendationEngine', () => {
         expect(statusUpdated).toHaveBeenCalledWith({
           id: recommendationId,
           status: 'acknowledged',
-          notes: 'Test notes'
+          notes: 'Test notes',
         });
       }
     });
 
     it('should throw error for non-existent recommendation', async () => {
       await expect(
-        recommendationEngine.updateRecommendationStatus('non-existent', 'completed')
+        recommendationEngine.updateRecommendationStatus('non-existent', 'completed'),
       ).rejects.toThrow('Recommendation non-existent not found');
     });
   });
@@ -330,7 +330,7 @@ describe('RecommendationEngine', () => {
     beforeEach(async () => {
       const records = [
         createTestRecord(new Date('2024-01-01')),
-        createTestRecord(new Date('2024-01-02'))
+        createTestRecord(new Date('2024-01-02')),
       ];
 
       for (const record of records) {
@@ -338,7 +338,7 @@ describe('RecommendationEngine', () => {
       }
 
       const report = await recommendationEngine.generateRecommendations(30);
-      
+
       // Update some recommendations to completed status
       if (report.recommendations.length > 0) {
         await recommendationEngine.updateRecommendationStatus(report.recommendations[0].id, 'completed');
@@ -391,7 +391,7 @@ describe('RecommendationEngine', () => {
       const parsed = JSON.parse(exported);
 
       expect(Array.isArray(parsed)).toBe(true);
-      
+
       if (parsed.length > 0) {
         expect(parsed[0].id).toBeDefined();
         expect(parsed[0].title).toBeDefined();
@@ -404,7 +404,7 @@ describe('RecommendationEngine', () => {
       const lines = exported.split('\n');
 
       expect(lines[0]).toContain('ID,Title,Priority,Category,Status,Impact,Effort,Created');
-      
+
       if (lines.length > 1) {
         const dataLine = lines[1];
         expect(dataLine.split(',').length).toBe(8);
@@ -425,14 +425,14 @@ describe('RecommendationEngine', () => {
         dataManager,
         trendAnalyzer,
         qualityPredictor,
-        { teamSize: 2, testingMaturity: 'basic' }
+        { teamSize: 2, testingMaturity: 'basic' },
       );
 
       const largeTeamEngine = new RecommendationEngine(
         dataManager,
         trendAnalyzer,
         qualityPredictor,
-        { teamSize: 20, testingMaturity: 'advanced' }
+        { teamSize: 20, testingMaturity: 'advanced' },
       );
 
       const records = [createTestRecord(new Date(), { coverage: { statements: 70 } })];
@@ -454,14 +454,14 @@ describe('RecommendationEngine', () => {
         dataManager,
         trendAnalyzer,
         qualityPredictor,
-        { projectPhase: 'development' }
+        { projectPhase: 'development' },
       );
 
       const legacyEngine = new RecommendationEngine(
         dataManager,
         trendAnalyzer,
         qualityPredictor,
-        { projectPhase: 'legacy' }
+        { projectPhase: 'legacy' },
       );
 
       const records = [createTestRecord(new Date())];
@@ -489,7 +489,7 @@ describe('RecommendationEngine', () => {
 
     it('should handle invalid recommendation IDs', async () => {
       await expect(
-        recommendationEngine.updateRecommendationStatus('invalid-id', 'completed')
+        recommendationEngine.updateRecommendationStatus('invalid-id', 'completed'),
       ).rejects.toThrow();
     });
 
@@ -505,9 +505,9 @@ describe('RecommendationEngine', () => {
       // Create data that might generate duplicate recommendations
       const records = [];
       for (let i = 0; i < 10; i++) {
-        records.push(createTestRecord(new Date(), { 
+        records.push(createTestRecord(new Date(), {
           coverage: { statements: 70 }, // Consistently low coverage
-          duration: 60 // Consistently slow
+          duration: 60, // Consistently slow
         }));
       }
 
@@ -522,7 +522,7 @@ describe('RecommendationEngine', () => {
       // Check that there are no exact duplicate titles
       const titles = report.recommendations.map(r => r.title);
       const uniqueTitles = new Set(titles);
-      
+
       expect(uniqueTitles.size).toBe(titles.length);
     });
 
@@ -538,11 +538,11 @@ describe('RecommendationEngine', () => {
 // Helper function to create test records
 function createTestRecord(
   timestamp: Date,
-  overrides: any = {}
+  overrides: any = {},
 ): TestSuiteRecord {
   const coverage = overrides.coverage || {};
   const performance = overrides.performance || {};
-  
+
   return {
     id: `test_${timestamp.getTime()}_${Math.random()}`,
     timestamp,
@@ -556,20 +556,20 @@ function createTestRecord(
       statements: coverage.statements || 85,
       branches: coverage.branches || 80,
       functions: coverage.functions || 90,
-      lines: coverage.lines || 83
+      lines: coverage.lines || 83,
     },
     performance: {
       totalMemory: performance.totalMemory || 128,
       peakMemory: performance.peakMemory || 256,
-      averageExecutionTime: performance.averageExecutionTime || 1.5
+      averageExecutionTime: performance.averageExecutionTime || 1.5,
     },
     environment: {
       nodeVersion: '18.0.0',
       platform: 'linux',
       ci: true,
       branch: 'main',
-      commit: 'abc123'
+      commit: 'abc123',
     },
-    tests: []
+    tests: [],
   };
 }

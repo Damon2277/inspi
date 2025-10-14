@@ -2,12 +2,13 @@
  * Compliance Checker Tests
  */
 
+import * as fs from 'fs';
+
 import {
   ComplianceChecker,
   createComplianceChecker,
-  ComplianceConfig
+  ComplianceConfig,
 } from '../../../../lib/testing/compliance/ComplianceChecker';
-import * as fs from 'fs';
 
 // Mock fs module
 jest.mock('fs');
@@ -26,8 +27,8 @@ describe('ComplianceChecker', () => {
           complexity: 10,
           maintainabilityIndex: 70,
           duplicateLines: 50,
-          codeSmells: 10
-        }
+          codeSmells: 10,
+        },
       },
       testCoverage: {
         enabled: true,
@@ -35,11 +36,11 @@ describe('ComplianceChecker', () => {
           statements: 80,
           branches: 75,
           functions: 80,
-          lines: 80
+          lines: 80,
         },
         excludePatterns: ['**/*.test.ts'],
         requireTestFiles: true,
-        testFilePatterns: ['**/*.test.ts']
+        testFilePatterns: ['**/*.test.ts'],
       },
       documentation: {
         enabled: true,
@@ -47,13 +48,13 @@ describe('ComplianceChecker', () => {
         apiDocumentation: {
           required: true,
           format: 'jsdoc',
-          coverage: 70
+          coverage: 70,
         },
         readmeRequirements: {
           sections: ['Installation', 'Usage'],
-          minimumLength: 500
+          minimumLength: 500,
         },
-        changelogRequired: true
+        changelogRequired: true,
       },
       security: {
         enabled: true,
@@ -62,14 +63,14 @@ describe('ComplianceChecker', () => {
         secretsDetection: true,
         codeAnalysis: true,
         allowedLicenses: ['MIT', 'Apache-2.0'],
-        securityHeaders: ['Content-Security-Policy']
+        securityHeaders: ['Content-Security-Policy'],
       },
       accessibility: {
         enabled: true,
         wcagLevel: 'AA',
         testPatterns: ['**/*.tsx'],
         requiredAttributes: ['alt', 'aria-label'],
-        colorContrastRatio: 4.5
+        colorContrastRatio: 4.5,
       },
       performance: {
         enabled: true,
@@ -77,12 +78,12 @@ describe('ComplianceChecker', () => {
           bundleSize: 500,
           loadTime: 3000,
           memoryUsage: 100,
-          cpuUsage: 80
+          cpuUsage: 80,
         },
-        metrics: ['FCP', 'LCP']
+        metrics: ['FCP', 'LCP'],
       },
       outputPath: './compliance-reports',
-      reportFormats: ['json', 'html']
+      reportFormats: ['json', 'html'],
     };
 
     checker = createComplianceChecker(config);
@@ -130,7 +131,7 @@ describe('ComplianceChecker', () => {
     it('should skip code quality when disabled', async () => {
       config.codeQuality.enabled = false;
       const disabledChecker = createComplianceChecker(config);
-      
+
       const result = await disabledChecker.runComplianceCheck();
 
       expect(result.categories.codeQuality.enabled).toBe(false);
@@ -141,7 +142,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const complexityCheck = result.categories.codeQuality.details.find(
-        d => d.check === 'Code Complexity'
+        d => d.check === 'Code Complexity',
       );
 
       expect(complexityCheck).toBeDefined();
@@ -152,7 +153,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const maintainabilityCheck = result.categories.codeQuality.details.find(
-        d => d.check === 'Maintainability Index'
+        d => d.check === 'Maintainability Index',
       );
 
       expect(maintainabilityCheck).toBeDefined();
@@ -172,7 +173,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const coverageChecks = ['Statement Coverage', 'Branch Coverage', 'Function Coverage', 'Line Coverage'];
-      
+
       coverageChecks.forEach(checkName => {
         const check = result.categories.testCoverage.details.find(d => d.check === checkName);
         expect(check).toBeDefined();
@@ -183,7 +184,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const testFileCheck = result.categories.testCoverage.details.find(
-        d => d.check === 'Test Files Existence'
+        d => d.check === 'Test Files Existence',
       );
 
       expect(testFileCheck).toBeDefined();
@@ -207,7 +208,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const requiredFilesCheck = result.categories.documentation.details.find(
-        d => d.check === 'Required Files'
+        d => d.check === 'Required Files',
       );
 
       expect(requiredFilesCheck).toBeDefined();
@@ -219,7 +220,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const readmeCheck = result.categories.documentation.details.find(
-        d => d.check === 'README Quality'
+        d => d.check === 'README Quality',
       );
 
       expect(readmeCheck).toBeDefined();
@@ -230,7 +231,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const apiDocCheck = result.categories.documentation.details.find(
-        d => d.check === 'API Documentation'
+        d => d.check === 'API Documentation',
       );
 
       expect(apiDocCheck).toBeDefined();
@@ -241,7 +242,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const changelogCheck = result.categories.documentation.details.find(
-        d => d.check === 'Changelog'
+        d => d.check === 'Changelog',
       );
 
       expect(changelogCheck).toBeDefined();
@@ -253,7 +254,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const vulnCheck = result.categories.security.details.find(
-        d => d.check === 'Vulnerability Scanning'
+        d => d.check === 'Vulnerability Scanning',
       );
 
       expect(vulnCheck).toBeDefined();
@@ -264,7 +265,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const depAuditCheck = result.categories.security.details.find(
-        d => d.check === 'Dependency Audit'
+        d => d.check === 'Dependency Audit',
       );
 
       expect(depAuditCheck).toBeDefined();
@@ -274,7 +275,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const secretsCheck = result.categories.security.details.find(
-        d => d.check === 'Secrets Detection'
+        d => d.check === 'Secrets Detection',
       );
 
       expect(secretsCheck).toBeDefined();
@@ -284,7 +285,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const licenseCheck = result.categories.security.details.find(
-        d => d.check === 'License Compliance'
+        d => d.check === 'License Compliance',
       );
 
       expect(licenseCheck).toBeDefined();
@@ -296,7 +297,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const wcagCheck = result.categories.accessibility.details.find(
-        d => d.check.includes('WCAG')
+        d => d.check.includes('WCAG'),
       );
 
       expect(wcagCheck).toBeDefined();
@@ -307,7 +308,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const contrastCheck = result.categories.accessibility.details.find(
-        d => d.check === 'Color Contrast'
+        d => d.check === 'Color Contrast',
       );
 
       expect(contrastCheck).toBeDefined();
@@ -317,7 +318,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const attributesCheck = result.categories.accessibility.details.find(
-        d => d.check === 'Required Attributes'
+        d => d.check === 'Required Attributes',
       );
 
       expect(attributesCheck).toBeDefined();
@@ -329,7 +330,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const bundleSizeCheck = result.categories.performance.details.find(
-        d => d.check === 'Bundle Size'
+        d => d.check === 'Bundle Size',
       );
 
       expect(bundleSizeCheck).toBeDefined();
@@ -340,7 +341,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const loadTimeCheck = result.categories.performance.details.find(
-        d => d.check === 'Load Time'
+        d => d.check === 'Load Time',
       );
 
       expect(loadTimeCheck).toBeDefined();
@@ -351,7 +352,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       const memoryCheck = result.categories.performance.details.find(
-        d => d.check === 'Memory Usage'
+        d => d.check === 'Memory Usage',
       );
 
       expect(memoryCheck).toBeDefined();
@@ -394,7 +395,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       expect(Array.isArray(result.violations)).toBe(true);
-      
+
       if (result.violations.length > 0) {
         const violation = result.violations[0];
         expect(violation).toHaveProperty('category');
@@ -410,7 +411,7 @@ describe('ComplianceChecker', () => {
       const result = await checker.runComplianceCheck();
 
       expect(Array.isArray(result.recommendations)).toBe(true);
-      
+
       if (result.recommendations.length > 0) {
         const recommendation = result.recommendations[0];
         expect(recommendation).toHaveProperty('category');
@@ -428,7 +429,7 @@ describe('ComplianceChecker', () => {
 
       if (result.violations.length > 1) {
         const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-        
+
         for (let i = 0; i < result.violations.length - 1; i++) {
           const currentSeverity = severityOrder[result.violations[i].severity];
           const nextSeverity = severityOrder[result.violations[i + 1].severity];
@@ -480,7 +481,7 @@ describe('ComplianceChecker', () => {
     it('should handle missing configuration gracefully', async () => {
       const minimalConfig = {
         outputPath: './reports',
-        reportFormats: ['json']
+        reportFormats: ['json'],
       } as any;
 
       const minimalChecker = createComplianceChecker(minimalConfig);
@@ -511,15 +512,15 @@ describe('ComplianceChecker', () => {
           pattern: /console\.log/,
           severity: 'warning',
           message: 'Remove console.log statements',
-          autoFix: false
-        }
+          autoFix: false,
+        },
       ];
 
       const customChecker = createComplianceChecker(config);
       const result = await customChecker.runComplianceCheck();
 
       const customRulesCheck = result.categories.codeQuality.details.find(
-        d => d.check === 'Custom Rules'
+        d => d.check === 'Custom Rules',
       );
 
       expect(customRulesCheck).toBeDefined();

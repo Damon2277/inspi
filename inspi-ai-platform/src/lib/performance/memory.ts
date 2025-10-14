@@ -92,7 +92,7 @@ export class MemoryMonitor {
       historyLimit: 100,
       enableLeakDetection: true,
       leakDetectionThreshold: 5,
-      ...config
+      ...config,
     };
     this.events = events;
   }
@@ -116,7 +116,7 @@ export class MemoryMonitor {
     logger.info('Memory monitoring started', {
       interval: this.config.interval,
       warningThreshold: this.config.warningThreshold,
-      dangerThreshold: this.config.dangerThreshold
+      dangerThreshold: this.config.dangerThreshold,
     });
   }
 
@@ -129,7 +129,7 @@ export class MemoryMonitor {
     }
 
     this.isMonitoring = false;
-    
+
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
@@ -154,7 +154,7 @@ export class MemoryMonitor {
       totalJSHeapSize: memory.totalJSHeapSize,
       jsHeapSizeLimit: memory.jsHeapSizeLimit,
       usagePercentage,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -177,12 +177,12 @@ export class MemoryMonitor {
     const recentSamples = data.slice(-10); // 最近10个样本
     const firstSample = recentSamples[0];
     const lastSample = recentSamples[recentSamples.length - 1];
-    
+
     const timeDiff = lastSample.timestamp.getTime() - firstSample.timestamp.getTime();
     const memoryDiff = lastSample.usedJSHeapSize - firstSample.usedJSHeapSize;
-    
+
     const rate = timeDiff > 0 ? (memoryDiff / timeDiff) * 1000 : 0; // 字节/秒
-    
+
     let direction: 'increasing' | 'decreasing' | 'stable';
     if (Math.abs(rate) < 1000) { // 小于1KB/s认为是稳定
       direction = 'stable';
@@ -200,7 +200,7 @@ export class MemoryMonitor {
       rate,
       duration: timeDiff,
       confidence,
-      samples: recentSamples
+      samples: recentSamples,
     };
   }
 
@@ -223,7 +223,7 @@ export class MemoryMonitor {
         priority: 'high',
         description: '内存使用率过高，建议立即进行垃圾回收',
         action: '调用 window.gc() 或减少内存使用',
-        estimatedSaving: currentInfo.usedJSHeapSize * 0.2
+        estimatedSaving: currentInfo.usedJSHeapSize * 0.2,
       });
 
       suggestions.push({
@@ -231,7 +231,7 @@ export class MemoryMonitor {
         priority: 'high',
         description: '清理不必要的对象引用和事件监听器',
         action: '检查并清理DOM引用、定时器、事件监听器',
-        estimatedSaving: currentInfo.usedJSHeapSize * 0.15
+        estimatedSaving: currentInfo.usedJSHeapSize * 0.15,
       });
     } else if (currentInfo.usagePercentage > this.config.warningThreshold) {
       suggestions.push({
@@ -239,7 +239,7 @@ export class MemoryMonitor {
         priority: 'medium',
         description: '内存使用率较高，建议优化数据结构',
         action: '使用更高效的数据结构，减少不必要的数据缓存',
-        estimatedSaving: currentInfo.usedJSHeapSize * 0.1
+        estimatedSaving: currentInfo.usedJSHeapSize * 0.1,
       });
     }
 
@@ -250,7 +250,7 @@ export class MemoryMonitor {
         priority: 'medium',
         description: '内存持续增长，建议延迟非关键操作',
         action: '延迟加载非关键资源，使用懒加载策略',
-        estimatedSaving: trend.rate * 10 // 10秒的增长量
+        estimatedSaving: trend.rate * 10, // 10秒的增长量
       });
     }
 
@@ -288,10 +288,10 @@ export class MemoryMonitor {
     suggestions: MemoryOptimizationSuggestion[];
   } {
     const current = this.getCurrentMemoryInfo();
-    const peak = this.history.reduce((max, info) => 
+    const peak = this.history.reduce((max, info) =>
       !max || info.usedJSHeapSize > max.usedJSHeapSize ? info : max
     , null as MemoryInfo | null);
-    
+
     const average = this.history.length > 0
       ? this.history.reduce((sum, info) => sum + info.usedJSHeapSize, 0) / this.history.length
       : 0;
@@ -304,7 +304,7 @@ export class MemoryMonitor {
       peak,
       average,
       trend,
-      suggestions
+      suggestions,
     };
   }
 
@@ -319,7 +319,7 @@ export class MemoryMonitor {
 
     // 添加到历史记录
     this.history.push(info);
-    
+
     // 限制历史记录数量
     if (this.history.length > this.config.historyLimit) {
       this.history = this.history.slice(-this.config.historyLimit);
@@ -352,14 +352,14 @@ export class MemoryMonitor {
         usage: info.usagePercentage,
         threshold: this.config.dangerThreshold,
         usedMB: Math.round(info.usedJSHeapSize / 1024 / 1024),
-        limitMB: Math.round(info.jsHeapSizeLimit / 1024 / 1024)
+        limitMB: Math.round(info.jsHeapSizeLimit / 1024 / 1024),
       });
     } else if (info.usagePercentage >= this.config.warningThreshold) {
       this.events.onWarning?.(info);
       logger.info('Memory usage warning', {
         usage: info.usagePercentage,
         threshold: this.config.warningThreshold,
-        usedMB: Math.round(info.usedJSHeapSize / 1024 / 1024)
+        usedMB: Math.round(info.usedJSHeapSize / 1024 / 1024),
       });
     }
   }
@@ -375,13 +375,13 @@ export class MemoryMonitor {
 
     if (trend.direction === 'increasing' && trend.rate > 5000) { // 5KB/s
       this.leakDetectionCounter++;
-      
+
       if (this.leakDetectionCounter >= this.config.leakDetectionThreshold) {
         this.events.onLeakDetected?.(trend);
-        logger.error('Potential memory leak detected', {
+        logger.error('Potential memory leak detected', undefined, {
           rate: trend.rate,
           duration: trend.duration,
-          confidence: trend.confidence
+          confidence: trend.confidence,
         });
         this.leakDetectionCounter = 0; // 重置计数器
       }
@@ -395,14 +395,14 @@ export class MemoryMonitor {
    */
   private checkGCHints(info: MemoryInfo): void {
     const timeSinceLastGC = Date.now() - this.lastGCTime;
-    const shouldSuggestGC = 
+    const shouldSuggestGC =
       info.usagePercentage > this.config.warningThreshold &&
       timeSinceLastGC > 30000; // 30秒
 
     if (shouldSuggestGC) {
       logger.info('Garbage collection recommended', {
         usage: info.usagePercentage,
-        timeSinceLastGC
+        timeSinceLastGC,
       });
     }
   }
@@ -411,7 +411,7 @@ export class MemoryMonitor {
    * 检查内存API是否可用
    */
   private isMemoryAPIAvailable(): boolean {
-    return typeof performance !== 'undefined' && 
+    return typeof performance !== 'undefined' &&
            'memory' in performance &&
            typeof (performance as any).memory === 'object';
   }
@@ -431,7 +431,7 @@ export class MemoryOptimizer {
     name: string,
     factory: () => T,
     reset: (obj: T) => void,
-    maxSize: number = 100
+    maxSize: number = 100,
   ): {
     acquire: () => T;
     release: (obj: T) => void;
@@ -463,7 +463,7 @@ export class MemoryOptimizer {
 
       clear: (): void => {
         pool.length = 0;
-      }
+      },
     };
   }
 
@@ -472,7 +472,7 @@ export class MemoryOptimizer {
    */
   static cacheWithWeakMap<K extends object, V>(
     key: K,
-    factory: () => V
+    factory: () => V,
   ): V {
     if (this.weakMapCache.has(key)) {
       return this.weakMapCache.get(key);
@@ -521,21 +521,21 @@ export class MemoryOptimizer {
     items: T[],
     processor: (item: T) => R,
     batchSize: number = 100,
-    delay: number = 0
+    delay: number = 0,
   ): Promise<R[]> {
     const results: R[] = [];
-    
+
     for (let i = 0; i < items.length; i += batchSize) {
       const batch = items.slice(i, i + batchSize);
       const batchResults = batch.map(processor);
       results.push(...batchResults);
-      
+
       // 给浏览器时间进行垃圾回收
       if (delay > 0 && i + batchSize < items.length) {
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
-    
+
     return results;
   }
 
@@ -550,14 +550,14 @@ export class MemoryOptimizer {
     recommendations: string[];
   } {
     const recommendations: string[] = [];
-    
+
     if (typeof performance === 'undefined' || !('memory' in performance)) {
       return {
         heapUsed: 'N/A',
         heapTotal: 'N/A',
         heapLimit: 'N/A',
         usage: 'N/A',
-        recommendations: ['Memory API not available in this environment']
+        recommendations: ['Memory API not available in this environment'],
       };
     }
 
@@ -583,7 +583,7 @@ export class MemoryOptimizer {
       heapTotal: `${totalMB} MB`,
       heapLimit: `${limitMB} MB`,
       usage: `${usage}%`,
-      recommendations
+      recommendations,
     };
   }
 }

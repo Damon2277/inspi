@@ -82,7 +82,7 @@ export class DataMaskingTester {
     const result: MaskingTestResult = {
       pattern: pattern.name,
       passed: true,
-      failures: []
+      failures: [],
     };
 
     // 测试预定义的测试用例
@@ -96,7 +96,7 @@ export class DataMaskingTester {
           input: testCase.input,
           expected: testCase.shouldMatch ? 'should match' : 'should not match',
           actual: shouldMatch ? 'matched' : 'did not match',
-          reason: 'Pattern matching failed'
+          reason: 'Pattern matching failed',
         });
       }
 
@@ -106,7 +106,7 @@ export class DataMaskingTester {
           input: testCase.input,
           expected: testCase.expectedMasked,
           actual: actualMasked,
-          reason: 'Masking result mismatch'
+          reason: 'Masking result mismatch',
         });
       }
     }
@@ -123,7 +123,7 @@ export class DataMaskingTester {
             input: match,
             expected: 'masked value',
             actual: match,
-            reason: 'Sensitive data not masked'
+            reason: 'Sensitive data not masked',
           });
         }
       }
@@ -142,7 +142,7 @@ export class DataMaskingTester {
       pattern: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
       maskingRule: (email: string) => {
         const [local, domain] = email.split('@');
-        const maskedLocal = local.length > 2 
+        const maskedLocal = local.length > 2
           ? local[0] + '*'.repeat(local.length - 2) + local[local.length - 1]
           : '*'.repeat(local.length);
         return `${maskedLocal}@${domain}`;
@@ -151,19 +151,19 @@ export class DataMaskingTester {
         {
           input: 'user@example.com',
           expectedMasked: 'u**r@example.com',
-          shouldMatch: true
+          shouldMatch: true,
         },
         {
           input: 'test@test.co',
           expectedMasked: 't**t@test.co',
-          shouldMatch: true
+          shouldMatch: true,
         },
         {
           input: 'not-an-email',
           expectedMasked: 'not-an-email',
-          shouldMatch: false
-        }
-      ]
+          shouldMatch: false,
+        },
+      ],
     });
 
     // 手机号码
@@ -178,19 +178,19 @@ export class DataMaskingTester {
         {
           input: '123-456-7890',
           expectedMasked: '123***7890',
-          shouldMatch: true
+          shouldMatch: true,
         },
         {
           input: '1234567890',
           expectedMasked: '123***7890',
-          shouldMatch: true
+          shouldMatch: true,
         },
         {
           input: '12345',
           expectedMasked: '12345',
-          shouldMatch: false
-        }
-      ]
+          shouldMatch: false,
+        },
+      ],
     });
 
     // 身份证号码（简化版）
@@ -204,19 +204,19 @@ export class DataMaskingTester {
         {
           input: '123456789012345678',
           expectedMasked: '123456********5678',
-          shouldMatch: true
+          shouldMatch: true,
         },
         {
           input: '123456789012345',
           expectedMasked: '123456*****2345',
-          shouldMatch: true
+          shouldMatch: true,
         },
         {
           input: '12345',
           expectedMasked: '12345',
-          shouldMatch: false
-        }
-      ]
+          shouldMatch: false,
+        },
+      ],
     });
 
     // IP地址
@@ -230,20 +230,20 @@ export class DataMaskingTester {
       testCases: [
         {
           input: '192.168.1.1',
-          expectedMasked: '192.168.***.***.', 
-          shouldMatch: true
+          expectedMasked: '192.168.***.***.',
+          shouldMatch: true,
         },
         {
           input: '10.0.0.1',
-          expectedMasked: '10.0.***.***.', 
-          shouldMatch: true
+          expectedMasked: '10.0.***.***.',
+          shouldMatch: true,
         },
         {
           input: 'not-an-ip',
           expectedMasked: 'not-an-ip',
-          shouldMatch: false
-        }
-      ]
+          shouldMatch: false,
+        },
+      ],
     });
   }
 
@@ -262,17 +262,17 @@ export class DataMaskingTester {
     const passedTests = results.filter(r => r.passed).length;
     const failedTests = totalTests - passedTests;
 
-    let report = `数据脱敏测试报告\n`;
-    report += `==================\n`;
+    let report = '数据脱敏测试报告\n';
+    report += '==================\n';
     report += `总测试数: ${totalTests}\n`;
     report += `通过: ${passedTests}\n`;
     report += `失败: ${failedTests}\n`;
     report += `通过率: ${((passedTests / totalTests) * 100).toFixed(2)}%\n\n`;
 
     if (failedTests > 0) {
-      report += `失败详情:\n`;
-      report += `----------\n`;
-      
+      report += '失败详情:\n';
+      report += '----------\n';
+
       for (const result of results) {
         if (!result.passed) {
           report += `模式: ${result.pattern}\n`;

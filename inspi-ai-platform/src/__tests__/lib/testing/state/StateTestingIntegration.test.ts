@@ -1,11 +1,12 @@
 /**
  * State Testing Integration Tests
- * 
+ *
  * End-to-end integration tests demonstrating the complete state management testing system
  * including real-world scenarios, performance testing, and comprehensive reporting.
  */
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
+
 import {
   StateTestFramework,
   ZustandTestUtils,
@@ -19,16 +20,16 @@ import {
   type StateTestScenario,
   type ZustandStore,
   type StateInvariant,
-  type StateTransition
+  type StateTransition,
 } from '../../../../lib/testing/state';
 
 // Mock zustand for testing
 jest.mock('zustand', () => ({
-  create: jest.fn()
+  create: jest.fn(),
 }));
 
 jest.mock('zustand/middleware', () => ({
-  subscribeWithSelector: jest.fn((fn) => fn)
+  subscribeWithSelector: jest.fn((fn) => fn),
 }));
 
 describe('State Testing Integration', () => {
@@ -38,7 +39,7 @@ describe('State Testing Integration', () => {
   beforeEach(() => {
     const config = createDefaultStateTestConfig();
     framework = createStateTestFramework(config);
-    
+
     const consistencyConfig = createDefaultConsistencyConfig();
     consistencyTester = createConsistencyTester(consistencyConfig);
   });
@@ -87,7 +88,7 @@ describe('State Testing Integration', () => {
             ...state,
             count: current + 1,
             history: [...state.history, { action: 'increment', from: current, to: current + 1 }],
-            lastAction: 'increment'
+            lastAction: 'increment',
           };
           listeners.forEach(listener => listener(state, { ...state, count: current }));
         },
@@ -97,7 +98,7 @@ describe('State Testing Integration', () => {
             ...state,
             count: current - 1,
             history: [...state.history, { action: 'decrement', from: current, to: current - 1 }],
-            lastAction: 'decrement'
+            lastAction: 'decrement',
           };
           listeners.forEach(listener => listener(state, { ...state, count: current }));
         },
@@ -106,10 +107,10 @@ describe('State Testing Integration', () => {
           state = {
             count: 0,
             history: [...state.history, { action: 'reset', from: prevState.count, to: 0 }],
-            lastAction: 'reset'
+            lastAction: 'reset',
           };
           listeners.forEach(listener => listener(state, prevState));
-        }
+        },
       };
 
       (create as jest.Mock).mockReturnValue(counterStore);
@@ -117,7 +118,7 @@ describe('State Testing Integration', () => {
 
     it('should test complete counter store functionality', async () => {
       const initialState = { count: 0, history: [], lastAction: null };
-      
+
       const scenarios: StateTestScenario<any>[] = [
         // Basic functionality tests
         {
@@ -132,8 +133,8 @@ describe('State Testing Integration', () => {
               type: 'sync',
               execute: (store: any) => {
                 store.increment();
-              }
-            }
+              },
+            },
           ],
           assertions: [
             {
@@ -143,7 +144,7 @@ describe('State Testing Integration', () => {
                 const state = store.getState();
                 return state.count === 1;
               },
-              message: 'Count should be 1 after increment'
+              message: 'Count should be 1 after increment',
             },
             {
               name: 'History should be updated',
@@ -152,9 +153,9 @@ describe('State Testing Integration', () => {
                 const state = store.getState();
                 return state.history.length === 1 && state.history[0].action === 'increment';
               },
-              message: 'History should record the increment action'
-            }
-          ]
+              message: 'History should record the increment action',
+            },
+          ],
         },
 
         // Multiple operations test
@@ -172,22 +173,22 @@ describe('State Testing Integration', () => {
                 store.increment();
                 store.increment();
                 store.increment();
-              }
+              },
             },
             {
               name: 'Decrement once',
               type: 'sync',
               execute: (store: any) => {
                 store.decrement();
-              }
+              },
             },
             {
               name: 'Reset counter',
               type: 'sync',
               execute: (store: any) => {
                 store.reset();
-              }
-            }
+              },
+            },
           ],
           assertions: [
             {
@@ -197,7 +198,7 @@ describe('State Testing Integration', () => {
                 const state = store.getState();
                 return state.count === 0;
               },
-              message: 'Count should be 0 after reset'
+              message: 'Count should be 0 after reset',
             },
             {
               name: 'History should record all operations',
@@ -206,10 +207,10 @@ describe('State Testing Integration', () => {
                 const state = store.getState();
                 return state.history.length === 5; // 3 increments + 1 decrement + 1 reset
               },
-              message: 'History should contain all 5 operations'
-            }
-          ]
-        }
+              message: 'History should contain all 5 operations',
+            },
+          ],
+        },
       ];
 
       const results = await framework.runTests(scenarios);
@@ -226,14 +227,14 @@ describe('State Testing Integration', () => {
           description: 'Count should always be a number',
           check: (state) => typeof state.count === 'number',
           severity: 'critical',
-          message: 'Count must be a number'
+          message: 'Count must be a number',
         },
         {
           name: 'History is Array',
           description: 'History should always be an array',
           check: (state) => Array.isArray(state.history),
           severity: 'high',
-          message: 'History must be an array'
+          message: 'History must be an array',
         },
         {
           name: 'History Length Consistency',
@@ -243,8 +244,8 @@ describe('State Testing Integration', () => {
             return state.history.length >= 0;
           },
           severity: 'medium',
-          message: 'History length should be consistent'
-        }
+          message: 'History length should be consistent',
+        },
       ];
 
       invariants.forEach(invariant => consistencyTester.registerInvariant(invariant));
@@ -257,8 +258,8 @@ describe('State Testing Integration', () => {
           to: (state) => typeof state.count === 'number',
           action: 'increment',
           validate: (from, to) => to.count === from.count + 1,
-          message: 'Increment should increase count by 1'
-        }
+          message: 'Increment should increase count by 1',
+        },
       ];
 
       transitions.forEach(transition => consistencyTester.registerTransition(transition));
@@ -287,11 +288,11 @@ describe('State Testing Integration', () => {
     let dataStore: ZustandStore<any>;
 
     beforeEach(() => {
-      let state = { 
-        data: null, 
-        loading: false, 
-        error: null, 
-        lastFetch: null 
+      let state = {
+        data: null,
+        loading: false,
+        error: null,
+        lastFetch: null,
       };
       const listeners: Array<(state: any, prevState: any) => void> = [];
 
@@ -329,43 +330,43 @@ describe('State Testing Integration', () => {
           try {
             // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 100));
-            
+
             // Success
             const successState = { ...state };
-            state = { 
-              ...state, 
-              loading: false, 
+            state = {
+              ...state,
+              loading: false,
               data: { id: 1, name: 'Test Data' },
-              lastFetch: new Date().toISOString()
+              lastFetch: new Date().toISOString(),
             };
             listeners.forEach(listener => listener(state, successState));
           } catch (error) {
             // Error
             const errorState = { ...state };
-            state = { 
-              ...state, 
-              loading: false, 
-              error: error.message 
+            state = {
+              ...state,
+              loading: false,
+              error: error.message,
             };
             listeners.forEach(listener => listener(state, errorState));
           }
         },
         clearData: () => {
           const prevState = { ...state };
-          state = { 
-            data: null, 
-            loading: false, 
-            error: null, 
-            lastFetch: null 
+          state = {
+            data: null,
+            loading: false,
+            error: null,
+            lastFetch: null,
           };
           listeners.forEach(listener => listener(state, prevState));
-        }
+        },
       };
     });
 
     it('should test async data loading scenarios', async () => {
       const initialState = { data: null, loading: false, error: null, lastFetch: null };
-      
+
       const scenarios: StateTestScenario<any>[] = [
         {
           name: 'Successful Data Fetch',
@@ -379,8 +380,8 @@ describe('State Testing Integration', () => {
               type: 'async',
               execute: async (store: any) => {
                 await store.fetchData();
-              }
-            }
+              },
+            },
           ],
           assertions: [
             {
@@ -390,7 +391,7 @@ describe('State Testing Integration', () => {
                 const state = store.getState();
                 return !state.loading && state.data !== null && state.error === null;
               },
-              message: 'Data should be loaded successfully'
+              message: 'Data should be loaded successfully',
             },
             {
               name: 'Last fetch should be recorded',
@@ -399,9 +400,9 @@ describe('State Testing Integration', () => {
                 const state = store.getState();
                 return state.lastFetch !== null;
               },
-              message: 'Last fetch timestamp should be recorded'
-            }
-          ]
+              message: 'Last fetch timestamp should be recorded',
+            },
+          ],
         },
 
         {
@@ -420,8 +421,8 @@ describe('State Testing Integration', () => {
                 const state = store.getState();
                 expect(state.loading).toBe(true);
                 await fetchPromise;
-              }
-            }
+              },
+            },
           ],
           assertions: [
             {
@@ -431,10 +432,10 @@ describe('State Testing Integration', () => {
                 const state = store.getState();
                 return !state.loading;
               },
-              message: 'Loading should be false after fetch completes'
-            }
-          ]
-        }
+              message: 'Loading should be false after fetch completes',
+            },
+          ],
+        },
       ];
 
       const results = await framework.runTests(scenarios);
@@ -452,7 +453,7 @@ describe('State Testing Integration', () => {
           to: (state) => state.loading,
           action: 'startLoading',
           validate: (from, to) => !from.loading && to.loading && to.error === null,
-          message: 'Loading should start with error cleared'
+          message: 'Loading should start with error cleared',
         },
         {
           name: 'Loading to Success',
@@ -462,8 +463,8 @@ describe('State Testing Integration', () => {
           validate: (from, to) => {
             return from.loading && !to.loading && to.data !== null && to.error === null;
           },
-          message: 'Successful loading should set data and clear error'
-        }
+          message: 'Successful loading should set data and clear error',
+        },
       ];
 
       transitions.forEach(transition => consistencyTester.registerTransition(transition));
@@ -482,18 +483,18 @@ describe('State Testing Integration', () => {
   describe('Performance and Stress Testing', () => {
     it('should perform comprehensive performance testing', async () => {
       const performanceStore = StateTestUtils.createMockStore({ counter: 0 });
-      
+
       // Test with different update counts
       const updateCounts = [100, 500, 1000];
-      
+
       for (const updateCount of updateCounts) {
         const scenarios = CommonStateScenarios.performance(performanceStore, { counter: 0 }, updateCount);
         const results = await framework.runTests(scenarios);
-        
+
         expect(results).toHaveLength(1);
         expect(results[0].context.performanceMetrics.updateTimes).toHaveLength(updateCount);
         expect(results[0].context.performanceMetrics.averageUpdateTime).toBeGreaterThan(0);
-        
+
         console.log(`Performance test with ${updateCount} updates:`);
         console.log(`- Average update time: ${results[0].context.performanceMetrics.averageUpdateTime.toFixed(3)}ms`);
         console.log(`- Peak memory usage: ${results[0].context.performanceMetrics.peakMemoryUsage.toFixed(2)}MB`);
@@ -501,27 +502,27 @@ describe('State Testing Integration', () => {
     });
 
     it('should test concurrent operations stress scenarios', async () => {
-      const stressStore = StateTestUtils.createMockStore({ 
-        counter: 0, 
+      const stressStore = StateTestUtils.createMockStore({
+        counter: 0,
         operations: 0,
-        lastUpdate: null 
+        lastUpdate: null,
       });
 
-      const concurrentOperations = Array.from({ length: 50 }, (_, i) => 
+      const concurrentOperations = Array.from({ length: 50 }, (_, i) =>
         async () => {
           await new Promise(resolve => setTimeout(resolve, Math.random() * 10));
-          stressStore.setState({ 
+          stressStore.setState({
             counter: stressStore.getState().counter + 1,
             operations: stressStore.getState().operations + 1,
-            lastUpdate: Date.now()
+            lastUpdate: Date.now(),
           });
-        }
+        },
       );
 
       const result = await consistencyTester.testConcurrency(
-        stressStore, 
-        concurrentOperations, 
-        'Stress Test - 50 Concurrent Operations'
+        stressStore,
+        concurrentOperations,
+        'Stress Test - 50 Concurrent Operations',
       );
 
       expect(result.operationsExecuted).toBe(50);
@@ -529,7 +530,7 @@ describe('State Testing Integration', () => {
       expect(result.stateHistory.length).toBeGreaterThan(1);
       expect(result.duration).toBeGreaterThan(0);
 
-      console.log(`Concurrency stress test results:`);
+      console.log('Concurrency stress test results:');
       console.log(`- Operations executed: ${result.operationsExecuted}`);
       console.log(`- Final counter value: ${result.finalState.counter}`);
       console.log(`- Race conditions detected: ${result.raceConditionsDetected}`);
@@ -540,13 +541,13 @@ describe('State Testing Integration', () => {
   describe('Comprehensive Reporting', () => {
     it('should generate comprehensive test reports', async () => {
       const testStore = StateTestUtils.createMockStore({ value: 0, status: 'idle' });
-      
+
       // Run various types of tests
       const scenarios: StateTestScenario<any>[] = [
         ...CommonStateScenarios.basic(testStore, { value: 0, status: 'idle' }),
         ...CommonStateScenarios.performance(testStore, { value: 0, status: 'idle' }, 100),
         ...CommonStateScenarios.concurrency(testStore, { value: 0, status: 'idle' }),
-        ...CommonStateScenarios.persistence(testStore, { value: 0, status: 'idle' })
+        ...CommonStateScenarios.persistence(testStore, { value: 0, status: 'idle' }),
       ];
 
       const results = await framework.runTests(scenarios);
@@ -569,9 +570,9 @@ describe('State Testing Integration', () => {
     });
 
     it('should generate consistency analysis report', async () => {
-      const consistencyStore = StateTestUtils.createMockStore({ 
-        count: 0, 
-        valid: true 
+      const consistencyStore = StateTestUtils.createMockStore({
+        count: 0,
+        valid: true,
       });
 
       // Register invariants
@@ -581,15 +582,15 @@ describe('State Testing Integration', () => {
           description: 'Count should never be negative',
           check: (state) => state.count >= 0,
           severity: 'high',
-          message: 'Count cannot be negative'
+          message: 'Count cannot be negative',
         },
         {
           name: 'Valid Flag Consistency',
           description: 'Valid flag should be boolean',
           check: (state) => typeof state.valid === 'boolean',
           severity: 'medium',
-          message: 'Valid flag must be boolean'
-        }
+          message: 'Valid flag must be boolean',
+        },
       ];
 
       invariants.forEach(invariant => consistencyTester.registerInvariant(invariant));
@@ -625,7 +626,7 @@ describe('State Testing Integration', () => {
         selectedUser: null,
         loading: false,
         error: null,
-        filters: { active: true, role: 'all' }
+        filters: { active: true, role: 'all' },
       });
 
       const scenarios: StateTestScenario<any>[] = [
@@ -639,7 +640,7 @@ describe('State Testing Integration', () => {
             selectedUser: null,
             loading: false,
             error: null,
-            filters: { active: true, role: 'all' }
+            filters: { active: true, role: 'all' },
           },
           actions: [
             {
@@ -648,15 +649,15 @@ describe('State Testing Integration', () => {
               execute: async (store) => {
                 store.setState({ loading: true });
                 await new Promise(resolve => setTimeout(resolve, 50));
-                store.setState({ 
-                  loading: false, 
+                store.setState({
+                  loading: false,
                   users: [
                     { id: 1, name: 'John', role: 'admin', active: true },
                     { id: 2, name: 'Jane', role: 'user', active: true },
-                    { id: 3, name: 'Bob', role: 'user', active: false }
-                  ]
+                    { id: 3, name: 'Bob', role: 'user', active: false },
+                  ],
                 });
-              }
+              },
             },
             {
               name: 'Select user',
@@ -664,17 +665,17 @@ describe('State Testing Integration', () => {
               execute: (store) => {
                 const users = store.getState().users;
                 store.setState({ selectedUser: users[0] });
-              }
+              },
             },
             {
               name: 'Update filters',
               type: 'sync',
               execute: (store) => {
-                store.setState({ 
-                  filters: { active: false, role: 'user' }
+                store.setState({
+                  filters: { active: false, role: 'user' },
                 });
-              }
-            }
+              },
+            },
           ],
           assertions: [
             {
@@ -684,7 +685,7 @@ describe('State Testing Integration', () => {
                 const state = store.getState();
                 return state.users.length === 3 && !state.loading;
               },
-              message: 'Should load 3 users and stop loading'
+              message: 'Should load 3 users and stop loading',
             },
             {
               name: 'User should be selected',
@@ -693,7 +694,7 @@ describe('State Testing Integration', () => {
                 const state = store.getState();
                 return state.selectedUser && state.selectedUser.id === 1;
               },
-              message: 'Should select the first user'
+              message: 'Should select the first user',
             },
             {
               name: 'Filters should be updated',
@@ -702,10 +703,10 @@ describe('State Testing Integration', () => {
                 const state = store.getState();
                 return !state.filters.active && state.filters.role === 'user';
               },
-              message: 'Should update filters correctly'
-            }
-          ]
-        }
+              message: 'Should update filters correctly',
+            },
+          ],
+        },
       ];
 
       const results = await framework.runTests(scenarios);

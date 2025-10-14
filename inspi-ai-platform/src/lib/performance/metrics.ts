@@ -11,7 +11,7 @@ export interface WebVitals {
   LCP: number | null; // Largest Contentful Paint
   FID: number | null; // First Input Delay
   CLS: number | null; // Cumulative Layout Shift
-  
+
   // Other Web Vitals
   FCP: number | null; // First Contentful Paint
   TTFB: number | null; // Time to First Byte
@@ -26,23 +26,23 @@ export interface CustomMetrics {
   domContentLoaded: number | null;
   windowLoad: number | null;
   firstPaint: number | null;
-  
+
   // 资源加载指标
   totalResources: number;
   failedResources: number;
   totalResourceSize: number;
-  
+
   // 网络指标
   connectionType: string | null;
   effectiveType: string | null;
   downlink: number | null;
   rtt: number | null;
-  
+
   // 内存指标
   usedJSHeapSize: number | null;
   totalJSHeapSize: number | null;
   jsHeapSizeLimit: number | null;
-  
+
   // 用户交互指标
   timeToInteractive: number | null;
   totalBlockingTime: number | null;
@@ -89,7 +89,7 @@ export class PerformanceMonitor {
     CLS: null,
     FCP: null,
     TTFB: null,
-    INP: null
+    INP: null,
   };
 
   private customMetrics: CustomMetrics = {
@@ -107,7 +107,7 @@ export class PerformanceMonitor {
     totalJSHeapSize: null,
     jsHeapSizeLimit: null,
     timeToInteractive: null,
-    totalBlockingTime: null
+    totalBlockingTime: null,
   };
 
   private thresholds: PerformanceThresholds = {
@@ -115,7 +115,7 @@ export class PerformanceMonitor {
     FID: { good: 100, needsImprovement: 300 },
     CLS: { good: 0.1, needsImprovement: 0.25 },
     FCP: { good: 1800, needsImprovement: 3000 },
-    TTFB: { good: 800, needsImprovement: 1800 }
+    TTFB: { good: 800, needsImprovement: 1800 },
   };
 
   private observers: PerformanceObserver[] = [];
@@ -132,22 +132,22 @@ export class PerformanceMonitor {
   private initializeMonitoring(): void {
     // 监控Web Vitals
     this.observeWebVitals();
-    
+
     // 监控资源加载
     this.observeResourceTiming();
-    
+
     // 监控导航时间
     this.observeNavigationTiming();
-    
+
     // 监控长任务
     this.observeLongTasks();
-    
+
     // 监控布局偏移
     this.observeLayoutShift();
-    
+
     // 监控内存使用
     this.observeMemoryUsage();
-    
+
     // 监控网络信息
     this.observeNetworkInformation();
 
@@ -165,10 +165,10 @@ export class PerformanceMonitor {
           const entries = list.getEntries();
           const lastEntry = entries[entries.length - 1] as any;
           this.webVitals.LCP = Math.round(lastEntry.startTime);
-          
+
           logger.debug('LCP measured', { value: this.webVitals.LCP });
         });
-        
+
         lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
         this.observers.push(lcpObserver);
       } catch (error) {
@@ -184,7 +184,7 @@ export class PerformanceMonitor {
             logger.debug('FID measured', { value: this.webVitals.FID });
           });
         });
-        
+
         fidObserver.observe({ entryTypes: ['first-input'] });
         this.observers.push(fidObserver);
       } catch (error) {
@@ -202,7 +202,7 @@ export class PerformanceMonitor {
             }
           });
         });
-        
+
         fcpObserver.observe({ entryTypes: ['paint'] });
         this.observers.push(fcpObserver);
       } catch (error) {
@@ -220,7 +220,7 @@ export class PerformanceMonitor {
   private measureWebVitalsWithLibrary(): void {
     // 这里应该导入web-vitals库
     // import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals';
-    
+
     // 为了演示，我们模拟测量
     setTimeout(() => {
       if (this.webVitals.LCP === null) {
@@ -243,18 +243,18 @@ export class PerformanceMonitor {
       try {
         const resourceObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries() as PerformanceResourceTiming[];
-          
+
           entries.forEach((entry) => {
             this.customMetrics.totalResources++;
             this.customMetrics.totalResourceSize += entry.transferSize || 0;
-            
+
             // 检查失败的资源
             if (entry.transferSize === 0 && entry.decodedBodySize === 0) {
               this.customMetrics.failedResources++;
             }
           });
         });
-        
+
         resourceObserver.observe({ entryTypes: ['resource'] });
         this.observers.push(resourceObserver);
       } catch (error) {
@@ -271,18 +271,18 @@ export class PerformanceMonitor {
       try {
         const navigationObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries() as PerformanceNavigationTiming[];
-          
+
           entries.forEach((entry) => {
             this.customMetrics.domContentLoaded = Math.round(entry.domContentLoadedEventEnd - entry.domContentLoadedEventStart);
             this.customMetrics.windowLoad = Math.round(entry.loadEventEnd - entry.loadEventStart);
-            
+
             // 计算TTFB
             if (this.webVitals.TTFB === null) {
               this.webVitals.TTFB = Math.round(entry.responseStart - entry.requestStart);
             }
           });
         });
-        
+
         navigationObserver.observe({ entryTypes: ['navigation'] });
         this.observers.push(navigationObserver);
       } catch (error) {
@@ -300,17 +300,17 @@ export class PerformanceMonitor {
         const longTaskObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
           let totalBlockingTime = 0;
-          
+
           entries.forEach((entry) => {
             // 长任务超过50ms的部分被认为是阻塞时间
             if (entry.duration > 50) {
               totalBlockingTime += entry.duration - 50;
             }
           });
-          
+
           this.customMetrics.totalBlockingTime = (this.customMetrics.totalBlockingTime || 0) + totalBlockingTime;
         });
-        
+
         longTaskObserver.observe({ entryTypes: ['longtask'] });
         this.observers.push(longTaskObserver);
       } catch (error) {
@@ -328,18 +328,18 @@ export class PerformanceMonitor {
         let clsValue = 0;
         let sessionValue = 0;
         let sessionEntries: any[] = [];
-        
+
         const clsObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
-          
+
           entries.forEach((entry: any) => {
             // 只计算非用户输入引起的布局偏移
             if (!entry.hadRecentInput) {
               const firstSessionEntry = sessionEntries[0];
               const lastSessionEntry = sessionEntries[sessionEntries.length - 1];
-              
+
               // 如果条目与上一个条目的时间间隔小于1秒且与第一个条目的时间间隔小于5秒，则包含在当前会话中
-              if (sessionValue && 
+              if (sessionValue &&
                   entry.startTime - lastSessionEntry.startTime < 1000 &&
                   entry.startTime - firstSessionEntry.startTime < 5000) {
                 sessionValue += entry.value;
@@ -348,7 +348,7 @@ export class PerformanceMonitor {
                 sessionValue = entry.value;
                 sessionEntries = [entry];
               }
-              
+
               // 如果当前会话值大于当前CLS值，则更新CLS
               if (sessionValue > clsValue) {
                 clsValue = sessionValue;
@@ -357,7 +357,7 @@ export class PerformanceMonitor {
             }
           });
         });
-        
+
         clsObserver.observe({ entryTypes: ['layout-shift'] });
         this.observers.push(clsObserver);
       } catch (error) {
@@ -409,9 +409,9 @@ export class PerformanceMonitor {
         connectionType: this.customMetrics.effectiveType || 'unknown',
         viewport: {
           width: window.innerWidth,
-          height: window.innerHeight
-        }
-      }
+          height: window.innerHeight,
+        },
+      },
     };
   }
 
@@ -429,7 +429,7 @@ export class PerformanceMonitor {
       CLS: 'unknown',
       FCP: 'unknown',
       TTFB: 'unknown',
-      INP: 'unknown'
+      INP: 'unknown',
     };
 
     const recommendations: string[] = [];
@@ -522,13 +522,13 @@ export class PerformanceMonitor {
   async sendReport(endpoint: string): Promise<void> {
     try {
       const report = this.getPerformanceReport();
-      
+
       await fetch(endpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(report)
+        body: JSON.stringify(report),
       });
 
       logger.info('Performance report sent', { sessionId: this.sessionId });
@@ -561,7 +561,7 @@ export class PerformanceMonitor {
    */
   private getDeviceType(): 'mobile' | 'tablet' | 'desktop' {
     const width = window.innerWidth;
-    
+
     if (width < 768) {
       return 'mobile';
     } else if (width < 1024) {
@@ -583,11 +583,11 @@ export class PerformanceUtils {
     const start = performance.now();
     const result = fn();
     const duration = performance.now() - start;
-    
+
     if (name) {
       logger.debug(`Function ${name} executed`, { duration });
     }
-    
+
     return { result, duration };
   }
 
@@ -598,11 +598,11 @@ export class PerformanceUtils {
     const start = performance.now();
     const result = await fn();
     const duration = performance.now() - start;
-    
+
     if (name) {
       logger.debug(`Async function ${name} executed`, { duration });
     }
-    
+
     return { result, duration };
   }
 
@@ -657,7 +657,7 @@ export class PerformanceUtils {
       resourceTiming: 'PerformanceResourceTiming' in window,
       userTiming: 'performance' in window && 'mark' in performance,
       memoryInfo: 'memory' in performance,
-      networkInformation: 'connection' in navigator
+      networkInformation: 'connection' in navigator,
     };
   }
 }

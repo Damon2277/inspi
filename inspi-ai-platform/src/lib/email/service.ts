@@ -4,8 +4,9 @@
  */
 
 import nodemailer from 'nodemailer';
-import { env } from '@/config/environment';
-import { logger } from '@/lib/utils/logger';
+
+import { env } from '@/shared/config/environment';
+import { logger } from '@/shared/utils/logger';
 
 export interface EmailOptions {
   to: string | string[];
@@ -40,7 +41,7 @@ export class EmailService {
         return;
       }
 
-      this.transporter = nodemailer.createTransporter({
+      this.transporter = nodemailer.createTransport({
         host: env.EMAIL.SMTP_HOST,
         port: env.EMAIL.SMTP_PORT,
         secure: env.EMAIL.SMTP_PORT === 465, // true for 465, false for other ports
@@ -49,16 +50,16 @@ export class EmailService {
           pass: env.EMAIL.SMTP_PASS,
         },
         tls: {
-          rejectUnauthorized: false // 允许自签名证书
-        }
+          rejectUnauthorized: false, // 允许自签名证书
+        },
       });
 
       this.isConfigured = true;
       logger.info('Email service configured successfully');
 
     } catch (error) {
-      logger.error('Failed to setup email transporter', { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      logger.error('Failed to setup email transporter', {
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -71,7 +72,7 @@ export class EmailService {
       logger.error('Email service not configured');
       return {
         success: false,
-        error: 'Email service not configured'
+        error: 'Email service not configured',
       };
     }
 
@@ -90,24 +91,24 @@ export class EmailService {
       logger.info('Email sent successfully', {
         to: options.to,
         subject: options.subject,
-        messageId: info.messageId
+        messageId: info.messageId,
       });
 
       return {
         success: true,
-        messageId: info.messageId
+        messageId: info.messageId,
       };
 
     } catch (error) {
       logger.error('Failed to send email', {
         to: options.to,
         subject: options.subject,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
 
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -126,7 +127,7 @@ export class EmailService {
       return true;
     } catch (error) {
       logger.error('Email connection verification failed', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return false;
     }

@@ -12,8 +12,7 @@ async function testLoggingSystem() {
   try {
     // 动态导入 ES 模块
     const { logger, createTracedLogger, createTaggedLogger, checkLoggerHealth } = 
-      await import('../src/lib/logging/logger.js');
-    const { createTimer, logUserAction, logAIOperation } = 
+      await     const { createTimer, logUserAction, logAIOperation } = 
       await import('../src/lib/logging/utils.js');
     
     console.log('✅ 日志模块导入成功');

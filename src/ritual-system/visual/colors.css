@@ -1,0 +1,164 @@
+/**
+ * 仪式感设计系统 - 神圣色彩系统
+ * Sacred Color System for Ritual Design
+ */
+
+:root {
+  /* 主要仪式感色彩 - Primary Ritual Colors */
+  --ritual-gold: #FFD700;
+  --ritual-gold-light: #FFF4B3;
+  --ritual-gold-dark: #B8860B;
+  --ritual-gold-glow: rgba(255, 215, 0, 0.3);
+
+  --ritual-deep-blue: #1E3A8A;
+  --ritual-deep-blue-light: #3B82F6;
+  --ritual-deep-blue-dark: #1E40AF;
+  --ritual-deep-blue-glow: rgba(30, 58, 138, 0.3);
+
+  --ritual-purple: #7C3AED;
+  --ritual-purple-light: #A78BFA;
+  --ritual-purple-dark: #5B21B6;
+  --ritual-purple-glow: rgba(124, 58, 237, 0.3);
+
+  /* 辅助仪式感色彩 - Secondary Ritual Colors */
+  --ritual-silver: #C0C0C0;
+  --ritual-silver-light: #E5E5E5;
+  --ritual-silver-dark: #808080;
+  --ritual-silver-glow: rgba(192, 192, 192, 0.3);
+
+  --ritual-rose-gold: #E8B4B8;
+  --ritual-rose-gold-light: #F4D1D4;
+  --ritual-rose-gold-dark: #C89196;
+  --ritual-rose-gold-glow: rgba(232, 180, 184, 0.3);
+
+  --ritual-emerald: #10B981;
+  --ritual-emerald-light: #34D399;
+  --ritual-emerald-dark: #059669;
+  --ritual-emerald-glow: rgba(16, 185, 129, 0.3);
+
+  /* 仪式感渐变 - Ritual Gradients */
+  --ritual-gradient-gold: linear-gradient(135deg, var(--ritual-gold-light) 0%, var(--ritual-gold) 50%, var(--ritual-gold-dark) 100%);
+  --ritual-gradient-blue: linear-gradient(135deg, var(--ritual-deep-blue-light) 0%, var(--ritual-deep-blue) 50%, var(--ritual-deep-blue-dark) 100%);
+  --ritual-gradient-purple: linear-gradient(135deg, var(--ritual-purple-light) 0%, var(--ritual-purple) 50%, var(--ritual-purple-dark) 100%);
+  --ritual-gradient-divine: linear-gradient(135deg, var(--ritual-gold) 0%, var(--ritual-purple) 50%, var(--ritual-deep-blue) 100%);
+  --ritual-gradient-celestial: linear-gradient(45deg, var(--ritual-silver) 0%, var(--ritual-gold) 25%, var(--ritual-purple) 50%, var(--ritual-deep-blue) 75%, var(--ritual-silver) 100%);
+
+  /* 仪式感阴影 - Ritual Shadows */
+  --ritual-shadow-subtle: 0 2px 8px var(--ritual-gold-glow);
+  --ritual-shadow-moderate: 0 4px 16px var(--ritual-purple-glow);
+  --ritual-shadow-dramatic: 0 8px 32px var(--ritual-deep-blue-glow);
+  --ritual-shadow-epic: 0 16px 64px rgba(255, 215, 0, 0.4), 0 8px 32px rgba(124, 58, 237, 0.3), 0 4px 16px rgba(30, 58, 138, 0.2);
+
+  /* 仪式感光效 - Ritual Glows */
+  --ritual-glow-inner: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  --ritual-glow-outer-gold: 0 0 20px var(--ritual-gold-glow);
+  --ritual-glow-outer-purple: 0 0 20px var(--ritual-purple-glow);
+  --ritual-glow-outer-blue: 0 0 20px var(--ritual-deep-blue-glow);
+  --ritual-glow-divine: 0 0 30px var(--ritual-gold-glow), 0 0 60px var(--ritual-purple-glow);
+
+  /* 文化适配色彩 - Cultural Adaptation Colors */
+  --ritual-eastern-red: #DC2626;
+  --ritual-eastern-gold: #F59E0B;
+  --ritual-western-blue: #2563EB;
+  --ritual-western-silver: #6B7280;
+  --ritual-neutral-white: #FFFFFF;
+  --ritual-neutral-black: #000000;
+  --ritual-neutral-gray: #6B7280;
+
+  /* 可访问性色彩 - Accessibility Colors */
+  --ritual-high-contrast-bg: #000000;
+  --ritual-high-contrast-fg: #FFFFFF;
+  --ritual-focus-ring: #3B82F6;
+  --ritual-error: #EF4444;
+  --ritual-success: #10B981;
+  --ritual-warning: #F59E0B;
+  --ritual-info: #3B82F6;
+}
+
+/* 仪式感色彩主题类 - Ritual Color Theme Classes */
+.ritual-theme-gold {
+  --ritual-primary: var(--ritual-gold);
+  --ritual-primary-light: var(--ritual-gold-light);
+  --ritual-primary-dark: var(--ritual-gold-dark);
+  --ritual-primary-glow: var(--ritual-gold-glow);
+  --ritual-gradient: var(--ritual-gradient-gold);
+  --ritual-shadow: var(--ritual-shadow-subtle);
+  --ritual-glow: var(--ritual-glow-outer-gold);
+}
+
+.ritual-theme-purple {
+  --ritual-primary: var(--ritual-purple);
+  --ritual-primary-light: var(--ritual-purple-light);
+  --ritual-primary-dark: var(--ritual-purple-dark);
+  --ritual-primary-glow: var(--ritual-purple-glow);
+  --ritual-gradient: var(--ritual-gradient-purple);
+  --ritual-shadow: var(--ritual-shadow-moderate);
+  --ritual-glow: var(--ritual-glow-outer-purple);
+}
+
+.ritual-theme-blue {
+  --ritual-primary: var(--ritual-deep-blue);
+  --ritual-primary-light: var(--ritual-deep-blue-light);
+  --ritual-primary-dark: var(--ritual-deep-blue-dark);
+  --ritual-primary-glow: var(--ritual-deep-blue-glow);
+  --ritual-gradient: var(--ritual-gradient-blue);
+  --ritual-shadow: var(--ritual-shadow-dramatic);
+  --ritual-glow: var(--ritual-glow-outer-blue);
+}
+
+.ritual-theme-divine {
+  --ritual-primary: var(--ritual-gold);
+  --ritual-secondary: var(--ritual-purple);
+  --ritual-tertiary: var(--ritual-deep-blue);
+  --ritual-gradient: var(--ritual-gradient-divine);
+  --ritual-shadow: var(--ritual-shadow-epic);
+  --ritual-glow: var(--ritual-glow-divine);
+}
+
+/* 文化适配主题 - Cultural Theme Classes */
+.ritual-culture-eastern {
+  --ritual-primary: var(--ritual-eastern-red);
+  --ritual-secondary: var(--ritual-eastern-gold);
+  --ritual-accent: var(--ritual-gold);
+}
+
+.ritual-culture-western {
+  --ritual-primary: var(--ritual-western-blue);
+  --ritual-secondary: var(--ritual-western-silver);
+  --ritual-accent: var(--ritual-silver);
+}
+
+.ritual-culture-neutral {
+  --ritual-primary: var(--ritual-neutral-gray);
+  --ritual-secondary: var(--ritual-neutral-white);
+  --ritual-accent: var(--ritual-gold);
+}
+
+/* 可访问性支持 - Accessibility Support */
+@media (prefers-contrast: high) {
+  :root {
+    --ritual-primary: var(--ritual-high-contrast-fg);
+    --ritual-background: var(--ritual-high-contrast-bg);
+    --ritual-shadow: none;
+    --ritual-glow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ritual-transition-duration: 0s;
+    --ritual-animation-duration: 0s;
+  }
+}
+
+/* 暗色模式适配 - Dark Mode Adaptation */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ritual-gold: #FFC107;
+    --ritual-deep-blue: #2196F3;
+    --ritual-purple: #9C27B0;
+    --ritual-background: #121212;
+    --ritual-surface: #1E1E1E;
+    --ritual-text: #FFFFFF;
+  }
+}

@@ -1,0 +1,1342 @@
+{
+  "summary": {
+    "analysisDate": "2025-09-18T05:44:30.716Z",
+    "overallScore": {
+      "total": 79,
+      "breakdown": {
+        "structure": 100,
+        "organization": 90,
+        "dependencies": 100,
+        "quality": 25
+      },
+      "grade": "B"
+    },
+    "recommendations": [
+      {
+        "type": "quality",
+        "priority": "medium",
+        "message": "代码注释不足，建议增加文档注释"
+      },
+      {
+        "type": "quality",
+        "priority": "low",
+        "message": "建议提高TypeScript覆盖率"
+      }
+    ]
+  },
+  "structure": {
+    "totalDirectories": 14,
+    "totalFiles": 41,
+    "maxDepth": 2,
+    "moduleCount": 5,
+    "testCoverage": 0.2926829268292683,
+    "tree": [
+      {
+        "type": "file",
+        "name": "FINAL_TEST_REPORT.md",
+        "path": "FINAL_TEST_REPORT.md",
+        "depth": 0,
+        "size": 8747,
+        "extension": ".md",
+        "isTest": false,
+        "isConfig": false,
+        "isDoc": true
+      },
+      {
+        "type": "file",
+        "name": "README.md",
+        "path": "README.md",
+        "depth": 0,
+        "size": 6113,
+        "extension": ".md",
+        "isTest": false,
+        "isConfig": false,
+        "isDoc": true
+      },
+      {
+        "type": "file",
+        "name": "RitualDesignSystem.ts",
+        "path": "RitualDesignSystem.ts",
+        "depth": 0,
+        "size": 14359,
+        "extension": ".ts",
+        "isTest": false,
+        "isConfig": false,
+        "isDoc": false
+      },
+      {
+        "type": "directory",
+        "name": "__tests__",
+        "path": "__tests__",
+        "depth": 0,
+        "children": [
+          {
+            "type": "file",
+            "name": "RitualDetector.test.ts",
+            "path": "__tests__/RitualDetector.test.ts",
+            "depth": 1,
+            "size": 9521,
+            "extension": ".ts",
+            "isTest": true,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "RitualTrigger.test.ts",
+            "path": "__tests__/RitualTrigger.test.ts",
+            "depth": 1,
+            "size": 7068,
+            "extension": ".ts",
+            "isTest": true,
+            "isConfig": false,
+            "isDoc": false
+          }
+        ]
+      },
+      {
+        "type": "directory",
+        "name": "animation",
+        "path": "animation",
+        "depth": 0,
+        "children": [
+          {
+            "type": "file",
+            "name": "AnimationRitualSystem.ts",
+            "path": "animation/AnimationRitualSystem.ts",
+            "depth": 1,
+            "size": 25583,
+            "extension": ".ts",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "directory",
+            "name": "__tests__",
+            "path": "animation/__tests__",
+            "depth": 1,
+            "children": [
+              {
+                "type": "file",
+                "name": "AnimationRitualSystem.test.ts",
+                "path": "animation/__tests__/AnimationRitualSystem.test.ts",
+                "depth": 2,
+                "size": 12808,
+                "extension": ".ts",
+                "isTest": true,
+                "isConfig": false,
+                "isDoc": false
+              }
+            ]
+          },
+          {
+            "type": "file",
+            "name": "easing-functions.ts",
+            "path": "animation/easing-functions.ts",
+            "depth": 1,
+            "size": 10743,
+            "extension": ".ts",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "index.ts",
+            "path": "animation/index.ts",
+            "depth": 1,
+            "size": 2659,
+            "extension": ".ts",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "test-animation-system.js",
+            "path": "animation/test-animation-system.js",
+            "depth": 1,
+            "size": 5061,
+            "extension": ".js",
+            "isTest": true,
+            "isConfig": false,
+            "isDoc": false
+          }
+        ]
+      },
+      {
+        "type": "directory",
+        "name": "audio",
+        "path": "audio",
+        "depth": 0,
+        "children": [
+          {
+            "type": "file",
+            "name": "AudioRitualManager.ts",
+            "path": "audio/AudioRitualManager.ts",
+            "depth": 1,
+            "size": 6212,
+            "extension": ".ts",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          }
+        ]
+      },
+      {
+        "type": "directory",
+        "name": "config",
+        "path": "config",
+        "depth": 0,
+        "children": [
+          {
+            "type": "file",
+            "name": "ConfigurationLoader.ts",
+            "path": "config/ConfigurationLoader.ts",
+            "depth": 1,
+            "size": 18731,
+            "extension": ".ts",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "RitualConfiguration.ts",
+            "path": "config/RitualConfiguration.ts",
+            "depth": 1,
+            "size": 29929,
+            "extension": ".ts",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "directory",
+            "name": "__tests__",
+            "path": "config/__tests__",
+            "depth": 1,
+            "children": [
+              {
+                "type": "file",
+                "name": "RitualConfiguration.test.ts",
+                "path": "config/__tests__/RitualConfiguration.test.ts",
+                "depth": 2,
+                "size": 17850,
+                "extension": ".ts",
+                "isTest": true,
+                "isConfig": false,
+                "isDoc": false
+              }
+            ]
+          },
+          {
+            "type": "file",
+            "name": "index.ts",
+            "path": "config/index.ts",
+            "depth": 1,
+            "size": 10047,
+            "extension": ".ts",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "test-config-system.js",
+            "path": "config/test-config-system.js",
+            "depth": 1,
+            "size": 7436,
+            "extension": ".js",
+            "isTest": true,
+            "isConfig": false,
+            "isDoc": false
+          }
+        ]
+      },
+      {
+        "type": "directory",
+        "name": "core",
+        "path": "core",
+        "depth": 0,
+        "children": [
+          {
+            "type": "file",
+            "name": "RitualDetector.ts",
+            "path": "core/RitualDetector.ts",
+            "depth": 1,
+            "size": 12568,
+            "extension": ".ts",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "RitualTrigger.ts",
+            "path": "core/RitualTrigger.ts",
+            "depth": 1,
+            "size": 7676,
+            "extension": ".ts",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "index.ts",
+            "path": "core/index.ts",
+            "depth": 1,
+            "size": 678,
+            "extension": ".ts",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          }
+        ]
+      },
+      {
+        "type": "directory",
+        "name": "evaluation",
+        "path": "evaluation",
+        "depth": 0,
+        "children": [
+          {
+            "type": "file",
+            "name": "architecture-analyzer.js",
+            "path": "evaluation/architecture-analyzer.js",
+            "depth": 1,
+            "size": 20334,
+            "extension": ".js",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "product-structure-assessment.md",
+            "path": "evaluation/product-structure-assessment.md",
+            "depth": 1,
+            "size": 15642,
+            "extension": ".md",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": true
+          }
+        ]
+      },
+      {
+        "type": "directory",
+        "name": "examples",
+        "path": "examples",
+        "depth": 0,
+        "children": [
+          {
+            "type": "file",
+            "name": "basic-usage.ts",
+            "path": "examples/basic-usage.ts",
+            "depth": 1,
+            "size": 8520,
+            "extension": ".ts",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "complete-system-demo.ts",
+            "path": "examples/complete-system-demo.ts",
+            "depth": 1,
+            "size": 11459,
+            "extension": ".ts",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          }
+        ]
+      },
+      {
+        "type": "file",
+        "name": "index.ts",
+        "path": "index.ts",
+        "depth": 0,
+        "size": 1938,
+        "extension": ".ts",
+        "isTest": false,
+        "isConfig": false,
+        "isDoc": false
+      },
+      {
+        "type": "file",
+        "name": "package.json",
+        "path": "package.json",
+        "depth": 0,
+        "size": 1325,
+        "extension": ".json",
+        "isTest": false,
+        "isConfig": true,
+        "isDoc": false
+      },
+      {
+        "type": "directory",
+        "name": "personalization",
+        "path": "personalization",
+        "depth": 0,
+        "children": [
+          {
+            "type": "file",
+            "name": "PersonalizedRitualEngine.ts",
+            "path": "personalization/PersonalizedRitualEngine.ts",
+            "depth": 1,
+            "size": 16122,
+            "extension": ".ts",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          }
+        ]
+      },
+      {
+        "type": "file",
+        "name": "test-complete-system.js",
+        "path": "test-complete-system.js",
+        "depth": 0,
+        "size": 8490,
+        "extension": ".js",
+        "isTest": true,
+        "isConfig": false,
+        "isDoc": false
+      },
+      {
+        "type": "directory",
+        "name": "test-suite",
+        "path": "test-suite",
+        "depth": 0,
+        "children": [
+          {
+            "type": "file",
+            "name": "comprehensive-test.js",
+            "path": "test-suite/comprehensive-test.js",
+            "depth": 1,
+            "size": 23183,
+            "extension": ".js",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "detailed-test-report.md",
+            "path": "test-suite/detailed-test-report.md",
+            "depth": 1,
+            "size": 10230,
+            "extension": ".md",
+            "isTest": true,
+            "isConfig": false,
+            "isDoc": true
+          },
+          {
+            "type": "file",
+            "name": "performance-benchmark.js",
+            "path": "test-suite/performance-benchmark.js",
+            "depth": 1,
+            "size": 12584,
+            "extension": ".js",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "performance-report.json",
+            "path": "test-suite/performance-report.json",
+            "depth": 1,
+            "size": 2638,
+            "extension": ".json",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "test-report.json",
+            "path": "test-suite/test-report.json",
+            "depth": 1,
+            "size": 2010,
+            "extension": ".json",
+            "isTest": true,
+            "isConfig": false,
+            "isDoc": false
+          }
+        ]
+      },
+      {
+        "type": "directory",
+        "name": "types",
+        "path": "types",
+        "depth": 0,
+        "children": [
+          {
+            "type": "file",
+            "name": "index.ts",
+            "path": "types/index.ts",
+            "depth": 1,
+            "size": 1600,
+            "extension": ".ts",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          }
+        ]
+      },
+      {
+        "type": "directory",
+        "name": "visual",
+        "path": "visual",
+        "depth": 0,
+        "children": [
+          {
+            "type": "file",
+            "name": "VisualRitualOrchestrator.ts",
+            "path": "visual/VisualRitualOrchestrator.ts",
+            "depth": 1,
+            "size": 15635,
+            "extension": ".ts",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "directory",
+            "name": "__tests__",
+            "path": "visual/__tests__",
+            "depth": 1,
+            "children": [
+              {
+                "type": "file",
+                "name": "VisualRitualOrchestrator.test.ts",
+                "path": "visual/__tests__/VisualRitualOrchestrator.test.ts",
+                "depth": 2,
+                "size": 10595,
+                "extension": ".ts",
+                "isTest": true,
+                "isConfig": false,
+                "isDoc": false
+              }
+            ]
+          },
+          {
+            "type": "file",
+            "name": "colors.css",
+            "path": "visual/colors.css",
+            "depth": 1,
+            "size": 5938,
+            "extension": ".css",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "decorative-elements.css",
+            "path": "visual/decorative-elements.css",
+            "depth": 1,
+            "size": 9165,
+            "extension": ".css",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "index.ts",
+            "path": "visual/index.ts",
+            "depth": 1,
+            "size": 1228,
+            "extension": ".ts",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "test-visual-system.js",
+            "path": "visual/test-visual-system.js",
+            "depth": 1,
+            "size": 3326,
+            "extension": ".js",
+            "isTest": true,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "test-visual-system.ts",
+            "path": "visual/test-visual-system.ts",
+            "depth": 1,
+            "size": 5308,
+            "extension": ".ts",
+            "isTest": true,
+            "isConfig": false,
+            "isDoc": false
+          },
+          {
+            "type": "file",
+            "name": "typography.css",
+            "path": "visual/typography.css",
+            "depth": 1,
+            "size": 9285,
+            "extension": ".css",
+            "isTest": false,
+            "isConfig": false,
+            "isDoc": false
+          }
+        ]
+      }
+    ]
+  },
+  "metrics": {
+    "fileOrganization": {
+      "totalFiles": 41,
+      "byExtension": {
+        ".md": 4,
+        ".ts": 24,
+        ".js": 7,
+        ".json": 3,
+        ".css": 3
+      },
+      "byType": {
+        "source": 31,
+        "styles": 3,
+        "tests": 12,
+        "configs": 1,
+        "docs": 4,
+        "others": 1
+      },
+      "averageFileSize": 10008.390243902439,
+      "largestFiles": [
+        {
+          "name": "RitualConfiguration.ts",
+          "size": 29929,
+          "path": "config/RitualConfiguration.ts"
+        },
+        {
+          "name": "AnimationRitualSystem.ts",
+          "size": 25583,
+          "path": "animation/AnimationRitualSystem.ts"
+        },
+        {
+          "name": "comprehensive-test.js",
+          "size": 23183,
+          "path": "test-suite/comprehensive-test.js"
+        },
+        {
+          "name": "architecture-analyzer.js",
+          "size": 20334,
+          "path": "evaluation/architecture-analyzer.js"
+        },
+        {
+          "name": "ConfigurationLoader.ts",
+          "size": 18731,
+          "path": "config/ConfigurationLoader.ts"
+        }
+      ],
+      "namingConsistency": 0.8536585365853658
+    }
+  },
+  "dependencies": {
+    "moduleCount": 18,
+    "totalImports": 19,
+    "averageImports": 1.0555555555555556,
+    "circularDependencies": [],
+    "dependencyGraph": {
+      "RitualDesignSystem.ts": {
+        "imports": 7,
+        "exports": 6,
+        "complexity": 626
+      },
+      "animation/AnimationRitualSystem.ts": {
+        "imports": 1,
+        "exports": 7,
+        "complexity": 1272
+      },
+      "animation/easing-functions.ts": {
+        "imports": 0,
+        "exports": 6,
+        "complexity": 523
+      },
+      "animation/index.ts": {
+        "imports": 0,
+        "exports": 3,
+        "complexity": 146
+      },
+      "audio/AudioRitualManager.ts": {
+        "imports": 1,
+        "exports": 2,
+        "complexity": 267
+      },
+      "config/ConfigurationLoader.ts": {
+        "imports": 1,
+        "exports": 5,
+        "complexity": 946
+      },
+      "config/RitualConfiguration.ts": {
+        "imports": 1,
+        "exports": 27,
+        "complexity": 1431
+      },
+      "config/index.ts": {
+        "imports": 0,
+        "exports": 6,
+        "complexity": 479
+      },
+      "core/RitualDetector.ts": {
+        "imports": 2,
+        "exports": 2,
+        "complexity": 601
+      },
+      "core/RitualTrigger.ts": {
+        "imports": 1,
+        "exports": 2,
+        "complexity": 367
+      },
+      "core/index.ts": {
+        "imports": 0,
+        "exports": 1,
+        "complexity": 30
+      },
+      "examples/basic-usage.ts": {
+        "imports": 1,
+        "exports": 0,
+        "complexity": 308
+      },
+      "examples/complete-system-demo.ts": {
+        "imports": 2,
+        "exports": 0,
+        "complexity": 416
+      },
+      "index.ts": {
+        "imports": 0,
+        "exports": 4,
+        "complexity": 88
+      },
+      "personalization/PersonalizedRitualEngine.ts": {
+        "imports": 1,
+        "exports": 10,
+        "complexity": 693
+      },
+      "types/index.ts": {
+        "imports": 0,
+        "exports": 6,
+        "complexity": 80
+      },
+      "visual/VisualRitualOrchestrator.ts": {
+        "imports": 1,
+        "exports": 4,
+        "complexity": 726
+      },
+      "visual/index.ts": {
+        "imports": 0,
+        "exports": 2,
+        "complexity": 51
+      }
+    }
+  },
+  "quality": {
+    "totalLines": 9169,
+    "totalFunctions": 2872,
+    "totalClasses": 21,
+    "totalInterfaces": 69,
+    "totalComments": 772,
+    "commentRatio": 0.08419674991820264,
+    "averageFunctionsPerFile": 119.66666666666667,
+    "averageLinesPerFile": 382.0416666666667,
+    "typeScriptCoverage": 0.5853658536585366
+  },
+  "visualization": {
+    "moduleStructure": {
+      "nodes": [
+        {
+          "type": "directory",
+          "name": "__tests__",
+          "path": "__tests__",
+          "depth": 0,
+          "children": [
+            {
+              "type": "file",
+              "name": "RitualDetector.test.ts",
+              "path": "__tests__/RitualDetector.test.ts",
+              "depth": 1,
+              "size": 9521,
+              "extension": ".ts",
+              "isTest": true,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "RitualTrigger.test.ts",
+              "path": "__tests__/RitualTrigger.test.ts",
+              "depth": 1,
+              "size": 7068,
+              "extension": ".ts",
+              "isTest": true,
+              "isConfig": false,
+              "isDoc": false
+            }
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "animation",
+          "path": "animation",
+          "depth": 0,
+          "children": [
+            {
+              "type": "file",
+              "name": "AnimationRitualSystem.ts",
+              "path": "animation/AnimationRitualSystem.ts",
+              "depth": 1,
+              "size": 25583,
+              "extension": ".ts",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "directory",
+              "name": "__tests__",
+              "path": "animation/__tests__",
+              "depth": 1,
+              "children": [
+                {
+                  "type": "file",
+                  "name": "AnimationRitualSystem.test.ts",
+                  "path": "animation/__tests__/AnimationRitualSystem.test.ts",
+                  "depth": 2,
+                  "size": 12808,
+                  "extension": ".ts",
+                  "isTest": true,
+                  "isConfig": false,
+                  "isDoc": false
+                }
+              ]
+            },
+            {
+              "type": "file",
+              "name": "easing-functions.ts",
+              "path": "animation/easing-functions.ts",
+              "depth": 1,
+              "size": 10743,
+              "extension": ".ts",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "index.ts",
+              "path": "animation/index.ts",
+              "depth": 1,
+              "size": 2659,
+              "extension": ".ts",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "test-animation-system.js",
+              "path": "animation/test-animation-system.js",
+              "depth": 1,
+              "size": 5061,
+              "extension": ".js",
+              "isTest": true,
+              "isConfig": false,
+              "isDoc": false
+            }
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "audio",
+          "path": "audio",
+          "depth": 0,
+          "children": [
+            {
+              "type": "file",
+              "name": "AudioRitualManager.ts",
+              "path": "audio/AudioRitualManager.ts",
+              "depth": 1,
+              "size": 6212,
+              "extension": ".ts",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            }
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "config",
+          "path": "config",
+          "depth": 0,
+          "children": [
+            {
+              "type": "file",
+              "name": "ConfigurationLoader.ts",
+              "path": "config/ConfigurationLoader.ts",
+              "depth": 1,
+              "size": 18731,
+              "extension": ".ts",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "RitualConfiguration.ts",
+              "path": "config/RitualConfiguration.ts",
+              "depth": 1,
+              "size": 29929,
+              "extension": ".ts",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "directory",
+              "name": "__tests__",
+              "path": "config/__tests__",
+              "depth": 1,
+              "children": [
+                {
+                  "type": "file",
+                  "name": "RitualConfiguration.test.ts",
+                  "path": "config/__tests__/RitualConfiguration.test.ts",
+                  "depth": 2,
+                  "size": 17850,
+                  "extension": ".ts",
+                  "isTest": true,
+                  "isConfig": false,
+                  "isDoc": false
+                }
+              ]
+            },
+            {
+              "type": "file",
+              "name": "index.ts",
+              "path": "config/index.ts",
+              "depth": 1,
+              "size": 10047,
+              "extension": ".ts",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "test-config-system.js",
+              "path": "config/test-config-system.js",
+              "depth": 1,
+              "size": 7436,
+              "extension": ".js",
+              "isTest": true,
+              "isConfig": false,
+              "isDoc": false
+            }
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "core",
+          "path": "core",
+          "depth": 0,
+          "children": [
+            {
+              "type": "file",
+              "name": "RitualDetector.ts",
+              "path": "core/RitualDetector.ts",
+              "depth": 1,
+              "size": 12568,
+              "extension": ".ts",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "RitualTrigger.ts",
+              "path": "core/RitualTrigger.ts",
+              "depth": 1,
+              "size": 7676,
+              "extension": ".ts",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "index.ts",
+              "path": "core/index.ts",
+              "depth": 1,
+              "size": 678,
+              "extension": ".ts",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            }
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "evaluation",
+          "path": "evaluation",
+          "depth": 0,
+          "children": [
+            {
+              "type": "file",
+              "name": "architecture-analyzer.js",
+              "path": "evaluation/architecture-analyzer.js",
+              "depth": 1,
+              "size": 20334,
+              "extension": ".js",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "product-structure-assessment.md",
+              "path": "evaluation/product-structure-assessment.md",
+              "depth": 1,
+              "size": 15642,
+              "extension": ".md",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": true
+            }
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "examples",
+          "path": "examples",
+          "depth": 0,
+          "children": [
+            {
+              "type": "file",
+              "name": "basic-usage.ts",
+              "path": "examples/basic-usage.ts",
+              "depth": 1,
+              "size": 8520,
+              "extension": ".ts",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "complete-system-demo.ts",
+              "path": "examples/complete-system-demo.ts",
+              "depth": 1,
+              "size": 11459,
+              "extension": ".ts",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            }
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "personalization",
+          "path": "personalization",
+          "depth": 0,
+          "children": [
+            {
+              "type": "file",
+              "name": "PersonalizedRitualEngine.ts",
+              "path": "personalization/PersonalizedRitualEngine.ts",
+              "depth": 1,
+              "size": 16122,
+              "extension": ".ts",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            }
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "test-suite",
+          "path": "test-suite",
+          "depth": 0,
+          "children": [
+            {
+              "type": "file",
+              "name": "comprehensive-test.js",
+              "path": "test-suite/comprehensive-test.js",
+              "depth": 1,
+              "size": 23183,
+              "extension": ".js",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "detailed-test-report.md",
+              "path": "test-suite/detailed-test-report.md",
+              "depth": 1,
+              "size": 10230,
+              "extension": ".md",
+              "isTest": true,
+              "isConfig": false,
+              "isDoc": true
+            },
+            {
+              "type": "file",
+              "name": "performance-benchmark.js",
+              "path": "test-suite/performance-benchmark.js",
+              "depth": 1,
+              "size": 12584,
+              "extension": ".js",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "performance-report.json",
+              "path": "test-suite/performance-report.json",
+              "depth": 1,
+              "size": 2638,
+              "extension": ".json",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "test-report.json",
+              "path": "test-suite/test-report.json",
+              "depth": 1,
+              "size": 2010,
+              "extension": ".json",
+              "isTest": true,
+              "isConfig": false,
+              "isDoc": false
+            }
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "types",
+          "path": "types",
+          "depth": 0,
+          "children": [
+            {
+              "type": "file",
+              "name": "index.ts",
+              "path": "types/index.ts",
+              "depth": 1,
+              "size": 1600,
+              "extension": ".ts",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            }
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "visual",
+          "path": "visual",
+          "depth": 0,
+          "children": [
+            {
+              "type": "file",
+              "name": "VisualRitualOrchestrator.ts",
+              "path": "visual/VisualRitualOrchestrator.ts",
+              "depth": 1,
+              "size": 15635,
+              "extension": ".ts",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "directory",
+              "name": "__tests__",
+              "path": "visual/__tests__",
+              "depth": 1,
+              "children": [
+                {
+                  "type": "file",
+                  "name": "VisualRitualOrchestrator.test.ts",
+                  "path": "visual/__tests__/VisualRitualOrchestrator.test.ts",
+                  "depth": 2,
+                  "size": 10595,
+                  "extension": ".ts",
+                  "isTest": true,
+                  "isConfig": false,
+                  "isDoc": false
+                }
+              ]
+            },
+            {
+              "type": "file",
+              "name": "colors.css",
+              "path": "visual/colors.css",
+              "depth": 1,
+              "size": 5938,
+              "extension": ".css",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "decorative-elements.css",
+              "path": "visual/decorative-elements.css",
+              "depth": 1,
+              "size": 9165,
+              "extension": ".css",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "index.ts",
+              "path": "visual/index.ts",
+              "depth": 1,
+              "size": 1228,
+              "extension": ".ts",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "test-visual-system.js",
+              "path": "visual/test-visual-system.js",
+              "depth": 1,
+              "size": 3326,
+              "extension": ".js",
+              "isTest": true,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "test-visual-system.ts",
+              "path": "visual/test-visual-system.ts",
+              "depth": 1,
+              "size": 5308,
+              "extension": ".ts",
+              "isTest": true,
+              "isConfig": false,
+              "isDoc": false
+            },
+            {
+              "type": "file",
+              "name": "typography.css",
+              "path": "visual/typography.css",
+              "depth": 1,
+              "size": 9285,
+              "extension": ".css",
+              "isTest": false,
+              "isConfig": false,
+              "isDoc": false
+            }
+          ]
+        }
+      ],
+      "edges": [],
+      "metrics": {
+        "totalModules": 5,
+        "averageFilesPerModule": 8.2
+      }
+    },
+    "dependencyGraph": {
+      "nodes": [
+        "RitualDesignSystem.ts",
+        "animation/AnimationRitualSystem.ts",
+        "animation/easing-functions.ts",
+        "animation/index.ts",
+        "audio/AudioRitualManager.ts",
+        "config/ConfigurationLoader.ts",
+        "config/RitualConfiguration.ts",
+        "config/index.ts",
+        "core/RitualDetector.ts",
+        "core/RitualTrigger.ts",
+        "core/index.ts",
+        "examples/basic-usage.ts",
+        "examples/complete-system-demo.ts",
+        "index.ts",
+        "personalization/PersonalizedRitualEngine.ts",
+        "types/index.ts",
+        "visual/VisualRitualOrchestrator.ts",
+        "visual/index.ts"
+      ],
+      "edges": [],
+      "metrics": {
+        "totalDependencies": 19,
+        "circularCount": 0
+      }
+    },
+    "qualityMetrics": {
+      "codeLines": 9169,
+      "commentRatio": 0.08419674991820264,
+      "typeScriptCoverage": 0.5853658536585366,
+      "averageComplexity": 382.0416666666667
+    },
+    "fileDistribution": {
+      "byExtension": {
+        ".md": 4,
+        ".ts": 24,
+        ".js": 7,
+        ".json": 3,
+        ".css": 3
+      },
+      "byType": {
+        "source": 31,
+        "styles": 3,
+        "tests": 12,
+        "configs": 1,
+        "docs": 4,
+        "others": 1
+      },
+      "sizeDistribution": [
+        {
+          "name": "RitualConfiguration.ts",
+          "size": 29929,
+          "path": "config/RitualConfiguration.ts"
+        },
+        {
+          "name": "AnimationRitualSystem.ts",
+          "size": 25583,
+          "path": "animation/AnimationRitualSystem.ts"
+        },
+        {
+          "name": "comprehensive-test.js",
+          "size": 23183,
+          "path": "test-suite/comprehensive-test.js"
+        },
+        {
+          "name": "architecture-analyzer.js",
+          "size": 20334,
+          "path": "evaluation/architecture-analyzer.js"
+        },
+        {
+          "name": "ConfigurationLoader.ts",
+          "size": 18731,
+          "path": "config/ConfigurationLoader.ts"
+        }
+      ]
+    }
+  }
+}

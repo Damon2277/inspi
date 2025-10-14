@@ -5,9 +5,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { LeaderboardEntry, LeaderboardResponse } from '@/types/contribution';
+
+import LoadingSpinner from '@/shared/components/LoadingSpinner';
+import { LeaderboardEntry, LeaderboardResponse } from '@/shared/types/contribution';
+
 import { LeaderboardCard } from './LeaderboardCard';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 interface RankingListProps {
   type: 'total' | 'weekly' | 'monthly' | 'creation' | 'reuse';
@@ -16,11 +18,11 @@ interface RankingListProps {
   className?: string;
 }
 
-export function RankingList({ 
-  type, 
-  currentUserId, 
+export function RankingList({
+  type,
+  currentUserId,
   limit = 20,
-  className = '' 
+  className = '',
 }: RankingListProps) {
   const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,7 +41,7 @@ export function RankingList({
         limit: limit.toString(),
         offset: offset.toString(),
         includeUserRank: currentUserId ? 'true' : 'false',
-        ...(currentUserId && { userId: currentUserId })
+        ...(currentUserId && { userId: currentUserId }),
       });
 
       const response = await fetch(`/api/leaderboard?${params}`);
@@ -50,11 +52,11 @@ export function RankingList({
       }
 
       const newData = result.data as LeaderboardResponse;
-      
+
       if (append && leaderboard) {
         setLeaderboard({
           ...newData,
-          entries: [...leaderboard.entries, ...newData.entries]
+          entries: [...leaderboard.entries, ...newData.entries],
         });
       } else {
         setLeaderboard(newData);
@@ -62,7 +64,7 @@ export function RankingList({
 
       // 检查是否还有更多数据
       setHasMore(newData.entries.length === limit);
-      
+
     } catch (err) {
       setError(err instanceof Error ? err.message : '获取排行榜失败');
     } finally {

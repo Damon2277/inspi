@@ -33,7 +33,7 @@ export const RetryButton: React.FC<RetryButtonProps> = ({
   variant = 'primary',
   showCount = true,
   resetOnSuccess = true,
-  children
+  children,
 }) => {
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
@@ -62,7 +62,7 @@ export const RetryButton: React.FC<RetryButtonProps> = ({
 
     try {
       await onRetry();
-      
+
       // 成功后重置计数
       if (resetOnSuccess) {
         setRetryCount(0);
@@ -71,7 +71,7 @@ export const RetryButton: React.FC<RetryButtonProps> = ({
       const newRetryCount = retryCount + 1;
       setRetryCount(newRetryCount);
       setLastError(error instanceof Error ? error : new Error('Retry failed'));
-      
+
       // 如果还有重试次数且启用自动重试，开始倒计时
       if (autoRetry && newRetryCount < maxRetries) {
         setCountdown(Math.floor(retryDelay / 1000));
@@ -91,17 +91,17 @@ export const RetryButton: React.FC<RetryButtonProps> = ({
   const sizeClasses = {
     sm: 'px-3 py-1.5 text-sm',
     md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg'
+    lg: 'px-6 py-3 text-lg',
   };
 
   const variantClasses = {
     primary: 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400',
     secondary: 'bg-gray-600 text-white hover:bg-gray-700 disabled:bg-gray-400',
-    outline: 'border-2 border-blue-600 text-blue-600 hover:bg-blue-50 disabled:border-gray-300 disabled:text-gray-400'
+    outline: 'border-2 border-blue-600 text-blue-600 hover:bg-blue-50 disabled:border-gray-300 disabled:text-gray-400',
   };
 
   const baseClasses = 'font-medium rounded-md transition-colors duration-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500';
-  
+
   const buttonClasses = `${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className}`;
 
   const canRetry = retryCount < maxRetries;
@@ -203,7 +203,7 @@ export const SmartRetryButton: React.FC<Omit<RetryButtonProps, 'retryDelay'> & {
       setCurrentDelay(baseDelay);
     } catch (error) {
       // 失败后增加延迟
-      setCurrentDelay(prev => calculateDelay(Math.log(prev / baseDelay) / Math.log(backoffFactor) + 1));
+      setCurrentDelay(calculateDelay(Math.log(currentDelay / baseDelay) / Math.log(backoffFactor) + 1));
       throw error;
     }
   };
@@ -253,7 +253,7 @@ export function useRetry({
   maxRetries = 3,
   baseDelay = 1000,
   maxDelay = 30000,
-  backoffFactor = 2
+  backoffFactor = 2,
 }: {
   maxRetries?: number;
   baseDelay?: number;
@@ -279,7 +279,7 @@ export function useRetry({
       const newRetryCount = retryCount + 1;
       setRetryCount(newRetryCount);
       setLastError(error instanceof Error ? error : new Error('Operation failed'));
-      
+
       // 如果还有重试次数，计算延迟后自动重试
       if (newRetryCount < maxRetries) {
         const delay = Math.min(baseDelay * Math.pow(backoffFactor, newRetryCount - 1), maxDelay);
@@ -304,7 +304,7 @@ export function useRetry({
     retryCount,
     isRetrying,
     lastError,
-    canRetry: retryCount < maxRetries
+    canRetry: retryCount < maxRetries,
   };
 }
 

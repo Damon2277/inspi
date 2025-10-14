@@ -119,7 +119,8 @@ class TestRunner {
             testSuite.assertionResults
               .filter(test => test.status === 'failed')
               .forEach(test => {
-                console.log(`      - ${test.title}: ${test.failureMessages[0]?.split('\n')[0] || '未知错误'}`);
+                console.log(`      - ${test.title}: ${test.failureMessages[0]?
+                  .split('\n')[0] || '未知错误'}`);
               });
           }
         }
@@ -142,7 +143,8 @@ class TestRunner {
       duration: suiteDuration
     };
     
-    console.log(`📊 ${suite.description}结果: ✅ ${suitePassed} | ❌ ${suiteFailed} | ⏱️  ${suiteDuration}ms\n`);
+    console.log(`📊 ${suite.description}结果:
+      ✅ ${suitePassed} | ❌ ${suiteFailed} | ⏱️  ${suiteDuration}ms\n`);
   }
 
   calculateOverallResults() {
@@ -217,7 +219,8 @@ class TestRunner {
       };
     });
     
-    const reportPath = path.join(__dirname, '..', '..', 'reports', 'version-management-test-report.json');
+    const reportPath = path.join(__dirname, '..', '..', 'reports',
+      'version-management-test-report.json');
     
     // 确保reports目录存在
     const reportsDir = path.dirname(reportPath);
@@ -235,7 +238,8 @@ class TestRunner {
     
     this.testSuites.forEach(suite => {
       const result = this.testResults[suite.name];
-      junitXml += `  <testsuite name="${suite.description}" tests="${result.total}" failures="${result.failed}" time="${result.duration / 1000}">\n`;
+      junitXml += `  <testsuite name="${suite.description}" tests=
+        "${result.total}" failures="${result.failed}" time="${result.duration / 1000}">\n`;
       
       // 这里简化处理，实际应该包含每个测试用例的详细信息
       for (let i = 0; i < result.passed; i++) {

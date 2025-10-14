@@ -1,7 +1,10 @@
 'use client';
-import React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import React from 'react';
+
+import { AppLayout } from '@/components/layout';
+
 
 // 案例数据接口
 interface CaseItem {
@@ -82,7 +85,7 @@ export default function CaseDetailPage() {
 3. 分析函数 y = 3x² - 6x + 2 的性质
         `,
         createdAt: '2024-01-15',
-        updatedAt: '2024-01-16'
+        updatedAt: '2024-01-16',
       },
       {
         id: 2,
@@ -143,7 +146,7 @@ export default function CaseDetailPage() {
 4. 创作实践
         `,
         createdAt: '2024-01-14',
-        updatedAt: '2024-01-15'
+        updatedAt: '2024-01-15',
       },
       {
         id: 3,
@@ -210,97 +213,80 @@ export default function CaseDetailPage() {
 4. 遵守实验室规则
         `,
         createdAt: '2024-01-13',
-        updatedAt: '2024-01-14'
-      }
+        updatedAt: '2024-01-14',
+      },
     ];
 
-    return mockCases.find(c => c.id === parseInt(id)) || null;
+    return (mockCases.find as any)(c => c.id === parseInt(id, 10)) || null;
   };
 
   const caseDetail = getCaseDetail(caseId);
 
   if (!caseDetail) {
     return (
-      <div className="modern-layout">
-        <div className="modern-container" style={{ padding: '80px 0', textAlign: 'center' }}>
-          <h1 style={{ fontSize: '48px', marginBottom: '16px' }}>😕</h1>
-          <h2 style={{ fontSize: '24px', marginBottom: '16px', color: 'var(--gray-900)' }}>
-            案例未找到
-          </h2>
-          <p style={{ color: 'var(--gray-600)', marginBottom: '32px' }}>
-            抱歉，您访问的案例不存在或已被删除。
-          </p>
-          <Link href="/" className="modern-btn modern-btn-primary">
-            返回首页
-          </Link>
+      <AppLayout>
+        <div className="modern-layout">
+          <div className="modern-container" style={{ padding: '80px 0', textAlign: 'center' }}>
+            <h1 style={{ fontSize: '48px', marginBottom: '16px' }}>😕</h1>
+            <h2 style={{ fontSize: '24px', marginBottom: '16px', color: 'var(--gray-900)' }}>
+              案例未找到
+            </h2>
+            <p style={{ color: 'var(--gray-600)', marginBottom: '32px' }}>
+              抱歉，您访问的案例不存在或已被删除。
+            </p>
+            <Link href="/" className="modern-btn modern-btn-primary">
+              返回首页
+            </Link>
+          </div>
         </div>
-      </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="modern-layout">
-      {/* 导航栏 */}
-      <nav className="modern-nav">
-        <div className="modern-container">
-          <div className="modern-nav-content">
-            <div className="modern-logo">Inspi.AI</div>
-            <div className="modern-nav-links mobile-hidden">
-              <Link href="/" className="modern-nav-link">首页</Link>
-              <Link href="/create" className="modern-nav-link">创作</Link>
-              <Link href="/square" className="modern-nav-link active">广场</Link>
-              <Link href="/profile" className="modern-nav-link">我的</Link>
-            </div>
-            <div className="flex gap-4">
-              <Link href="/create" className="modern-btn modern-btn-primary modern-btn-sm">
-                开启魔法
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <AppLayout>
+      <div className="modern-layout">
       {/* 案例详情内容 */}
       <div className="modern-container" style={{ padding: '40px 0 80px' }}>
         {/* 返回按钮 */}
         <div style={{ marginBottom: '32px' }}>
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="modern-btn modern-btn-ghost"
-            style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
               gap: '8px',
-              padding: '8px 16px'
+              padding: '8px 16px',
             }}
           >
             ← 返回首页
           </Link>
         </div>
 
-        <div className="case-detail-grid" style={{ 
+        <div className="case-detail-grid" style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 300px', 
-          gap: '40px' 
+          gridTemplateColumns: '1fr 300px',
+          gap: '40px',
         }}>
           {/* 主要内容区域 */}
           <div className="modern-card">
             <div className="modern-card-body" style={{ padding: '40px' }}>
               {/* 案例头部信息 */}
               <div style={{ marginBottom: '32px' }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '16px', 
-                  marginBottom: '16px' 
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  marginBottom: '16px',
                 }}>
                   <div style={{ fontSize: '64px' }}>{caseDetail.thumbnail}</div>
                   <div>
-                    <h1 style={{ 
-                      fontSize: '32px', 
-                      fontWeight: '700', 
-                      color: 'var(--gray-900)', 
-                      marginBottom: '8px' 
+                    <h1 style={{
+                      fontSize: '32px',
+                      fontWeight: '700',
+                      color: 'var(--gray-900)',
+                      marginBottom: '8px',
                     }}>
                       {caseDetail.title}
                     </h1>
@@ -311,7 +297,7 @@ export default function CaseDetailPage() {
                         color: 'var(--primary-700)',
                         borderRadius: 'var(--radius-sm)',
                         fontSize: '14px',
-                        fontWeight: '500'
+                        fontWeight: '500',
                       }}>
                         {caseDetail.subject}
                       </span>
@@ -320,7 +306,7 @@ export default function CaseDetailPage() {
                         background: 'var(--gray-100)',
                         color: 'var(--gray-600)',
                         borderRadius: 'var(--radius-sm)',
-                        fontSize: '14px'
+                        fontSize: '14px',
                       }}>
                         {caseDetail.grade}
                       </span>
@@ -331,11 +317,11 @@ export default function CaseDetailPage() {
                   </div>
                 </div>
 
-                <p style={{ 
-                  fontSize: '18px', 
-                  color: 'var(--gray-600)', 
+                <p style={{
+                  fontSize: '18px',
+                  color: 'var(--gray-600)',
                   lineHeight: '1.6',
-                  marginBottom: '24px'
+                  marginBottom: '24px',
                 }}>
                   {caseDetail.description}
                 </p>
@@ -348,7 +334,7 @@ export default function CaseDetailPage() {
                       background: 'var(--gray-100)',
                       color: 'var(--gray-600)',
                       fontSize: '14px',
-                      borderRadius: 'var(--radius-sm)'
+                      borderRadius: 'var(--radius-sm)',
                     }}>
                       #{tag}
                     </span>
@@ -357,14 +343,14 @@ export default function CaseDetailPage() {
               </div>
 
               {/* 案例内容 */}
-              <div style={{ 
-                borderTop: '1px solid var(--gray-200)', 
-                paddingTop: '32px' 
+              <div style={{
+                borderTop: '1px solid var(--gray-200)',
+                paddingTop: '32px',
               }}>
                 <div className="case-content">
                   {caseDetail.content ? (
-                    <div 
-                      dangerouslySetInnerHTML={{ 
+                    <div
+                      dangerouslySetInnerHTML={{
                         __html: caseDetail.content
                           .replace(/\n/g, '<br>')
                           .replace(/^# (.*$)/gm, '<h1>$1</h1>')
@@ -372,7 +358,7 @@ export default function CaseDetailPage() {
                           .replace(/^### (.*$)/gm, '<h3>$1</h3>')
                           .replace(/^\*\*(.*?)\*\*/gm, '<strong>$1</strong>')
                           .replace(/^\* (.*$)/gm, '<li>$1</li>')
-                          .replace(/^(\d+)\. (.*$)/gm, '<li>$1. $2</li>')
+                          .replace(/^(\d+)\. (.*$)/gm, '<li>$1. $2</li>'),
                       }}
                     />
                   ) : (
@@ -390,11 +376,11 @@ export default function CaseDetailPage() {
             {/* 案例统计 */}
             <div className="modern-card" style={{ marginBottom: '24px' }}>
               <div className="modern-card-body">
-                <h3 style={{ 
-                  fontSize: '18px', 
-                  fontWeight: '600', 
+                <h3 style={{
+                  fontSize: '18px',
+                  fontWeight: '600',
                   marginBottom: '16px',
-                  color: 'var(--gray-900)'
+                  color: 'var(--gray-900)',
                 }}>
                   案例数据
                 </h3>
@@ -418,16 +404,16 @@ export default function CaseDetailPage() {
             {/* 操作按钮 */}
             <div className="modern-card">
               <div className="modern-card-body">
-                <h3 style={{ 
-                  fontSize: '18px', 
-                  fontWeight: '600', 
+                <h3 style={{
+                  fontSize: '18px',
+                  fontWeight: '600',
                   marginBottom: '16px',
-                  color: 'var(--gray-900)'
+                  color: 'var(--gray-900)',
                 }}>
                   操作
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <button 
+                  <button
                     className="modern-btn modern-btn-primary"
                     style={{ width: '100%' }}
                     onClick={() => {
@@ -437,7 +423,7 @@ export default function CaseDetailPage() {
                   >
                     ❤️ 点赞
                   </button>
-                  <button 
+                  <button
                     className="modern-btn modern-btn-outline"
                     style={{ width: '100%' }}
                     onClick={() => {
@@ -447,7 +433,7 @@ export default function CaseDetailPage() {
                   >
                     ⭐ 收藏
                   </button>
-                  <button 
+                  <button
                     className="modern-btn modern-btn-ghost"
                     style={{ width: '100%' }}
                     onClick={() => {
@@ -456,7 +442,7 @@ export default function CaseDetailPage() {
                         navigator.share({
                           title: caseDetail.title,
                           text: caseDetail.description,
-                          url: window.location.href
+                          url: window.location.href,
                         });
                       } else {
                         // 复制链接到剪贴板
@@ -474,25 +460,25 @@ export default function CaseDetailPage() {
             {/* 作者信息 */}
             <div className="modern-card" style={{ marginTop: '24px' }}>
               <div className="modern-card-body">
-                <h3 style={{ 
-                  fontSize: '18px', 
-                  fontWeight: '600', 
+                <h3 style={{
+                  fontSize: '18px',
+                  fontWeight: '600',
                   marginBottom: '16px',
-                  color: 'var(--gray-900)'
+                  color: 'var(--gray-900)',
                 }}>
                   作者信息
                 </h3>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ 
-                    width: '60px', 
-                    height: '60px', 
-                    borderRadius: '50%', 
+                  <div style={{
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
                     background: 'var(--primary-100)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '24px',
-                    margin: '0 auto 12px'
+                    margin: '0 auto 12px',
                   }}>
                     👨‍🏫
                   </div>
@@ -510,11 +496,11 @@ export default function CaseDetailPage() {
       </div>
 
       {/* 页脚 */}
-      <footer style={{ 
-        background: 'var(--gray-900)', 
-        color: 'var(--gray-300)', 
+      <footer style={{
+        background: 'var(--gray-900)',
+        color: 'var(--gray-300)',
         padding: '40px 0',
-        textAlign: 'center'
+        textAlign: 'center',
       }}>
         <div className="modern-container">
           <div className="modern-logo" style={{ color: 'white', marginBottom: '16px' }}>
@@ -523,6 +509,7 @@ export default function CaseDetailPage() {
           <p>© 2024 Inspi.AI. 让AI激发教学创意.</p>
         </div>
       </footer>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

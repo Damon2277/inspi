@@ -1,6 +1,6 @@
 /**
  * DynamicChartGenerator Unit Tests
- * 
+ *
  * Comprehensive test suite for the dynamic chart generation system,
  * covering chart creation, data management, real-time updates,
  * and Chart.js integration.
@@ -23,7 +23,7 @@ describe('DynamicChartGenerator', () => {
     it('should create a new chart with default configuration', () => {
       const config: ChartConfig = {
         title: 'Test Chart',
-        type: 'line'
+        type: 'line',
       };
 
       const chart = chartGenerator.createChart('test-chart', config);
@@ -44,7 +44,7 @@ describe('DynamicChartGenerator', () => {
         responsive: false,
         realTime: true,
         maxDataPoints: 50,
-        colors: ['#ff0000', '#00ff00', '#0000ff']
+        colors: ['#ff0000', '#00ff00', '#0000ff'],
       };
 
       const chart = chartGenerator.createChart('custom-chart', config);
@@ -60,7 +60,7 @@ describe('DynamicChartGenerator', () => {
     it('should retrieve created chart', () => {
       const config: ChartConfig = {
         title: 'Retrievable Chart',
-        type: 'pie'
+        type: 'pie',
       };
 
       chartGenerator.createChart('retrievable-chart', config);
@@ -80,7 +80,7 @@ describe('DynamicChartGenerator', () => {
     beforeEach(() => {
       chartGenerator.createChart('test-chart', {
         title: 'Test Chart',
-        type: 'line'
+        type: 'line',
       });
     });
 
@@ -89,9 +89,9 @@ describe('DynamicChartGenerator', () => {
         name: 'Test Series',
         data: [
           { timestamp: new Date(), value: 10 },
-          { timestamp: new Date(), value: 20 }
+          { timestamp: new Date(), value: 20 },
         ],
-        type: 'line'
+        type: 'line',
       };
 
       chartGenerator.addSeries('test-chart', series);
@@ -106,13 +106,13 @@ describe('DynamicChartGenerator', () => {
       const series1: ChartSeries = {
         name: 'Series 1',
         data: [],
-        type: 'line'
+        type: 'line',
       };
 
       const series2: ChartSeries = {
         name: 'Series 2',
         data: [],
-        type: 'line'
+        type: 'line',
       };
 
       chartGenerator.addSeries('test-chart', series1);
@@ -128,14 +128,14 @@ describe('DynamicChartGenerator', () => {
       const initialSeries: ChartSeries = {
         name: 'Updatable Series',
         data: [{ timestamp: new Date(), value: 10 }],
-        type: 'line'
+        type: 'line',
       };
 
       chartGenerator.addSeries('test-chart', initialSeries);
 
       const newData: ChartDataPoint[] = [
         { timestamp: new Date(), value: 20 },
-        { timestamp: new Date(), value: 30 }
+        { timestamp: new Date(), value: 30 },
       ];
 
       chartGenerator.updateSeries('test-chart', 'Updatable Series', newData);
@@ -150,7 +150,7 @@ describe('DynamicChartGenerator', () => {
       const series: ChartSeries = {
         name: 'Growing Series',
         data: [{ timestamp: new Date(), value: 10 }],
-        type: 'line'
+        type: 'line',
       };
 
       chartGenerator.addSeries('test-chart', series);
@@ -158,7 +158,7 @@ describe('DynamicChartGenerator', () => {
       const newDataPoint: ChartDataPoint = {
         timestamp: new Date(),
         value: 20,
-        label: 'New Point'
+        label: 'New Point',
       };
 
       chartGenerator.addDataPoint('test-chart', 'Growing Series', newDataPoint);
@@ -174,13 +174,13 @@ describe('DynamicChartGenerator', () => {
       chartGenerator.createChart('limited-chart', {
         title: 'Limited Chart',
         type: 'line',
-        maxDataPoints: 3
+        maxDataPoints: 3,
       });
 
       const series: ChartSeries = {
         name: 'Limited Series',
         data: [],
-        type: 'line'
+        type: 'line',
       };
 
       chartGenerator.addSeries('limited-chart', series);
@@ -189,7 +189,7 @@ describe('DynamicChartGenerator', () => {
       for (let i = 0; i < 5; i++) {
         chartGenerator.addDataPoint('limited-chart', 'Limited Series', {
           timestamp: new Date(Date.now() + i * 1000),
-          value: i
+          value: i,
         });
       }
 
@@ -203,7 +203,7 @@ describe('DynamicChartGenerator', () => {
       const series: ChartSeries = {
         name: 'Test Series',
         data: [],
-        type: 'line'
+        type: 'line',
       };
 
       expect(() => {
@@ -223,7 +223,7 @@ describe('DynamicChartGenerator', () => {
       const testStatuses = [
         { status: 'passed', timestamp: new Date(Date.now() - 2000), count: 5 },
         { status: 'failed', timestamp: new Date(Date.now() - 1000), count: 2 },
-        { status: 'running', timestamp: new Date(), count: 3 }
+        { status: 'running', timestamp: new Date(), count: 3 },
       ];
 
       const chart = chartGenerator.generateTestStatusChart(testStatuses);
@@ -240,15 +240,15 @@ describe('DynamicChartGenerator', () => {
           statements: 80,
           branches: 75,
           functions: 85,
-          lines: 78
+          lines: 78,
         },
         {
           timestamp: new Date(Date.now() - 1000),
           statements: 85,
           branches: 80,
           functions: 90,
-          lines: 83
-        }
+          lines: 83,
+        },
       ];
 
       const chart = chartGenerator.generateCoverageTrendChart(coverageHistory);
@@ -266,14 +266,14 @@ describe('DynamicChartGenerator', () => {
           timestamp: new Date(Date.now() - 2000),
           averageTestTime: 100,
           memoryUsage: 64,
-          totalTests: 50
+          totalTests: 50,
         },
         {
           timestamp: new Date(Date.now() - 1000),
           averageTestTime: 120,
           memoryUsage: 72,
-          totalTests: 60
-        }
+          totalTests: 60,
+        },
       ];
 
       const chart = chartGenerator.generatePerformanceChart(performanceData);
@@ -290,14 +290,14 @@ describe('DynamicChartGenerator', () => {
           file: 'test1.spec.ts',
           testName: 'Test A',
           failureCount: 3,
-          timestamp: new Date()
+          timestamp: new Date(),
         },
         {
           file: 'test2.spec.ts',
           testName: 'Test B',
           failureCount: 1,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       ];
 
       const chart = chartGenerator.generateFailureHeatmap(failureData);
@@ -319,7 +319,7 @@ describe('DynamicChartGenerator', () => {
     it('should update test progress chart', () => {
       const chart = chartGenerator.generateTestProgressChart();
       const chartId = 'test-progress';
-      
+
       // Manually add the chart to the generator
       (chartGenerator as any).charts.set(chartId, chart);
 
@@ -327,7 +327,7 @@ describe('DynamicChartGenerator', () => {
         passed: 10,
         failed: 2,
         running: 3,
-        pending: 5
+        pending: 5,
       });
 
       const updatedChart = chartGenerator.getChart(chartId);
@@ -350,10 +350,10 @@ describe('DynamicChartGenerator', () => {
 
     it('should remove chart', () => {
       chartGenerator.createChart('removable-chart', { title: 'Removable', type: 'pie' });
-      
+
       const removed = chartGenerator.removeChart('removable-chart');
       expect(removed).toBe(true);
-      
+
       const chart = chartGenerator.getChart('removable-chart');
       expect(chart).toBeUndefined();
     });
@@ -386,7 +386,7 @@ describe('DynamicChartGenerator', () => {
       const series: ChartSeries = {
         name: 'Test Series',
         data: [{ timestamp: new Date(), value: 10 }],
-        type: 'line'
+        type: 'line',
       };
 
       chartGenerator.addSeries('callback-chart', series);
@@ -405,7 +405,7 @@ describe('DynamicChartGenerator', () => {
       const series: ChartSeries = {
         name: 'Test Series',
         data: [{ timestamp: new Date(), value: 10 }],
-        type: 'line'
+        type: 'line',
       };
 
       chartGenerator.addSeries('callback-chart', series);
@@ -424,18 +424,18 @@ describe('DynamicChartGenerator', () => {
         type: 'line',
         axes: {
           x: { label: 'Time', type: 'time' },
-          y: { label: 'Value', min: 0, max: 100 }
-        }
+          y: { label: 'Value', min: 0, max: 100 },
+        },
       });
 
       const series: ChartSeries = {
         name: 'Test Data',
         data: [
           { timestamp: new Date(Date.now() - 2000), value: 10 },
-          { timestamp: new Date(Date.now() - 1000), value: 20 }
+          { timestamp: new Date(Date.now() - 1000), value: 20 },
         ],
         type: 'line',
-        color: '#ff0000'
+        color: '#ff0000',
       };
 
       chartGenerator.addSeries('chartjs-test', series);
@@ -485,15 +485,15 @@ describe('DynamicChartGenerator', () => {
   describe('Export Configuration', () => {
     it('should export chart configuration', () => {
       chartGenerator.createChart('export-test', { title: 'Export Test', type: 'bar' });
-      
+
       const series: ChartSeries = {
         name: 'Export Series',
         data: [
           { timestamp: new Date(), value: 10 },
           { timestamp: new Date(), value: 20 },
-          { timestamp: new Date(), value: 30 }
+          { timestamp: new Date(), value: 30 },
         ],
-        type: 'bar'
+        type: 'bar',
       };
 
       chartGenerator.addSeries('export-test', series);
@@ -531,14 +531,14 @@ describe('DynamicChartGenerator', () => {
         chartGenerator.addSeries('error-test', {
           name: '',
           data: [],
-          type: 'line'
+          type: 'line',
         });
       }).not.toThrow();
 
       expect(() => {
         chartGenerator.addDataPoint('error-test', '', {
           timestamp: new Date(),
-          value: NaN
+          value: NaN,
         });
       }).toThrow(); // Should throw because series doesn't exist
     });

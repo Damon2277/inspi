@@ -17,7 +17,7 @@ describe('Cache Concurrency Safety Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRedisManager = redisManager as jest.Mocked<typeof redisManager>;
-    
+
     // Mock Redis client
     mockClient = {
       get: jest.fn(),
@@ -31,7 +31,7 @@ describe('Cache Concurrency Safety Tests', () => {
       watch: jest.fn(),
       unwatch: jest.fn(),
       multi: jest.fn(),
-      eval: jest.fn()
+      eval: jest.fn(),
     };
 
     mockRedisManager.getClient.mockReturnValue(mockClient);
@@ -57,7 +57,7 @@ describe('Cache Concurrency Safety Tests', () => {
 
       // Act
       const promises = Array.from({ length: concurrentReads }, () =>
-        redis.get(key)
+        redis.get(key),
       );
 
       const results = await Promise.all(promises);
@@ -79,7 +79,7 @@ describe('Cache Concurrency Safety Tests', () => {
 
       // Act
       const promises = Array.from({ length: concurrentWrites }, (_, i) =>
-        redis.set(`${baseKey}:${i}`, `value-${i}`)
+        redis.set(`${baseKey}:${i}`, `value-${i}`),
       );
 
       const results = await Promise.all(promises);
@@ -87,12 +87,12 @@ describe('Cache Concurrency Safety Tests', () => {
       // Assert
       expect(results).toHaveLength(concurrentWrites);
       expect(mockClient.set).toHaveBeenCalledTimes(concurrentWrites);
-      
+
       // 验证每个写操作都被正确调用
       for (let i = 0; i < concurrentWrites; i++) {
         expect(mockClient.set).toHaveBeenCalledWith(
           `inspi:${baseKey}:${i}`,
-          `value-${i}`
+          `value-${i}`,
         );
       }
     });
@@ -113,7 +113,7 @@ describe('Cache Concurrency Safety Tests', () => {
 
       // Act
       const promises = [];
-      
+
       for (let i = 0; i < operationCount; i++) {
         if (i % 2 === 0) {
           // 读操作
@@ -128,7 +128,7 @@ describe('Cache Concurrency Safety Tests', () => {
 
       // Assert
       expect(results).toHaveLength(operationCount);
-      
+
       // 验证读操作返回了有效值
       const readResults = results.filter((result, index) => index % 2 === 0);
       readResults.forEach(result => {
@@ -139,7 +139,7 @@ describe('Cache Concurrency Safety Tests', () => {
     it('应该处理并发删除操作', async () => {
       // Arrange
       const keys = Array.from({ length: 20 }, (_, i) => `concurrent:delete:${i}`);
-      
+
       mockClient.del.mockResolvedValue(1);
 
       // Act
@@ -149,7 +149,7 @@ describe('Cache Concurrency Safety Tests', () => {
       // Assert
       expect(results).toHaveLength(keys.length);
       expect(mockClient.del).toHaveBeenCalledTimes(keys.length);
-      
+
       keys.forEach(key => {
         expect(mockClient.del).toHaveBeenCalledWith(`inspi:${key}`);
       });
@@ -170,7 +170,7 @@ describe('Cache Concurrency Safety Tests', () => {
 
       // Act
       const promises = Array.from({ length: concurrentIncrements }, () =>
-        redis.increment(key)
+        redis.increment(key),
       );
 
       const results = await Promise.all(promises);
@@ -179,7 +179,7 @@ describe('Cache Concurrency Safety Tests', () => {
       expect(results).toHaveLength(concurrentIncrements);
       expect(Math.max(...results)).toBe(concurrentIncrements);
       expect(mockClient.incr).toHaveBeenCalledTimes(concurrentIncrements);
-      
+
       // 验证结果的唯一性（每个递增操作应该返回不同的值）
       const uniqueResults = new Set(results);
       expect(uniqueResults.size).toBe(concurrentIncrements);
@@ -198,7 +198,7 @@ describe('Cache Concurrency Safety Tests', () => {
 
       // Act
       const promises = Array.from({ length: concurrentDecrements }, () =>
-        redis.decrement(key)
+        redis.decrement(key),
       );
 
       const results = await Promise.all(promises);
@@ -239,7 +239,7 @@ describe('Cache Concurrency Safety Tests', () => {
 
       // Assert
       expect(results).toHaveLength(operationCount);
-      
+
       // 由于递增和递减操作数量相等，最终值应该接近初始值
       const finalValue = currentValue;
       expect(Math.abs(finalValue - 50)).toBeLessThanOrEqual(1);
@@ -256,24 +256,24 @@ describe('Cache Concurrency Safety Tests', () => {
         set: jest.fn().mockReturnThis(),
         get: jest.fn().mockReturnThis(),
         del: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue(['OK', 'OK', 'OK'])
+        exec: jest.fn().mockResolvedValue(['OK', 'OK', 'OK']),
       };
 
       mockClient.multi.mockReturnValue(mockMulti);
 
       // Act
       const multi = mockClient.multi();
-      
+
       for (let i = 0; i < keys.length; i++) {
         multi.set(`inspi:${keys[i]}`, values[i]);
       }
-      
+
       const results = await multi.exec();
 
       // Assert
       expect(results).toEqual(['OK', 'OK', 'OK']);
       expect(mockMulti.exec).toHaveBeenCalled();
-      
+
       keys.forEach((key, i) => {
         expect(mockMulti.set).toHaveBeenCalledWith(`inspi:${key}`, values[i]);
       });
@@ -283,23 +283,23 @@ describe('Cache Concurrency Safety Tests', () => {
       // Arrange
       const key = 'tx:conflict';
       const initialValue = 'initial';
-      
+
       mockClient.watch.mockResolvedValue('OK');
       mockClient.unwatch.mockResolvedValue('OK');
-      
+
       const mockMulti = {
         set: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue(null) // null表示事务被中断
+        exec: jest.fn().mockResolvedValue(null), // null表示事务被中断
       };
 
       mockClient.multi.mockReturnValue(mockMulti);
 
       // Act
       await mockClient.watch(`inspi:${key}`);
-      
+
       const multi = mockClient.multi();
       multi.set(`inspi:${key}`, 'new value');
-      
+
       const result = await multi.exec();
 
       // Assert
@@ -315,7 +315,7 @@ describe('Cache Concurrency Safety Tests', () => {
 
       const mockMulti = {
         set: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue(['OK'])
+        exec: jest.fn().mockResolvedValue(['OK']),
       };
 
       mockClient.multi.mockReturnValue(mockMulti);
@@ -346,18 +346,18 @@ describe('Cache Concurrency Safety Tests', () => {
       const concurrentOperations = 20;
 
       // 模拟读-修改-写操作
-      mockClient.get.mockImplementation(() => 
-        Promise.resolve(sharedCounter.toString())
+      mockClient.get.mockImplementation(() =>
+        Promise.resolve(sharedCounter.toString()),
       );
 
       mockClient.set.mockImplementation((key, value) => {
-        sharedCounter = parseInt(value);
+        sharedCounter = parseInt(value, 10);
         return Promise.resolve('OK');
       });
 
       const readModifyWrite = async () => {
         const current = await redis.get(key);
-        const currentValue = parseInt(current || '0');
+        const currentValue = parseInt(current || '0', 10);
         const newValue = currentValue + 1;
         await redis.set(key, newValue.toString());
         return newValue;
@@ -365,14 +365,14 @@ describe('Cache Concurrency Safety Tests', () => {
 
       // Act
       const promises = Array.from({ length: concurrentOperations }, () =>
-        readModifyWrite()
+        readModifyWrite(),
       );
 
       const results = await Promise.all(promises);
 
       // Assert
       expect(results).toHaveLength(concurrentOperations);
-      
+
       // 由于竞态条件，最终值可能不等于操作次数
       // 但应该在合理范围内
       expect(sharedCounter).toBeGreaterThan(0);
@@ -395,29 +395,29 @@ describe('Cache Concurrency Safety Tests', () => {
 
       mockClient.set.mockImplementation((key, value) => {
         if (key.includes('version')) {
-          version = parseInt(value);
+          version = parseInt(value, 10);
         }
         return Promise.resolve('OK');
       });
 
       const optimisticUpdate = async (newData: string) => {
         const currentVersion = await redis.get(`${key}:version`);
-        const versionNum = parseInt(currentVersion || '0');
-        
+        const versionNum = parseInt(currentVersion || '0', 10);
+
         // 模拟业务逻辑处理时间
         await new Promise(resolve => setTimeout(resolve, 1));
-        
+
         // 尝试更新
         const newVersion = versionNum + 1;
         await redis.set(`${key}:version`, newVersion.toString());
         await redis.set(key, newData);
-        
+
         return newVersion;
       };
 
       // Act
       const promises = Array.from({ length: concurrentUpdates }, (_, i) =>
-        optimisticUpdate(`data-${i}`)
+        optimisticUpdate(`data-${i}`),
       );
 
       const results = await Promise.all(promises);
@@ -453,10 +453,10 @@ describe('Cache Concurrency Safety Tests', () => {
         // 模拟防止缓存穿透的逻辑
         const lockKey = `${key}:lock`;
         const lockValue = Date.now().toString();
-        
+
         // 简化的分布式锁实现
         const acquired = await redis.set(lockKey, lockValue, { ttl: 10 });
-        
+
         if (acquired) {
           try {
             const dbValue = await mockDbCall();
@@ -474,14 +474,14 @@ describe('Cache Concurrency Safety Tests', () => {
 
       // Act
       const promises = Array.from({ length: concurrentRequests }, () =>
-        getCachedData()
+        getCachedData(),
       );
 
       const results = await Promise.all(promises);
 
       // Assert
       expect(results).toHaveLength(concurrentRequests);
-      
+
       // 由于分布式锁保护，数据库调用次数应该远少于并发请求数
       expect(dbCallCount).toBeLessThan(concurrentRequests);
       expect(dbCallCount).toBeGreaterThan(0);
@@ -508,7 +508,7 @@ describe('Cache Concurrency Safety Tests', () => {
 
       // Act
       const promises = Array.from({ length: concurrentConnections }, (_, i) =>
-        redis.get(`pool:test:${i}`)
+        redis.get(`pool:test:${i}`),
       );
 
       // 监控连接数
@@ -523,7 +523,7 @@ describe('Cache Concurrency Safety Tests', () => {
       // Assert
       expect(results).toHaveLength(concurrentConnections);
       expect(activeConnections).toBe(0); // 所有连接应该已释放
-      
+
       results.forEach(result => {
         expect(result).toBe('pooled-value');
       });
@@ -546,17 +546,17 @@ describe('Cache Concurrency Safety Tests', () => {
 
       // Act
       const promises = Array.from({ length: excessiveConnections }, (_, i) =>
-        redis.get(`pool:limit:${i}`).catch(error => ({ error: error.message }))
+        redis.get(`pool:limit:${i}`).catch(error => ({ error: error.message })),
       );
 
       const results = await Promise.all(promises);
 
       // Assert
       expect(results).toHaveLength(excessiveConnections);
-      
+
       const successfulResults = results.filter(r => typeof r === 'string');
       const errorResults = results.filter(r => typeof r === 'object' && 'error' in r);
-      
+
       expect(successfulResults.length + errorResults.length).toBe(excessiveConnections);
       expect(errorResults.length).toBeGreaterThan(0); // 应该有一些连接被拒绝
     });
@@ -594,7 +594,7 @@ describe('Cache Concurrency Safety Tests', () => {
 
       // Assert
       expect(results).toHaveLength(concurrentOperations);
-      
+
       // 内存增长应该在合理范围内（小于50MB）
       expect(memoryIncrease).toBeLessThan(50 * 1024 * 1024);
     });

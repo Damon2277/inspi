@@ -4,31 +4,31 @@
  */
 
 export { DataMaskingTester } from './DataMaskingTester';
-export type { 
-  SensitiveDataPattern, 
-  MaskingTestResult 
+export type {
+  SensitiveDataPattern,
+  MaskingTestResult,
 } from './DataMaskingTester';
 
 export { AccessPermissionTester } from './AccessPermissionTester';
-export type { 
-  AccessRule, 
-  AccessTestCase, 
-  AccessTestResult 
+export type {
+  AccessRule,
+  AccessTestCase,
+  AccessTestResult,
 } from './AccessPermissionTester';
 
 export { DataDeletionTester } from './DataDeletionTester';
-export type { 
-  DeletionRule, 
-  DeletionTestCase, 
-  DeletionTestResult 
+export type {
+  DeletionRule,
+  DeletionTestCase,
+  DeletionTestResult,
 } from './DataDeletionTester';
 
 export { PrivacyComplianceChecker } from './PrivacyComplianceChecker';
-export type { 
-  ComplianceRule, 
-  ComplianceContext, 
-  ComplianceResult, 
-  ComplianceReport 
+export type {
+  ComplianceRule,
+  ComplianceContext,
+  ComplianceResult,
+  ComplianceReport,
 } from './PrivacyComplianceChecker';
 
 /**
@@ -97,7 +97,7 @@ export class PrivacyTestFramework {
       deletionResults: [] as any[],
       complianceReport: null as any,
       overallScore: 0,
-      summary: ''
+      summary: '',
     };
 
     try {

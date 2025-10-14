@@ -6,8 +6,9 @@
 import { spawn, SpawnOptions } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { NodeVersionInfo, CompatibilityTestResult, PerformanceMetrics } from './types';
+
 import { EnvironmentDetector } from './EnvironmentDetector';
+import { NodeVersionInfo, CompatibilityTestResult, PerformanceMetrics } from './types';
 
 export class NodeVersionTester {
   private supportedVersions: string[] = [
@@ -16,7 +17,7 @@ export class NodeVersionTester {
     '20.5.0',
     '20.6.0',
     '20.8.0',
-    '21.0.0'
+    '21.0.0',
   ];
 
   private testTimeout = 300000; // 5 minutes
@@ -26,7 +27,7 @@ export class NodeVersionTester {
    */
   async testMultipleVersions(
     testCommand: string,
-    versions?: string[]
+    versions?: string[],
   ): Promise<CompatibilityTestResult[]> {
     const versionsToTest = versions || this.supportedVersions;
     const results: CompatibilityTestResult[] = [];
@@ -45,10 +46,10 @@ export class NodeVersionTester {
             type: 'version',
             message: `Failed to test Node.js ${version}: ${error}`,
             severity: 'critical',
-            affectedTests: ['all']
+            affectedTests: ['all'],
           }],
           warnings: [],
-          performance: this.getEmptyPerformanceMetrics()
+          performance: this.getEmptyPerformanceMetrics(),
         });
       }
     }
@@ -61,7 +62,7 @@ export class NodeVersionTester {
    */
   async testSingleVersion(
     version: string,
-    testCommand: string
+    testCommand: string,
   ): Promise<CompatibilityTestResult> {
     const startTime = Date.now();
     const environment = await EnvironmentDetector.getEnvironmentInfo();
@@ -79,10 +80,10 @@ export class NodeVersionTester {
           message: `Node.js version ${version} is not available`,
           severity: 'critical',
           suggestion: 'Install the required Node.js version using nvm or similar tool',
-          affectedTests: ['all']
+          affectedTests: ['all'],
         }],
         warnings: [],
-        performance: this.getEmptyPerformanceMetrics()
+        performance: this.getEmptyPerformanceMetrics(),
       };
     }
 
@@ -93,7 +94,7 @@ export class NodeVersionTester {
       return {
         environment: {
           ...environment,
-          nodeVersion: `v${version}`
+          nodeVersion: `v${version}`,
         },
         testSuite: `node-${version}`,
         passed: testResult.exitCode === 0,
@@ -102,10 +103,10 @@ export class NodeVersionTester {
           type: 'version',
           message: `Tests failed with Node.js ${version}`,
           severity: 'major',
-          affectedTests: this.parseFailedTests(testResult.stderr)
+          affectedTests: this.parseFailedTests(testResult.stderr),
         }] : [],
         warnings: this.parseWarnings(testResult.stdout, testResult.stderr),
-        performance: testResult.performance
+        performance: testResult.performance,
       };
     } catch (error) {
       return {
@@ -117,10 +118,10 @@ export class NodeVersionTester {
           type: 'version',
           message: `Error running tests with Node.js ${version}: ${error}`,
           severity: 'critical',
-          affectedTests: ['all']
+          affectedTests: ['all'],
         }],
         warnings: [],
-        performance: this.getEmptyPerformanceMetrics()
+        performance: this.getEmptyPerformanceMetrics(),
       };
     }
   }
@@ -146,7 +147,7 @@ export class NodeVersionTester {
         version,
         compatible,
         issues,
-        features
+        features,
       });
     }
 
@@ -165,7 +166,7 @@ export class NodeVersionTester {
       }
 
       // Try direct node command with version check
-      const nodeResult = await this.runCommand(`node --version`);
+      const nodeResult = await this.runCommand('node --version');
       if (nodeResult.exitCode === 0 && nodeResult.stdout.includes(version)) {
         return true;
       }
@@ -181,7 +182,7 @@ export class NodeVersionTester {
    */
   private async runTestWithVersion(
     version: string,
-    testCommand: string
+    testCommand: string,
   ): Promise<{
     exitCode: number;
     stdout: string;
@@ -198,8 +199,8 @@ export class NodeVersionTester {
       timeout: this.testTimeout,
       env: {
         ...process.env,
-        NODE_ENV: 'test'
-      }
+        NODE_ENV: 'test',
+      },
     });
 
     const endTime = Date.now();
@@ -210,17 +211,17 @@ export class NodeVersionTester {
       memoryUsage: {
         peak: Math.max(endMemory.heapUsed, startMemory.heapUsed),
         average: (endMemory.heapUsed + startMemory.heapUsed) / 2,
-        final: endMemory.heapUsed
+        final: endMemory.heapUsed,
       },
       cpuUsage: {
         peak: 0, // Would need more sophisticated monitoring
-        average: 0
-      }
+        average: 0,
+      },
     };
 
     return {
       ...result,
-      performance
+      performance,
     };
   }
 
@@ -229,7 +230,7 @@ export class NodeVersionTester {
    */
   private async runCommand(
     command: string,
-    options: SpawnOptions & { timeout?: number } = {}
+    options: SpawnOptions & { timeout?: number } = {},
   ): Promise<{
     exitCode: number;
     stdout: string;
@@ -240,7 +241,7 @@ export class NodeVersionTester {
       const child = spawn(cmd, args, {
         shell: true,
         stdio: 'pipe',
-        ...options
+        ...options,
       });
 
       let stdout = '';
@@ -265,7 +266,7 @@ export class NodeVersionTester {
         resolve({
           exitCode: code || 0,
           stdout,
-          stderr
+          stderr,
         });
       });
 
@@ -288,7 +289,7 @@ export class NodeVersionTester {
     return {
       major: parseInt(match[1], 10),
       minor: parseInt(match[2], 10),
-      patch: parseInt(match[3], 10)
+      patch: parseInt(match[3], 10),
     };
   }
 
@@ -298,7 +299,7 @@ export class NodeVersionTester {
   private async checkVersionCompatibility(version: string): Promise<boolean> {
     try {
       const versionInfo = this.parseVersion(version);
-      
+
       // Check minimum supported version
       if (versionInfo.major < 18) {
         return false;
@@ -392,7 +393,7 @@ export class NodeVersionTester {
         warnings.push({
           type: 'deprecation' as const,
           message: match,
-          affectedTests: ['all']
+          affectedTests: ['all'],
         });
       }
     }
@@ -404,7 +405,7 @@ export class NodeVersionTester {
         warnings.push({
           type: 'performance' as const,
           message: match,
-          affectedTests: ['all']
+          affectedTests: ['all'],
         });
       }
     }
@@ -421,12 +422,12 @@ export class NodeVersionTester {
       memoryUsage: {
         peak: 0,
         average: 0,
-        final: 0
+        final: 0,
       },
       cpuUsage: {
         peak: 0,
-        average: 0
-      }
+        average: 0,
+      },
     };
   }
 }

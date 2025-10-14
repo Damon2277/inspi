@@ -3,8 +3,8 @@
  * 测试订阅升级、配额计算和业务规则
  */
 
-import { QuotaManager, UserQuota, QuotaLimits } from '@/lib/quota/quotaManager';
 import { redis } from '@/lib/cache/redis';
+import { QuotaManager, UserQuota, QuotaLimits } from '@/lib/quota/quotaManager';
 
 // Mock dependencies
 jest.mock('@/lib/cache/redis');
@@ -18,7 +18,7 @@ describe('QuotaManager Business Logic Tests', () => {
     jest.clearAllMocks();
     quotaManager = new QuotaManager();
     mockRedis = redis as jest.Mocked<typeof redis>;
-    
+
     // Mock Redis methods
     mockRedis.get = jest.fn();
     mockRedis.set = jest.fn();
@@ -39,7 +39,7 @@ describe('QuotaManager Business Logic Tests', () => {
       // Act & Assert
       for (const plan of plans) {
         const quota = await quotaManager.checkQuota(userId, plan);
-        
+
         expect(quota.plan).toBe(plan);
         expect(quota.dailyLimit).toBe(expectedLimits[plan]);
         expect(quota.remaining).toBe(expectedLimits[plan]);
@@ -124,7 +124,7 @@ describe('QuotaManager Business Logic Tests', () => {
       expect(result).toBe(true);
       expect(mockRedis.increment).toHaveBeenCalledWith(
         expect.stringContaining(`quota:${userId}`),
-        expect.objectContaining({ ttl: expect.any(Number) })
+        expect.objectContaining({ ttl: expect.any(Number) }),
       );
     });
 
@@ -204,12 +204,12 @@ describe('QuotaManager Business Logic Tests', () => {
 
       // Assert
       expect(quota.resetTime).toBeInstanceOf(Date);
-      
+
       // 重置时间应该是明天的0点
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       tomorrow.setHours(0, 0, 0, 0);
-      
+
       expect(quota.resetTime.getTime()).toBe(tomorrow.getTime());
     });
 
@@ -230,12 +230,12 @@ describe('QuotaManager Business Logic Tests', () => {
 
       // Assert
       expect(quota.currentUsage).toBe(50);
-      
+
       // TTL应该很短（接近午夜）
       const secondsUntilMidnight = Math.floor((
         new Date(mockDate.getTime() + 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0) - mockDate.getTime()
       ) / 1000);
-      
+
       expect(secondsUntilMidnight).toBeLessThan(120); // 小于2分钟
 
       // 恢复Date mock
@@ -285,7 +285,7 @@ describe('QuotaManager Business Logic Tests', () => {
         '2024-01-04': '35',
         '2024-01-05': '12',
         '2024-01-06': '28',
-        '2024-01-07': '18' // 今天
+        '2024-01-07': '18', // 今天
       };
 
       mockRedis.get.mockImplementation((key) => {
@@ -304,11 +304,11 @@ describe('QuotaManager Business Logic Tests', () => {
       expect(stats.today.userId).toBe(userId);
       expect(stats.today.currentUsage).toBe(18);
       expect(stats.history).toHaveLength(7);
-      
+
       // 验证历史数据的准确性
       const totalHistoryUsage = stats.history.reduce((sum, day) => sum + day.usage, 0);
       expect(totalHistoryUsage).toBeGreaterThan(0);
-      
+
       // 验证日期格式
       stats.history.forEach(day => {
         expect(day.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
@@ -337,7 +337,7 @@ describe('QuotaManager Business Logic Tests', () => {
 
       // Assert
       expect(stats.history).toHaveLength(7);
-      
+
       // 验证递增趋势
       for (let i = 1; i < stats.history.length; i++) {
         expect(stats.history[i].usage).toBeGreaterThanOrEqual(stats.history[i - 1].usage);
@@ -362,12 +362,12 @@ describe('QuotaManager Business Logic Tests', () => {
 
       // Assert
       expect(stats.history).toHaveLength(7);
-      
+
       // 缺失的数据应该被设为0
-      const missingDays = stats.history.filter(day => 
-        day.date.includes('01-03') || day.date.includes('01-05')
+      const missingDays = stats.history.filter(day =>
+        day.date.includes('01-03') || day.date.includes('01-05'),
       );
-      
+
       missingDays.forEach(day => {
         expect(day.usage).toBe(0);
       });
@@ -380,7 +380,7 @@ describe('QuotaManager Business Logic Tests', () => {
       const newLimits: Partial<QuotaLimits> = {
         free: 15,
         pro: 150,
-        super: 1500
+        super: 1500,
       };
 
       // Act
@@ -397,7 +397,7 @@ describe('QuotaManager Business Logic Tests', () => {
       // Arrange
       const originalLimits = quotaManager.getQuotaLimits();
       const partialUpdate: Partial<QuotaLimits> = {
-        pro: 200
+        pro: 200,
       };
 
       // Act
@@ -415,7 +415,7 @@ describe('QuotaManager Business Logic Tests', () => {
       const invalidLimits: Partial<QuotaLimits> = {
         free: -5, // 负数限制
         pro: 0,   // 零限制
-        super: 999999999 // 过大限制
+        super: 999999999, // 过大限制
       };
 
       // Act
@@ -434,7 +434,7 @@ describe('QuotaManager Business Logic Tests', () => {
       const hierarchicalLimits: QuotaLimits = {
         free: 20,
         pro: 200,
-        super: 2000
+        super: 2000,
       };
 
       // Act
@@ -473,7 +473,7 @@ describe('QuotaManager Business Logic Tests', () => {
       // Act & Assert
       for (const userId of invalidUserIds) {
         const quota = await quotaManager.checkQuota(userId as any, 'free');
-        
+
         // 应该返回有效的配额对象，但可能有默认值
         expect(quota).toBeDefined();
         expect(quota.plan).toBe('free');
@@ -526,7 +526,7 @@ describe('QuotaManager Business Logic Tests', () => {
       // Assert
       expect(isHealthy).toBe(true);
       expect(mockRedis.get).toHaveBeenCalledWith(
-        expect.stringContaining('health_check_user')
+        expect.stringContaining('health_check_user'),
       );
     });
 
@@ -555,7 +555,7 @@ describe('QuotaManager Business Logic Tests', () => {
       expect(status.quotaLimits).toEqual({
         free: expect.any(Number),
         pro: expect.any(Number),
-        super: expect.any(Number)
+        super: expect.any(Number),
       });
       expect(typeof status.cacheReady).toBe('boolean');
     });

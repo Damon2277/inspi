@@ -10,18 +10,18 @@ try {
 } catch (error) {
   env = process.env;
 }
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 
 class TestConfigManager {
   constructor() {
     if (TestConfigManager.instance) {
       return TestConfigManager.instance;
     }
-    
+
     this.configPath = path.join(process.cwd(), 'test.config.json');
     this.config = this.loadConfig();
-    
+
     TestConfigManager.instance = this;
   }
 
@@ -37,7 +37,7 @@ class TestConfigManager {
    */
   loadConfig() {
     const defaultConfig = this.getDefaultConfig();
-    
+
     try {
       if (fs.existsSync(this.configPath)) {
         const userConfig = JSON.parse(fs.readFileSync(this.configPath, 'utf8'));
@@ -46,7 +46,7 @@ class TestConfigManager {
     } catch (error) {
       console.warn('Failed to load test config, using defaults:', error);
     }
-    
+
     return defaultConfig;
   }
 
@@ -78,7 +78,7 @@ class TestConfigManager {
         reporters: ['text', 'lcov', 'html', 'json'],
         directory: 'coverage',
       },
-      
+
       execution: {
         timeout: 60000,
         maxWorkers: '50%',
@@ -89,7 +89,7 @@ class TestConfigManager {
         detectOpenHandles: true,
         forceExit: true,
       },
-      
+
       reporting: {
         formats: ['html', 'json', 'junit'],
         outputDir: 'test-reports',
@@ -102,7 +102,7 @@ class TestConfigManager {
           '!src/**/*.stories.{js,jsx,ts,tsx}',
         ],
       },
-      
+
       quality: {
         gates: [
           {
@@ -229,7 +229,7 @@ class TestConfigManager {
    */
   getConfigForType(type) {
     const config = { ...this.config };
-    
+
     // 根据测试类型调整配置
     switch (type) {
       case 'unit':
@@ -238,14 +238,14 @@ class TestConfigManager {
         config.mocks.database = true;
         config.coverage.threshold.statements = 95;
         break;
-        
+
       case 'integration':
         config.execution.timeout = 30000;
         config.mocks.external = false;
         config.mocks.database = false;
         config.coverage.threshold.statements = 85;
         break;
-        
+
       case 'e2e':
         config.execution.timeout = 60000;
         config.mocks.external = false;
@@ -253,7 +253,7 @@ class TestConfigManager {
         config.coverage.threshold.statements = 70;
         break;
     }
-    
+
     config.environment.type = type;
     return config;
   }
@@ -282,7 +282,7 @@ class TestConfigManager {
    */
   validateConfig() {
     const errors = [];
-    
+
     // 验证覆盖率阈值
     const { threshold } = this.config.coverage;
     if (threshold.statements < 0 || threshold.statements > 100) {
@@ -297,12 +297,12 @@ class TestConfigManager {
     if (threshold.lines < 0 || threshold.lines > 100) {
       errors.push('Coverage threshold for lines must be between 0 and 100');
     }
-    
+
     // 验证执行配置
     if (this.config.execution.timeout <= 0) {
       errors.push('Execution timeout must be greater than 0');
     }
-    
+
     // 验证数据库配置
     if (!this.config.database.mongodb.uri) {
       errors.push('MongoDB URI is required');
@@ -310,7 +310,7 @@ class TestConfigManager {
     if (!this.config.database.redis.url) {
       errors.push('Redis URL is required');
     }
-    
+
     return {
       valid: errors.length === 0,
       errors,
@@ -330,7 +330,7 @@ class TestConfigManager {
    */
   getJestConfig(type = 'unit') {
     const config = this.getConfigForType(type);
-    
+
     return {
       displayName: `${type.charAt(0).toUpperCase() + type.slice(1)} Tests`,
       testEnvironment: type === 'unit' ? 'jsdom' : 'node',
@@ -342,24 +342,24 @@ class TestConfigManager {
       detectOpenHandles: config.execution.detectOpenHandles,
       forceExit: config.execution.forceExit,
       bail: config.execution.bail,
-      
+
       collectCoverageFrom: config.reporting.collectCoverageFrom,
       coverageDirectory: `${config.coverage.directory}/${type}`,
       coverageReporters: config.coverage.reporters,
       coverageThreshold: {
         global: config.coverage.threshold,
       },
-      
+
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
       },
-      
+
       testPathIgnorePatterns: [
         '<rootDir>/.next/',
         '<rootDir>/node_modules/',
         '<rootDir>/coverage/',
       ],
-      
+
       transformIgnorePatterns: [
         'node_modules/(?!(bson|mongodb|mongoose|d3|d3-.*)/)',
       ],

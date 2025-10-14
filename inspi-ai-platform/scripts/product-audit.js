@@ -189,11 +189,7 @@ function checkComponentLibrary() {
     'src/components/invitation/InvitationManagement.tsx',
     'src/components/invitation/InvitationStats.tsx',
     'src/components/admin/AdminDashboard.tsx',
-    'src/components/notification/NotificationManagement.tsx',
-    
-    // 移动端组件
-    'src/components/mobile/MobileLayout.tsx',
-    'src/components/mobile/MobileBottomNav.tsx'
+    'src/components/notification/NotificationManagement.tsx'
   ];
   
   const existingComponents = components.filter(comp => checkFileExists(comp));
@@ -345,7 +341,8 @@ function analyzeProductCompleteness() {
     { name: '奖励引擎', exists: checkFileExists('src/lib/invitation/services/RewardEngine.ts') },
     { name: '积分系统', exists: checkFileExists('src/lib/invitation/services/CreditSystem.ts') },
     { name: '徽章系统', exists: checkFileExists('src/lib/invitation/services/BadgeSystem.ts') },
-    { name: '反欺诈检测', exists: checkFileExists('src/lib/invitation/services/FraudDetectionService.ts') },
+    { name: '反欺诈检测',
+      exists: checkFileExists('src/lib/invitation/services/FraudDetectionService.ts') },
     { name: '通知系统', exists: checkFileExists('src/lib/invitation/services/NotificationService.ts') },
     { name: '管理后台', exists: checkFileExists('src/app/admin/page.tsx') },
     { name: '前端组件', exists: checkFileExists('src/components/invitation/InvitationManagement.tsx') }
@@ -364,8 +361,6 @@ function analyzeProductCompleteness() {
   console.log('\n🎨 UI/UX系统:');
   const uiFeatures = [
     { name: '设计系统', exists: checkDirectoryExists('src/components/ui') },
-    { name: '响应式布局', exists: checkFileExists('src/styles/mobile.css') },
-    { name: '移动端适配', exists: checkDirectoryExists('src/components/mobile') },
     { name: '桌面端界面', exists: checkDirectoryExists('src/components/desktop') },
     { name: '组件库', exists: componentCheck.existing.length > 10 }
   ];
@@ -632,7 +627,8 @@ function generateRoadmap() {
   ];
   
   roadmap.forEach(phase => {
-    const priorityIcon = phase.priority === 'high' ? '🚨' : phase.priority === 'medium' ? '⚠️' : '💡';
+    const priorityIcon = phase.priority === 'high' ?
+      '🚨' : phase.priority === 'medium' ? '⚠️' : '💡';
     console.log(`\n${priorityIcon} ${phase.phase} (${phase.timeline})`);
     phase.features.forEach(feature => {
       console.log(`   - ${feature}`);

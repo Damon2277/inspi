@@ -15,7 +15,7 @@ describe('DataMaskingTester', () => {
     it('应该正确识别和脱敏邮箱地址', async () => {
       const testData = {
         email: 'user@example.com',
-        contact: 'Please contact admin@company.org for support'
+        contact: 'Please contact admin@company.org for support',
       };
 
       const results = await tester.testDataMasking(testData);
@@ -29,7 +29,7 @@ describe('DataMaskingTester', () => {
       const testData = {
         phone: '123-456-7890',
         mobile: '1234567890',
-        text: 'Call me at 987-654-3210'
+        text: 'Call me at 987-654-3210',
       };
 
       const results = await tester.testDataMasking(testData);
@@ -42,7 +42,7 @@ describe('DataMaskingTester', () => {
     it('应该正确识别和脱敏身份证号码', async () => {
       const testData = {
         idCard: '123456789012345678',
-        shortId: '123456789012345'
+        shortId: '123456789012345',
       };
 
       const results = await tester.testDataMasking(testData);
@@ -56,7 +56,7 @@ describe('DataMaskingTester', () => {
       const testData = {
         serverIp: '192.168.1.1',
         clientIp: '10.0.0.1',
-        log: 'Request from 172.16.0.100'
+        log: 'Request from 172.16.0.100',
       };
 
       const results = await tester.testDataMasking(testData);
@@ -80,9 +80,9 @@ describe('DataMaskingTester', () => {
           {
             input: '1234 5678 9012 3456',
             expectedMasked: '**** **** **** 3456',
-            shouldMatch: true
-          }
-        ]
+            shouldMatch: true,
+          },
+        ],
       };
 
       tester.registerPattern(customPattern);
@@ -102,21 +102,21 @@ describe('DataMaskingTester', () => {
           {
             input: '123-45-6789',
             expectedMasked: '***-**-6789',
-            shouldMatch: true
+            shouldMatch: true,
           },
           {
             input: '12345',
             expectedMasked: '12345',
-            shouldMatch: false
-          }
-        ]
+            shouldMatch: false,
+          },
+        ],
       };
 
       tester.registerPattern(customPattern);
 
       const testData = {
         ssn: '123-45-6789',
-        note: 'SSN: 987-65-4321'
+        note: 'SSN: 987-65-4321',
       };
 
       const results = await tester.testDataMasking(testData);
@@ -131,12 +131,12 @@ describe('DataMaskingTester', () => {
     it('应该检测未脱敏的敏感数据', () => {
       const originalData = {
         email: 'user@example.com',
-        phone: '123-456-7890'
+        phone: '123-456-7890',
       };
 
       const maskedData = {
         email: 'u**r@example.com',
-        phone: '123-456-7890' // 未脱敏
+        phone: '123-456-7890', // 未脱敏
       };
 
       const isValid = tester.validateMaskedData(originalData, maskedData);
@@ -146,12 +146,12 @@ describe('DataMaskingTester', () => {
     it('应该通过正确脱敏的数据验证', () => {
       const originalData = {
         email: 'user@example.com',
-        phone: '123-456-7890'
+        phone: '123-456-7890',
       };
 
       const maskedData = {
         email: 'u**r@example.com',
-        phone: '123***7890'
+        phone: '123***7890',
       };
 
       const isValid = tester.validateMaskedData(originalData, maskedData);
@@ -163,7 +163,7 @@ describe('DataMaskingTester', () => {
     it('应该生成详细的脱敏测试报告', async () => {
       const testData = {
         email: 'test@example.com',
-        phone: '123-456-7890'
+        phone: '123-456-7890',
       };
 
       const results = await tester.testDataMasking(testData);
@@ -184,9 +184,9 @@ describe('DataMaskingTester', () => {
           {
             input: 'test',
             expectedMasked: '****', // 期望脱敏但实际不会
-            shouldMatch: true
-          }
-        ]
+            shouldMatch: true,
+          },
+        ],
       };
 
       tester.registerPattern(failingPattern);
@@ -210,7 +210,7 @@ describe('DataMaskingTester', () => {
       const testData = {
         nullValue: null,
         undefinedValue: undefined,
-        emptyString: ''
+        emptyString: '',
       };
 
       const results = await tester.testDataMasking(testData);
@@ -223,9 +223,9 @@ describe('DataMaskingTester', () => {
         user: {
           email: 'nested@example.com',
           profile: {
-            phone: '123-456-7890'
-          }
-        }
+            phone: '123-456-7890',
+          },
+        },
       };
 
       const results = await tester.testDataMasking(testData);
@@ -235,7 +235,7 @@ describe('DataMaskingTester', () => {
     it('应该处理数组数据', async () => {
       const testData = {
         emails: ['user1@example.com', 'user2@example.com'],
-        phones: ['123-456-7890', '987-654-3210']
+        phones: ['123-456-7890', '987-654-3210'],
       };
 
       const results = await tester.testDataMasking(testData);
@@ -249,8 +249,8 @@ describe('DataMaskingTester', () => {
         users: Array.from({ length: 1000 }, (_, i) => ({
           id: i,
           email: `user${i}@example.com`,
-          phone: `${String(i).padStart(3, '0')}-456-7890`
-        }))
+          phone: `${String(i).padStart(3, '0')}-456-7890`,
+        })),
       };
 
       const startTime = Date.now();
@@ -269,7 +269,7 @@ describe('DataMaskingTester', () => {
           name: 'invalid',
           pattern: /test/g, // 简单的正则表达式
           maskingRule: (value: string) => value,
-          testCases: []
+          testCases: [],
         };
         tester.registerPattern(invalidPattern);
       }).not.toThrow();
@@ -286,15 +286,15 @@ describe('DataMaskingTester', () => {
           {
             input: 'error',
             expectedMasked: 'masked',
-            shouldMatch: true
-          }
-        ]
+            shouldMatch: true,
+          },
+        ],
       };
 
       tester.registerPattern(errorPattern);
 
       const testData = { test: 'error' };
-      
+
       // 应该不抛出异常，而是在结果中记录错误
       await expect(tester.testDataMasking(testData)).resolves.toBeDefined();
     });

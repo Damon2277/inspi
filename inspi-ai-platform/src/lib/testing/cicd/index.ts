@@ -1,6 +1,6 @@
 /**
  * CI/CD Integration Optimization System
- * 
+ *
  * This module provides comprehensive CI/CD integration capabilities including:
  * - Pipeline optimization and performance monitoring
  * - Test result integration and reporting
@@ -21,5 +21,5 @@ export type {
   QualityGate,
   DeploymentConfig,
   CICDMetrics,
-  PipelineOptimization
+  PipelineOptimization,
 } from './types';

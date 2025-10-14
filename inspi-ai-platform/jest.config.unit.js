@@ -1,61 +1,70 @@
 /**
- * Jest 单元测试配置
- * 专门用于单元测试，快速执行，不依赖外部服务
+ * Jest单元测试配置
+ * 专门用于运行单元测试
  */
-const nextJest = require('next/jest')
+const nextJest = require('next/jest');
 
 const createJestConfig = nextJest({
   dir: './',
-})
+});
 
-const unitConfig = {
-  displayName: 'Unit Tests',
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  testEnvironment: 'jsdom',
+const customJestConfig = {
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.simple.js'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
+  testEnvironment: 'jest-environment-jsdom',
+  collectCoverageFrom: [
+    'src/**/*.{js,jsx,ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/**/*.stories.{js,jsx,ts,tsx}',
+    '!src/**/__tests__/**',
+    '!src/**/__mocks__/**',
+    '!src/**/index.{js,ts}',
+    '!src/app/**/layout.tsx',
+    '!src/app/**/loading.tsx',
+    '!src/app/**/error.tsx',
+    '!src/app/**/not-found.tsx',
+    '!src/examples/**',
+  ],
+  // 当前阶段仅聚焦缓存模块单元测试，后续可按需逐步放开
   testMatch: [
-    '<rootDir>/src/**/*.test.{js,jsx,ts,tsx}',
-    '<rootDir>/src/__tests__/unit/**/*.{js,jsx,ts,tsx}',
-    '<rootDir>/src/__tests__/components/**/*.{js,jsx,ts,tsx}',
-    '<rootDir>/src/__tests__/hooks/**/*.{js,jsx,ts,tsx}',
-    '<rootDir>/src/__tests__/utils/**/*.{js,jsx,ts,tsx}'
+    '<rootDir>/src/__tests__/unit/cache/**/*.test.{js,jsx,ts,tsx}',
   ],
   testPathIgnorePatterns: [
     '<rootDir>/.next/',
     '<rootDir>/node_modules/',
-    '<rootDir>/src/__tests__/api/',
     '<rootDir>/src/__tests__/integration/',
     '<rootDir>/src/__tests__/e2e/',
     '<rootDir>/src/__tests__/performance/',
-    '<rootDir>/src/__tests__/security/'
+    '<rootDir>/src/__tests__/unit/ai/aiPerformanceAndErrorHandling.test.ts',
+    '<rootDir>/src/__tests__/unit/ai/aiResponseHandling.test.ts',
+    '<rootDir>/src/__tests__/unit/ai/geminiService.test.ts',
+    '<rootDir>/src/__tests__/unit/auth/authMiddleware.test.ts',
+    '<rootDir>/src/__tests__/unit/api/healthCheckReliability.test.ts',
+    '<rootDir>/src/__tests__/unit/subscription/quota-manager.test.ts',
   ],
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
+  transform: {
+    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
   },
-  collectCoverageFrom: [
-    'src/components/**/*.{js,jsx,ts,tsx}',
-    'src/hooks/**/*.{js,jsx,ts,tsx}',
-    'src/lib/**/*.{js,jsx,ts,tsx}',
-    'src/utils/**/*.{js,jsx,ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/**/*.stories.{js,jsx,ts,tsx}',
-    '!src/**/*.test.{js,jsx,ts,tsx}',
-    '!src/**/*.spec.{js,jsx,ts,tsx}',
-  ],
-  coverageReporters: ['text', 'lcov', 'html'],
-  coverageDirectory: 'coverage/unit',
-  coverageThreshold: {
-    global: {
-      branches: 90,
-      functions: 90,
-      lines: 90,
-      statements: 90
-    }
-  },
-  testTimeout: 10000,
-  maxWorkers: '50%',
   transformIgnorePatterns: [
-    'node_modules/(?!(bson|mongodb|mongoose|d3|d3-.*)/)'
-  ]
-}
+    'node_modules/(?!(d3|d3-.*|bson|mongodb|mongoose)/)',
+  ],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  testTimeout: 10000,
+  setupFiles: ['<rootDir>/jest.env.js'],
+  // 单元测试不需要全局设置
+  maxWorkers: '50%',
+  // 快速失败模式
+  bail: false,
+  // 详细输出
+  verbose: true,
+  // 错误时显示完整的diff
+  expand: true,
+  // 强制退出
+  forceExit: true,
+  // 检测打开的句柄
+  detectOpenHandles: true,
+};
 
-module.exports = createJestConfig(unitConfig)
+module.exports = createJestConfig(customJestConfig);

@@ -1,12 +1,13 @@
 /**
  * TestReportGenerator Unit Tests
- * 
+ *
  * Comprehensive test suite for the test report generation system,
  * covering multi-format reports, templates, charts, and error handling.
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
+
 import { TestReportGenerator, TestReportData, ReportConfig, ReportTemplate } from '../../../../lib/testing/reporting/TestReportGenerator';
 
 // Mock fs module
@@ -21,7 +22,7 @@ describe('TestReportGenerator', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     tempDir = '/tmp/test-reports';
-    
+
     // Mock fs methods
     mockFs.existsSync.mockReturnValue(false);
     mockFs.mkdirSync.mockImplementation(() => undefined);
@@ -31,7 +32,7 @@ describe('TestReportGenerator', () => {
       outputDir: tempDir,
       formats: ['html', 'json', 'markdown'],
       includeCharts: true,
-      includeTrends: true
+      includeTrends: true,
     });
 
     mockReportData = {
@@ -42,7 +43,7 @@ describe('TestReportGenerator', () => {
         passedTests: 95,
         failedTests: 3,
         skippedTests: 2,
-        passRate: 95
+        passRate: 95,
       },
       coverage: {
         statements: 92.5,
@@ -56,20 +57,20 @@ describe('TestReportGenerator', () => {
             branches: 90,
             functions: 100,
             lines: 94,
-            uncoveredLines: [15, 23, 45]
-          }
-        ]
+            uncoveredLines: [15, 23, 45],
+          },
+        ],
       },
       performance: {
         totalExecutionTime: 5000,
         averageTestTime: 50,
         slowestTests: [
-          { name: 'slow test', duration: 500, file: 'test.spec.ts' }
+          { name: 'slow test', duration: 500, file: 'test.spec.ts' },
         ],
         memoryUsage: {
           peak: 128,
-          average: 64
-        }
+          average: 64,
+        },
       },
       testResults: [
         {
@@ -77,7 +78,7 @@ describe('TestReportGenerator', () => {
           testSuite: 'Service Tests',
           testName: 'should work correctly',
           status: 'passed',
-          duration: 45
+          duration: 45,
         },
         {
           testFile: 'test2.spec.ts',
@@ -87,30 +88,30 @@ describe('TestReportGenerator', () => {
           duration: 120,
           error: {
             message: 'Expected true but got false',
-            stack: 'Error stack trace...'
-          }
-        }
+            stack: 'Error stack trace...',
+          },
+        },
       ],
       quality: {
         qualityScore: 85,
         securityIssues: 2,
         codeSmells: 5,
-        technicalDebt: '2h 30m'
+        technicalDebt: '2h 30m',
       },
       trends: {
         coverageTrend: [
           { date: new Date('2024-01-01'), coverage: 90 },
-          { date: new Date('2024-01-02'), coverage: 92.5 }
+          { date: new Date('2024-01-02'), coverage: 92.5 },
         ],
         performanceTrend: [
           { date: new Date('2024-01-01'), duration: 5200 },
-          { date: new Date('2024-01-02'), duration: 5000 }
+          { date: new Date('2024-01-02'), duration: 5000 },
         ],
         qualityTrend: [
           { date: new Date('2024-01-01'), score: 82 },
-          { date: new Date('2024-01-02'), score: 85 }
-        ]
-      }
+          { date: new Date('2024-01-02'), score: 85 },
+        ],
+      },
     };
   });
 
@@ -132,9 +133,9 @@ describe('TestReportGenerator', () => {
             secondary: '#00ff00',
             success: '#0000ff',
             warning: '#ffff00',
-            error: '#ff00ff'
-          }
-        }
+            error: '#ff00ff',
+          },
+        },
       };
 
       const customGenerator = new TestReportGenerator(customConfig);
@@ -144,7 +145,7 @@ describe('TestReportGenerator', () => {
     it('should update configuration', () => {
       const newConfig = {
         formats: ['pdf'] as const,
-        includeCharts: false
+        includeCharts: false,
       };
 
       generator.updateConfig(newConfig);
@@ -192,7 +193,7 @@ describe('TestReportGenerator', () => {
       expect(consoleSpy).toHaveBeenCalled();
       // Charts might also fail due to the same writeFileSync mock, so just check that some error was logged
       expect(result.files.length).toBeGreaterThanOrEqual(0);
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -202,7 +203,7 @@ describe('TestReportGenerator', () => {
       const htmlGenerator = new TestReportGenerator({
         outputDir: tempDir,
         formats: ['html'],
-        includeCharts: true
+        includeCharts: true,
       });
 
       await htmlGenerator.generateReport(mockReportData);
@@ -210,7 +211,7 @@ describe('TestReportGenerator', () => {
       expect(mockFs.writeFileSync).toHaveBeenCalledWith(
         expect.stringContaining('.html'),
         expect.stringContaining('<!DOCTYPE html>'),
-        'utf8'
+        'utf8',
       );
     });
 
@@ -225,9 +226,9 @@ describe('TestReportGenerator', () => {
             secondary: '#6c757d',
             success: '#28a745',
             warning: '#ffc107',
-            error: '#dc3545'
-          }
-        }
+            error: '#dc3545',
+          },
+        },
       });
 
       await brandedGenerator.generateReport(mockReportData);
@@ -235,17 +236,17 @@ describe('TestReportGenerator', () => {
       expect(mockFs.writeFileSync).toHaveBeenCalledWith(
         expect.any(String),
         expect.stringContaining('Custom Test Report'),
-        'utf8'
+        'utf8',
       );
     });
 
     it('should include charts in HTML report when enabled', async () => {
       await generator.generateReport(mockReportData);
 
-      const htmlCall = mockFs.writeFileSync.mock.calls.find(call => 
-        call[0].toString().includes('.html')
+      const htmlCall = mockFs.writeFileSync.mock.calls.find(call =>
+        call[0].toString().includes('.html'),
       );
-      
+
       expect(htmlCall?.[1]).toContain('chart.js');
       expect(htmlCall?.[1]).toContain('coverageChart');
     });
@@ -255,13 +256,13 @@ describe('TestReportGenerator', () => {
     it('should generate valid JSON report', async () => {
       const jsonGenerator = new TestReportGenerator({
         outputDir: tempDir,
-        formats: ['json']
+        formats: ['json'],
       });
 
       await jsonGenerator.generateReport(mockReportData);
 
-      const jsonCall = mockFs.writeFileSync.mock.calls.find(call => 
-        call[0].toString().includes('.json') && !call[0].toString().includes('chart')
+      const jsonCall = mockFs.writeFileSync.mock.calls.find(call =>
+        call[0].toString().includes('.json') && !call[0].toString().includes('chart'),
       );
 
       expect(jsonCall).toBeDefined();
@@ -271,13 +272,13 @@ describe('TestReportGenerator', () => {
     it('should include metadata in JSON report', async () => {
       const jsonGenerator = new TestReportGenerator({
         outputDir: tempDir,
-        formats: ['json']
+        formats: ['json'],
       });
 
       await jsonGenerator.generateReport(mockReportData);
 
-      const jsonCall = mockFs.writeFileSync.mock.calls.find(call => 
-        call[0].toString().includes('.json') && !call[0].toString().includes('chart')
+      const jsonCall = mockFs.writeFileSync.mock.calls.find(call =>
+        call[0].toString().includes('.json') && !call[0].toString().includes('chart'),
       );
 
       const jsonData = JSON.parse(jsonCall![1] as string);
@@ -291,13 +292,13 @@ describe('TestReportGenerator', () => {
     it('should generate JUnit XML format', async () => {
       const xmlGenerator = new TestReportGenerator({
         outputDir: tempDir,
-        formats: ['xml']
+        formats: ['xml'],
       });
 
       await xmlGenerator.generateReport(mockReportData);
 
-      const xmlCall = mockFs.writeFileSync.mock.calls.find(call => 
-        call[0].toString().includes('.xml')
+      const xmlCall = mockFs.writeFileSync.mock.calls.find(call =>
+        call[0].toString().includes('.xml'),
       );
 
       expect(xmlCall?.[1]).toContain('<?xml version="1.0" encoding="UTF-8"?>');
@@ -309,13 +310,13 @@ describe('TestReportGenerator', () => {
     it('should handle test failures in XML format', async () => {
       const xmlGenerator = new TestReportGenerator({
         outputDir: tempDir,
-        formats: ['xml']
+        formats: ['xml'],
       });
 
       await xmlGenerator.generateReport(mockReportData);
 
-      const xmlCall = mockFs.writeFileSync.mock.calls.find(call => 
-        call[0].toString().includes('.xml')
+      const xmlCall = mockFs.writeFileSync.mock.calls.find(call =>
+        call[0].toString().includes('.xml'),
       );
 
       expect(xmlCall?.[1]).toContain('<failure');
@@ -334,21 +335,21 @@ describe('TestReportGenerator', () => {
             duration: 100,
             error: {
               message: 'Error with <tags> & "quotes"',
-              stack: 'Stack with <xml> & special chars'
-            }
-          }
-        ]
+              stack: 'Stack with <xml> & special chars',
+            },
+          },
+        ],
       };
 
       const xmlGenerator = new TestReportGenerator({
         outputDir: tempDir,
-        formats: ['xml']
+        formats: ['xml'],
       });
 
       await xmlGenerator.generateReport(dataWithSpecialChars);
 
-      const xmlCall = mockFs.writeFileSync.mock.calls.find(call => 
-        call[0].toString().includes('.xml')
+      const xmlCall = mockFs.writeFileSync.mock.calls.find(call =>
+        call[0].toString().includes('.xml'),
       );
 
       expect(xmlCall?.[1]).toContain('&lt;');
@@ -362,13 +363,13 @@ describe('TestReportGenerator', () => {
     it('should generate markdown report with tables', async () => {
       const mdGenerator = new TestReportGenerator({
         outputDir: tempDir,
-        formats: ['markdown']
+        formats: ['markdown'],
       });
 
       await mdGenerator.generateReport(mockReportData);
 
-      const mdCall = mockFs.writeFileSync.mock.calls.find(call => 
-        call[0].toString().includes('.markdown')
+      const mdCall = mockFs.writeFileSync.mock.calls.find(call =>
+        call[0].toString().includes('.markdown'),
       );
 
       expect(mdCall?.[1]).toContain('# ');
@@ -379,13 +380,13 @@ describe('TestReportGenerator', () => {
     it('should include all sections in markdown report', async () => {
       const mdGenerator = new TestReportGenerator({
         outputDir: tempDir,
-        formats: ['markdown']
+        formats: ['markdown'],
       });
 
       await mdGenerator.generateReport(mockReportData);
 
-      const mdCall = mockFs.writeFileSync.mock.calls.find(call => 
-        call[0].toString().includes('.markdown')
+      const mdCall = mockFs.writeFileSync.mock.calls.find(call =>
+        call[0].toString().includes('.markdown'),
       );
 
       expect(mdCall?.[1]).toContain('## Test Summary');
@@ -399,13 +400,13 @@ describe('TestReportGenerator', () => {
     it('should generate CSV with proper headers', async () => {
       const csvGenerator = new TestReportGenerator({
         outputDir: tempDir,
-        formats: ['csv']
+        formats: ['csv'],
       });
 
       await csvGenerator.generateReport(mockReportData);
 
-      const csvCall = mockFs.writeFileSync.mock.calls.find(call => 
-        call[0].toString().includes('.csv')
+      const csvCall = mockFs.writeFileSync.mock.calls.find(call =>
+        call[0].toString().includes('.csv'),
       );
 
       expect(csvCall?.[1]).toContain('Test File,Test Suite,Test Name,Status,Duration (ms),Error Message');
@@ -422,21 +423,21 @@ describe('TestReportGenerator', () => {
             status: 'failed' as const,
             duration: 100,
             error: {
-              message: 'Error with "quotes" in message'
-            }
-          }
-        ]
+              message: 'Error with "quotes" in message',
+            },
+          },
+        ],
       };
 
       const csvGenerator = new TestReportGenerator({
         outputDir: tempDir,
-        formats: ['csv']
+        formats: ['csv'],
       });
 
       await csvGenerator.generateReport(dataWithQuotes);
 
-      const csvCall = mockFs.writeFileSync.mock.calls.find(call => 
-        call[0].toString().includes('.csv')
+      const csvCall = mockFs.writeFileSync.mock.calls.find(call =>
+        call[0].toString().includes('.csv'),
       );
 
       expect(csvCall?.[1]).toContain('""quotes""');
@@ -447,7 +448,7 @@ describe('TestReportGenerator', () => {
     it('should generate HTML file and PDF instructions', async () => {
       const pdfGenerator = new TestReportGenerator({
         outputDir: tempDir,
-        formats: ['pdf']
+        formats: ['pdf'],
       });
 
       await pdfGenerator.generateReport(mockReportData);
@@ -456,14 +457,14 @@ describe('TestReportGenerator', () => {
       expect(mockFs.writeFileSync).toHaveBeenCalledWith(
         expect.stringContaining('.html'),
         expect.stringContaining('<!DOCTYPE html>'),
-        'utf8'
+        'utf8',
       );
 
       // Should generate PDF instructions
       expect(mockFs.writeFileSync).toHaveBeenCalledWith(
         expect.stringContaining('-pdf-instructions.txt'),
         expect.stringContaining('PDF Report Generation Instructions'),
-        'utf8'
+        'utf8',
       );
     });
   });
@@ -474,12 +475,12 @@ describe('TestReportGenerator', () => {
 
       expect(mockFs.writeFileSync).toHaveBeenCalledWith(
         expect.stringContaining('coverage-chart.json'),
-        expect.any(String)
+        expect.any(String),
       );
 
       expect(mockFs.writeFileSync).toHaveBeenCalledWith(
         expect.stringContaining('results-chart.json'),
-        expect.any(String)
+        expect.any(String),
       );
     });
 
@@ -488,7 +489,7 @@ describe('TestReportGenerator', () => {
 
       expect(mockFs.writeFileSync).toHaveBeenCalledWith(
         expect.stringContaining('trend-chart.json'),
-        expect.any(String)
+        expect.any(String),
       );
     });
 
@@ -496,13 +497,13 @@ describe('TestReportGenerator', () => {
       const noChartsGenerator = new TestReportGenerator({
         outputDir: tempDir,
         formats: ['html'],
-        includeCharts: false
+        includeCharts: false,
       });
 
       await noChartsGenerator.generateReport(mockReportData);
 
-      const chartCalls = mockFs.writeFileSync.mock.calls.filter(call => 
-        call[0].toString().includes('chart.json')
+      const chartCalls = mockFs.writeFileSync.mock.calls.filter(call =>
+        call[0].toString().includes('chart.json'),
       );
 
       expect(chartCalls).toHaveLength(0);
@@ -511,8 +512,8 @@ describe('TestReportGenerator', () => {
     it('should generate valid chart configuration JSON', async () => {
       await generator.generateReport(mockReportData);
 
-      const coverageChartCall = mockFs.writeFileSync.mock.calls.find(call => 
-        call[0].toString().includes('coverage-chart.json')
+      const coverageChartCall = mockFs.writeFileSync.mock.calls.find(call =>
+        call[0].toString().includes('coverage-chart.json'),
       );
 
       const chartData = JSON.parse(coverageChartCall![1] as string);
@@ -526,10 +527,10 @@ describe('TestReportGenerator', () => {
     it('should have default templates', () => {
       const templates = generator.getTemplates();
       expect(templates.length).toBeGreaterThan(0);
-      
+
       const htmlTemplate = templates.find(t => t.format === 'html');
       const markdownTemplate = templates.find(t => t.format === 'markdown');
-      
+
       expect(htmlTemplate).toBeDefined();
       expect(markdownTemplate).toBeDefined();
     });
@@ -540,14 +541,14 @@ describe('TestReportGenerator', () => {
         description: 'Custom template',
         format: 'html',
         template: '<html><body>{{title}}</body></html>',
-        variables: ['title']
+        variables: ['title'],
       };
 
       generator.addTemplate(customTemplate);
-      
+
       const templates = generator.getTemplates();
       const addedTemplate = templates.find(t => t.name === 'custom');
-      
+
       expect(addedTemplate).toBeDefined();
       expect(addedTemplate?.template).toBe(customTemplate.template);
     });
@@ -558,16 +559,16 @@ describe('TestReportGenerator', () => {
         description: 'Test template',
         format: 'html',
         template: '<html><title>{{title}}</title><body>Tests: {{summary.totalTests}}</body></html>',
-        variables: ['title', 'summary']
+        variables: ['title', 'summary'],
       };
 
       // Create a new generator with custom template
       const customGenerator = new TestReportGenerator({
         outputDir: tempDir,
         formats: ['html'],
-        includeCharts: false
+        includeCharts: false,
       });
-      
+
       customGenerator.addTemplate(customTemplate);
 
       // Mock the template retrieval to use our custom template
@@ -581,8 +582,8 @@ describe('TestReportGenerator', () => {
 
       await customGenerator.generateReport(mockReportData);
 
-      const htmlCall = mockFs.writeFileSync.mock.calls.find(call => 
-        call[0].toString().includes('.html')
+      const htmlCall = mockFs.writeFileSync.mock.calls.find(call =>
+        call[0].toString().includes('.html'),
       );
 
       expect(htmlCall?.[1]).toContain('Tests: 100');
@@ -595,9 +596,9 @@ describe('TestReportGenerator', () => {
       const emptyGenerator = new TestReportGenerator({
         outputDir: tempDir,
         formats: ['html'],
-        includeCharts: false
+        includeCharts: false,
       });
-      
+
       // Clear the default templates
       (emptyGenerator as any).templates.clear();
 
@@ -607,17 +608,17 @@ describe('TestReportGenerator', () => {
 
       expect(consoleSpy).toHaveBeenCalledWith(
         'Failed to generate html report:',
-        expect.any(Error)
+        expect.any(Error),
       );
       expect(result.files).toHaveLength(0);
-      
+
       consoleSpy.mockRestore();
     });
 
     it('should handle unsupported format', async () => {
       const unsupportedGenerator = new TestReportGenerator({
         outputDir: tempDir,
-        formats: ['unsupported' as any]
+        formats: ['unsupported' as any],
       });
 
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
@@ -626,7 +627,7 @@ describe('TestReportGenerator', () => {
 
       expect(consoleSpy).toHaveBeenCalledWith(
         'Failed to generate unsupported report:',
-        expect.any(Error)
+        expect.any(Error),
       );
 
       consoleSpy.mockRestore();
@@ -645,7 +646,7 @@ describe('TestReportGenerator', () => {
 
       expect(consoleSpy).toHaveBeenCalled();
       expect(result.files.length).toBeGreaterThan(0); // Other formats should succeed
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -661,8 +662,8 @@ describe('TestReportGenerator', () => {
           passedTests: 0,
           failedTests: 0,
           skippedTests: 0,
-          passRate: 0
-        }
+          passRate: 0,
+        },
       };
 
       const result = await generator.generateReport(emptyData);
@@ -678,10 +679,10 @@ describe('TestReportGenerator', () => {
             testSuite: 'Test Suite',
             testName: 'failing test',
             status: 'failed' as const,
-            duration: 100
+            duration: 100,
             // No error property
-          }
-        ]
+          },
+        ],
       };
 
       const result = await generator.generateReport(dataWithoutErrorDetails);
@@ -694,8 +695,8 @@ describe('TestReportGenerator', () => {
         trends: {
           coverageTrend: [],
           performanceTrend: [],
-          qualityTrend: []
-        }
+          qualityTrend: [],
+        },
       };
 
       const result = await generator.generateReport(dataWithoutTrends);
@@ -712,9 +713,9 @@ describe('TestReportGenerator', () => {
             testSuite: longFileName,
             testName: longFileName,
             status: 'passed' as const,
-            duration: 50
-          }
-        ]
+            duration: 50,
+          },
+        ],
       };
 
       const result = await generator.generateReport(dataWithLongNames);
@@ -735,9 +736,9 @@ describe('TestReportGenerator', () => {
           ...(i % 10 === 0 && {
             error: {
               message: `Error in test ${i}`,
-              stack: `Stack trace for test ${i}`
-            }
-          })
+              stack: `Stack trace for test ${i}`,
+            },
+          }),
         })),
         summary: {
           ...mockReportData.summary,
@@ -745,8 +746,8 @@ describe('TestReportGenerator', () => {
           passedTests: 9000,
           failedTests: 1000,
           skippedTests: 0,
-          passRate: 90
-        }
+          passRate: 90,
+        },
       };
 
       const startTime = Date.now();

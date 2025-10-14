@@ -3,7 +3,7 @@
  * 提供各平台的分享SDK集成功能
  */
 
-import { SharePlatform, ShareContent } from '../types'
+import { SharePlatform, ShareContent } from '../types';
 
 export interface ShareSDKResult {
   success: boolean
@@ -19,10 +19,10 @@ export interface ShareSDKConfig {
 }
 
 export abstract class BaseShareSDK {
-  protected config: ShareSDKConfig
+  protected config: ShareSDKConfig;
 
   constructor(config: ShareSDKConfig) {
-    this.config = config
+    this.config = config;
   }
 
   abstract initialize(): Promise<boolean>
@@ -34,21 +34,21 @@ export abstract class BaseShareSDK {
  * 微信分享SDK
  */
 export class WeChatShareSDK extends BaseShareSDK {
-  private wx: any = null
+  private wx: any = null;
 
   async initialize(): Promise<boolean> {
     try {
       // 检查是否在微信环境中
       if (typeof window === 'undefined') {
-        return false
+        return false;
       }
 
       // 动态加载微信JS-SDK
       if (!window.wx) {
-        await this.loadWeChatSDK()
+        await this.loadWeChatSDK();
       }
 
-      this.wx = window.wx
+      this.wx = window.wx;
 
       // 配置微信JS-SDK
       this.wx.config({
@@ -61,21 +61,21 @@ export class WeChatShareSDK extends BaseShareSDK {
           'updateAppMessageShareData',
           'updateTimelineShareData',
           'onMenuShareTimeline',
-          'onMenuShareAppMessage'
-        ]
-      })
+          'onMenuShareAppMessage',
+        ],
+      });
 
       return new Promise((resolve) => {
         this.wx.ready(() => {
-          resolve(true)
-        })
+          resolve(true);
+        });
         this.wx.error(() => {
-          resolve(false)
-        })
-      })
+          resolve(false);
+        });
+      });
     } catch (error) {
-      console.error('WeChat SDK initialization failed:', error)
-      return false
+      console.error('WeChat SDK initialization failed:', error);
+      return false;
     }
   }
 
@@ -83,8 +83,8 @@ export class WeChatShareSDK extends BaseShareSDK {
     if (!this.wx || !this.isAvailable()) {
       return {
         success: false,
-        error: 'WeChat SDK not available'
-      }
+        error: 'WeChat SDK not available',
+      };
     }
 
     try {
@@ -94,60 +94,60 @@ export class WeChatShareSDK extends BaseShareSDK {
         link: content.url,
         imgUrl: content.imageUrl || '',
         success: () => {
-          console.log('WeChat share success')
+          console.log('WeChat share success');
         },
         cancel: () => {
-          console.log('WeChat share cancelled')
+          console.log('WeChat share cancelled');
         },
         fail: (error: any) => {
-          console.error('WeChat share failed:', error)
-        }
-      }
+          console.error('WeChat share failed:', error);
+        },
+      };
 
       // 分享到朋友圈
-      this.wx.updateTimelineShareData(shareData)
-      
+      this.wx.updateTimelineShareData(shareData);
+
       // 分享给朋友
-      this.wx.updateAppMessageShareData(shareData)
+      this.wx.updateAppMessageShareData(shareData);
 
       return {
         success: true,
-        shareId: `wechat_${Date.now()}`
-      }
+        shareId: `wechat_${Date.now()}`,
+      };
     } catch (error) {
       return {
         success: false,
-        error: `WeChat share failed: ${error}`
-      }
+        error: `WeChat share failed: ${error}`,
+      };
     }
   }
 
   isAvailable(): boolean {
-    if (typeof window === 'undefined') return false
-    
+    if (typeof window === 'undefined') return false;
+
     // 检查是否在微信浏览器中
-    const ua = window.navigator.userAgent.toLowerCase()
-    return ua.includes('micromessenger')
+    const ua = window.navigator.userAgent.toLowerCase();
+    return ua.includes('micromessenger');
   }
 
   private async loadWeChatSDK(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const script = document.createElement('script')
-      script.src = 'https://res.wx.qq.com/open/js/jweixin-1.6.0.js'
-      script.onload = () => resolve()
-      script.onerror = () => reject(new Error('Failed to load WeChat SDK'))
-      document.head.appendChild(script)
-    })
+      const script = document.createElement('script');
+      script.src = 'https://res.wx.qq.com/open/js/jweixin-1.6.0.js';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load WeChat SDK'));
+      document.head.appendChild(script);
+    });
   }
 
   private generateNonceStr(): string {
-    return Math.random().toString(36).substr(2, 15)
+    return Math.random().toString(36).substr(2, 15);
   }
 
   private async getSignature(): Promise<string> {
     // 这里需要调用后端API获取签名
     // 为了演示，返回空字符串
-    return ''
+    return '';
   }
 }
 
@@ -155,31 +155,31 @@ export class WeChatShareSDK extends BaseShareSDK {
  * QQ分享SDK
  */
 export class QQShareSDK extends BaseShareSDK {
-  private qqApi: any = null
+  private qqApi: any = null;
 
   async initialize(): Promise<boolean> {
     try {
       if (typeof window === 'undefined') {
-        return false
+        return false;
       }
 
       // 动态加载QQ分享SDK
       if (!window.QC) {
-        await this.loadQQSDK()
+        await this.loadQQSDK();
       }
 
-      this.qqApi = window.QC
+      this.qqApi = window.QC;
 
       // 初始化QQ SDK
       this.qqApi.init({
         appId: this.config.appId,
-        redirectURI: this.config.redirectUri
-      })
+        redirectURI: this.config.redirectUri,
+      });
 
-      return true
+      return true;
     } catch (error) {
-      console.error('QQ SDK initialization failed:', error)
-      return false
+      console.error('QQ SDK initialization failed:', error);
+      return false;
     }
   }
 
@@ -187,8 +187,8 @@ export class QQShareSDK extends BaseShareSDK {
     if (!this.qqApi || !this.isAvailable()) {
       return {
         success: false,
-        error: 'QQ SDK not available'
-      }
+        error: 'QQ SDK not available',
+      };
     }
 
     try {
@@ -202,45 +202,45 @@ export class QQShareSDK extends BaseShareSDK {
         site: 'Inspi.AI',
         style: '203',
         width: 98,
-        height: 22
-      }
+        height: 22,
+      };
 
       return new Promise((resolve) => {
         this.qqApi.Share.share(shareData, (result: any) => {
           if (result.code === 0) {
             resolve({
               success: true,
-              shareId: `qq_${Date.now()}`
-            })
+              shareId: `qq_${Date.now()}`,
+            });
           } else {
             resolve({
               success: false,
-              error: result.msg || 'QQ share failed'
-            })
+              error: result.msg || 'QQ share failed',
+            });
           }
-        })
-      })
+        });
+      });
     } catch (error) {
       return {
         success: false,
-        error: `QQ share failed: ${error}`
-      }
+        error: `QQ share failed: ${error}`,
+      };
     }
   }
 
   isAvailable(): boolean {
-    if (typeof window === 'undefined') return false
-    return !!window.QC
+    if (typeof window === 'undefined') return false;
+    return !!window.QC;
   }
 
   private async loadQQSDK(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const script = document.createElement('script')
-      script.src = 'https://qzonestyle.gtimg.cn/qzone/openapi/qc_loader.js'
-      script.onload = () => resolve()
-      script.onerror = () => reject(new Error('Failed to load QQ SDK'))
-      document.head.appendChild(script)
-    })
+      const script = document.createElement('script');
+      script.src = 'https://qzonestyle.gtimg.cn/qzone/openapi/qc_loader.js';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load QQ SDK'));
+      document.head.appendChild(script);
+    });
   }
 }
 
@@ -248,20 +248,20 @@ export class QQShareSDK extends BaseShareSDK {
  * 钉钉分享SDK
  */
 export class DingTalkShareSDK extends BaseShareSDK {
-  private dd: any = null
+  private dd: any = null;
 
   async initialize(): Promise<boolean> {
     try {
       if (typeof window === 'undefined') {
-        return false
+        return false;
       }
 
       // 动态加载钉钉SDK
       if (!window.dd) {
-        await this.loadDingTalkSDK()
+        await this.loadDingTalkSDK();
       }
 
-      this.dd = window.dd
+      this.dd = window.dd;
 
       // 配置钉钉SDK
       this.dd.config({
@@ -271,21 +271,21 @@ export class DingTalkShareSDK extends BaseShareSDK {
         nonceStr: this.generateNonceStr(),
         signature: await this.getSignature(),
         jsApiList: [
-          'biz.util.share'
-        ]
-      })
+          'biz.util.share',
+        ],
+      });
 
       return new Promise((resolve) => {
         this.dd.ready(() => {
-          resolve(true)
-        })
+          resolve(true);
+        });
         this.dd.error(() => {
-          resolve(false)
-        })
-      })
+          resolve(false);
+        });
+      });
     } catch (error) {
-      console.error('DingTalk SDK initialization failed:', error)
-      return false
+      console.error('DingTalk SDK initialization failed:', error);
+      return false;
     }
   }
 
@@ -293,8 +293,8 @@ export class DingTalkShareSDK extends BaseShareSDK {
     if (!this.dd || !this.isAvailable()) {
       return {
         success: false,
-        error: 'DingTalk SDK not available'
-      }
+        error: 'DingTalk SDK not available',
+      };
     }
 
     try {
@@ -303,8 +303,8 @@ export class DingTalkShareSDK extends BaseShareSDK {
         url: content.url,
         title: content.title,
         content: content.description,
-        image: content.imageUrl || ''
-      }
+        image: content.imageUrl || '',
+      };
 
       return new Promise((resolve) => {
         this.dd.biz.util.share({
@@ -316,50 +316,50 @@ export class DingTalkShareSDK extends BaseShareSDK {
           onSuccess: () => {
             resolve({
               success: true,
-              shareId: `dingtalk_${Date.now()}`
-            })
+              shareId: `dingtalk_${Date.now()}`,
+            });
           },
           onFail: (error: any) => {
             resolve({
               success: false,
-              error: error.errorMessage || 'DingTalk share failed'
-            })
-          }
-        })
-      })
+              error: error.errorMessage || 'DingTalk share failed',
+            });
+          },
+        });
+      });
     } catch (error) {
       return {
         success: false,
-        error: `DingTalk share failed: ${error}`
-      }
+        error: `DingTalk share failed: ${error}`,
+      };
     }
   }
 
   isAvailable(): boolean {
-    if (typeof window === 'undefined') return false
-    
+    if (typeof window === 'undefined') return false;
+
     // 检查是否在钉钉环境中
-    const ua = window.navigator.userAgent.toLowerCase()
-    return ua.includes('dingtalk')
+    const ua = window.navigator.userAgent.toLowerCase();
+    return ua.includes('dingtalk');
   }
 
   private async loadDingTalkSDK(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const script = document.createElement('script')
-      script.src = 'https://g.alicdn.com/dingding/dinglogin/0.0.5/ddLogin.js'
-      script.onload = () => resolve()
-      script.onerror = () => reject(new Error('Failed to load DingTalk SDK'))
-      document.head.appendChild(script)
-    })
+      const script = document.createElement('script');
+      script.src = 'https://g.alicdn.com/dingding/dinglogin/0.0.5/ddLogin.js';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load DingTalk SDK'));
+      document.head.appendChild(script);
+    });
   }
 
   private generateNonceStr(): string {
-    return Math.random().toString(36).substr(2, 15)
+    return Math.random().toString(36).substr(2, 15);
   }
 
   private async getSignature(): Promise<string> {
     // 这里需要调用后端API获取签名
-    return ''
+    return '';
   }
 }
 
@@ -367,20 +367,20 @@ export class DingTalkShareSDK extends BaseShareSDK {
  * 企业微信分享SDK
  */
 export class WeWorkShareSDK extends BaseShareSDK {
-  private wwApi: any = null
+  private wwApi: any = null;
 
   async initialize(): Promise<boolean> {
     try {
       if (typeof window === 'undefined') {
-        return false
+        return false;
       }
 
       // 动态加载企业微信SDK
       if (!window.wx) {
-        await this.loadWeWorkSDK()
+        await this.loadWeWorkSDK();
       }
 
-      this.wwApi = window.wx
+      this.wwApi = window.wx;
 
       // 配置企业微信SDK
       this.wwApi.config({
@@ -394,21 +394,21 @@ export class WeWorkShareSDK extends BaseShareSDK {
           'agentConfig',
           'selectExternalContact',
           'getCurExternalContact',
-          'shareToExternalContact'
-        ]
-      })
+          'shareToExternalContact',
+        ],
+      });
 
       return new Promise((resolve) => {
         this.wwApi.ready(() => {
-          resolve(true)
-        })
+          resolve(true);
+        });
         this.wwApi.error(() => {
-          resolve(false)
-        })
-      })
+          resolve(false);
+        });
+      });
     } catch (error) {
-      console.error('WeWork SDK initialization failed:', error)
-      return false
+      console.error('WeWork SDK initialization failed:', error);
+      return false;
     }
   }
 
@@ -416,8 +416,8 @@ export class WeWorkShareSDK extends BaseShareSDK {
     if (!this.wwApi || !this.isAvailable()) {
       return {
         success: false,
-        error: 'WeWork SDK not available'
-      }
+        error: 'WeWork SDK not available',
+      };
     }
 
     try {
@@ -426,8 +426,8 @@ export class WeWorkShareSDK extends BaseShareSDK {
         url: content.url,
         title: content.title,
         desc: content.description,
-        imgUrl: content.imageUrl || ''
-      }
+        imgUrl: content.imageUrl || '',
+      };
 
       return new Promise((resolve) => {
         this.wwApi.shareToExternalContact({
@@ -439,50 +439,50 @@ export class WeWorkShareSDK extends BaseShareSDK {
           success: () => {
             resolve({
               success: true,
-              shareId: `wework_${Date.now()}`
-            })
+              shareId: `wework_${Date.now()}`,
+            });
           },
           fail: (error: any) => {
             resolve({
               success: false,
-              error: error.errMsg || 'WeWork share failed'
-            })
-          }
-        })
-      })
+              error: error.errMsg || 'WeWork share failed',
+            });
+          },
+        });
+      });
     } catch (error) {
       return {
         success: false,
-        error: `WeWork share failed: ${error}`
-      }
+        error: `WeWork share failed: ${error}`,
+      };
     }
   }
 
   isAvailable(): boolean {
-    if (typeof window === 'undefined') return false
-    
+    if (typeof window === 'undefined') return false;
+
     // 检查是否在企业微信环境中
-    const ua = window.navigator.userAgent.toLowerCase()
-    return ua.includes('wxwork')
+    const ua = window.navigator.userAgent.toLowerCase();
+    return ua.includes('wxwork');
   }
 
   private async loadWeWorkSDK(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const script = document.createElement('script')
-      script.src = 'https://res.wx.qq.com/open/js/jweixin-1.2.0.js'
-      script.onload = () => resolve()
-      script.onerror = () => reject(new Error('Failed to load WeWork SDK'))
-      document.head.appendChild(script)
-    })
+      const script = document.createElement('script');
+      script.src = 'https://res.wx.qq.com/open/js/jweixin-1.2.0.js';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load WeWork SDK'));
+      document.head.appendChild(script);
+    });
   }
 
   private generateNonceStr(): string {
-    return Math.random().toString(36).substr(2, 15)
+    return Math.random().toString(36).substr(2, 15);
   }
 
   private async getSignature(): Promise<string> {
     // 这里需要调用后端API获取签名
-    return ''
+    return '';
   }
 }
 
@@ -491,34 +491,34 @@ export class WeWorkShareSDK extends BaseShareSDK {
  */
 export class EmailShareService extends BaseShareSDK {
   async initialize(): Promise<boolean> {
-    return true // 邮件分享不需要初始化
+    return true; // 邮件分享不需要初始化
   }
 
   async share(content: ShareContent): Promise<ShareSDKResult> {
     try {
-      const subject = encodeURIComponent(content.title)
-      const body = encodeURIComponent(`${content.description}\n\n邀请链接: ${content.url}`)
-      
-      const mailtoUrl = `mailto:?subject=${subject}&body=${body}`
-      
+      const subject = encodeURIComponent(content.title);
+      const body = encodeURIComponent(`${content.description}\n\n邀请链接: ${content.url}`);
+
+      const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
+
       if (typeof window !== 'undefined') {
-        window.location.href = mailtoUrl
+        window.location.href = mailtoUrl;
       }
 
       return {
         success: true,
-        shareId: `email_${Date.now()}`
-      }
+        shareId: `email_${Date.now()}`,
+      };
     } catch (error) {
       return {
         success: false,
-        error: `Email share failed: ${error}`
-      }
+        error: `Email share failed: ${error}`,
+      };
     }
   }
 
   isAvailable(): boolean {
-    return typeof window !== 'undefined'
+    return typeof window !== 'undefined';
   }
 }
 
@@ -526,117 +526,117 @@ export class EmailShareService extends BaseShareSDK {
  * 分享SDK管理器
  */
 export class ShareSDKManager {
-  private sdks: Map<SharePlatform, BaseShareSDK> = new Map()
-  private configs: Map<SharePlatform, ShareSDKConfig> = new Map()
+  private sdks: Map<SharePlatform, BaseShareSDK> = new Map();
+  private configs: Map<SharePlatform, ShareSDKConfig> = new Map();
 
   constructor() {
-    this.initializeConfigs()
+    this.initializeConfigs();
   }
 
   private initializeConfigs(): void {
     // 从环境变量或配置文件加载SDK配置
     this.configs.set(SharePlatform.WECHAT, {
       appId: process.env.NEXT_PUBLIC_WECHAT_APP_ID || '',
-      appSecret: process.env.WECHAT_APP_SECRET || ''
-    })
+      appSecret: process.env.WECHAT_APP_SECRET || '',
+    });
 
     this.configs.set(SharePlatform.QQ, {
       appId: process.env.NEXT_PUBLIC_QQ_APP_ID || '',
-      redirectUri: process.env.NEXT_PUBLIC_QQ_REDIRECT_URI || ''
-    })
+      redirectUri: process.env.NEXT_PUBLIC_QQ_REDIRECT_URI || '',
+    });
 
     this.configs.set(SharePlatform.DINGTALK, {
       appId: process.env.NEXT_PUBLIC_DINGTALK_AGENT_ID || '',
-      appKey: process.env.NEXT_PUBLIC_DINGTALK_CORP_ID || ''
-    })
+      appKey: process.env.NEXT_PUBLIC_DINGTALK_CORP_ID || '',
+    });
 
     this.configs.set(SharePlatform.WEWORK, {
       appId: process.env.NEXT_PUBLIC_WEWORK_CORP_ID || '',
-      appSecret: process.env.WEWORK_CORP_SECRET || ''
-    })
+      appSecret: process.env.WEWORK_CORP_SECRET || '',
+    });
   }
 
   async getSDK(platform: SharePlatform): Promise<BaseShareSDK | null> {
     if (this.sdks.has(platform)) {
-      return this.sdks.get(platform)!
+      return this.sdks.get(platform)!;
     }
 
-    const config = this.configs.get(platform)
+    const config = this.configs.get(platform);
     if (!config) {
-      console.warn(`No configuration found for platform: ${platform}`)
-      return null
+      console.warn(`No configuration found for platform: ${platform}`);
+      return null;
     }
 
-    let sdk: BaseShareSDK
+    let sdk: BaseShareSDK;
 
     switch (platform) {
       case SharePlatform.WECHAT:
-        sdk = new WeChatShareSDK(config)
-        break
+        sdk = new WeChatShareSDK(config);
+        break;
       case SharePlatform.QQ:
-        sdk = new QQShareSDK(config)
-        break
+        sdk = new QQShareSDK(config);
+        break;
       case SharePlatform.DINGTALK:
-        sdk = new DingTalkShareSDK(config)
-        break
+        sdk = new DingTalkShareSDK(config);
+        break;
       case SharePlatform.WEWORK:
-        sdk = new WeWorkShareSDK(config)
-        break
+        sdk = new WeWorkShareSDK(config);
+        break;
       case SharePlatform.EMAIL:
-        sdk = new EmailShareService(config)
-        break
+        sdk = new EmailShareService(config);
+        break;
       default:
-        return null
+        return null;
     }
 
-    const initialized = await sdk.initialize()
+    const initialized = await sdk.initialize();
     if (initialized) {
-      this.sdks.set(platform, sdk)
-      return sdk
+      this.sdks.set(platform, sdk);
+      return sdk;
     }
 
-    return null
+    return null;
   }
 
   async shareContent(platform: SharePlatform, content: ShareContent): Promise<ShareSDKResult> {
-    const sdk = await this.getSDK(platform)
+    const sdk = await this.getSDK(platform);
     if (!sdk) {
       return {
         success: false,
-        error: `SDK not available for platform: ${platform}`
-      }
+        error: `SDK not available for platform: ${platform}`,
+      };
     }
 
     if (!sdk.isAvailable()) {
       return {
         success: false,
-        error: `Platform ${platform} is not available in current environment`
-      }
+        error: `Platform ${platform} is not available in current environment`,
+      };
     }
 
-    return await sdk.share(content)
+    return await sdk.share(content);
   }
 
   isPlatformAvailable(platform: SharePlatform): boolean {
-    const sdk = this.sdks.get(platform)
-    return sdk ? sdk.isAvailable() : false
+    const sdk = this.sdks.get(platform);
+    return sdk ? sdk.isAvailable() : false;
   }
 
   getAvailablePlatforms(): SharePlatform[] {
-    const platforms: SharePlatform[] = []
-    
+    const platforms: SharePlatform[] = [];
+
     for (const platform of Object.values(SharePlatform)) {
       if (this.isPlatformAvailable(platform)) {
-        platforms.push(platform)
+        platforms.push(platform);
       }
     }
 
-    return platforms
+    return platforms;
   }
 
   updateConfig(platform: SharePlatform, config: ShareSDKConfig): void {
-    this.configs.set(platform, config)
+    this.configs.set(platform, config);
     // 移除已缓存的SDK，强制重新初始化
-    this.sdks.delete(platform)
+    this.sdks.delete(platform);
   }
 }

@@ -1,13 +1,13 @@
 /**
  * Compliance Checker
- * 
+ *
  * Comprehensive compliance checking system for code quality standards,
  * test coverage requirements, documentation completeness, and regulatory compliance.
  */
 
+import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
-import { EventEmitter } from 'events';
 
 export interface ComplianceConfig {
   codeQuality: CodeQualityConfig;
@@ -193,7 +193,7 @@ export class ComplianceChecker extends EventEmitter {
       overall: {
         passed: false,
         score: 0,
-        grade: 'F'
+        grade: 'F',
       },
       categories: {
         codeQuality: await this.checkCodeQuality(),
@@ -201,16 +201,16 @@ export class ComplianceChecker extends EventEmitter {
         documentation: await this.checkDocumentation(),
         security: await this.checkSecurity(),
         accessibility: await this.checkAccessibility(),
-        performance: await this.checkPerformance()
+        performance: await this.checkPerformance(),
       },
       violations: [],
       recommendations: [],
-      trends: await this.loadComplianceTrends()
+      trends: await this.loadComplianceTrends(),
     };
 
     // Calculate overall score and grade
     result.overall = this.calculateOverallScore(result.categories);
-    
+
     // Collect violations and recommendations
     result.violations = this.collectViolations(result.categories);
     result.recommendations = this.generateRecommendations(result.categories);
@@ -243,7 +243,7 @@ export class ComplianceChecker extends EventEmitter {
           passed: eslintResult.errors === 0,
           value: eslintResult.errors,
           threshold: 0,
-          message: `${eslintResult.errors} ESLint errors found`
+          message: `${eslintResult.errors} ESLint errors found`,
         });
         metrics.eslintErrors = eslintResult.errors;
         metrics.eslintWarnings = eslintResult.warnings;
@@ -257,7 +257,7 @@ export class ComplianceChecker extends EventEmitter {
           passed: prettierResult.unformattedFiles === 0,
           value: prettierResult.unformattedFiles,
           threshold: 0,
-          message: `${prettierResult.unformattedFiles} files need formatting`
+          message: `${prettierResult.unformattedFiles} files need formatting`,
         });
         metrics.unformattedFiles = prettierResult.unformattedFiles;
       }
@@ -270,7 +270,7 @@ export class ComplianceChecker extends EventEmitter {
           passed: tsResult.errors === 0,
           value: tsResult.errors,
           threshold: 0,
-          message: `${tsResult.errors} TypeScript errors found`
+          message: `${tsResult.errors} TypeScript errors found`,
         });
         metrics.typeScriptErrors = tsResult.errors;
       }
@@ -282,7 +282,7 @@ export class ComplianceChecker extends EventEmitter {
         passed: complexityResult.averageComplexity <= this.config.codeQuality.thresholds.complexity,
         value: complexityResult.averageComplexity,
         threshold: this.config.codeQuality.thresholds.complexity,
-        message: `Average complexity: ${complexityResult.averageComplexity}`
+        message: `Average complexity: ${complexityResult.averageComplexity}`,
       });
       metrics.averageComplexity = complexityResult.averageComplexity;
       metrics.maxComplexity = complexityResult.maxComplexity;
@@ -294,7 +294,7 @@ export class ComplianceChecker extends EventEmitter {
         passed: maintainabilityResult.index >= this.config.codeQuality.thresholds.maintainabilityIndex,
         value: maintainabilityResult.index,
         threshold: this.config.codeQuality.thresholds.maintainabilityIndex,
-        message: `Maintainability index: ${maintainabilityResult.index}`
+        message: `Maintainability index: ${maintainabilityResult.index}`,
       });
       metrics.maintainabilityIndex = maintainabilityResult.index;
 
@@ -305,7 +305,7 @@ export class ComplianceChecker extends EventEmitter {
         passed: duplicateResult.duplicateLines <= this.config.codeQuality.thresholds.duplicateLines,
         value: duplicateResult.duplicateLines,
         threshold: this.config.codeQuality.thresholds.duplicateLines,
-        message: `${duplicateResult.duplicateLines} duplicate lines found`
+        message: `${duplicateResult.duplicateLines} duplicate lines found`,
       });
       metrics.duplicateLines = duplicateResult.duplicateLines;
 
@@ -316,7 +316,7 @@ export class ComplianceChecker extends EventEmitter {
         passed: customRulesResult.violations === 0,
         value: customRulesResult.violations,
         threshold: 0,
-        message: `${customRulesResult.violations} custom rule violations`
+        message: `${customRulesResult.violations} custom rule violations`,
       });
       metrics.customRuleViolations = customRulesResult.violations;
 
@@ -334,7 +334,7 @@ export class ComplianceChecker extends EventEmitter {
       passed,
       score,
       details,
-      metrics
+      metrics,
     };
   }
 
@@ -354,7 +354,7 @@ export class ComplianceChecker extends EventEmitter {
     try {
       // Load coverage report
       const coverageData = await this.loadCoverageReport();
-      
+
       if (coverageData) {
         // Statement coverage check
         details.push({
@@ -362,7 +362,7 @@ export class ComplianceChecker extends EventEmitter {
           passed: coverageData.statements >= this.config.testCoverage.thresholds.statements,
           value: coverageData.statements,
           threshold: this.config.testCoverage.thresholds.statements,
-          message: `Statement coverage: ${coverageData.statements}%`
+          message: `Statement coverage: ${coverageData.statements}%`,
         });
         metrics.statementCoverage = coverageData.statements;
 
@@ -372,7 +372,7 @@ export class ComplianceChecker extends EventEmitter {
           passed: coverageData.branches >= this.config.testCoverage.thresholds.branches,
           value: coverageData.branches,
           threshold: this.config.testCoverage.thresholds.branches,
-          message: `Branch coverage: ${coverageData.branches}%`
+          message: `Branch coverage: ${coverageData.branches}%`,
         });
         metrics.branchCoverage = coverageData.branches;
 
@@ -382,7 +382,7 @@ export class ComplianceChecker extends EventEmitter {
           passed: coverageData.functions >= this.config.testCoverage.thresholds.functions,
           value: coverageData.functions,
           threshold: this.config.testCoverage.thresholds.functions,
-          message: `Function coverage: ${coverageData.functions}%`
+          message: `Function coverage: ${coverageData.functions}%`,
         });
         metrics.functionCoverage = coverageData.functions;
 
@@ -392,7 +392,7 @@ export class ComplianceChecker extends EventEmitter {
           passed: coverageData.lines >= this.config.testCoverage.thresholds.lines,
           value: coverageData.lines,
           threshold: this.config.testCoverage.thresholds.lines,
-          message: `Line coverage: ${coverageData.lines}%`
+          message: `Line coverage: ${coverageData.lines}%`,
         });
         metrics.lineCoverage = coverageData.lines;
       }
@@ -405,7 +405,7 @@ export class ComplianceChecker extends EventEmitter {
           passed: testFileResult.missingTestFiles === 0,
           value: testFileResult.missingTestFiles,
           threshold: 0,
-          message: `${testFileResult.missingTestFiles} source files without tests`
+          message: `${testFileResult.missingTestFiles} source files without tests`,
         });
         metrics.missingTestFiles = testFileResult.missingTestFiles;
         metrics.totalSourceFiles = testFileResult.totalSourceFiles;
@@ -425,7 +425,7 @@ export class ComplianceChecker extends EventEmitter {
       passed,
       score,
       details,
-      metrics
+      metrics,
     };
   }
 
@@ -450,7 +450,7 @@ export class ComplianceChecker extends EventEmitter {
         passed: requiredFilesResult.missingFiles === 0,
         value: requiredFilesResult.missingFiles,
         threshold: 0,
-        message: `${requiredFilesResult.missingFiles} required files missing`
+        message: `${requiredFilesResult.missingFiles} required files missing`,
       });
       metrics.missingRequiredFiles = requiredFilesResult.missingFiles;
 
@@ -461,7 +461,7 @@ export class ComplianceChecker extends EventEmitter {
         passed: readmeResult.score >= 80,
         value: readmeResult.score,
         threshold: 80,
-        message: `README quality score: ${readmeResult.score}%`
+        message: `README quality score: ${readmeResult.score}%`,
       });
       metrics.readmeQuality = readmeResult.score;
 
@@ -473,7 +473,7 @@ export class ComplianceChecker extends EventEmitter {
           passed: apiDocResult.coverage >= this.config.documentation.apiDocumentation.coverage,
           value: apiDocResult.coverage,
           threshold: this.config.documentation.apiDocumentation.coverage,
-          message: `API documentation coverage: ${apiDocResult.coverage}%`
+          message: `API documentation coverage: ${apiDocResult.coverage}%`,
         });
         metrics.apiDocCoverage = apiDocResult.coverage;
       }
@@ -486,9 +486,9 @@ export class ComplianceChecker extends EventEmitter {
           passed: changelogResult.exists && changelogResult.upToDate,
           value: changelogResult.exists ? 1 : 0,
           threshold: 1,
-          message: changelogResult.exists 
+          message: changelogResult.exists
             ? (changelogResult.upToDate ? 'Changelog is up to date' : 'Changelog needs updating')
-            : 'Changelog file missing'
+            : 'Changelog file missing',
         });
         metrics.changelogExists = changelogResult.exists ? 1 : 0;
         metrics.changelogUpToDate = changelogResult.upToDate ? 1 : 0;
@@ -508,7 +508,7 @@ export class ComplianceChecker extends EventEmitter {
       passed,
       score,
       details,
-      metrics
+      metrics,
     };
   }
 
@@ -534,7 +534,7 @@ export class ComplianceChecker extends EventEmitter {
           passed: vulnResult.highSeverityVulns === 0,
           value: vulnResult.highSeverityVulns,
           threshold: 0,
-          message: `${vulnResult.highSeverityVulns} high severity vulnerabilities found`
+          message: `${vulnResult.highSeverityVulns} high severity vulnerabilities found`,
         });
         metrics.highSeverityVulns = vulnResult.highSeverityVulns;
         metrics.totalVulns = vulnResult.totalVulns;
@@ -548,7 +548,7 @@ export class ComplianceChecker extends EventEmitter {
           passed: depAuditResult.vulnerabilities === 0,
           value: depAuditResult.vulnerabilities,
           threshold: 0,
-          message: `${depAuditResult.vulnerabilities} vulnerable dependencies found`
+          message: `${depAuditResult.vulnerabilities} vulnerable dependencies found`,
         });
         metrics.vulnerableDependencies = depAuditResult.vulnerabilities;
       }
@@ -561,7 +561,7 @@ export class ComplianceChecker extends EventEmitter {
           passed: secretsResult.secrets === 0,
           value: secretsResult.secrets,
           threshold: 0,
-          message: `${secretsResult.secrets} potential secrets found`
+          message: `${secretsResult.secrets} potential secrets found`,
         });
         metrics.potentialSecrets = secretsResult.secrets;
       }
@@ -573,7 +573,7 @@ export class ComplianceChecker extends EventEmitter {
         passed: licenseResult.nonCompliantLicenses === 0,
         value: licenseResult.nonCompliantLicenses,
         threshold: 0,
-        message: `${licenseResult.nonCompliantLicenses} non-compliant licenses found`
+        message: `${licenseResult.nonCompliantLicenses} non-compliant licenses found`,
       });
       metrics.nonCompliantLicenses = licenseResult.nonCompliantLicenses;
 
@@ -591,7 +591,7 @@ export class ComplianceChecker extends EventEmitter {
       passed,
       score,
       details,
-      metrics
+      metrics,
     };
   }
 
@@ -616,7 +616,7 @@ export class ComplianceChecker extends EventEmitter {
         passed: wcagResult.violations === 0,
         value: wcagResult.violations,
         threshold: 0,
-        message: `${wcagResult.violations} WCAG violations found`
+        message: `${wcagResult.violations} WCAG violations found`,
       });
       metrics.wcagViolations = wcagResult.violations;
 
@@ -627,7 +627,7 @@ export class ComplianceChecker extends EventEmitter {
         passed: contrastResult.failedElements === 0,
         value: contrastResult.failedElements,
         threshold: 0,
-        message: `${contrastResult.failedElements} elements with insufficient contrast`
+        message: `${contrastResult.failedElements} elements with insufficient contrast`,
       });
       metrics.contrastFailures = contrastResult.failedElements;
 
@@ -638,7 +638,7 @@ export class ComplianceChecker extends EventEmitter {
         passed: attributesResult.missingAttributes === 0,
         value: attributesResult.missingAttributes,
         threshold: 0,
-        message: `${attributesResult.missingAttributes} elements missing required attributes`
+        message: `${attributesResult.missingAttributes} elements missing required attributes`,
       });
       metrics.missingAttributes = attributesResult.missingAttributes;
 
@@ -656,7 +656,7 @@ export class ComplianceChecker extends EventEmitter {
       passed,
       score,
       details,
-      metrics
+      metrics,
     };
   }
 
@@ -681,7 +681,7 @@ export class ComplianceChecker extends EventEmitter {
         passed: bundleSizeResult.size <= this.config.performance.budgets.bundleSize,
         value: bundleSizeResult.size,
         threshold: this.config.performance.budgets.bundleSize,
-        message: `Bundle size: ${bundleSizeResult.size}KB`
+        message: `Bundle size: ${bundleSizeResult.size}KB`,
       });
       metrics.bundleSize = bundleSizeResult.size;
 
@@ -692,7 +692,7 @@ export class ComplianceChecker extends EventEmitter {
         passed: loadTimeResult.time <= this.config.performance.budgets.loadTime,
         value: loadTimeResult.time,
         threshold: this.config.performance.budgets.loadTime,
-        message: `Load time: ${loadTimeResult.time}ms`
+        message: `Load time: ${loadTimeResult.time}ms`,
       });
       metrics.loadTime = loadTimeResult.time;
 
@@ -703,7 +703,7 @@ export class ComplianceChecker extends EventEmitter {
         passed: memoryResult.usage <= this.config.performance.budgets.memoryUsage,
         value: memoryResult.usage,
         threshold: this.config.performance.budgets.memoryUsage,
-        message: `Memory usage: ${memoryResult.usage}MB`
+        message: `Memory usage: ${memoryResult.usage}MB`,
       });
       metrics.memoryUsage = memoryResult.usage;
 
@@ -721,7 +721,7 @@ export class ComplianceChecker extends EventEmitter {
       passed,
       score,
       details,
-      metrics
+      metrics,
     };
   }
 
@@ -770,7 +770,7 @@ export class ComplianceChecker extends EventEmitter {
         statements: 92.5,
         branches: 88.3,
         functions: 95.1,
-        lines: 91.8
+        lines: 91.8,
       };
     } catch {
       return null;
@@ -871,7 +871,7 @@ export class ComplianceChecker extends EventEmitter {
       passed: true,
       score: 100,
       details: [],
-      metrics: {}
+      metrics: {},
     };
   }
 
@@ -915,7 +915,7 @@ export class ComplianceChecker extends EventEmitter {
             rule: detail.check,
             message: detail.message,
             suggestion: this.generateSuggestion(categoryName, detail),
-            autoFixable: this.isAutoFixable(categoryName, detail)
+            autoFixable: this.isAutoFixable(categoryName, detail),
           });
         }
       });
@@ -942,7 +942,7 @@ export class ComplianceChecker extends EventEmitter {
           description: `${failedChecks.length} checks failed in ${categoryName} category`,
           action: this.generateCategoryAction(categoryName, failedChecks),
           estimatedEffort: this.estimateEffort(failedChecks.length),
-          impact: this.estimateImpact(category.score)
+          impact: this.estimateImpact(category.score),
         });
       }
     });
@@ -965,20 +965,20 @@ export class ComplianceChecker extends EventEmitter {
         'Code Formatting': 'Run `npm run format` to format code with Prettier',
         'TypeScript Compliance': 'Fix TypeScript errors by running `npm run type-check`',
         'Code Complexity': 'Refactor complex functions to reduce cyclomatic complexity',
-        'Maintainability Index': 'Improve code maintainability by reducing complexity and adding documentation'
+        'Maintainability Index': 'Improve code maintainability by reducing complexity and adding documentation',
       },
       testCoverage: {
         'Statement Coverage': 'Add more unit tests to increase statement coverage',
         'Branch Coverage': 'Add tests for conditional branches and edge cases',
         'Function Coverage': 'Ensure all functions have corresponding tests',
-        'Line Coverage': 'Add tests to cover untested lines of code'
+        'Line Coverage': 'Add tests to cover untested lines of code',
       },
       documentation: {
         'Required Files': 'Create missing documentation files',
         'README Quality': 'Improve README with better structure and content',
         'API Documentation': 'Add JSDoc comments to public APIs',
-        'Changelog': 'Create and maintain a CHANGELOG.md file'
-      }
+        'Changelog': 'Create and maintain a CHANGELOG.md file',
+      },
     };
 
     return suggestions[category]?.[detail.check] || `Address ${detail.check} issues`;
@@ -987,7 +987,7 @@ export class ComplianceChecker extends EventEmitter {
   private isAutoFixable(category: string, detail: CategoryDetail): boolean {
     const autoFixableChecks = [
       'Code Formatting',
-      'ESLint Compliance'
+      'ESLint Compliance',
     ];
     return autoFixableChecks.includes(detail.check);
   }
@@ -1005,7 +1005,7 @@ export class ComplianceChecker extends EventEmitter {
       documentation: 'Create and update documentation files',
       security: 'Address security vulnerabilities and update dependencies',
       accessibility: 'Fix accessibility issues and improve WCAG compliance',
-      performance: 'Optimize performance to meet budget requirements'
+      performance: 'Optimize performance to meet budget requirements',
     };
 
     return actions[category] || `Address ${failedChecks.length} failed checks`;

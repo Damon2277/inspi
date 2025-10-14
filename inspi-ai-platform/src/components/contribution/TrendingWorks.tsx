@@ -4,12 +4,12 @@
 
 'use client';
 
-import { TrendingWorks } from '@/components/shared/TrendingWorks';
+import { TrendingWorks } from '@/shared/components/TrendingWorks';
 
 // 导出共享组件，默认使用contribution API端点
 export function ContributionTrendingWorks(props: React.ComponentProps<typeof TrendingWorks>) {
   return (
-    <TrendingWorks 
+    <TrendingWorks
       apiEndpoint="/api/contribution/trending"
       showViewButton={true}
       cardStyle="detailed"

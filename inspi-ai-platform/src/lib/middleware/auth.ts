@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import connectDB from '@/lib/mongodb';
+import { NextRequest, NextResponse } from 'next/server';
+
 import User from '@/lib/models/User';
+import connectDB from '@/lib/mongodb';
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: any;
@@ -17,10 +18,10 @@ export async function authenticateToken(request: NextRequest) {
 
   try {
     const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as any;
-    
+
     await connectDB();
-    const user = await User.findById(decoded.userId);
-    
+    const user = await (User.findById as any)(decoded.userId);
+
     if (!user) {
       return null;
     }
@@ -35,17 +36,17 @@ export async function authenticateToken(request: NextRequest) {
 export function requireAuth(handler: Function) {
   return async (request: NextRequest) => {
     const user = await authenticateToken(request);
-    
+
     if (!user) {
       return NextResponse.json(
         { code: 'UNAUTHORIZED', message: '请先登录' },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     // Add user to request object
     (request as AuthenticatedRequest).user = user;
-    
+
     return handler(request);
   };
 }
@@ -53,10 +54,10 @@ export function requireAuth(handler: Function) {
 export function optionalAuth(handler: Function) {
   return async (request: NextRequest) => {
     const user = await authenticateToken(request);
-    
+
     // Add user to request object (can be null)
     (request as AuthenticatedRequest).user = user;
-    
+
     return handler(request);
   };
 }

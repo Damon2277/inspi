@@ -3,9 +3,10 @@
  * 处理邀请挑战活动的创建、管理、进度追踪和结果统计
  */
 
-import { v4 as uuidv4 } from 'uuid'
-import { DatabasePool } from '../database'
-import { logger } from '../../utils/logger'
+import { v4 as uuidv4 } from 'uuid';
+
+import { logger } from '../../utils/logger';
+import { DatabasePool } from '../database';
 import {
   InvitationActivity,
   ActivityType,
@@ -17,8 +18,8 @@ import {
   ActivityResult,
   RewardType,
   TimePeriod,
-  Pagination
-} from '../types'
+  Pagination,
+} from '../types';
 
 export class InvitationActivityService {
   constructor(private db: DatabasePool) {}
@@ -36,8 +37,8 @@ export class InvitationActivityService {
     rewards: ActivityReward[]
     targetMetrics?: Record<string, number>
   }): Promise<InvitationActivity> {
-    const activityId = uuidv4()
-    
+    const activityId = uuidv4();
+
     try {
       await this.db.transaction(async (conn) => {
         // 创建活动
@@ -54,8 +55,8 @@ export class InvitationActivityService {
           activityData.startDate,
           activityData.endDate,
           JSON.stringify(activityData.rules),
-          JSON.stringify(activityData.targetMetrics || {})
-        ])
+          JSON.stringify(activityData.targetMetrics || {}),
+        ]);
 
         // 创建活动奖励
         for (const reward of activityData.rewards) {
@@ -71,22 +72,22 @@ export class InvitationActivityService {
             reward.amount,
             reward.description,
             reward.rankRange?.min || 1,
-            reward.rankRange?.max || 1
-          ])
+            reward.rankRange?.max || 1,
+          ]);
         }
 
         // 记录活动创建事件
         await this.logActivityEvent(conn, activityId, null, 'activity_created', {
           name: activityData.name,
-          type: activityData.type
-        })
-      })
+          type: activityData.type,
+        });
+      });
 
-      logger.info('Activity created successfully', { activityId, name: activityData.name })
-      return await this.getActivityById(activityId)
+      logger.info('Activity created successfully', { activityId, name: activityData.name });
+      return await this.getActivityById(activityId);
     } catch (error) {
-      logger.error('Failed to create activity', { error, activityData })
-      throw new Error('创建活动失败')
+      logger.error('Failed to create activity', { error, activityData });
+      throw new Error('创建活动失败');
     }
   }
 
@@ -103,59 +104,59 @@ export class InvitationActivityService {
       rules: ActivityRules
       targetMetrics: Record<string, number>
       status: ActivityStatus
-    }>
+    }>,
   ): Promise<InvitationActivity> {
     try {
-      const setParts: string[] = []
-      const params: any[] = []
+      const setParts: string[] = [];
+      const params: any[] = [];
 
       if (updates.name !== undefined) {
-        setParts.push('name = ?')
-        params.push(updates.name)
+        setParts.push('name = ?');
+        params.push(updates.name);
       }
       if (updates.description !== undefined) {
-        setParts.push('description = ?')
-        params.push(updates.description)
+        setParts.push('description = ?');
+        params.push(updates.description);
       }
       if (updates.startDate !== undefined) {
-        setParts.push('start_date = ?')
-        params.push(updates.startDate)
+        setParts.push('start_date = ?');
+        params.push(updates.startDate);
       }
       if (updates.endDate !== undefined) {
-        setParts.push('end_date = ?')
-        params.push(updates.endDate)
+        setParts.push('end_date = ?');
+        params.push(updates.endDate);
       }
       if (updates.rules !== undefined) {
-        setParts.push('rules = ?')
-        params.push(JSON.stringify(updates.rules))
+        setParts.push('rules = ?');
+        params.push(JSON.stringify(updates.rules));
       }
       if (updates.targetMetrics !== undefined) {
-        setParts.push('target_metrics = ?')
-        params.push(JSON.stringify(updates.targetMetrics))
+        setParts.push('target_metrics = ?');
+        params.push(JSON.stringify(updates.targetMetrics));
       }
       if (updates.status !== undefined) {
-        setParts.push('status = ?')
-        params.push(updates.status)
+        setParts.push('status = ?');
+        params.push(updates.status);
       }
 
       if (setParts.length === 0) {
-        throw new Error('没有提供更新字段')
+        throw new Error('没有提供更新字段');
       }
 
-      setParts.push('updated_at = CURRENT_TIMESTAMP')
-      params.push(activityId)
+      setParts.push('updated_at = CURRENT_TIMESTAMP');
+      params.push(activityId);
 
       await this.db.execute(`
         UPDATE invitation_activities 
         SET ${setParts.join(', ')} 
         WHERE id = ?
-      `, params)
+      `, params);
 
-      logger.info('Activity updated successfully', { activityId, updates })
-      return await this.getActivityById(activityId)
+      logger.info('Activity updated successfully', { activityId, updates });
+      return await this.getActivityById(activityId);
     } catch (error) {
-      logger.error('Failed to update activity', { error, activityId, updates })
-      throw new Error('更新活动失败')
+      logger.error('Failed to update activity', { error, activityId, updates });
+      throw new Error('更新活动失败');
     }
   }
 
@@ -166,10 +167,10 @@ export class InvitationActivityService {
     try {
       const [activities] = await this.db.query<any>(`
         SELECT * FROM invitation_activities WHERE id = ?
-      `, [activityId])
+      `, [activityId]);
 
       if (!activities) {
-        throw new Error('活动不存在')
+        throw new Error('活动不存在');
       }
 
       const rewards = await this.db.query<any>(`
@@ -177,7 +178,7 @@ export class InvitationActivityService {
         FROM activity_rewards 
         WHERE activity_id = ?
         ORDER BY rank_min ASC
-      `, [activityId])
+      `, [activityId]);
 
       return {
         id: activities.id,
@@ -192,18 +193,18 @@ export class InvitationActivityService {
           type: r.reward_type as RewardType,
           amount: r.reward_amount,
           description: r.description,
-          rankRange: r.rank_min === r.rank_max ? 
-            { min: r.rank_min, max: r.rank_max } : 
-            { min: r.rank_min, max: r.rank_max }
+          rankRange: r.rank_min === r.rank_max ?
+            { min: r.rank_min, max: r.rank_max } :
+            { min: r.rank_min, max: r.rank_max },
         })),
         targetMetrics: JSON.parse(activities.target_metrics || '{}'),
         isActive: activities.is_active,
         createdAt: new Date(activities.created_at),
-        updatedAt: new Date(activities.updated_at)
-      }
+        updatedAt: new Date(activities.updated_at),
+      };
     } catch (error) {
-      logger.error('Failed to get activity', { error, activityId })
-      throw new Error('获取活动详情失败')
+      logger.error('Failed to get activity', { error, activityId });
+      throw new Error('获取活动详情失败');
     }
   }
 
@@ -217,39 +218,39 @@ export class InvitationActivityService {
     pagination?: Pagination
   } = {}): Promise<{ activities: InvitationActivity[], total: number }> {
     try {
-      const conditions: string[] = []
-      const params: any[] = []
+      const conditions: string[] = [];
+      const params: any[] = [];
 
       if (filters.status) {
-        conditions.push('status = ?')
-        params.push(filters.status)
+        conditions.push('status = ?');
+        params.push(filters.status);
       }
       if (filters.type) {
-        conditions.push('type = ?')
-        params.push(filters.type)
+        conditions.push('type = ?');
+        params.push(filters.type);
       }
       if (filters.isActive !== undefined) {
-        conditions.push('is_active = ?')
-        params.push(filters.isActive)
+        conditions.push('is_active = ?');
+        params.push(filters.isActive);
       }
 
-      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
-      
+      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
       // 获取总数
       const [countResult] = await this.db.query<{ count: number }>(`
         SELECT COUNT(*) as count FROM invitation_activities ${whereClause}
-      `, params)
+      `, params);
 
       // 获取活动列表
-      const pagination = filters.pagination || { page: 1, limit: 10 }
-      const offset = (pagination.page - 1) * pagination.limit
-      
+      const pagination = filters.pagination || { page: 1, limit: 10 };
+      const offset = (pagination.page - 1) * pagination.limit;
+
       const activities = await this.db.query<any>(`
         SELECT * FROM invitation_activities 
         ${whereClause}
         ORDER BY created_at DESC
         LIMIT ? OFFSET ?
-      `, [...params, pagination.limit, offset])
+      `, [...params, pagination.limit, offset]);
 
       const activitiesWithRewards = await Promise.all(
         activities.map(async (activity: any) => {
@@ -258,7 +259,7 @@ export class InvitationActivityService {
             FROM activity_rewards 
             WHERE activity_id = ?
             ORDER BY rank_min ASC
-          `, [activity.id])
+          `, [activity.id]);
 
           return {
             id: activity.id,
@@ -273,23 +274,23 @@ export class InvitationActivityService {
               type: r.reward_type as RewardType,
               amount: r.reward_amount,
               description: r.description,
-              rankRange: { min: r.rank_min, max: r.rank_max }
+              rankRange: { min: r.rank_min, max: r.rank_max },
             })),
             targetMetrics: JSON.parse(activity.target_metrics || '{}'),
             isActive: activity.is_active,
             createdAt: new Date(activity.created_at),
-            updatedAt: new Date(activity.updated_at)
-          }
-        })
-      )
+            updatedAt: new Date(activity.updated_at),
+          };
+        }),
+      );
 
       return {
         activities: activitiesWithRewards,
-        total: countResult?.count || 0
-      }
+        total: countResult?.count || 0,
+      };
     } catch (error) {
-      logger.error('Failed to get activities', { error, filters })
-      throw new Error('获取活动列表失败')
+      logger.error('Failed to get activities', { error, filters });
+      throw new Error('获取活动列表失败');
     }
   }
 
@@ -302,28 +303,28 @@ export class InvitationActivityService {
   }): Promise<ActivityParticipant> {
     try {
       // 检查活动是否存在且可参与
-      const activity = await this.getActivityById(activityId)
+      const activity = await this.getActivityById(activityId);
       if (activity.status !== ActivityStatus.ACTIVE) {
-        throw new Error('活动未开放参与')
+        throw new Error('活动未开放参与');
       }
 
-      const now = new Date()
+      const now = new Date();
       if (now < activity.startDate || now > activity.endDate) {
-        throw new Error('活动未在参与时间范围内')
+        throw new Error('活动未在参与时间范围内');
       }
 
       // 检查用户是否已参与
       const [existing] = await this.db.query<any>(`
         SELECT id FROM activity_participants 
         WHERE activity_id = ? AND user_id = ?
-      `, [activityId, userId])
+      `, [activityId, userId]);
 
       if (existing) {
-        throw new Error('用户已参与该活动')
+        throw new Error('用户已参与该活动');
       }
 
-      const participantId = uuidv4()
-      const progressId = uuidv4()
+      const participantId = uuidv4();
+      const progressId = uuidv4();
 
       await this.db.transaction(async (conn) => {
         // 添加参与者
@@ -331,7 +332,7 @@ export class InvitationActivityService {
           INSERT INTO activity_participants (
             id, activity_id, user_id, user_name, user_email, status
           ) VALUES (?, ?, ?, ?, ?, 'active')
-        `, [participantId, activityId, userId, userInfo.userName, userInfo.userEmail])
+        `, [participantId, activityId, userId, userInfo.userName, userInfo.userEmail]);
 
         // 初始化进度
         await conn.execute(`
@@ -339,17 +340,17 @@ export class InvitationActivityService {
             id, activity_id, user_id, invites_sent, 
             registrations_achieved, activations_achieved, current_score
           ) VALUES (?, ?, ?, 0, 0, 0, 0)
-        `, [progressId, activityId, userId])
+        `, [progressId, activityId, userId]);
 
         // 记录加入事件
         await this.logActivityEvent(conn, activityId, userId, 'user_joined', {
           userName: userInfo.userName,
-          userEmail: userInfo.userEmail
-        })
-      })
+          userEmail: userInfo.userEmail,
+        });
+      });
 
-      logger.info('User joined activity successfully', { activityId, userId })
-      
+      logger.info('User joined activity successfully', { activityId, userId });
+
       return {
         id: participantId,
         activityId,
@@ -357,11 +358,11 @@ export class InvitationActivityService {
         userName: userInfo.userName,
         userEmail: userInfo.userEmail,
         joinedAt: new Date(),
-        status: 'active'
-      }
+        status: 'active',
+      };
     } catch (error) {
-      logger.error('Failed to join activity', { error, activityId, userId })
-      throw error
+      logger.error('Failed to join activity', { error, activityId, userId });
+      throw error;
     }
   }
 
@@ -375,22 +376,22 @@ export class InvitationActivityService {
       invitesSent?: number
       registrationsAchieved?: number
       activationsAchieved?: number
-    }
+    },
   ): Promise<ActivityProgress> {
     try {
-      const activity = await this.getActivityById(activityId)
-      
+      const activity = await this.getActivityById(activityId);
+
       // 计算新分数
-      const currentProgress = await this.getUserProgress(activityId, userId)
-      const newInvites = progressData.invitesSent || currentProgress.invitesSent
-      const newRegistrations = progressData.registrationsAchieved || currentProgress.registrationsAchieved
-      const newActivations = progressData.activationsAchieved || currentProgress.activationsAchieved
+      const currentProgress = await this.getUserProgress(activityId, userId);
+      const newInvites = progressData.invitesSent || currentProgress.invitesSent;
+      const newRegistrations = progressData.registrationsAchieved || currentProgress.registrationsAchieved;
+      const newActivations = progressData.activationsAchieved || currentProgress.activationsAchieved;
 
       const newScore = this.calculateScore(activity.rules.scoringRules, {
         invitesSent: newInvites,
         registrationsAchieved: newRegistrations,
-        activationsAchieved: newActivations
-      })
+        activationsAchieved: newActivations,
+      });
 
       await this.db.transaction(async (conn) => {
         // 更新进度
@@ -399,25 +400,25 @@ export class InvitationActivityService {
           SET invites_sent = ?, registrations_achieved = ?, 
               activations_achieved = ?, current_score = ?, updated_at = CURRENT_TIMESTAMP
           WHERE activity_id = ? AND user_id = ?
-        `, [newInvites, newRegistrations, newActivations, newScore, activityId, userId])
+        `, [newInvites, newRegistrations, newActivations, newScore, activityId, userId]);
 
         // 更新排名
-        await this.updateRankings(conn, activityId)
+        await this.updateRankings(conn, activityId);
 
         // 记录进度更新事件
         await this.logActivityEvent(conn, activityId, userId, 'progress_updated', {
           invitesSent: newInvites,
           registrationsAchieved: newRegistrations,
           activationsAchieved: newActivations,
-          newScore
-        })
-      })
+          newScore,
+        });
+      });
 
-      logger.info('User progress updated', { activityId, userId, newScore })
-      return await this.getUserProgress(activityId, userId)
+      logger.info('User progress updated', { activityId, userId, newScore });
+      return await this.getUserProgress(activityId, userId);
     } catch (error) {
-      logger.error('Failed to update user progress', { error, activityId, userId, progressData })
-      throw new Error('更新用户进度失败')
+      logger.error('Failed to update user progress', { error, activityId, userId, progressData });
+      throw new Error('更新用户进度失败');
     }
   }
 
@@ -429,10 +430,10 @@ export class InvitationActivityService {
       const [progress] = await this.db.query<any>(`
         SELECT * FROM activity_progress 
         WHERE activity_id = ? AND user_id = ?
-      `, [activityId, userId])
+      `, [activityId, userId]);
 
       if (!progress) {
-        throw new Error('用户未参与该活动')
+        throw new Error('用户未参与该活动');
       }
 
       return {
@@ -444,11 +445,11 @@ export class InvitationActivityService {
         currentScore: progress.current_score,
         rank: progress.current_rank,
         completedAt: progress.completed_at ? new Date(progress.completed_at) : undefined,
-        updatedAt: new Date(progress.updated_at)
-      }
+        updatedAt: new Date(progress.updated_at),
+      };
     } catch (error) {
-      logger.error('Failed to get user progress', { error, activityId, userId })
-      throw new Error('获取用户进度失败')
+      logger.error('Failed to get user progress', { error, activityId, userId });
+      throw new Error('获取用户进度失败');
     }
   }
 
@@ -457,17 +458,17 @@ export class InvitationActivityService {
    */
   async getActivityLeaderboard(
     activityId: string,
-    pagination: Pagination = { page: 1, limit: 50 }
+    pagination: Pagination = { page: 1, limit: 50 },
   ): Promise<{ leaderboard: ActivityProgress[], total: number }> {
     try {
-      const offset = (pagination.page - 1) * pagination.limit
+      const offset = (pagination.page - 1) * pagination.limit;
 
       const [countResult] = await this.db.query<{ count: number }>(`
         SELECT COUNT(*) as count 
         FROM activity_progress ap
         JOIN activity_participants part ON ap.activity_id = part.activity_id AND ap.user_id = part.user_id
         WHERE ap.activity_id = ? AND part.status = 'active'
-      `, [activityId])
+      `, [activityId]);
 
       const leaderboard = await this.db.query<any>(`
         SELECT ap.*, part.user_name, part.user_email
@@ -476,7 +477,7 @@ export class InvitationActivityService {
         WHERE ap.activity_id = ? AND part.status = 'active'
         ORDER BY ap.current_score DESC, ap.updated_at ASC
         LIMIT ? OFFSET ?
-      `, [activityId, pagination.limit, offset])
+      `, [activityId, pagination.limit, offset]);
 
       const formattedLeaderboard = leaderboard.map((item: any, index: number) => ({
         activityId: item.activity_id,
@@ -487,16 +488,16 @@ export class InvitationActivityService {
         currentScore: item.current_score,
         rank: offset + index + 1,
         completedAt: item.completed_at ? new Date(item.completed_at) : undefined,
-        updatedAt: new Date(item.updated_at)
-      }))
+        updatedAt: new Date(item.updated_at),
+      }));
 
       return {
         leaderboard: formattedLeaderboard,
-        total: countResult?.count || 0
-      }
+        total: countResult?.count || 0,
+      };
     } catch (error) {
-      logger.error('Failed to get activity leaderboard', { error, activityId })
-      throw new Error('获取活动排行榜失败')
+      logger.error('Failed to get activity leaderboard', { error, activityId });
+      throw new Error('获取活动排行榜失败');
     }
   }
 
@@ -505,13 +506,13 @@ export class InvitationActivityService {
    */
   async completeActivity(activityId: string): Promise<ActivityResult[]> {
     try {
-      const activity = await this.getActivityById(activityId)
-      
+      const activity = await this.getActivityById(activityId);
+
       if (activity.status === ActivityStatus.COMPLETED) {
-        throw new Error('活动已完成')
+        throw new Error('活动已完成');
       }
 
-      const results: ActivityResult[] = []
+      const results: ActivityResult[] = [];
 
       await this.db.transaction(async (conn) => {
         // 获取最终排行榜
@@ -521,19 +522,19 @@ export class InvitationActivityService {
           JOIN activity_participants part ON ap.activity_id = part.activity_id AND ap.user_id = part.user_id
           WHERE ap.activity_id = ? AND part.status = 'active'
           ORDER BY ap.current_score DESC, ap.updated_at ASC
-        `, [activityId])
+        `, [activityId]);
 
         // 确定获奖者并分配奖励
         for (let i = 0; i < finalRankings.length; i++) {
-          const participant = finalRankings[i]
-          const rank = i + 1
-          
+          const participant = finalRankings[i];
+          const rank = i + 1;
+
           // 确定用户获得的奖励
-          const userRewards = this.determineUserRewards(activity.rewards, rank)
-          const isWinner = userRewards.length > 0
+          const userRewards = this.determineUserRewards(activity.rewards, rank);
+          const isWinner = userRewards.length > 0;
 
           // 保存结果
-          const resultId = uuidv4()
+          const resultId = uuidv4();
           await conn.execute(`
             INSERT INTO activity_results (
               id, activity_id, user_id, final_rank, final_score, 
@@ -546,8 +547,8 @@ export class InvitationActivityService {
             rank,
             participant.current_score,
             isWinner,
-            JSON.stringify(userRewards)
-          ])
+            JSON.stringify(userRewards),
+          ]);
 
           results.push({
             activityId,
@@ -556,8 +557,8 @@ export class InvitationActivityService {
             score: participant.current_score,
             rewards: userRewards,
             isWinner,
-            completedAt: new Date()
-          })
+            completedAt: new Date(),
+          });
         }
 
         // 更新活动状态为已完成
@@ -565,25 +566,25 @@ export class InvitationActivityService {
           UPDATE invitation_activities 
           SET status = 'completed', updated_at = CURRENT_TIMESTAMP
           WHERE id = ?
-        `, [activityId])
+        `, [activityId]);
 
         // 记录活动完成事件
         await this.logActivityEvent(conn, activityId, null, 'activity_completed', {
           totalParticipants: finalRankings.length,
-          winnersCount: results.filter(r => r.isWinner).length
-        })
-      })
+          winnersCount: results.filter(r => r.isWinner).length,
+        });
+      });
 
-      logger.info('Activity completed successfully', { 
-        activityId, 
+      logger.info('Activity completed successfully', {
+        activityId,
         participantsCount: results.length,
-        winnersCount: results.filter(r => r.isWinner).length
-      })
+        winnersCount: results.filter(r => r.isWinner).length,
+      });
 
-      return results
+      return results;
     } catch (error) {
-      logger.error('Failed to complete activity', { error, activityId })
-      throw new Error('完成活动失败')
+      logger.error('Failed to complete activity', { error, activityId });
+      throw new Error('完成活动失败');
     }
   }
 
@@ -612,7 +613,7 @@ export class InvitationActivityService {
         FROM activity_participants part
         LEFT JOIN activity_progress prog ON part.activity_id = prog.activity_id AND part.user_id = prog.user_id
         WHERE part.activity_id = ?
-      `, [activityId])
+      `, [activityId]);
 
       return {
         totalParticipants: stats?.total_participants || 0,
@@ -621,11 +622,11 @@ export class InvitationActivityService {
         totalRegistrations: stats?.total_registrations || 0,
         totalActivations: stats?.total_activations || 0,
         averageScore: Math.round(stats?.average_score || 0),
-        topScore: stats?.top_score || 0
-      }
+        topScore: stats?.top_score || 0,
+      };
     } catch (error) {
-      logger.error('Failed to get activity statistics', { error, activityId })
-      throw new Error('获取活动统计失败')
+      logger.error('Failed to get activity statistics', { error, activityId });
+      throw new Error('获取活动统计失败');
     }
   }
 
@@ -638,13 +639,13 @@ export class InvitationActivityService {
       invitesSent: number
       registrationsAchieved: number
       activationsAchieved: number
-    }
+    },
   ): number {
     return (
       progress.invitesSent * scoringRules.invitePoints +
       progress.registrationsAchieved * scoringRules.registrationPoints +
       progress.activationsAchieved * scoringRules.activationPoints
-    )
+    );
   }
 
   /**
@@ -661,7 +662,7 @@ export class InvitationActivityService {
              OR (ap2.current_score = ap1.current_score AND ap2.updated_at < ap1.updated_at))
       )
       WHERE ap1.activity_id = ?
-    `, [activityId])
+    `, [activityId]);
   }
 
   /**
@@ -669,9 +670,9 @@ export class InvitationActivityService {
    */
   private determineUserRewards(rewards: ActivityReward[], rank: number): ActivityReward[] {
     return rewards.filter(reward => {
-      if (!reward.rankRange) return rank === 1
-      return rank >= reward.rankRange.min && rank <= reward.rankRange.max
-    })
+      if (!reward.rankRange) return rank === 1;
+      return rank >= reward.rankRange.min && rank <= reward.rankRange.max;
+    });
   }
 
   /**
@@ -682,12 +683,12 @@ export class InvitationActivityService {
     activityId: string,
     userId: string | null,
     eventType: string,
-    eventData: any
+    eventData: any,
   ): Promise<void> {
     await conn.execute(`
       INSERT INTO activity_events (
         id, activity_id, user_id, event_type, event_data
       ) VALUES (?, ?, ?, ?, ?)
-    `, [uuidv4(), activityId, userId, eventType, JSON.stringify(eventData)])
+    `, [uuidv4(), activityId, userId, eventType, JSON.stringify(eventData)]);
   }
 }

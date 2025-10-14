@@ -58,9 +58,9 @@ class VersionManager {
     }
     
     return {
-      major: parseInt(match[1]),
-      minor: parseInt(match[2]),
-      patch: parseInt(match[3]),
+      major: parseInt(match[1], 10),
+      minor: parseInt(match[2], 10),
+      patch: parseInt(match[3], 10),
       prerelease: match[4] || null
     };
   }
@@ -83,7 +83,7 @@ class VersionManager {
           const prereleaseMatch = parsed.prerelease.match(/^(.+)\.(\d+)$/);
           if (prereleaseMatch) {
             const identifier = prereleaseMatch[1];
-            const number = parseInt(prereleaseMatch[2]) + 1;
+            const number = parseInt(prereleaseMatch[2], 10) + 1;
             return `${parsed.major}.${parsed.minor}.${parsed.patch}-${identifier}.${number}`;
           }
         }
@@ -265,7 +265,8 @@ class VersionManager {
     releaseNotes += `\`\`\`\n\n`;
 
     releaseNotes += `## 🔗 相关链接\n\n`;
-    releaseNotes += `- [完整变更日志](https://github.com/your-org/inspi-ai-platform/compare/v${this.getCurrentVersion()}...${tagName})\n`;
+    releaseNotes += `- [完整变更日志](https:
+      //github.com/your-org/inspi-ai-platform/compare/v${this.getCurrentVersion()}...${tagName})\n`;
     releaseNotes += `- [问题反馈](https://github.com/your-org/inspi-ai-platform/issues)\n\n`;
 
     return releaseNotes;

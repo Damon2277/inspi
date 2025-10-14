@@ -1,6 +1,6 @@
 /**
  * 增量测试系统
- * 
+ *
  * 这个模块提供了完整的增量测试解决方案，包括：
  * - Git变更检测和依赖分析
  * - 受影响测试的智能识别
@@ -15,19 +15,20 @@ export { IncrementalTestRunner } from './IncrementalTestRunner';
 export { AccuracyVerifier } from './AccuracyVerifier';
 
 // Import the classes for internal use
-import { IncrementalTestRunner } from './IncrementalTestRunner';
 import { AccuracyVerifier } from './AccuracyVerifier';
+import type { VerificationResult, AccuracyMetrics } from './AccuracyVerifier';
+import { IncrementalTestRunner } from './IncrementalTestRunner';
 
 export type {
   GitChange,
   GitCommitInfo,
-  ChangeAnalysis
+  ChangeAnalysis,
 } from './GitChangeDetector';
 
 export type {
   FileDependency,
   DependencyGraph,
-  ImpactAnalysis
+  ImpactAnalysis,
 } from './DependencyAnalyzer';
 
 export type {
@@ -36,20 +37,20 @@ export type {
   TestError,
   CacheEntry,
   CacheStats,
-  CacheOptions
+  CacheOptions,
 } from './TestCacheManager';
 
 export type {
   IncrementalTestOptions,
   TestExecutionPlan,
-  IncrementalTestResult
+  IncrementalTestResult,
 } from './IncrementalTestRunner';
 
 export type {
   VerificationResult,
   VerificationDetails,
   ComparisonReport,
-  AccuracyMetrics
+  AccuracyMetrics,
 } from './AccuracyVerifier';
 
 /**
@@ -118,6 +119,4 @@ export class IncrementalTestSystem {
 // 重新导入类型
 import type { IncrementalTestOptions } from './IncrementalTestRunner';
 import type { IncrementalTestResult } from './IncrementalTestRunner';
-import type { VerificationResult } from './AccuracyVerifier';
 import type { CacheStats } from './TestCacheManager';
-import type { AccuracyMetrics } from './AccuracyVerifier';

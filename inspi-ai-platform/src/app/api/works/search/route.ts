@@ -1,34 +1,39 @@
+/**
+ * 作品搜索API路由
+ */
 import { NextRequest, NextResponse } from 'next/server';
-import workService from '@/lib/services/workService';
-import { handleAPIError } from '@/lib/utils/errorHandler';
 
-// GET /api/works/search - 搜索作品
+import WorkService from '@/core/community/work-service';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const keyword = searchParams.get('q');
 
-    if (!keyword) {
-      return NextResponse.json(
-        { success: false, message: '请提供搜索关键词' },
-        { status: 400 }
-      );
-    }
-
-    const filters = {
+    const query = {
+      query: searchParams.get('query') || undefined,
       subject: searchParams.get('subject') || undefined,
       gradeLevel: searchParams.get('gradeLevel') || undefined,
-      limit: parseInt(searchParams.get('limit') || '20')
+      category: searchParams.get('category') || undefined,
+      difficulty: searchParams.get('difficulty') || undefined,
+      tags: searchParams.getAll('tags'),
+      author: searchParams.get('author') || undefined,
+      sortBy: (searchParams.get('sortBy') as any) || 'latest',
+      page: parseInt(searchParams.get('page') || '1', 10),
+      limit: parseInt(searchParams.get('limit') || '20', 10),
     };
 
-    const works = await workService.searchWorks(keyword, filters);
+    const result = await WorkService.searchWorks(query);
 
-    return NextResponse.json({
-      success: true,
-      data: works,
-      total: works.length
-    });
-  } catch (error: any) {
-    return handleAPIError(error);
+    if (result.success) {
+      return NextResponse.json(result, { status: 200 });
+    } else {
+      return NextResponse.json(result, { status: 400 });
+    }
+  } catch (error) {
+    console.error('Search works API error:', error);
+    return NextResponse.json(
+      { success: false, error: '服务器错误' },
+      { status: 500 },
+    );
   }
 }

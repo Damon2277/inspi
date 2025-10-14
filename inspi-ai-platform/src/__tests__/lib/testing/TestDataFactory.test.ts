@@ -1,4 +1,6 @@
 import { ObjectId } from 'mongoose';
+
+import { TestDataBuilder as Builder } from '@/lib/testing/TestDataBuilder';
 import {
   TestDataFactory,
   TestDataBuilder,
@@ -6,7 +8,6 @@ import {
   WorkFactory,
   TeachingCardFactory,
 } from '@/lib/testing/TestDataFactory';
-import { TestDataBuilder as Builder } from '@/lib/testing/TestDataBuilder';
 
 describe('Test Data Factory System', () => {
   let testDataFactory: TestDataFactory;
@@ -16,7 +17,7 @@ describe('Test Data Factory System', () => {
     // 创建新的工厂实例
     testDataFactory = new TestDataFactory();
     testDataBuilder = Builder;
-    
+
     // 重置所有工厂和构建器的序列号
     testDataFactory.resetSequences();
     testDataBuilder.resetSequences();
@@ -26,7 +27,7 @@ describe('Test Data Factory System', () => {
     describe('User Factory', () => {
       it('should create a user with default values', () => {
         const user = testDataFactory.user.create();
-        
+
         expect(user).toHaveProperty('_id');
         expect(user.email).toMatch(/^test\d+@example\.com$/);
         expect(user.name).toMatch(/^Test User \d+$/);
@@ -47,7 +48,7 @@ describe('Test Data Factory System', () => {
         };
 
         const user = testDataFactory.user.create(overrides);
-        
+
         expect(user.email).toBe('custom@example.com');
         expect(user.name).toBe('Custom User');
         expect(user.subscription.plan).toBe('pro');
@@ -56,13 +57,13 @@ describe('Test Data Factory System', () => {
 
       it('should create multiple users with unique data', () => {
         const users = testDataFactory.user.createMany(3);
-        
+
         expect(users).toHaveLength(3);
-        
+
         const emails = users.map(u => u.email);
         const uniqueEmails = new Set(emails);
         expect(uniqueEmails.size).toBe(3);
-        
+
         const names = users.map(u => u.name);
         const uniqueNames = new Set(names);
         expect(uniqueNames.size).toBe(3);
@@ -72,14 +73,14 @@ describe('Test Data Factory System', () => {
         const freeUser = testDataFactory.user.createWithSubscription('free');
         const proUser = testDataFactory.user.createWithSubscription('pro');
         const superUser = testDataFactory.user.createWithSubscription('super');
-        
+
         expect(freeUser.subscription.plan).toBe('free');
         expect(freeUser.subscription.expiresAt).toBeNull();
-        
+
         expect(proUser.subscription.plan).toBe('pro');
         expect(proUser.subscription.expiresAt).toBeInstanceOf(Date);
         expect(proUser.subscription.autoRenew).toBe(true);
-        
+
         expect(superUser.subscription.plan).toBe('super');
         expect(superUser.subscription.expiresAt).toBeInstanceOf(Date);
         expect(superUser.subscription.autoRenew).toBe(true);
@@ -87,7 +88,7 @@ describe('Test Data Factory System', () => {
 
       it('should create Google users', () => {
         const googleUser = testDataFactory.user.createGoogleUser();
-        
+
         expect(googleUser.googleId).toMatch(/^google_\d+$/);
         expect(googleUser.password).toBeNull();
       });
@@ -96,7 +97,7 @@ describe('Test Data Factory System', () => {
     describe('Work Factory', () => {
       it('should create a work with default values', () => {
         const work = testDataFactory.work.create();
-        
+
         expect(work).toHaveProperty('_id');
         expect(work.title).toMatch(/^Test Work \d+$/);
         expect(work.knowledgePoint).toMatch(/^Knowledge Point \d+$/);
@@ -110,13 +111,13 @@ describe('Test Data Factory System', () => {
       it('should create works with specific authors', () => {
         const user = testDataFactory.user.create();
         const work = testDataFactory.work.createWithAuthor(user._id);
-        
+
         expect(work.author).toEqual(user._id);
       });
 
       it('should create published works', () => {
         const work = testDataFactory.work.createPublished();
-        
+
         expect(work.status).toBe('published');
         expect(work.reuseCount).toBeGreaterThanOrEqual(0);
       });
@@ -127,9 +128,9 @@ describe('Test Data Factory System', () => {
         const originalWork = testDataFactory.work.createWithAuthor(originalUser._id, {
           status: 'published',
         });
-        
+
         const reusedWork = testDataFactory.work.createReusedWork(originalWork, newUser._id);
-        
+
         expect(reusedWork.author).toEqual(newUser._id);
         expect(reusedWork.originalWork).toEqual(originalWork._id);
         expect(reusedWork.attribution).toHaveLength(1);
@@ -142,7 +143,7 @@ describe('Test Data Factory System', () => {
     describe('Knowledge Graph Factory', () => {
       it('should create a knowledge graph with default values', () => {
         const graph = testDataFactory.graph.create();
-        
+
         expect(graph).toHaveProperty('_id');
         expect(graph.name).toMatch(/^Test Graph \d+$/);
         expect(graph.nodes).toHaveLength(5);
@@ -153,17 +154,17 @@ describe('Test Data Factory System', () => {
 
       it('should create graphs with hierarchy', () => {
         const graph = testDataFactory.graph.createWithHierarchy(3, 2);
-        
+
         expect(graph.nodes.length).toBeGreaterThan(1);
         expect(graph.edges.length).toBeGreaterThan(0);
-        
+
         // 验证层次结构
         const rootNodes = graph.nodes.filter(n => n.level === 0);
         expect(rootNodes).toHaveLength(1);
-        
+
         const level1Nodes = graph.nodes.filter(n => n.level === 1);
         expect(level1Nodes).toHaveLength(2);
-        
+
         const level2Nodes = graph.nodes.filter(n => n.level === 2);
         expect(level2Nodes).toHaveLength(4);
       });
@@ -172,7 +173,7 @@ describe('Test Data Factory System', () => {
     describe('Complex Scenarios', () => {
       it('should create user with works relationship', () => {
         const { user, works } = testDataFactory.createUserWithWorks(5);
-        
+
         expect(works).toHaveLength(5);
         works.forEach(work => {
           expect(work.author).toEqual(user._id);
@@ -181,14 +182,14 @@ describe('Test Data Factory System', () => {
 
       it('should create reuse chain', () => {
         const { users, works } = testDataFactory.createReuseChain(4);
-        
+
         expect(users).toHaveLength(4);
         expect(works).toHaveLength(4);
-        
+
         // 验证复用链
         const originalWork = works[0];
         expect(originalWork.originalWork).toBeUndefined();
-        
+
         for (let i = 1; i < works.length; i++) {
           const reusedWork = works[i];
           expect(reusedWork.originalWork).toBeDefined();
@@ -198,7 +199,7 @@ describe('Test Data Factory System', () => {
 
       it('should create collaboration scenario', () => {
         const scenario = testDataFactory.createCollaborationScenario();
-        
+
         expect(scenario.users).toHaveLength(5);
         expect(scenario.originalWorks).toHaveLength(5);
         expect(scenario.reusedWorks.length).toBeGreaterThan(0);
@@ -217,7 +218,7 @@ describe('Test Data Factory System', () => {
           .withUsage(5, 2)
           .withContributionScore(100)
           .build();
-        
+
         expect(user.email).toBe('builder@example.com');
         expect(user.name).toBe('Builder User');
         expect(user.subscription.plan).toBe('pro');
@@ -232,7 +233,7 @@ describe('Test Data Factory System', () => {
         const superUser = testDataBuilder.user().asSuperUser().build();
         const googleUser = testDataBuilder.user().asGoogleUser().build();
         const activeUser = testDataBuilder.user().asActiveUser().build();
-        
+
         expect(freeUser.subscription.plan).toBe('free');
         expect(proUser.subscription.plan).toBe('pro');
         expect(superUser.subscription.plan).toBe('super');
@@ -252,7 +253,7 @@ describe('Test Data Factory System', () => {
           .asPublished()
           .withCompleteCardSet()
           .build();
-        
+
         expect(work.title).toBe('Custom Work');
         expect(work.author).toEqual(user._id);
         expect(work.subject).toBe('数学');
@@ -264,7 +265,7 @@ describe('Test Data Factory System', () => {
         const mathWork = testDataBuilder.work().asMathWork().build();
         const chineseWork = testDataBuilder.work().asChineseWork().build();
         const englishWork = testDataBuilder.work().asEnglishWork().build();
-        
+
         expect(mathWork.subject).toBe('数学');
         expect(chineseWork.subject).toBe('语文');
         expect(englishWork.subject).toBe('英语');
@@ -281,7 +282,7 @@ describe('Test Data Factory System', () => {
           .withSimpleHierarchy()
           .asPublic()
           .build();
-        
+
         expect(graph.userId).toEqual(user._id);
         expect(graph.name).toBe('Test Math Graph');
         expect(graph.subject).toBe('数学');
@@ -296,20 +297,20 @@ describe('Test Data Factory System', () => {
     it('should create complex data scenarios', () => {
       // 使用工厂创建数据
       const { user, works } = testDataFactory.createUserWithWorks(3);
-      
+
       // 使用构建器创建更多数据
       const customWork = testDataBuilder.work()
         .withAuthor(user._id)
         .asMathWork()
         .asPublished()
         .build();
-      
+
       expect(user).toBeDefined();
       expect(works).toHaveLength(3);
       expect(customWork.author).toEqual(user._id);
       expect(customWork.subject).toBe('数学');
       expect(customWork.status).toBe('published');
-      
+
       // 验证所有作品都属于同一用户
       works.forEach(work => {
         expect(work.author).toEqual(user._id);

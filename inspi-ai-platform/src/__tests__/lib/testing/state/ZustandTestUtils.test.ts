@@ -1,20 +1,21 @@
 /**
  * Zustand Test Utils Tests
- * 
+ *
  * Tests for Zustand-specific testing utilities including
  * store creation, test scenarios, and assertions.
  */
 import { create } from 'zustand';
+
 import {
   ZustandTestUtils,
   ZustandAssertions,
   type ZustandStore,
-  type ZustandStoreConfig
+  type ZustandStoreConfig,
 } from '../../../../lib/testing/state';
 
 // Mock zustand since we're in a test environment
 jest.mock('zustand', () => ({
-  create: jest.fn()
+  create: jest.fn(),
 }));
 
 describe('ZustandTestUtils', () => {
@@ -48,7 +49,7 @@ describe('ZustandTestUtils', () => {
       },
       destroy: () => {
         listeners.splice(0, listeners.length);
-      }
+      },
     };
 
     // Mock the create function to return our mock store
@@ -62,7 +63,7 @@ describe('ZustandTestUtils', () => {
   describe('Store Creation', () => {
     it('should create a test store with initial state', () => {
       const config: ZustandStoreConfig<any> = {
-        initialState: { count: 0, name: 'test' }
+        initialState: { count: 0, name: 'test' },
       };
 
       const store = ZustandTestUtils.createTestStore(config);
@@ -79,8 +80,8 @@ describe('ZustandTestUtils', () => {
         actions: {
           increment: (state) => ({ count: state.count + 1 }),
           decrement: (state) => ({ count: state.count - 1 }),
-          reset: () => ({ count: 0 })
-        }
+          reset: () => ({ count: 0 }),
+        },
       };
 
       const store = ZustandTestUtils.createTestStore(config);
@@ -94,8 +95,8 @@ describe('ZustandTestUtils', () => {
         initialState: { count: 0 },
         middleware: [
           { type: 'subscribeWithSelector' },
-          { type: 'persist', config: { name: 'test-store' } }
-        ]
+          { type: 'persist', config: { name: 'test-store' } },
+        ],
       };
 
       const store = ZustandTestUtils.createTestStore(config);
@@ -110,7 +111,7 @@ describe('ZustandTestUtils', () => {
       const store = ZustandTestUtils.builder<{ count: number }>()
         .withInitialState({ count: 0 })
         .withActions({
-          increment: (state) => ({ count: state.count + 1 })
+          increment: (state) => ({ count: state.count + 1 }),
         })
         .build();
 
@@ -121,7 +122,7 @@ describe('ZustandTestUtils', () => {
       expect(() => {
         ZustandTestUtils.builder<{ count: number }>()
           .withActions({
-            increment: (state) => ({ count: state.count + 1 })
+            increment: (state) => ({ count: state.count + 1 }),
           })
           .build();
       }).toThrow('Initial state is required');
@@ -173,7 +174,7 @@ describe('ZustandTestUtils', () => {
         ...mockStore,
         increment: jest.fn(),
         decrement: jest.fn(),
-        reset: jest.fn()
+        reset: jest.fn(),
       };
 
       const initialState = { count: 0 };
@@ -194,10 +195,10 @@ describe('ZustandTestUtils', () => {
       const expectedValue = 'John';
 
       const scenarios = ZustandTestUtils.createSelectorScenarios(
-        mockStore, 
-        initialState, 
-        selector, 
-        expectedValue
+        mockStore,
+        initialState,
+        selector,
+        expectedValue,
       );
 
       expect(scenarios).toHaveLength(1);
@@ -209,9 +210,9 @@ describe('ZustandTestUtils', () => {
     it('should create subscribeWithSelector middleware scenarios', () => {
       const initialState = { specificProp: 'initial' };
       const scenarios = ZustandTestUtils.createMiddlewareScenarios(
-        mockStore, 
-        initialState, 
-        'subscribeWithSelector'
+        mockStore,
+        initialState,
+        'subscribeWithSelector',
       );
 
       expect(scenarios).toHaveLength(1);
@@ -221,9 +222,9 @@ describe('ZustandTestUtils', () => {
     it('should create persist middleware scenarios', () => {
       const initialState = { persistTest: false };
       const scenarios = ZustandTestUtils.createMiddlewareScenarios(
-        mockStore, 
-        initialState, 
-        'persist'
+        mockStore,
+        initialState,
+        'persist',
       );
 
       expect(scenarios).toHaveLength(1);
@@ -309,14 +310,14 @@ describe('ZustandAssertions', () => {
 
   beforeEach(() => {
     let state = { count: 0, name: 'test', active: true };
-    
+
     mockStore = {
       getState: () => state,
       setState: (partial: any) => {
         state = { ...state, ...partial };
       },
       subscribe: () => () => {},
-      destroy: () => {}
+      destroy: () => {},
     };
   });
 
@@ -357,7 +358,7 @@ describe('ZustandAssertions', () => {
       const subscriptionCalls = [
         { state: {}, prevState: {}, timestamp: new Date() },
         { state: {}, prevState: {}, timestamp: new Date() },
-        { state: {}, prevState: {}, timestamp: new Date() }
+        { state: {}, prevState: {}, timestamp: new Date() },
       ];
 
       const result = ZustandAssertions.subscriptionCalledTimes(subscriptionCalls, 3);

@@ -5,10 +5,11 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { 
-  CompatibilityReport, 
-  CompatibilityTestResult, 
-  SupportMatrix 
+
+import {
+  CompatibilityReport,
+  CompatibilityTestResult,
+  SupportMatrix,
 } from './types';
 
 export class CompatibilityReporter {
@@ -23,7 +24,7 @@ export class CompatibilityReporter {
    */
   async generateReport(
     report: CompatibilityReport,
-    format: 'html' | 'json' | 'markdown' | 'all' = 'all'
+    format: 'html' | 'json' | 'markdown' | 'all' = 'all',
   ): Promise<{
     html?: string;
     json?: string;
@@ -297,7 +298,7 @@ export class CompatibilityReporter {
     return JSON.stringify({
       ...report,
       generatedAt: new Date().toISOString(),
-      version: '1.0.0'
+      version: '1.0.0',
     }, null, 2);
   }
 
@@ -324,8 +325,8 @@ Generated on: ${new Date().toLocaleString()}
 
 | Environment | Status | Duration (ms) | Errors | Warnings | Platform | Node Version |
 |-------------|--------|---------------|--------|----------|----------|--------------|
-${results.map(result => 
-  `| ${result.testSuite} | ${result.passed ? '✅ PASSED' : '❌ FAILED'} | ${result.duration.toLocaleString()} | ${result.errors.length} | ${result.warnings.length} | ${result.environment.platform} | ${result.environment.nodeVersion} |`
+${results.map(result =>
+  `| ${result.testSuite} | ${result.passed ? '✅ PASSED' : '❌ FAILED'} | ${result.duration.toLocaleString()} | ${result.errors.length} | ${result.warnings.length} | ${result.environment.platform} | ${result.environment.nodeVersion} |`,
 ).join('\n')}
 
 ## Recommendations
@@ -338,32 +339,32 @@ ${recommendations.map(rec => `- ${rec}`).join('\n')}
 
 | Platform | Supported | Min Node Version | Limitations |
 |----------|-----------|------------------|-------------|
-${supportMatrix.platforms.map(platform => 
-  `| ${platform.platform} | ${platform.supported ? '✅ Yes' : '❌ No'} | ${platform.minNodeVersion || 'N/A'} | ${platform.limitations?.join(', ') || 'None'} |`
+${supportMatrix.platforms.map(platform =>
+  `| ${platform.platform} | ${platform.supported ? '✅ Yes' : '❌ No'} | ${platform.minNodeVersion || 'N/A'} | ${platform.limitations?.join(', ') || 'None'} |`,
 ).join('\n')}
 
 ### Node.js Versions
 
 | Version | Supported | Tested | Issues |
 |---------|-----------|--------|--------|
-${supportMatrix.nodeVersions.map(node => 
-  `| ${node.version} | ${node.supported ? '✅ Yes' : '❌ No'} | ${node.tested ? '✅' : '❌'} | ${node.issues?.join(', ') || 'None'} |`
+${supportMatrix.nodeVersions.map(node =>
+  `| ${node.version} | ${node.supported ? '✅ Yes' : '❌ No'} | ${node.tested ? '✅' : '❌'} | ${node.issues?.join(', ') || 'None'} |`,
 ).join('\n')}
 
 ### Browser Support
 
 | Browser | Versions | Supported | Polyfills Required |
 |---------|----------|-----------|-------------------|
-${supportMatrix.browsers.map(browser => 
-  `| ${browser.browser} | ${browser.versions.join(', ')} | ${browser.supported ? '✅ Yes' : '❌ No'} | ${browser.polyfillsRequired?.join(', ') || 'None'} |`
+${supportMatrix.browsers.map(browser =>
+  `| ${browser.browser} | ${browser.versions.join(', ')} | ${browser.supported ? '✅ Yes' : '❌ No'} | ${browser.polyfillsRequired?.join(', ') || 'None'} |`,
 ).join('\n')}
 
 ### Container Support
 
 | Runtime | Base Images | Supported | Recommendations |
 |---------|-------------|-----------|-----------------|
-${supportMatrix.containers.map(container => 
-  `| ${container.runtime} | ${container.baseImages.join(', ')} | ${container.supported ? '✅ Yes' : '❌ No'} | ${container.recommendations?.join(', ') || 'None'} |`
+${supportMatrix.containers.map(container =>
+  `| ${container.runtime} | ${container.baseImages.join(', ')} | ${container.supported ? '✅ Yes' : '❌ No'} | ${container.recommendations?.join(', ') || 'None'} |`,
 ).join('\n')}
 
 ## Detailed Results
@@ -409,27 +410,27 @@ ${result.warnings.map(warning => `- **${warning.type}**: ${warning.message}`).jo
     const { summary, results } = report;
     const failedResults = results.filter(r => !r.passed);
 
-    let output = `## 🔄 Cross-Platform Compatibility Test Results\n\n`;
-    
+    let output = '## 🔄 Cross-Platform Compatibility Test Results\n\n';
+
     if (summary.failedEnvironments === 0) {
       output += `✅ **All ${summary.totalEnvironments} environments passed!**\n\n`;
     } else {
       output += `❌ **${summary.failedEnvironments} of ${summary.totalEnvironments} environments failed**\n\n`;
-      
-      output += `### Failed Environments\n\n`;
+
+      output += '### Failed Environments\n\n';
       for (const result of failedResults) {
         output += `- **${result.testSuite}**: ${result.errors.map(e => e.message).join(', ')}\n`;
       }
-      output += `\n`;
+      output += '\n';
     }
 
     if (summary.warningEnvironments > 0) {
       output += `⚠️ **${summary.warningEnvironments} environments have warnings**\n\n`;
     }
 
-    output += `### Summary\n\n`;
-    output += `| Status | Count |\n`;
-    output += `|--------|-------|\n`;
+    output += '### Summary\n\n';
+    output += '| Status | Count |\n';
+    output += '|--------|-------|\n';
     output += `| ✅ Passed | ${summary.passedEnvironments} |\n`;
     output += `| ❌ Failed | ${summary.failedEnvironments} |\n`;
     output += `| ⚠️ Warnings | ${summary.warningEnvironments} |\n`;

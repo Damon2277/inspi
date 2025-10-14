@@ -1,10 +1,11 @@
 /**
  * Middleware Test Framework
- * 
+ *
  * Comprehensive testing framework for middleware components including
  * functional testing, boundary testing, integration testing, and performance benchmarking.
  */
 import { EventEmitter } from 'events';
+
 import { NextRequest, NextResponse } from 'next/server';
 
 export interface MiddlewareTestConfig {
@@ -263,16 +264,16 @@ export class MiddlewareTestFramework extends EventEmitter {
    */
   async runFunctionalTests(scenarios: TestScenario[]): Promise<TestResult[]> {
     const results: TestResult[] = [];
-    
+
     for (const scenario of scenarios.filter(s => s.type === 'functional')) {
       this.emit('testStarted', { scenario: scenario.name, type: 'functional' });
-      
+
       const result = await this.executeTestScenario(scenario);
       results.push(result);
-      
+
       this.emit('testCompleted', { scenario: scenario.name, result });
     }
-    
+
     return results;
   }
 
@@ -282,20 +283,20 @@ export class MiddlewareTestFramework extends EventEmitter {
   async runBoundaryTests(middleware: string, testCases: BoundaryTestCase[]): Promise<TestResult[]> {
     const results: TestResult[] = [];
     const middlewareDefinition = this.middlewares.get(middleware);
-    
+
     if (!middlewareDefinition) {
       throw new Error(`Middleware ${middleware} not found`);
     }
 
     for (const testCase of testCases) {
       this.emit('boundaryTestStarted', { middleware, testCase: testCase.name });
-      
+
       const result = await this.executeBoundaryTest(middlewareDefinition, testCase);
       results.push(result);
-      
+
       this.emit('boundaryTestCompleted', { middleware, testCase: testCase.name, result });
     }
-    
+
     return results;
   }
 
@@ -304,18 +305,18 @@ export class MiddlewareTestFramework extends EventEmitter {
    */
   async runIntegrationTests(suites: IntegrationTestSuite[]): Promise<TestResult[]> {
     const results: TestResult[] = [];
-    
+
     for (const suite of suites) {
       this.emit('integrationSuiteStarted', { suite: suite.name });
-      
+
       for (const scenario of suite.scenarios) {
         const result = await this.executeIntegrationScenario(suite.chain, scenario);
         results.push(result);
       }
-      
+
       this.emit('integrationSuiteCompleted', { suite: suite.name });
     }
-    
+
     return results;
   }
 
@@ -329,21 +330,21 @@ export class MiddlewareTestFramework extends EventEmitter {
 
     const results: TestResult[] = [];
     const performanceScenarios = scenarios.filter(s => s.type === 'performance');
-    
+
     for (const scenario of performanceScenarios) {
       this.emit('performanceBenchmarkStarted', { middleware, scenario: scenario.name });
-      
+
       const result = await this.executePerformanceBenchmark(scenario);
       results.push(result);
-      
+
       // Store baseline if this is the first run
       if (!this.performanceBaselines.has(scenario.name) && result.performance) {
         this.performanceBaselines.set(scenario.name, result.performance);
       }
-      
+
       this.emit('performanceBenchmarkCompleted', { middleware, scenario: scenario.name, result });
     }
-    
+
     return results;
   }
 
@@ -364,8 +365,8 @@ export class MiddlewareTestFramework extends EventEmitter {
         nodeVersion: process.version,
         testFrameworkVersion: '1.0.0',
         middleware: typeof scenario.middleware === 'string' ? scenario.middleware : scenario.middleware.name,
-        requestId: this.generateRequestId()
-      }
+        requestId: this.generateRequestId(),
+      },
     };
 
     try {
@@ -390,7 +391,7 @@ export class MiddlewareTestFramework extends EventEmitter {
 
       // Validate response
       result.assertions = await this.validateResponse(response, scenario.expected);
-      
+
       // Check if all assertions passed
       result.status = result.assertions.every(a => a.passed) ? 'passed' : 'failed';
 
@@ -405,7 +406,7 @@ export class MiddlewareTestFramework extends EventEmitter {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         type: error instanceof Error ? error.constructor.name : 'Unknown',
-        context: { scenario: scenario.name }
+        context: { scenario: scenario.name },
       };
     }
 
@@ -430,17 +431,17 @@ export class MiddlewareTestFramework extends EventEmitter {
         nodeVersion: process.version,
         testFrameworkVersion: '1.0.0',
         middleware: middleware.name,
-        requestId: this.generateRequestId()
-      }
+        requestId: this.generateRequestId(),
+      },
     };
 
     try {
-      const request = this.createTestRequest({ 
-        request: { 
+      const request = this.createTestRequest({
+        request: {
           url: 'http://localhost:3000/test',
           method: 'POST',
-          body: testCase.input
-        }
+          body: testCase.input,
+        },
       });
 
       let response: NextResponse;
@@ -464,7 +465,7 @@ export class MiddlewareTestFramework extends EventEmitter {
             passed: !threwError,
             expected: false,
             actual: threwError,
-            message: threwError ? `Unexpected error: ${error?.message}` : 'No error thrown as expected'
+            message: threwError ? `Unexpected error: ${error?.message}` : 'No error thrown as expected',
           });
           break;
 
@@ -474,7 +475,7 @@ export class MiddlewareTestFramework extends EventEmitter {
             passed: threwError,
             expected: true,
             actual: threwError,
-            message: threwError ? 'Error thrown as expected' : 'Expected error but none was thrown'
+            message: threwError ? 'Error thrown as expected' : 'Expected error but none was thrown',
           });
           break;
 
@@ -484,7 +485,7 @@ export class MiddlewareTestFramework extends EventEmitter {
             passed: !threwError && response!.status >= 200 && response!.status < 300,
             expected: 'graceful handling',
             actual: threwError ? 'error' : 'handled',
-            message: 'Should handle boundary case gracefully'
+            message: 'Should handle boundary case gracefully',
           });
           break;
       }
@@ -498,7 +499,7 @@ export class MiddlewareTestFramework extends EventEmitter {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         type: error instanceof Error ? error.constructor.name : 'Unknown',
-        context: { testCase: testCase.name }
+        context: { testCase: testCase.name },
       };
     }
 
@@ -523,8 +524,8 @@ export class MiddlewareTestFramework extends EventEmitter {
         nodeVersion: process.version,
         testFrameworkVersion: '1.0.0',
         middleware: chain.name,
-        requestId: this.generateRequestId()
-      }
+        requestId: this.generateRequestId(),
+      },
     };
 
     try {
@@ -538,12 +539,12 @@ export class MiddlewareTestFramework extends EventEmitter {
           throw new Error(`Middleware ${step.middleware} not found in chain`);
         }
 
-        const request = this.createTestRequest({ 
-          request: { 
+        const request = this.createTestRequest({
+          request: {
             url: 'http://localhost:3000/test',
             method: 'POST',
-            body: currentInput
-          }
+            body: currentInput,
+          },
         });
 
         const response = await this.executeMiddleware(middleware, request);
@@ -551,7 +552,7 @@ export class MiddlewareTestFramework extends EventEmitter {
           middleware: step.middleware,
           input: currentInput,
           output: response,
-          step: step
+          step: step,
         });
 
         // Use output as input for next step
@@ -560,7 +561,7 @@ export class MiddlewareTestFramework extends EventEmitter {
 
       // Validate assertions
       const assertions: AssertionResult[] = [];
-      
+
       for (const assertion of scenario.assertions) {
         const assertionResult = await this.validateIntegrationAssertion(assertion, stepResults);
         assertions.push(assertionResult);
@@ -575,7 +576,7 @@ export class MiddlewareTestFramework extends EventEmitter {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         type: error instanceof Error ? error.constructor.name : 'Unknown',
-        context: { scenario: scenario.name }
+        context: { scenario: scenario.name },
       };
     }
 
@@ -599,8 +600,8 @@ export class MiddlewareTestFramework extends EventEmitter {
         nodeVersion: process.version,
         testFrameworkVersion: '1.0.0',
         middleware: typeof scenario.middleware === 'string' ? scenario.middleware : scenario.middleware.name,
-        requestId: this.generateRequestId()
-      }
+        requestId: this.generateRequestId(),
+      },
     };
 
     try {
@@ -618,7 +619,7 @@ export class MiddlewareTestFramework extends EventEmitter {
 
       // Calculate aggregate performance metrics
       result.performance = this.aggregatePerformanceResults(runs);
-      
+
       // Validate against thresholds
       result.assertions = this.validatePerformanceThresholds(result.performance);
       result.status = result.assertions.every(a => a.passed) ? 'passed' : 'failed';
@@ -629,7 +630,7 @@ export class MiddlewareTestFramework extends EventEmitter {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         type: error instanceof Error ? error.constructor.name : 'Unknown',
-        context: { scenario: scenario.name }
+        context: { scenario: scenario.name },
       };
     }
 
@@ -644,7 +645,7 @@ export class MiddlewareTestFramework extends EventEmitter {
     const startMemory = process.memoryUsage();
 
     const request = this.createTestRequest(scenario.input);
-    
+
     if (typeof scenario.middleware === 'string') {
       const middlewareDefinition = this.middlewares.get(scenario.middleware);
       if (!middlewareDefinition) {
@@ -666,7 +667,7 @@ export class MiddlewareTestFramework extends EventEmitter {
       memoryUsage,
       cpuUsage: 0, // Would need more sophisticated CPU monitoring
       throughput: 1000 / executionTime, // requests per second
-      breakdown: [] // Would need instrumentation for detailed breakdown
+      breakdown: [], // Would need instrumentation for detailed breakdown
     };
   }
 
@@ -681,7 +682,7 @@ export class MiddlewareTestFramework extends EventEmitter {
    * Execute middleware chain
    */
   private async executeMiddlewareChain(chain: MiddlewareChain, request: NextRequest): Promise<NextResponse> {
-    let currentRequest = request;
+    const currentRequest = request;
     let response: NextResponse = NextResponse.next();
 
     if (chain.order === 'sequential') {
@@ -702,7 +703,7 @@ export class MiddlewareTestFramework extends EventEmitter {
         }
         return middleware.handler(currentRequest);
       });
-      
+
       const responses = await Promise.all(promises);
       response = responses[responses.length - 1]; // Use last response
     }
@@ -715,7 +716,7 @@ export class MiddlewareTestFramework extends EventEmitter {
    */
   private createTestRequest(input: TestInput): NextRequest {
     const url = new URL(input.request.url);
-    
+
     // Add search params
     if (input.request.searchParams) {
       Object.entries(input.request.searchParams).forEach(([key, value]) => {
@@ -724,7 +725,7 @@ export class MiddlewareTestFramework extends EventEmitter {
     }
 
     const headers = new Headers(input.request.headers || {});
-    
+
     // Add cookies to headers
     if (input.request.cookies) {
       const cookieString = Object.entries(input.request.cookies)
@@ -739,10 +740,10 @@ export class MiddlewareTestFramework extends EventEmitter {
     };
 
     if (input.request.body && input.request.method !== 'GET') {
-      requestInit.body = typeof input.request.body === 'string' 
-        ? input.request.body 
+      requestInit.body = typeof input.request.body === 'string'
+        ? input.request.body
         : JSON.stringify(input.request.body);
-      
+
       if (!headers.has('content-type')) {
         headers.set('content-type', 'application/json');
       }
@@ -764,7 +765,7 @@ export class MiddlewareTestFramework extends EventEmitter {
         passed: response.status === expected.response.status,
         expected: expected.response.status,
         actual: response.status,
-        message: `Expected status ${expected.response.status}, got ${response.status}`
+        message: `Expected status ${expected.response.status}, got ${response.status}`,
       });
     }
 
@@ -777,7 +778,7 @@ export class MiddlewareTestFramework extends EventEmitter {
           passed: actualValue === expectedValue,
           expected: expectedValue,
           actual: actualValue,
-          message: `Expected header ${key} to be ${expectedValue}, got ${actualValue}`
+          message: `Expected header ${key} to be ${expectedValue}, got ${actualValue}`,
         });
       });
     }
@@ -792,7 +793,7 @@ export class MiddlewareTestFramework extends EventEmitter {
           passed: bodyMatches,
           expected: expected.response.body,
           actual: actualBody,
-          message: bodyMatches ? 'Body matches expected' : 'Body does not match expected'
+          message: bodyMatches ? 'Body matches expected' : 'Body does not match expected',
         });
       } catch (error) {
         assertions.push({
@@ -800,7 +801,7 @@ export class MiddlewareTestFramework extends EventEmitter {
           passed: false,
           expected: 'valid JSON',
           actual: 'invalid JSON',
-          message: `Failed to parse response body as JSON: ${error}`
+          message: `Failed to parse response body as JSON: ${error}`,
         });
       }
     }
@@ -818,7 +819,7 @@ export class MiddlewareTestFramework extends EventEmitter {
       passed: true, // Placeholder
       expected: assertion.condition,
       actual: 'validated',
-      message: assertion.message
+      message: assertion.message,
     };
   }
 
@@ -835,7 +836,7 @@ export class MiddlewareTestFramework extends EventEmitter {
       passed: performance.executionTime <= thresholds.maxExecutionTime,
       expected: `<= ${thresholds.maxExecutionTime}ms`,
       actual: `${performance.executionTime}ms`,
-      message: `Execution time should be under ${thresholds.maxExecutionTime}ms`
+      message: `Execution time should be under ${thresholds.maxExecutionTime}ms`,
     });
 
     // Memory usage threshold
@@ -844,7 +845,7 @@ export class MiddlewareTestFramework extends EventEmitter {
       passed: performance.memoryUsage <= thresholds.maxMemoryUsage,
       expected: `<= ${thresholds.maxMemoryUsage}MB`,
       actual: `${performance.memoryUsage}MB`,
-      message: `Memory usage should be under ${thresholds.maxMemoryUsage}MB`
+      message: `Memory usage should be under ${thresholds.maxMemoryUsage}MB`,
     });
 
     // Throughput threshold
@@ -853,7 +854,7 @@ export class MiddlewareTestFramework extends EventEmitter {
       passed: performance.throughput >= thresholds.minThroughput,
       expected: `>= ${thresholds.minThroughput} req/s`,
       actual: `${performance.throughput} req/s`,
-      message: `Throughput should be at least ${thresholds.minThroughput} requests per second`
+      message: `Throughput should be at least ${thresholds.minThroughput} requests per second`,
     });
 
     return assertions;
@@ -873,7 +874,7 @@ export class MiddlewareTestFramework extends EventEmitter {
       memoryUsage: avgMemoryUsage,
       cpuUsage: avgCpuUsage,
       throughput: avgThroughput,
-      breakdown: [] // Would aggregate breakdowns if available
+      breakdown: [], // Would aggregate breakdowns if available
     };
   }
 
@@ -893,8 +894,8 @@ export class MiddlewareTestFramework extends EventEmitter {
     const failedTests = results.filter(r => r.status === 'failed').length;
     const skippedTests = results.filter(r => r.status === 'skipped').length;
 
-    let report = `# Middleware Test Report\n\n`;
-    report += `**Summary:**\n`;
+    let report = '# Middleware Test Report\n\n';
+    report += '**Summary:**\n';
     report += `- Total Tests: ${totalTests}\n`;
     report += `- Passed: ${passedTests}\n`;
     report += `- Failed: ${failedTests}\n`;
@@ -909,7 +910,7 @@ export class MiddlewareTestFramework extends EventEmitter {
       typeBreakdown.set(result.type, stats);
     });
 
-    report += `## Test Type Breakdown\n\n`;
+    report += '## Test Type Breakdown\n\n';
     typeBreakdown.forEach((stats, type) => {
       const total = stats.passed + stats.failed + stats.skipped;
       const successRate = total > 0 ? ((stats.passed / total) * 100).toFixed(1) : 0;
@@ -919,7 +920,7 @@ export class MiddlewareTestFramework extends EventEmitter {
     // Performance summary
     const performanceResults = results.filter(r => r.performance);
     if (performanceResults.length > 0) {
-      report += `\n## Performance Summary\n\n`;
+      report += '\n## Performance Summary\n\n';
       performanceResults.forEach(result => {
         report += `### ${result.scenario}\n`;
         report += `- Execution Time: ${result.performance!.executionTime.toFixed(2)}ms\n`;
@@ -931,19 +932,19 @@ export class MiddlewareTestFramework extends EventEmitter {
     // Failed tests details
     const failedResults = results.filter(r => r.status === 'failed');
     if (failedResults.length > 0) {
-      report += `\n## Failed Tests\n\n`;
+      report += '\n## Failed Tests\n\n';
       failedResults.forEach(result => {
         report += `### ${result.scenario} (${result.type})\n`;
         report += `- Duration: ${result.duration}ms\n`;
         report += `- Error: ${result.error?.message || 'Unknown error'}\n`;
-        
+
         if (result.assertions.length > 0) {
-          report += `- Failed Assertions:\n`;
+          report += '- Failed Assertions:\n';
           result.assertions.filter(a => !a.passed).forEach(assertion => {
             report += `  - ${assertion.name}: ${assertion.message}\n`;
           });
         }
-        report += `\n`;
+        report += '\n';
       });
     }
 

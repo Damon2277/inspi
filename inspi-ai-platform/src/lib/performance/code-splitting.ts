@@ -73,37 +73,35 @@ export class CodeSplittingManager {
    */
   async importModule<T = any>(
     importFn: () => Promise<T>,
-    config: SplittingConfig = {}
+    config: SplittingConfig = { strategy: SplittingStrategy.ASYNC },
   ): Promise<ImportResult<T>> {
     const {
+      strategy = SplittingStrategy.ASYNC,
       chunkName = 'dynamic-chunk',
       retries = 3,
       timeout = 10000,
       preload = false,
-      prefetch = false
-    } = config;
+      prefetch = false } = config;
 
     const startTime = Date.now();
-    
+
     // 检查是否已加载
     if (this.loadedChunks.has(chunkName)) {
       return {
         module: this.loadedChunks.get(chunkName),
         loadTime: 0,
         fromCache: true,
-        chunkName
-      };
+        chunkName };
     }
 
     // 检查是否正在加载
     if (this.loadingPromises.has(chunkName)) {
-      const module = await this.loadingPromises.get(chunkName);
+      const moduleExports = await this.loadingPromises.get(chunkName);
       return {
-        module,
+        module: moduleExports,
         loadTime: Date.now() - startTime,
         fromCache: false,
-        chunkName
-      };
+        chunkName };
     }
 
     // 创建加载Promise
@@ -111,11 +109,11 @@ export class CodeSplittingManager {
     this.loadingPromises.set(chunkName, loadPromise);
 
     try {
-      const module = await loadPromise;
+      const moduleExports = await loadPromise;
       const loadTime = Date.now() - startTime;
 
       // 缓存模块
-      this.loadedChunks.set(chunkName, module);
+      this.loadedChunks.set(chunkName, moduleExports);
       this.loadTimes.set(chunkName, loadTime);
       this.loadingPromises.delete(chunkName);
 
@@ -132,25 +130,22 @@ export class CodeSplittingManager {
       logger.debug('Module imported successfully', {
         chunkName,
         loadTime,
-        strategy: config.strategy
-      });
+        strategy });
 
       return {
-        module,
+        module: moduleExports,
         loadTime,
         fromCache: false,
-        chunkName
-      };
+        chunkName };
 
     } catch (error) {
       this.failedChunks.add(chunkName);
       this.loadingPromises.delete(chunkName);
-      
+
       logger.error('Module import failed', error instanceof Error ? error : new Error(String(error)), {
         chunkName,
-        retries
-      });
-      
+        retries });
+
       throw error;
     }
   }
@@ -162,27 +157,26 @@ export class CodeSplittingManager {
     imports: Array<{
       importFn: () => Promise<T>;
       config: SplittingConfig;
-    }>
+    }>,
   ): Promise<Array<ImportResult<T>>> {
     const results: Array<ImportResult<T>> = [];
     const batchSize = 3; // 并发限制
 
     for (let i = 0; i < imports.length; i += batchSize) {
       const batch = imports.slice(i, i + batchSize);
-      
+
       const batchPromises = batch.map(async ({ importFn, config }) => {
         try {
           return await this.importModule(importFn, config);
         } catch (error) {
           logger.error('Batch import failed', error instanceof Error ? error : new Error(String(error)), {
-            chunkName: config.chunkName
-          });
+            chunkName: config.chunkName });
           return null;
         }
       });
 
       const batchResults = await Promise.allSettled(batchPromises);
-      
+
       batchResults.forEach((result) => {
         if (result.status === 'fulfilled' && result.value) {
           results.push(result.value);
@@ -198,10 +192,10 @@ export class CodeSplittingManager {
    */
   async preloadModule(
     importFn: () => Promise<any>,
-    chunkName: string
+    chunkName: string,
   ): Promise<void> {
     if (this.loadedChunks.has(chunkName) || this.loadingPromises.has(chunkName)) {
-      return;
+      return null;
     }
 
     try {
@@ -209,15 +203,13 @@ export class CodeSplittingManager {
         chunkName,
         strategy: SplittingStrategy.ASYNC,
         preload: false,
-        prefetch: false
-      });
-      
+        prefetch: false });
+
       logger.debug('Module preloaded', { chunkName });
     } catch (error) {
       logger.warn('Module preload failed', {
         chunkName,
-        error: error instanceof Error ? error.message : String(error)
-      });
+        error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -226,7 +218,7 @@ export class CodeSplittingManager {
    */
   prefetchModule(
     importFn: () => Promise<any>,
-    chunkName: string
+    chunkName: string,
   ): void {
     // 在空闲时间预获取
     if ('requestIdleCallback' in window) {
@@ -264,7 +256,7 @@ export class CodeSplittingManager {
       size: this.chunkSizes.get(chunkName) || 0,
       loadTime: this.loadTimes.get(chunkName) || 0,
       status: 'loaded' as const,
-      strategy: SplittingStrategy.ASYNC // 默认策略
+      strategy: SplittingStrategy.ASYNC, // 默认策略
     }));
 
     return {
@@ -275,8 +267,7 @@ export class CodeSplittingManager {
       loadedSize,
       averageLoadTime,
       cacheHitRate,
-      chunkDetails
-    };
+      chunkDetails };
   }
 
   /**
@@ -304,7 +295,7 @@ export class CodeSplittingManager {
   private async loadWithRetry<T>(
     importFn: () => Promise<T>,
     retries: number,
-    timeout: number
+    timeout: number,
   ): Promise<T> {
     let lastError: Error;
 
@@ -320,7 +311,7 @@ export class CodeSplittingManager {
 
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        
+
         if (attempt < retries) {
           // 指数退避
           const delay = Math.min(1000 * Math.pow(2, attempt), 5000);
@@ -329,7 +320,11 @@ export class CodeSplittingManager {
       }
     }
 
-    throw lastError!;
+    if (lastError instanceof Error) {
+      throw lastError;
+    }
+
+    throw new Error('Code splitting manager failed to load module');
   }
 
   /**
@@ -366,7 +361,7 @@ export class RouteSplitting {
   registerRoute(
     path: string,
     importFn: () => Promise<any>,
-    config: Omit<SplittingConfig, 'strategy'> = {}
+    config: Omit<SplittingConfig, 'strategy'> = {},
   ): void {
     const chunkName = config.chunkName || `route-${path.replace(/[^a-zA-Z0-9]/g, '-')}`;
     this.routeChunks.set(path, chunkName);
@@ -396,7 +391,7 @@ export class RouteSplitting {
   async preloadRoute(path: string): Promise<void> {
     const chunkName = this.routeChunks.get(path);
     if (!chunkName) {
-      return;
+      return null;
     }
 
     // 这里需要实际的导入函数
@@ -409,7 +404,7 @@ export class RouteSplitting {
  */
 export class ComponentSplitting {
   private codeSplittingManager: CodeSplittingManager;
-  private componentRegistry = new Map<string, () => Promise<any>>();
+  private componentRegistry: Map<string, () => Promise<any>> = new Map();
 
   constructor(codeSplittingManager: CodeSplittingManager) {
     this.codeSplittingManager = codeSplittingManager;
@@ -421,12 +416,12 @@ export class ComponentSplitting {
   registerComponent(
     name: string,
     importFn: () => Promise<any>,
-    config: Omit<SplittingConfig, 'strategy'> = {}
+    config: Omit<SplittingConfig, 'strategy'> = {},
   ): void {
     this.componentRegistry.set(name, importFn);
 
     const chunkName = config.chunkName || `component-${name}`;
-    
+
     // 预加载高优先级组件
     if (config.priority && config.priority > 7) {
       this.codeSplittingManager.preloadModule(importFn, chunkName);
@@ -444,8 +439,7 @@ export class ComponentSplitting {
 
     return await this.codeSplittingManager.importModule(importFn, {
       chunkName: `component-${name}`,
-      strategy: SplittingStrategy.COMPONENT
-    });
+      strategy: SplittingStrategy.COMPONENT });
   }
 
   /**
@@ -462,9 +456,7 @@ export class ComponentSplitting {
         importFn,
         config: {
           chunkName: `component-${name}`,
-          strategy: SplittingStrategy.COMPONENT
-        }
-      };
+          strategy: SplittingStrategy.COMPONENT } };
     });
 
     return await this.codeSplittingManager.importModules(imports);
@@ -480,11 +472,11 @@ export class SplittingUtils {
    */
   static createDynamicImport<T>(
     importFn: () => Promise<{ default: T }>,
-    chunkName?: string
+    chunkName?: string,
   ): () => Promise<T> {
     return async () => {
-      const module = await importFn();
-      return module.default;
+      const moduleExports = await importFn();
+      return moduleExports.default;
     };
   }
 
@@ -495,18 +487,18 @@ export class SplittingUtils {
     chunkName: string,
     mode: 'lazy' | 'eager' | 'weak' = 'lazy',
     preload?: boolean,
-    prefetch?: boolean
+    prefetch?: boolean,
   ): string {
     const comments = [`webpackChunkName: "${chunkName}"`];
-    
+
     if (mode !== 'lazy') {
       comments.push(`webpackMode: "${mode}"`);
     }
-    
+
     if (preload) {
       comments.push('webpackPreload: true');
     }
-    
+
     if (prefetch) {
       comments.push('webpackPrefetch: true');
     }
@@ -528,8 +520,7 @@ export class SplittingUtils {
     // 这里应该集成webpack-bundle-analyzer或类似工具
     return Promise.resolve({
       totalSize: 0,
-      chunks: []
-    });
+      chunks: [] });
   }
 
   /**
@@ -541,10 +532,9 @@ export class SplittingUtils {
     modulePreload: boolean;
   } {
     return {
-      dynamicImport: typeof import === 'function',
-      webpackChunks: typeof __webpack_require__ !== 'undefined',
-      modulePreload: 'modulepreload' in HTMLLinkElement.prototype
-    };
+      dynamicImport: true, // 现代浏览器都支持动态导入
+      webpackChunks: typeof (globalThis as any).__webpack_require__ !== 'undefined',
+      modulePreload: 'modulepreload' in HTMLLinkElement.prototype };
   }
 }
 

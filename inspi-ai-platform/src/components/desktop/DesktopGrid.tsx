@@ -19,13 +19,13 @@ export function DesktopGrid({
   columns = 3,
   gap = 'md',
   className = '',
-  responsive = true
+  responsive = true,
 }: DesktopGridProps) {
   const gapClasses = {
     sm: 'desktop-grid-gap-sm',
     md: 'desktop-grid-gap-md',
     lg: 'desktop-grid-gap-lg',
-    xl: 'desktop-grid-gap-xl'
+    xl: 'desktop-grid-gap-xl',
   };
 
   const getColumnClasses = () => {
@@ -40,7 +40,7 @@ export function DesktopGrid({
       3: 'desktop-grid-3',
       4: 'desktop-grid-4',
       5: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5',
-      6: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6'
+      6: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6',
     };
 
     return responsiveClasses[columns];
@@ -66,14 +66,14 @@ export function DesktopGrid({
 export function DesktopGridItem({
   children,
   span = 1,
-  className = ''
+  className = '',
 }: {
   children: React.ReactNode;
   span?: 1 | 2 | 3 | 4 | 5 | 6;
   className?: string;
 }) {
   const spanClass = span ? `col-span-${span}` : '';
-  
+
   return (
     <div className={`${spanClass} ${className}`}>
       {children}

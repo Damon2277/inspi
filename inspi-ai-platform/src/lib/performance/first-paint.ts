@@ -67,7 +67,7 @@ export class FirstPaintOptimizer {
     DCL: null,
     Load: null,
     FMP: null,
-    TTI: null
+    TTI: null,
   };
   private criticalResources: CriticalResource[] = [];
   private observers: PerformanceObserver[] = [];
@@ -81,7 +81,7 @@ export class FirstPaintOptimizer {
       preloadCritical: true,
       deferNonCritical: true,
       enableServiceWorker: true,
-      ...config
+      ...config,
     };
 
     this.initializeOptimizations();
@@ -94,30 +94,30 @@ export class FirstPaintOptimizer {
   private initializeOptimizations(): void {
     // 1. 内联关键CSS
     this.inlineCriticalCSS();
-    
+
     // 2. 预加载关键资源
     if (this.config.preloadCritical) {
       this.preloadCriticalResources();
     }
-    
+
     // 3. 延迟非关键资源
     if (this.config.deferNonCritical) {
       this.deferNonCriticalResources();
     }
-    
+
     // 4. 优化字体加载
     if (this.config.preloadFonts) {
       this.optimizeFontLoading();
     }
-    
+
     // 5. 启用Service Worker
     if (this.config.enableServiceWorker) {
       this.enableServiceWorker();
     }
-    
+
     // 6. 优化图片加载
     this.optimizeImageLoading();
-    
+
     // 7. 减少主线程阻塞
     this.reduceMainThreadBlocking();
 
@@ -129,12 +129,12 @@ export class FirstPaintOptimizer {
    */
   private inlineCriticalCSS(): void {
     const criticalCSS = this.extractCriticalCSS();
-    
+
     if (criticalCSS && criticalCSS.length < this.config.inlineCSSThreshold) {
       const style = document.createElement('style');
       style.textContent = criticalCSS;
       style.setAttribute('data-critical', 'true');
-      
+
       // 插入到head的最前面
       const firstChild = document.head.firstChild;
       if (firstChild) {
@@ -154,7 +154,7 @@ export class FirstPaintOptimizer {
     // 这里应该实现关键CSS提取逻辑
     // 可以使用工具如critical、penthouse等
     // 或者预先生成的关键CSS
-    
+
     // 模拟关键CSS
     return `
       body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
@@ -174,7 +174,7 @@ export class FirstPaintOptimizer {
       // 关键图片
       { href: '/images/hero.webp', as: 'image' },
       // 关键脚本
-      { href: '/js/critical.js', as: 'script' }
+      { href: '/js/critical.js', as: 'script' },
     ];
 
     criticalResources.forEach(resource => {
@@ -182,11 +182,11 @@ export class FirstPaintOptimizer {
       link.rel = 'preload';
       link.href = resource.href;
       link.as = resource.as;
-      
+
       if (resource.type) {
         link.type = resource.type;
       }
-      
+
       if (resource.crossorigin) {
         link.crossOrigin = resource.crossorigin;
       }
@@ -206,7 +206,7 @@ export class FirstPaintOptimizer {
     nonCriticalCSS.forEach(link => {
       const href = (link as HTMLLinkElement).href;
       link.remove();
-      
+
       // 在页面加载完成后加载
       window.addEventListener('load', () => {
         const newLink = document.createElement('link');
@@ -231,31 +231,7 @@ export class FirstPaintOptimizer {
    * 优化字体加载
    */
   private optimizeFontLoading(): void {
-    // 预连接到字体CDN
-    const preconnectLink = document.createElement('link');
-    preconnectLink.rel = 'preconnect';
-    preconnectLink.href = 'https://fonts.googleapis.com';
-    preconnectLink.crossOrigin = 'anonymous';
-    document.head.appendChild(preconnectLink);
-
-    const preconnectLink2 = document.createElement('link');
-    preconnectLink2.rel = 'preconnect';
-    preconnectLink2.href = 'https://fonts.gstatic.com';
-    preconnectLink2.crossOrigin = 'anonymous';
-    document.head.appendChild(preconnectLink2);
-
-    // 设置font-display: swap
-    const style = document.createElement('style');
-    style.textContent = `
-      @font-face {
-        font-family: 'Inter';
-        font-display: swap;
-        src: url('/fonts/inter-var.woff2') format('woff2');
-      }
-    `;
-    document.head.appendChild(style);
-
-    logger.debug('Font loading optimized');
+    logger.debug('Font loading handled by next/font');
   }
 
   /**
@@ -305,7 +281,7 @@ export class FirstPaintOptimizer {
           }
         });
       }, {
-        rootMargin: '50px'
+        rootMargin: '50px',
       });
 
       const lazyImages = document.querySelectorAll('img[data-src]');
@@ -342,10 +318,10 @@ export class FirstPaintOptimizer {
   private performNonCriticalTasks(): void {
     // 初始化分析工具
     this.initializeAnalytics();
-    
+
     // 预加载下一页内容
     this.preloadNextPageContent();
-    
+
     // 初始化第三方库
     this.initializeThirdPartyLibraries();
   }
@@ -364,22 +340,22 @@ export class FirstPaintOptimizer {
     // 示例：分解数据处理任务
     const processDataInChunks = (data: any[], chunkSize: number = 100) => {
       let index = 0;
-      
+
       const processChunk = () => {
         const chunk = data.slice(index, index + chunkSize);
-        
+
         // 处理当前块
         chunk.forEach(item => {
           // 处理逻辑
         });
-        
+
         index += chunkSize;
-        
+
         if (index < data.length) {
           scheduler(processChunk);
         }
       };
-      
+
       scheduler(processChunk);
     };
   }
@@ -401,7 +377,7 @@ export class FirstPaintOptimizer {
             }
           });
         });
-        
+
         paintObserver.observe({ entryTypes: ['paint'] });
         this.observers.push(paintObserver);
       } catch (error) {
@@ -415,7 +391,7 @@ export class FirstPaintOptimizer {
           const lastEntry = entries[entries.length - 1] as any;
           this.metrics.LCP = Math.round(lastEntry.startTime);
         });
-        
+
         lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
         this.observers.push(lcpObserver);
       } catch (error) {
@@ -433,7 +409,7 @@ export class FirstPaintOptimizer {
 
       // 计算自定义FMP
       this.calculateFMP();
-      
+
       // 计算TTI
       this.calculateTTI();
     });
@@ -453,9 +429,9 @@ export class FirstPaintOptimizer {
           observer.disconnect();
         }
       });
-      
+
       observer.observe(mainContent, { childList: true, subtree: true });
-      
+
       // 如果已经有内容，立即设置FMP
       if (mainContent.children.length > 0) {
         this.metrics.FMP = Math.round(performance.now());
@@ -469,15 +445,15 @@ export class FirstPaintOptimizer {
   private calculateTTI(): void {
     // 简化的TTI计算：页面加载完成且没有长任务
     let longTaskCount = 0;
-    
+
     if ('PerformanceObserver' in window) {
       try {
         const longTaskObserver = new PerformanceObserver((list) => {
           longTaskCount += list.getEntries().length;
         });
-        
+
         longTaskObserver.observe({ entryTypes: ['longtask'] });
-        
+
         // 5秒后检查TTI
         setTimeout(() => {
           if (longTaskCount === 0 && document.readyState === 'complete') {
@@ -579,7 +555,7 @@ export class FirstPaintOptimizer {
       observer.disconnect();
     });
     this.observers = [];
-    
+
     logger.info('First paint optimizer cleaned up');
   }
 }
@@ -670,15 +646,15 @@ export class FirstPaintUtils {
         jsSize: 130 * 1024,     // 130KB
         cssSize: 20 * 1024,     // 20KB
         imageSize: 100 * 1024,  // 100KB
-        fontSize: 30 * 1024     // 30KB
+        fontSize: 30 * 1024,     // 30KB
       },
       recommendations: [
         '保持关键资源总大小在170KB以下',
         '使用代码分割减少初始JavaScript包大小',
         '内联关键CSS，延迟加载非关键CSS',
         '优化图片格式和大小',
-        '使用字体子集和现代字体格式'
-      ]
+        '使用字体子集和现代字体格式',
+      ],
     };
   }
 }

@@ -11,7 +11,7 @@ describe('DeploymentValidator', () => {
 
   beforeEach(() => {
     validator = new DeploymentValidator();
-    
+
     mockDeploymentConfig = {
       environment: 'staging',
       strategy: 'rolling',
@@ -22,32 +22,32 @@ describe('DeploymentValidator', () => {
             url: 'https://staging.example.com/health',
             method: 'GET',
             expectedStatus: 200,
-            timeout: 10000
+            timeout: 10000,
           },
           {
             name: 'Database Health',
             url: 'https://staging.example.com/health/db',
             method: 'GET',
             expectedStatus: 200,
-            timeout: 15000
-          }
+            timeout: 15000,
+          },
         ],
         smokeTests: [
           {
             name: 'API Smoke Test',
             command: 'curl -f https://staging.example.com/api/status',
             timeout: 30000,
-            expectedExitCode: 0
+            expectedExitCode: 0,
           },
           {
             name: 'Authentication Test',
             command: 'npm run test:smoke:auth -- --env=staging',
             timeout: 60000,
-            expectedExitCode: 0
-          }
+            expectedExitCode: 0,
+          },
         ],
         timeout: 300000,
-        retries: 3
+        retries: 3,
       },
       rollback: {
         enabled: true,
@@ -56,10 +56,10 @@ describe('DeploymentValidator', () => {
           {
             type: 'health',
             threshold: 0.8,
-            duration: 60000
-          }
+            duration: 60000,
+          },
         ],
-        strategy: 'previous'
+        strategy: 'previous',
       },
       monitoring: {
         enabled: true,
@@ -69,11 +69,11 @@ describe('DeploymentValidator', () => {
             name: 'High Error Rate',
             condition: 'error_rate > 0.05',
             severity: 'high',
-            channels: ['slack']
-          }
+            channels: ['slack'],
+          },
         ],
-        duration: 600000
-      }
+        duration: 600000,
+      },
     };
   });
 
@@ -112,10 +112,10 @@ describe('DeploymentValidator', () => {
               url: 'https://staging.example.com/nonexistent',
               method: 'GET' as const,
               expectedStatus: 200,
-              timeout: 1000
-            }
-          ]
-        }
+              timeout: 1000,
+            },
+          ],
+        },
       };
 
       const result = await validator.validateDeployment(failingConfig);
@@ -128,7 +128,7 @@ describe('DeploymentValidator', () => {
       await validator.validateDeployment(mockDeploymentConfig);
       await validator.validateDeployment({
         ...mockDeploymentConfig,
-        environment: 'production'
+        environment: 'production',
       });
 
       const history = validator.getDeploymentHistory();
@@ -148,10 +148,10 @@ describe('DeploymentValidator', () => {
               url: '', // Invalid URL
               method: 'GET' as const,
               expectedStatus: 200,
-              timeout: 1000
-            }
-          ]
-        }
+              timeout: 1000,
+            },
+          ],
+        },
       };
 
       const result = await validator.validateDeployment(invalidConfig);
@@ -166,7 +166,7 @@ describe('DeploymentValidator', () => {
       const result = await validator.validateDeployment(mockDeploymentConfig);
 
       expect(result.healthChecks).toHaveLength(2);
-      
+
       const appHealthCheck = result.healthChecks.find(h => h.name === 'Application Health');
       expect(appHealthCheck).toBeDefined();
       expect(appHealthCheck?.url).toBe('https://staging.example.com/health');
@@ -185,10 +185,10 @@ describe('DeploymentValidator', () => {
               url: 'https://staging.example.com/slow',
               method: 'GET' as const,
               expectedStatus: 200,
-              timeout: 1 // Very short timeout
-            }
-          ]
-        }
+              timeout: 1, // Very short timeout
+            },
+          ],
+        },
       };
 
       const result = await validator.validateDeployment(timeoutConfig);
@@ -222,7 +222,7 @@ describe('DeploymentValidator', () => {
       const result = await validator.validateDeployment(mockDeploymentConfig);
 
       expect(result.smokeTests).toHaveLength(2);
-      
+
       const apiTest = result.smokeTests.find(t => t.name === 'API Smoke Test');
       expect(apiTest).toBeDefined();
       expect(apiTest?.command).toBe('curl -f https://staging.example.com/api/status');
@@ -240,10 +240,10 @@ describe('DeploymentValidator', () => {
               name: 'Failing Test',
               command: 'exit 1', // Command that always fails
               timeout: 5000,
-              expectedExitCode: 0
-            }
-          ]
-        }
+              expectedExitCode: 0,
+            },
+          ],
+        },
       };
 
       const result = await validator.validateDeployment(failingConfig);
@@ -262,10 +262,10 @@ describe('DeploymentValidator', () => {
               name: 'Timeout Test',
               command: 'sleep 10', // Long running command
               timeout: 1, // Very short timeout
-              expectedExitCode: 0
-            }
-          ]
-        }
+              expectedExitCode: 0,
+            },
+          ],
+        },
       };
 
       const result = await validator.validateDeployment(timeoutConfig);
@@ -303,19 +303,19 @@ describe('DeploymentValidator', () => {
               url: 'https://staging.example.com/fail',
               method: 'GET' as const,
               expectedStatus: 200,
-              timeout: 1000
-            }
-          ]
+              timeout: 1000,
+            },
+          ],
         },
         rollback: {
           ...mockDeploymentConfig.rollback,
-          automatic: true
-        }
+          automatic: true,
+        },
       };
 
       // Add a previous deployment to rollback to
       await validator.validateDeployment(mockDeploymentConfig);
-      
+
       const result = await validator.validateDeployment(failingConfig);
 
       expect(result.passed).toBe(false);
@@ -333,14 +333,14 @@ describe('DeploymentValidator', () => {
               url: 'https://staging.example.com/fail',
               method: 'GET' as const,
               expectedStatus: 200,
-              timeout: 1000
-            }
-          ]
+              timeout: 1000,
+            },
+          ],
         },
         rollback: {
           ...mockDeploymentConfig.rollback,
-          automatic: false
-        }
+          automatic: false,
+        },
       };
 
       const result = await validator.validateDeployment(noRollbackConfig);
@@ -355,7 +355,7 @@ describe('DeploymentValidator', () => {
       // Perform multiple deployments
       await validator.validateDeployment(mockDeploymentConfig);
       await validator.validateDeployment(mockDeploymentConfig);
-      
+
       const failingConfig = {
         ...mockDeploymentConfig,
         validation: {
@@ -366,10 +366,10 @@ describe('DeploymentValidator', () => {
               url: 'https://staging.example.com/fail',
               method: 'GET' as const,
               expectedStatus: 200,
-              timeout: 1000
-            }
-          ]
-        }
+              timeout: 1000,
+            },
+          ],
+        },
       };
       await validator.validateDeployment(failingConfig);
 
@@ -438,7 +438,7 @@ describe('DeploymentValidator', () => {
       it('should validate required environment', () => {
         const invalidConfig = {
           ...mockDeploymentConfig,
-          environment: ''
+          environment: '',
         };
 
         const errors = DeploymentValidator.validateConfig(invalidConfig);
@@ -451,8 +451,8 @@ describe('DeploymentValidator', () => {
           ...mockDeploymentConfig,
           validation: {
             ...mockDeploymentConfig.validation,
-            healthChecks: []
-          }
+            healthChecks: [],
+          },
         };
 
         const errors = DeploymentValidator.validateConfig(invalidConfig);
@@ -471,10 +471,10 @@ describe('DeploymentValidator', () => {
                 url: '',
                 method: 'GET' as const,
                 expectedStatus: 200,
-                timeout: -1
-              }
-            ]
-          }
+                timeout: -1,
+              },
+            ],
+          },
         };
 
         const errors = DeploymentValidator.validateConfig(invalidConfig);
@@ -494,10 +494,10 @@ describe('DeploymentValidator', () => {
                 name: '',
                 command: '',
                 timeout: -1,
-                expectedExitCode: 0
-              }
-            ]
-          }
+                expectedExitCode: 0,
+              },
+            ],
+          },
         };
 
         const errors = DeploymentValidator.validateConfig(invalidConfig);
@@ -512,11 +512,11 @@ describe('DeploymentValidator', () => {
   describe('deployment history management', () => {
     it('should maintain deployment history', async () => {
       const environments = ['dev', 'staging', 'production'];
-      
+
       for (const env of environments) {
         await validator.validateDeployment({
           ...mockDeploymentConfig,
-          environment: env
+          environment: env,
         });
       }
 
@@ -530,7 +530,7 @@ describe('DeploymentValidator', () => {
       for (let i = 0; i < 15; i++) {
         await validator.validateDeployment({
           ...mockDeploymentConfig,
-          environment: `env-${i}`
+          environment: `env-${i}`,
         });
       }
 
@@ -563,8 +563,8 @@ describe('DeploymentValidator', () => {
         ...mockDeploymentConfig,
         validation: {
           ...mockDeploymentConfig.validation,
-          healthChecks: []
-        }
+          healthChecks: [],
+        },
       };
 
       const result = await validator.validateDeployment(emptyHealthConfig);
@@ -578,8 +578,8 @@ describe('DeploymentValidator', () => {
         ...mockDeploymentConfig,
         validation: {
           ...mockDeploymentConfig.validation,
-          smokeTests: []
-        }
+          smokeTests: [],
+        },
       };
 
       const result = await validator.validateDeployment(emptySmokeConfig);
@@ -599,14 +599,14 @@ describe('DeploymentValidator', () => {
               url: 'https://staging.example.com/fail',
               method: 'GET' as const,
               expectedStatus: 200,
-              timeout: 1000
-            }
-          ]
+              timeout: 1000,
+            },
+          ],
         },
         rollback: {
           ...mockDeploymentConfig.rollback,
-          automatic: true
-        }
+          automatic: true,
+        },
       };
 
       const result = await validator.validateDeployment(failingConfig);
@@ -620,8 +620,8 @@ describe('DeploymentValidator', () => {
         ...mockDeploymentConfig,
         rollback: {
           ...mockDeploymentConfig.rollback,
-          enabled: false
-        }
+          enabled: false,
+        },
       };
 
       const result = await validator.validateDeployment(disabledRollbackConfig);

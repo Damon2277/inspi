@@ -2,8 +2,9 @@
  * 性能告警和通知系统
  */
 import { logger } from '@/lib/logging/logger';
-import { WebVitalsMetric } from './web-vitals';
+
 import { CustomMetric } from './custom-metrics';
+import { WebVitalsMetric } from './web-vitals';
 
 /**
  * 告警级别
@@ -104,13 +105,13 @@ export class PerformanceAlertManager {
           metric: 'LCP',
           operator: 'gt',
           threshold: 4000,
-          duration: 60000 // 1分钟
+          duration: 60000, // 1分钟
         }],
         actions: [
           { type: 'log', config: { level: 'error' } },
-          { type: 'console', config: {} }
+          { type: 'console', config: {} },
         ],
-        cooldown: 300000 // 5分钟
+        cooldown: 300000, // 5分钟
       },
       {
         id: 'cls-warning',
@@ -123,12 +124,12 @@ export class PerformanceAlertManager {
           metric: 'CLS',
           operator: 'gt',
           threshold: 0.1,
-          duration: 30000 // 30秒
+          duration: 30000, // 30秒
         }],
         actions: [
-          { type: 'log', config: { level: 'warn' } }
+          { type: 'log', config: { level: 'warn' } },
         ],
-        cooldown: 180000 // 3分钟
+        cooldown: 180000, // 3分钟
       },
       {
         id: 'fid-error',
@@ -141,13 +142,13 @@ export class PerformanceAlertManager {
           metric: 'FID',
           operator: 'gt',
           threshold: 300,
-          duration: 60000 // 1分钟
+          duration: 60000, // 1分钟
         }],
         actions: [
           { type: 'log', config: { level: 'error' } },
-          { type: 'console', config: {} }
+          { type: 'console', config: {} },
         ],
-        cooldown: 240000 // 4分钟
+        cooldown: 240000, // 4分钟
       },
       {
         id: 'memory-critical',
@@ -160,13 +161,13 @@ export class PerformanceAlertManager {
           metric: 'memory.usage_percentage',
           operator: 'gt',
           threshold: 90,
-          duration: 120000 // 2分钟
+          duration: 120000, // 2分钟
         }],
         actions: [
           { type: 'log', config: { level: 'error' } },
-          { type: 'console', config: {} }
+          { type: 'console', config: {} },
         ],
-        cooldown: 600000 // 10分钟
+        cooldown: 600000, // 10分钟
       },
       {
         id: 'error-rate-high',
@@ -180,13 +181,13 @@ export class PerformanceAlertManager {
           operator: 'gt',
           threshold: 5,
           duration: 300000, // 5分钟
-          aggregation: 'avg'
+          aggregation: 'avg',
         }],
         actions: [
-          { type: 'log', config: { level: 'error' } }
+          { type: 'log', config: { level: 'error' } },
         ],
-        cooldown: 300000 // 5分钟
-      }
+        cooldown: 300000, // 5分钟
+      },
     ];
 
     defaultRules.forEach(rule => this.addRule(rule));
@@ -245,8 +246,8 @@ export class PerformanceAlertManager {
       metadata: {
         rating: metric.rating,
         navigationType: metric.navigationType,
-        id: metric.id
-      }
+        id: metric.id,
+      },
     });
 
     this.checkRules('web-vitals', metric.name, metric.value);
@@ -264,8 +265,8 @@ export class PerformanceAlertManager {
       metadata: {
         unit: metric.unit,
         category: metric.category,
-        tags: metric.tags
-      }
+        tags: metric.tags,
+      },
     });
 
     this.checkRules('custom-metric', metric.name, metric.value);
@@ -302,8 +303,8 @@ export class PerformanceAlertManager {
       }
 
       // 检查条件
-      const matchingConditions = rule.conditions.filter(condition => 
-        condition.type === conditionType && condition.metric === metricName
+      const matchingConditions = rule.conditions.filter(condition =>
+        condition.type === conditionType && condition.metric === metricName,
       );
 
       for (const condition of matchingConditions) {
@@ -327,7 +328,7 @@ export class PerformanceAlertManager {
     if (condition.duration) {
       const durationAgo = Date.now() - condition.duration;
       const recentHistory = history.filter(point => point.timestamp > durationAgo);
-      
+
       if (recentHistory.length === 0) {
         return false;
       }
@@ -393,8 +394,8 @@ export class PerformanceAlertManager {
         metric: metricName,
         value,
         threshold: condition.threshold,
-        conditions: [condition]
-      }
+        conditions: [condition],
+      },
     };
 
     this.events.push(alertEvent);
@@ -410,7 +411,7 @@ export class PerformanceAlertManager {
       level: rule.level,
       metric: metricName,
       value,
-      threshold: condition.threshold
+      threshold: condition.threshold,
     });
   }
 
@@ -441,7 +442,7 @@ export class PerformanceAlertManager {
     } catch (error) {
       logger.error('Failed to execute alert action', error instanceof Error ? error : new Error(String(error)), {
         actionType: action.type,
-        eventId: event.id
+        eventId: event.id,
       });
     }
   }
@@ -452,10 +453,10 @@ export class PerformanceAlertManager {
   private executeLogAction(action: AlertAction, event: AlertEvent): void {
     const level = action.config.level || 'info';
     const message = `Performance Alert: ${event.message}`;
-    
+
     switch (level) {
       case 'error':
-        logger.error(message, { event });
+        logger.error(message, undefined, { event });
         break;
       case 'warn':
         logger.warn(message, { event });
@@ -476,7 +477,7 @@ export class PerformanceAlertManager {
     if (typeof console === 'undefined') return;
 
     const message = `🚨 Performance Alert [${event.level.toUpperCase()}]: ${event.message}`;
-    
+
     switch (event.level) {
       case 'critical':
       case 'error':
@@ -496,7 +497,7 @@ export class PerformanceAlertManager {
    */
   private async executeEmailAction(action: AlertAction, event: AlertEvent): Promise<void> {
     const { to, subject, template } = action.config;
-    
+
     if (!to) {
       logger.warn('Email action missing recipient', { eventId: event.id });
       return;
@@ -506,7 +507,7 @@ export class PerformanceAlertManager {
     logger.info('Email alert would be sent', {
       to,
       subject: subject || `Performance Alert: ${event.ruleName}`,
-      event
+      event,
     });
   }
 
@@ -515,7 +516,7 @@ export class PerformanceAlertManager {
    */
   private async executeWebhookAction(action: AlertAction, event: AlertEvent): Promise<void> {
     const { url, method = 'POST', headers = {} } = action.config;
-    
+
     if (!url) {
       logger.warn('Webhook action missing URL', { eventId: event.id });
       return;
@@ -526,9 +527,9 @@ export class PerformanceAlertManager {
         method,
         headers: {
           'Content-Type': 'application/json',
-          ...headers
+          ...headers,
         },
-        body: JSON.stringify(event)
+        body: JSON.stringify(event),
       });
 
       if (!response.ok) {
@@ -539,7 +540,7 @@ export class PerformanceAlertManager {
     } catch (error) {
       logger.error('Failed to send webhook alert', error instanceof Error ? error : new Error(String(error)), {
         url,
-        eventId: event.id
+        eventId: event.id,
       });
     }
   }
@@ -549,7 +550,7 @@ export class PerformanceAlertManager {
    */
   private executeStorageAction(action: AlertAction, event: AlertEvent): void {
     const { key = 'performance_alerts' } = action.config;
-    
+
     if (typeof localStorage === 'undefined') {
       return;
     }
@@ -557,7 +558,7 @@ export class PerformanceAlertManager {
     try {
       const existingAlerts = JSON.parse(localStorage.getItem(key) || '[]');
       existingAlerts.push(event);
-      
+
       // 保持最近100个告警
       const recentAlerts = existingAlerts.slice(-100);
       localStorage.setItem(key, JSON.stringify(recentAlerts));
@@ -576,7 +577,7 @@ export class PerformanceAlertManager {
       'lt': '<',
       'lte': '<=',
       'eq': '=',
-      'neq': '!='
+      'neq': '!=',
     };
     return operatorMap[operator] || operator;
   }
@@ -614,7 +615,7 @@ export class PerformanceAlertManager {
    * 解决告警
    */
   resolveAlert(eventId: string): boolean {
-    const event = this.events.find(e => e.id === eventId);
+    const event = (this.events as any).find(e => e.id === eventId);
     if (event && !event.resolved) {
       event.resolved = true;
       event.resolvedAt = Date.now();
@@ -632,11 +633,11 @@ export class PerformanceAlertManager {
     const initialCount = this.events.length;
     this.events = this.events.filter(event => event.timestamp > threshold);
     const clearedCount = initialCount - this.events.length;
-    
+
     if (clearedCount > 0) {
       logger.info('Alert events cleared', { clearedCount });
     }
-    
+
     return clearedCount;
   }
 
@@ -663,7 +664,7 @@ export class PerformanceAlertManager {
       rulesCount: this.rules.size,
       activeAlertsCount: this.getActiveAlerts().length,
       totalEventsCount: this.events.length,
-      metricsCount: this.metricHistory.size
+      metricsCount: this.metricHistory.size,
     };
   }
 }

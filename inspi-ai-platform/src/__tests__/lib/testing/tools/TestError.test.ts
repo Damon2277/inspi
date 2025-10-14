@@ -2,12 +2,12 @@
  * Tests for Test Error Handling System
  */
 
-import { 
-  TestError, 
-  TestErrorHandler, 
-  DefaultRecoveryStrategies, 
+import {
+  TestError,
+  TestErrorHandler,
+  DefaultRecoveryStrategies,
   ErrorAssertions,
-  TestErrorType 
+  TestErrorType,
 } from '../../../../lib/testing/errors/TestError';
 
 describe('TestError', () => {
@@ -15,9 +15,9 @@ describe('TestError', () => {
     it('should create error with basic properties', () => {
       const error = new TestError(
         TestErrorType.ASSERTION_FAILED,
-        'Test assertion failed'
+        'Test assertion failed',
       );
-      
+
       expect(error.type).toBe(TestErrorType.ASSERTION_FAILED);
       expect(error.message).toBe('Test assertion failed');
       expect(error.timestamp).toBeInstanceOf(Date);
@@ -30,16 +30,16 @@ describe('TestError', () => {
         testName: 'my-test',
         testFile: 'test.spec.ts',
         testSuite: 'MyTestSuite',
-        additionalInfo: { userId: '123' }
+        additionalInfo: { userId: '123' },
       };
-      
+
       const error = new TestError(
         TestErrorType.TIMEOUT,
         'Test timed out',
         context,
-        true
+        true,
       );
-      
+
       expect(error.context.testName).toBe('my-test');
       expect(error.context.testFile).toBe('test.spec.ts');
       expect(error.context.testSuite).toBe('MyTestSuite');
@@ -57,12 +57,12 @@ describe('TestError', () => {
           testName: 'should-mock-service',
           testFile: 'service.test.ts',
           testSuite: 'ServiceTests',
-          additionalInfo: { mockName: 'EmailService' }
-        }
+          additionalInfo: { mockName: 'EmailService' },
+        },
       );
-      
+
       const formatted = error.getFormattedMessage();
-      
+
       expect(formatted).toContain('[MOCK_FAILED] Mock setup failed');
       expect(formatted).toContain('Test: should-mock-service');
       expect(formatted).toContain('File: service.test.ts');
@@ -76,11 +76,11 @@ describe('TestError', () => {
       const error = new TestError(
         TestErrorType.COVERAGE_FAILED,
         'Coverage below threshold',
-        { testName: 'coverage-test' }
+        { testName: 'coverage-test' },
       );
-      
+
       const json = error.toJSON();
-      
+
       expect(json).toHaveProperty('name', 'TestError');
       expect(json).toHaveProperty('type', TestErrorType.COVERAGE_FAILED);
       expect(json).toHaveProperty('message', 'Coverage below threshold');
@@ -97,9 +97,9 @@ describe('TestError', () => {
       const testError = TestError.fromError(
         originalError,
         TestErrorType.SETUP_FAILED,
-        { testName: 'setup-test' }
+        { testName: 'setup-test' },
       );
-      
+
       expect(testError).toBeInstanceOf(TestError);
       expect(testError.type).toBe(TestErrorType.SETUP_FAILED);
       expect(testError.message).toBe('Original error message');
@@ -119,9 +119,9 @@ describe('TestErrorHandler', () => {
   describe('error recording', () => {
     it('should record errors in history', async () => {
       const error = new TestError(TestErrorType.TIMEOUT, 'Test timeout');
-      
+
       await handler.handleError(error);
-      
+
       const stats = handler.getErrorStats();
       expect(stats.total).toBe(1);
       expect(stats.byType[TestErrorType.TIMEOUT]).toBe(1);
@@ -135,7 +135,7 @@ describe('TestErrorHandler', () => {
         const error = new TestError(TestErrorType.ASSERTION_FAILED, `Error ${i}`);
         await handler.handleError(error);
       }
-      
+
       const stats = handler.getErrorStats();
       expect(stats.total).toBe(100); // Should be limited to 100
     });
@@ -144,52 +144,52 @@ describe('TestErrorHandler', () => {
   describe('recovery strategies', () => {
     it('should register and use recovery strategies', async () => {
       let recoveryAttempted = false;
-      
+
       const mockStrategy = {
         canRecover: (error: TestError) => error.type === TestErrorType.NETWORK_FAILED,
         recover: async (error: TestError) => {
           recoveryAttempted = true;
         },
         getRetryCount: () => 1,
-        getMaxRetries: () => 3
+        getMaxRetries: () => 3,
       };
-      
+
       handler.registerStrategy(TestErrorType.NETWORK_FAILED, mockStrategy);
-      
+
       const error = new TestError(
         TestErrorType.NETWORK_FAILED,
         'Network error',
         {},
-        true // recoverable
+        true, // recoverable
       );
-      
+
       const recovered = await handler.handleError(error);
-      
+
       expect(recovered).toBe(true);
       expect(recoveryAttempted).toBe(true);
     });
 
     it('should not attempt recovery for non-recoverable errors', async () => {
       let recoveryAttempted = false;
-      
+
       const mockStrategy = {
         canRecover: () => true,
         recover: async () => { recoveryAttempted = true; },
         getRetryCount: () => 0,
-        getMaxRetries: () => 3
+        getMaxRetries: () => 3,
       };
-      
+
       handler.registerStrategy(TestErrorType.ASSERTION_FAILED, mockStrategy);
-      
+
       const error = new TestError(
         TestErrorType.ASSERTION_FAILED,
         'Assertion failed',
         {},
-        false // not recoverable
+        false, // not recoverable
       );
-      
+
       const recovered = await handler.handleError(error);
-      
+
       expect(recovered).toBe(false);
       expect(recoveryAttempted).toBe(false);
     });
@@ -199,22 +199,22 @@ describe('TestErrorHandler', () => {
         canRecover: () => true,
         recover: async () => { throw new Error('Recovery failed'); },
         getRetryCount: () => 1,
-        getMaxRetries: () => 3
+        getMaxRetries: () => 3,
       };
-      
+
       handler.registerStrategy(TestErrorType.DATABASE_FAILED, mockStrategy);
-      
+
       const error = new TestError(
         TestErrorType.DATABASE_FAILED,
         'Database error',
         {},
-        true
+        true,
       );
-      
+
       const recovered = await handler.handleError(error);
-      
+
       expect(recovered).toBe(false);
-      
+
       // Should have recorded both original and recovery failure errors
       const stats = handler.getErrorStats();
       expect(stats.total).toBe(2);
@@ -253,10 +253,10 @@ describe('DefaultRecoveryStrategies', () => {
   describe('timeout recovery', () => {
     it('should create timeout recovery strategy', () => {
       const strategy = DefaultRecoveryStrategies.createTimeoutRecovery(3);
-      
+
       const timeoutError = new TestError(TestErrorType.TIMEOUT, 'Timeout');
       const otherError = new TestError(TestErrorType.ASSERTION_FAILED, 'Assert');
-      
+
       expect(strategy.canRecover(timeoutError)).toBe(true);
       expect(strategy.canRecover(otherError)).toBe(false);
       expect(strategy.getMaxRetries()).toBe(3);
@@ -265,18 +265,18 @@ describe('DefaultRecoveryStrategies', () => {
     it('should respect retry limits', async () => {
       const strategy = DefaultRecoveryStrategies.createTimeoutRecovery(2);
       const error = new TestError(TestErrorType.TIMEOUT, 'Timeout');
-      
+
       // Mock setTimeout to avoid actual delays
       const originalSetTimeout = global.setTimeout;
       global.setTimeout = ((fn: any) => fn()) as any;
-      
+
       try {
         expect(strategy.canRecover(error)).toBe(true); // First attempt
         await strategy.recover(error); // Actually perform recovery to increment counter
-        
+
         expect(strategy.canRecover(error)).toBe(true); // Second attempt
         await strategy.recover(error); // Actually perform recovery to increment counter
-        
+
         expect(strategy.canRecover(error)).toBe(false); // Third attempt - should fail
       } finally {
         global.setTimeout = originalSetTimeout;
@@ -287,7 +287,7 @@ describe('DefaultRecoveryStrategies', () => {
   describe('network recovery', () => {
     it('should create network recovery strategy', () => {
       const strategy = DefaultRecoveryStrategies.createNetworkRecovery(5);
-      
+
       const networkError = new TestError(TestErrorType.NETWORK_FAILED, 'Network');
       expect(strategy.canRecover(networkError)).toBe(true);
       expect(strategy.getMaxRetries()).toBe(5);
@@ -297,7 +297,7 @@ describe('DefaultRecoveryStrategies', () => {
   describe('database recovery', () => {
     it('should create database recovery strategy', () => {
       const strategy = DefaultRecoveryStrategies.createDatabaseRecovery(3);
-      
+
       const dbError = new TestError(TestErrorType.DATABASE_FAILED, 'Database');
       expect(strategy.canRecover(dbError)).toBe(true);
       expect(strategy.getMaxRetries()).toBe(3);
@@ -307,7 +307,7 @@ describe('DefaultRecoveryStrategies', () => {
   describe('mock recovery', () => {
     it('should create mock recovery strategy', () => {
       const strategy = DefaultRecoveryStrategies.createMockRecovery();
-      
+
       const mockError = new TestError(TestErrorType.MOCK_FAILED, 'Mock');
       expect(strategy.canRecover(mockError)).toBe(true);
       expect(strategy.getMaxRetries()).toBe(1);
@@ -338,11 +338,11 @@ describe('ErrorAssertions', () => {
       const error = new TestError(
         TestErrorType.SETUP_FAILED,
         'Setup failed',
-        { testName: 'my-test', testFile: 'test.spec.ts' }
+        { testName: 'my-test', testFile: 'test.spec.ts' },
       );
-      
-      expect(() => 
-        ErrorAssertions.assertErrorContext(error, { testName: 'my-test' })
+
+      expect(() =>
+        ErrorAssertions.assertErrorContext(error, { testName: 'my-test' }),
       ).not.toThrow();
     });
 
@@ -350,11 +350,11 @@ describe('ErrorAssertions', () => {
       const error = new TestError(
         TestErrorType.SETUP_FAILED,
         'Setup failed',
-        { testName: 'my-test' }
+        { testName: 'my-test' },
       );
-      
-      expect(() => 
-        ErrorAssertions.assertErrorContext(error, { testName: 'other-test' })
+
+      expect(() =>
+        ErrorAssertions.assertErrorContext(error, { testName: 'other-test' }),
       ).toThrow(TestError);
     });
   });
@@ -363,14 +363,14 @@ describe('ErrorAssertions', () => {
     it('should pass for correct recoverability', () => {
       const recoverableError = new TestError(TestErrorType.TIMEOUT, 'Timeout', {}, true);
       const nonRecoverableError = new TestError(TestErrorType.ASSERTION_FAILED, 'Assert', {}, false);
-      
+
       expect(() => ErrorAssertions.assertErrorRecoverable(recoverableError, true)).not.toThrow();
       expect(() => ErrorAssertions.assertErrorRecoverable(nonRecoverableError, false)).not.toThrow();
     });
 
     it('should fail for incorrect recoverability', () => {
       const error = new TestError(TestErrorType.TIMEOUT, 'Timeout', {}, false);
-      
+
       expect(() => ErrorAssertions.assertErrorRecoverable(error, true)).toThrow(TestError);
     });
   });

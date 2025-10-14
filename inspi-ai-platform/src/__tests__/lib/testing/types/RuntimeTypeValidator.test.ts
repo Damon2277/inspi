@@ -6,7 +6,7 @@ import {
   RuntimeTypeValidator,
   createRuntimeTypeValidator,
   ValidationRule,
-  TypeSchema
+  TypeSchema,
 } from '../../../../lib/testing/types/RuntimeTypeValidator';
 
 describe('RuntimeTypeValidator', () => {
@@ -23,8 +23,8 @@ describe('RuntimeTypeValidator', () => {
         rules: [
           { field: 'id', type: 'number', required: true },
           { field: 'name', type: 'string', required: true },
-          { field: 'email', type: 'email', required: false }
-        ]
+          { field: 'email', type: 'email', required: false },
+        ],
       };
 
       expect(() => validator.registerSchema(schema)).not.toThrow();
@@ -56,8 +56,8 @@ describe('RuntimeTypeValidator', () => {
           { field: 'id', type: 'number', required: true },
           { field: 'name', type: 'string', required: true },
           { field: 'email', type: 'email', required: false },
-          { field: 'age', type: 'number', required: false }
-        ]
+          { field: 'age', type: 'number', required: false },
+        ],
       };
       validator.registerSchema(userSchema);
     });
@@ -67,7 +67,7 @@ describe('RuntimeTypeValidator', () => {
         id: 1,
         name: 'John Doe',
         email: 'john@example.com',
-        age: 30
+        age: 30,
       };
 
       const result = validator.validate('User', validUser);
@@ -78,7 +78,7 @@ describe('RuntimeTypeValidator', () => {
 
     it('should detect missing required fields', () => {
       const invalidUser = {
-        name: 'John Doe'
+        name: 'John Doe',
         // Missing required 'id' field
       };
 
@@ -93,7 +93,7 @@ describe('RuntimeTypeValidator', () => {
     it('should detect incorrect types', () => {
       const invalidUser = {
         id: 'not-a-number',
-        name: 'John Doe'
+        name: 'John Doe',
       };
 
       const result = validator.validate('User', invalidUser);
@@ -108,7 +108,7 @@ describe('RuntimeTypeValidator', () => {
     it('should handle optional fields correctly', () => {
       const userWithoutOptional = {
         id: 1,
-        name: 'John Doe'
+        name: 'John Doe',
         // Optional fields omitted
       };
 
@@ -122,7 +122,7 @@ describe('RuntimeTypeValidator', () => {
       const userWithInvalidEmail = {
         id: 1,
         name: 'John Doe',
-        email: 'invalid-email'
+        email: 'invalid-email',
       };
 
       const result = validator.validate('User', userWithInvalidEmail);
@@ -143,8 +143,8 @@ describe('RuntimeTypeValidator', () => {
           { field: 'tags', type: 'string[]', required: true },
           { field: 'status', type: 'string', required: true, validator: (v) => ['active', 'inactive'].includes(v) },
           { field: 'url', type: 'url', required: false },
-          { field: 'createdAt', type: 'date', required: true }
-        ]
+          { field: 'createdAt', type: 'date', required: true },
+        ],
       };
       validator.registerSchema(productSchema);
     });
@@ -156,7 +156,7 @@ describe('RuntimeTypeValidator', () => {
         price: 99.99,
         tags: ['electronics', 'gadget'],
         status: 'active',
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       const result = validator.validate('Product', validProduct);
@@ -164,7 +164,7 @@ describe('RuntimeTypeValidator', () => {
 
       const invalidProduct = {
         ...validProduct,
-        id: 'invalid-uuid'
+        id: 'invalid-uuid',
       };
 
       const invalidResult = validator.validate('Product', invalidProduct);
@@ -178,7 +178,7 @@ describe('RuntimeTypeValidator', () => {
         price: 99.99,
         tags: ['electronics', 'gadget'],
         status: 'active',
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       const result = validator.validate('Product', validProduct);
@@ -186,7 +186,7 @@ describe('RuntimeTypeValidator', () => {
 
       const invalidProduct = {
         ...validProduct,
-        tags: 'not-an-array'
+        tags: 'not-an-array',
       };
 
       const invalidResult = validator.validate('Product', invalidProduct);
@@ -200,7 +200,7 @@ describe('RuntimeTypeValidator', () => {
         price: 99.99,
         tags: ['electronics'],
         status: 'active',
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       const result = validator.validate('Product', validProduct);
@@ -208,7 +208,7 @@ describe('RuntimeTypeValidator', () => {
 
       const invalidProduct = {
         ...validProduct,
-        status: 'invalid-status'
+        status: 'invalid-status',
       };
 
       const invalidResult = validator.validate('Product', invalidProduct);
@@ -223,7 +223,7 @@ describe('RuntimeTypeValidator', () => {
         tags: ['electronics'],
         status: 'active',
         url: 'https://example.com/product',
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       const result = validator.validate('Product', validProduct);
@@ -231,7 +231,7 @@ describe('RuntimeTypeValidator', () => {
 
       const invalidProduct = {
         ...validProduct,
-        url: 'invalid-url'
+        url: 'invalid-url',
       };
 
       const invalidResult = validator.validate('Product', invalidProduct);
@@ -245,7 +245,7 @@ describe('RuntimeTypeValidator', () => {
         price: 99.99,
         tags: ['electronics'],
         status: 'active',
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       const result = validator.validate('Product', validProduct);
@@ -254,7 +254,7 @@ describe('RuntimeTypeValidator', () => {
       // Test with ISO string
       const productWithISODate = {
         ...validProduct,
-        createdAt: '2023-01-01T00:00:00.000Z'
+        createdAt: '2023-01-01T00:00:00.000Z',
       };
 
       const isoResult = validator.validate('Product', productWithISODate);
@@ -263,7 +263,7 @@ describe('RuntimeTypeValidator', () => {
       // Test with invalid date
       const invalidProduct = {
         ...validProduct,
-        createdAt: 'invalid-date'
+        createdAt: 'invalid-date',
       };
 
       const invalidResult = validator.validate('Product', invalidProduct);
@@ -278,8 +278,8 @@ describe('RuntimeTypeValidator', () => {
         rules: [
           { field: 'street', type: 'string', required: true },
           { field: 'city', type: 'string', required: true },
-          { field: 'zipCode', type: 'string', required: true }
-        ]
+          { field: 'zipCode', type: 'string', required: true },
+        ],
       };
 
       const userWithAddressSchema: TypeSchema = {
@@ -287,11 +287,11 @@ describe('RuntimeTypeValidator', () => {
         rules: [
           { field: 'id', type: 'number', required: true },
           { field: 'name', type: 'string', required: true },
-          { field: 'address', type: 'object', required: true }
+          { field: 'address', type: 'object', required: true },
         ],
         nested: {
-          address: addressSchema
-        }
+          address: addressSchema,
+        },
       };
 
       validator.registerSchema(addressSchema);
@@ -305,8 +305,8 @@ describe('RuntimeTypeValidator', () => {
         address: {
           street: '123 Main St',
           city: 'Anytown',
-          zipCode: '12345'
-        }
+          zipCode: '12345',
+        },
       };
 
       const result = validator.validate('UserWithAddress', validUser);
@@ -319,9 +319,9 @@ describe('RuntimeTypeValidator', () => {
         name: 'John Doe',
         address: {
           street: '123 Main St',
-          city: 'Anytown'
+          city: 'Anytown',
           // Missing zipCode
-        }
+        },
       };
 
       const result = validator.validate('UserWithAddress', invalidUser);
@@ -336,8 +336,8 @@ describe('RuntimeTypeValidator', () => {
         name: 'StrictUser',
         rules: [
           { field: 'id', type: 'number', required: true },
-          { field: 'name', type: 'string', required: true }
-        ]
+          { field: 'name', type: 'string', required: true },
+        ],
       };
       validator.registerSchema(strictSchema);
     });
@@ -346,7 +346,7 @@ describe('RuntimeTypeValidator', () => {
       const userWithExtra = {
         id: 1,
         name: 'John Doe',
-        extraField: 'extra value'
+        extraField: 'extra value',
       };
 
       const result = validator.validate('StrictUser', userWithExtra, { strict: false });
@@ -358,7 +358,7 @@ describe('RuntimeTypeValidator', () => {
       const userWithExtra = {
         id: 1,
         name: 'John Doe',
-        extraField: 'extra value'
+        extraField: 'extra value',
       };
 
       const result = validator.validate('StrictUser', userWithExtra, { strict: true });
@@ -374,8 +374,8 @@ describe('RuntimeTypeValidator', () => {
         name: 'UnionType',
         rules: [
           { field: 'id', type: 'string | number', required: true },
-          { field: 'value', type: 'string | boolean', required: true }
-        ]
+          { field: 'value', type: 'string | boolean', required: true },
+        ],
       };
       validator.registerSchema(unionSchema);
     });
@@ -385,7 +385,7 @@ describe('RuntimeTypeValidator', () => {
         { id: 'string-id', value: 'string-value' },
         { id: 123, value: true },
         { id: 'string-id', value: false },
-        { id: 456, value: 'another-string' }
+        { id: 456, value: 'another-string' },
       ];
 
       for (const obj of validObjects) {
@@ -397,7 +397,7 @@ describe('RuntimeTypeValidator', () => {
     it('should reject invalid union types', () => {
       const invalidObject = {
         id: true, // boolean not allowed in string | number
-        value: 'valid-string'
+        value: 'valid-string',
       };
 
       const result = validator.validate('UnionType', invalidObject);
@@ -410,8 +410,8 @@ describe('RuntimeTypeValidator', () => {
       const simpleSchema: TypeSchema = {
         name: 'Simple',
         rules: [
-          { field: 'id', type: 'number', required: true }
-        ]
+          { field: 'id', type: 'number', required: true },
+        ],
       };
       validator.registerSchema(simpleSchema);
     });
@@ -464,10 +464,10 @@ describe('RuntimeTypeValidator', () => {
         name: 'Test User',
         subscription: {
           plan: 'free',
-          features: {}
+          features: {},
         },
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       const result = validator.validate('User', validUser);
@@ -488,7 +488,7 @@ describe('RuntimeTypeValidator', () => {
         isPublic: true,
         tags: ['test'],
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       const result = validator.validate('Work', validWork);
@@ -502,7 +502,7 @@ describe('RuntimeTypeValidator', () => {
         id: 'card-1',
         type: 'visualization',
         title: 'Test Card',
-        content: 'Test content'
+        content: 'Test content',
       };
 
       const result = validator.validate('TeachingCard', validCard);
@@ -521,8 +521,8 @@ describe('RuntimeTypeValidator', () => {
       const schema: TypeSchema = {
         name: 'TestSchema',
         rules: [
-          { field: 'id', type: 'number', required: true }
-        ]
+          { field: 'id', type: 'number', required: true },
+        ],
       };
       validator.registerSchema(schema);
 

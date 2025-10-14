@@ -23,17 +23,17 @@ export function getVerificationEmailTemplate(variables: {
   expiryMinutes?: number;
 }): EmailTemplate {
   const { code, email, type, expiryMinutes = 10 } = variables;
-  
+
   const typeMap = {
     registration: '注册验证',
     login: '登录验证',
-    password_reset: '密码重置'
+    password_reset: '密码重置',
   };
 
   const actionMap = {
     registration: '完成注册',
     login: '完成登录',
-    password_reset: '重置密码'
+    password_reset: '重置密码',
   };
 
   const subject = `【Inspi.AI】${typeMap[type]}验证码：${code}`;
@@ -537,7 +537,7 @@ export function getPasswordResetSuccessTemplate(variables: {
  */
 export function renderTemplate(template: string, variables: TemplateVariables): string {
   let rendered = template;
-  
+
   Object.entries(variables).forEach(([key, value]) => {
     const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
     rendered = rendered.replace(regex, String(value));

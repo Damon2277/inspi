@@ -2,7 +2,8 @@
  * 测试数据工厂
  * 用于生成各种测试数据
  */
-import { Types } from 'mongoose'
+import { Types } from 'mongoose';
+
 import {
   GraphType,
   NodeType,
@@ -10,33 +11,33 @@ import {
   GraphLayout,
   KnowledgeGraph,
   GraphNode,
-  GraphEdge
-} from '@/types/knowledgeGraph'
+  GraphEdge,
+} from '@/shared/types/knowledgeGraph';
 
 // 基础工厂类
 class Factory<T> {
-  private defaults: Partial<T>
-  private sequence = 0
+  private defaults: Partial<T>;
+  private sequence = 0;
 
   constructor(defaults: Partial<T>) {
-    this.defaults = defaults
+    this.defaults = defaults;
   }
 
   create(overrides: Partial<T> = {}): T {
-    this.sequence++
+    this.sequence++;
     return {
       ...this.defaults,
       ...overrides,
-    } as T
+    } as T;
   }
 
   createMany(count: number, overrides: Partial<T> = {}): T[] {
-    return Array.from({ length: count }, () => this.create(overrides))
+    return Array.from({ length: count }, () => (this.create as any)(overrides));
   }
 
   sequence(fn: (seq: number) => Partial<T>): T {
-    this.sequence++
-    return this.create(fn(this.sequence))
+    this.sequence++;
+    return (this.create as any)(fn(this.sequence));
   }
 }
 
@@ -52,12 +53,12 @@ export const UserFactory = new Factory({
     limits: {
       dailyGenerations: 10,
       maxWorks: 50,
-      maxGraphs: 5
-    }
+      maxGraphs: 5,
+    },
   },
   createdAt: new Date(),
-  updatedAt: new Date()
-})
+  updatedAt: new Date(),
+});
 
 // 作品工厂
 export const WorkFactory = new Factory({
@@ -73,24 +74,24 @@ export const WorkFactory = new Factory({
       type: 'concept',
       title: 'Test Concept',
       content: 'This is a test concept card',
-      metadata: {}
-    }
+      metadata: {},
+    },
   ],
   metadata: {
     isPublic: true,
     tags: ['test', 'mathematics'],
     difficulty: 3,
-    estimatedTime: 30
+    estimatedTime: 30,
   },
   stats: {
     views: 0,
     likes: 0,
     reuseCount: 0,
-    rating: 0
+    rating: 0,
   },
   createdAt: new Date(),
-  updatedAt: new Date()
-})
+  updatedAt: new Date(),
+});
 
 // 知识图谱节点工厂
 export const GraphNodeFactory = new Factory<GraphNode>({
@@ -103,11 +104,11 @@ export const GraphNodeFactory = new Factory<GraphNode>({
     description: 'Test node description',
     workCount: 0,
     reuseCount: 0,
-    tags: ['test']
+    tags: ['test'],
   },
   isVisible: true,
-  isLocked: false
-})
+  isLocked: false,
+});
 
 // 知识图谱边工厂
 export const GraphEdgeFactory = new Factory<GraphEdge>({
@@ -118,11 +119,11 @@ export const GraphEdgeFactory = new Factory<GraphEdge>({
   weight: 1.0,
   metadata: {
     strength: 0.8,
-    description: 'Test edge'
+    description: 'Test edge',
   },
   isVisible: true,
-  isDirected: true
-})
+  isDirected: true,
+});
 
 // 知识图谱工厂
 export const KnowledgeGraphFactory = new Factory<KnowledgeGraph>({
@@ -137,7 +138,7 @@ export const KnowledgeGraphFactory = new Factory<KnowledgeGraph>({
   edges: [],
   layout: {
     type: GraphLayout.FORCE,
-    options: {}
+    options: {},
   },
   view: {
     showLabels: true,
@@ -148,13 +149,13 @@ export const KnowledgeGraphFactory = new Factory<KnowledgeGraph>({
     theme: 'light',
     animations: true,
     minimap: true,
-    toolbar: true
+    toolbar: true,
   },
   version: 1,
   isPublic: false,
   createdAt: new Date(),
-  updatedAt: new Date()
-})
+  updatedAt: new Date(),
+});
 
 // 贡献记录工厂
 export const ContributionFactory = new Factory({
@@ -164,10 +165,10 @@ export const ContributionFactory = new Factory({
   points: 10,
   metadata: {
     workId: () => new Types.ObjectId().toString(),
-    workTitle: 'Test Work'
+    workTitle: 'Test Work',
   },
-  createdAt: new Date()
-})
+  createdAt: new Date(),
+});
 
 // 复用记录工厂
 export const ReuseFactory = new Factory({
@@ -181,75 +182,75 @@ export const ReuseFactory = new Factory({
     originalTitle: 'Original Work',
     originalAuthor: 'Original Author',
     reuseType: 'full_reuse',
-    modifications: []
+    modifications: [],
   },
-  createdAt: new Date()
-})
+  createdAt: new Date(),
+});
 
 // 复杂数据场景工厂
 export class ScenarioFactory {
   // 创建完整的知识图谱场景
   static createGraphWithNodes(nodeCount = 3, edgeCount = 2) {
-    const nodes = GraphNodeFactory.createMany(nodeCount, {})
-    const edges = []
-    
+    const nodes = GraphNodeFactory.createMany(nodeCount, {});
+    const edges = [];
+
     // 创建边，确保引用存在的节点
     for (let i = 0; i < Math.min(edgeCount, nodeCount - 1); i++) {
-      edges.push(GraphEdgeFactory.create({
+      edges.push((GraphEdgeFactory.create as any)({
         source: nodes[i].id,
-        target: nodes[i + 1].id
-      }))
+        target: nodes[i + 1].id,
+      }));
     }
 
-    return KnowledgeGraphFactory.create({
+    return (KnowledgeGraphFactory.create as any)({
       nodes,
-      edges
-    })
+      edges,
+    });
   }
 
   // 创建用户及其作品场景
   static createUserWithWorks(workCount = 3) {
-    const user = UserFactory.create()
+    const user = (UserFactory.create as any)();
     const works = WorkFactory.createMany(workCount, {
-      userId: user._id
-    })
+      userId: user._id,
+    });
 
-    return { user, works }
+    return { user, works };
   }
 
   // 创建复用链场景
   static createReuseChain(length = 3) {
-    const users = UserFactory.createMany(length)
-    const works = []
-    const reuses = []
+    const users = UserFactory.createMany(length);
+    const works = [];
+    const reuses = [];
 
     // 创建原始作品
-    const originalWork = WorkFactory.create({
-      userId: users[0]._id
-    })
-    works.push(originalWork)
+    const originalWork = (WorkFactory.create as any)({
+      userId: users[0]._id,
+    });
+    works.push(originalWork);
 
     // 创建复用链
     for (let i = 1; i < length; i++) {
-      const newWork = WorkFactory.create({
-        userId: users[i]._id
-      })
-      works.push(newWork)
+      const newWork = (WorkFactory.create as any)({
+        userId: users[i]._id,
+      });
+      works.push(newWork);
 
-      const reuse = ReuseFactory.create({
+      const reuse = (ReuseFactory.create as any)({
         originalWorkId: works[i - 1]._id,
         newWorkId: newWork._id,
         userId: users[i]._id,
-        originalAuthorId: users[0]._id
-      })
-      reuses.push(reuse)
+        originalAuthorId: users[0]._id,
+      });
+      reuses.push(reuse);
     }
 
-    return { users, works, reuses }
+    return { users, works, reuses };
   }
 }
 
-export default {
+const factories = {
   UserFactory,
   WorkFactory,
   GraphNodeFactory,
@@ -257,5 +258,7 @@ export default {
   KnowledgeGraphFactory,
   ContributionFactory,
   ReuseFactory,
-  ScenarioFactory
-}
+  ScenarioFactory,
+};
+
+export default factories;

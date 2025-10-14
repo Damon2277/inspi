@@ -75,7 +75,8 @@ class TeamNotifier {
       type: NOTIFICATION_TYPES.TASK_STATUS_CHANGE,
       priority: this.getStatusChangePriority(taskInfo.oldStatus, taskInfo.newStatus),
       title: `Task Status Changed: ${taskInfo.taskName}`,
-      message: `Task "${taskInfo.taskName}" changed from ${taskInfo.oldStatus} to ${taskInfo.newStatus}`,
+      message:
+        `Task "${taskInfo.taskName}" changed from ${taskInfo.oldStatus} to ${taskInfo.newStatus}`,
       details: {
         task: taskInfo.taskName,
         oldStatus: taskInfo.oldStatus,
@@ -127,7 +128,8 @@ class TeamNotifier {
         estimatedTime: requestInfo.estimatedTime,
         timestamp: new Date().toISOString()
       },
-      recipients: requestInfo.targetCollaborators || this.getRecipientsForNotification('collaboration_request')
+      recipients: requestInfo.targetCollaborators ||
+        this.getRecipientsForNotification('collaboration_request')
     };
 
     this.sendNotification(notification);
@@ -295,7 +297,8 @@ class TeamNotifier {
       report.byPriority[priority] = this.notifications.filter(n => n.priority === priority).length;
     });
 
-    const reportFile = path.join(process.cwd(), 'docs', 'reports', `notification-report-${Date.now()}.json`);
+    const reportFile = path.join(process.cwd(), 'docs', 'reports',
+      `notification-report-${Date.now()}.json`);
     const reportDir = path.dirname(reportFile);
     
     if (!fs.existsSync(reportDir)) {

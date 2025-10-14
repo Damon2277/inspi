@@ -12,37 +12,38 @@
 
 :root {
   /* 色彩系统 */
-  --bg-primary: #F9FAFC;
+  --bg-primary: #f9fafc;
   --text-primary: #111827;
-  --text-secondary: #6B7280;
-  
+  --text-secondary: #6b7280;
+
   /* 品牌渐变 */
-  --brand-orange: #FF8C00;
-  --brand-magenta: #E025B0;
-  --gradient-brand: linear-gradient(90deg, #FF8C00 0%, #E025B0 100%);
-  
+  --brand-orange: #ff8c00;
+  --brand-magenta: #e025b0;
+  --gradient-brand: linear-gradient(90deg, #ff8c00 0%, #e025b0 100%);
+
   /* 微光边框渐变 */
-  --border-orange: #FFD1A8;
-  --border-pink: #F5B9E8;
-  --gradient-border: linear-gradient(90deg, #FFD1A8 0%, #F5B9E8 100%);
-  
+  --border-orange: #ffd1a8;
+  --border-pink: #f5b9e8;
+  --gradient-border: linear-gradient(90deg, #ffd1a8 0%, #f5b9e8 100%);
+
   /* 深色按钮 */
-  --bg-dark-button: #2D3748;
-  
+  --bg-dark-button: #2d3748;
+
   /* 圆角系统 */
   --radius-card: 24px;
   --radius-button: 12px;
   --radius-pill: 9999px;
   --radius-small: 8px;
-  
+
   /* 阴影系统 */
   --shadow-card: 0px 8px 32px rgba(0, 0, 0, 0.05);
   --shadow-card-hover: 0px 12px 40px rgba(0, 0, 0, 0.08);
   --shadow-glow: 0 0 20px rgba(255, 140, 0, 0.3);
-  
+
   /* 字体系统 */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  
+  --font-family:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
   /* 间距系统 (8pt grid) */
   --space-xs: 4px;
   --space-sm: 8px;
@@ -129,7 +130,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: radial-gradient(circle, #E5E7EB 1px, transparent 1px);
+  background-image: radial-gradient(circle, #e5e7eb 1px, transparent 1px);
   background-size: 20px 20px;
   opacity: 0.3;
   pointer-events: none;
@@ -148,10 +149,12 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: 
-    linear-gradient(90deg, transparent 0%, #E5E7EB 50%, transparent 100%),
-    linear-gradient(0deg, transparent 0%, #E5E7EB 50%, transparent 100%);
-  background-size: 100px 1px, 1px 100px;
+  background-image:
+    linear-gradient(90deg, transparent 0%, #e5e7eb 50%, transparent 100%),
+    linear-gradient(0deg, transparent 0%, #e5e7eb 50%, transparent 100%);
+  background-size:
+    100px 1px,
+    1px 100px;
   opacity: 0.2;
   pointer-events: none;
   z-index: -1;
@@ -180,9 +183,13 @@ body {
   padding: 1px;
   background: var(--gradient-border);
   border-radius: inherit;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   mask-composite: xor;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
 }
 
@@ -221,7 +228,7 @@ body {
 }
 
 .btn-primary:hover {
-  background: linear-gradient(95deg, #FF8C00 0%, #E025B0 100%);
+  background: linear-gradient(95deg, #ff8c00 0%, #e025b0 100%);
   box-shadow: var(--shadow-glow);
   transform: scale(1.02);
 }
@@ -257,14 +264,22 @@ body {
   padding: 1px;
   background: var(--gradient-border);
   border-radius: inherit;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   mask-composite: xor;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
 }
 
 .btn-secondary:hover {
-  background: linear-gradient(90deg, rgba(255, 209, 168, 0.1) 0%, rgba(245, 185, 232, 0.1) 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 209, 168, 0.1) 0%,
+    rgba(245, 185, 232, 0.1) 100%
+  );
   color: var(--brand-magenta);
 }
 
@@ -384,28 +399,64 @@ body {
 }
 
 /* 间距工具类 */
-.p-xs { padding: var(--space-xs); }
-.p-sm { padding: var(--space-sm); }
-.p-md { padding: var(--space-md); }
-.p-lg { padding: var(--space-lg); }
-.p-xl { padding: var(--space-xl); }
+.p-xs {
+  padding: var(--space-xs);
+}
+.p-sm {
+  padding: var(--space-sm);
+}
+.p-md {
+  padding: var(--space-md);
+}
+.p-lg {
+  padding: var(--space-lg);
+}
+.p-xl {
+  padding: var(--space-xl);
+}
 
-.m-xs { margin: var(--space-xs); }
-.m-sm { margin: var(--space-sm); }
-.m-md { margin: var(--space-md); }
-.m-lg { margin: var(--space-lg); }
-.m-xl { margin: var(--space-xl); }
+.m-xs {
+  margin: var(--space-xs);
+}
+.m-sm {
+  margin: var(--space-sm);
+}
+.m-md {
+  margin: var(--space-md);
+}
+.m-lg {
+  margin: var(--space-lg);
+}
+.m-xl {
+  margin: var(--space-xl);
+}
 
 /* 布局工具类 */
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.items-center { align-items: center; }
-.justify-center { justify-content: center; }
-.justify-between { justify-content: space-between; }
+.flex {
+  display: flex;
+}
+.flex-col {
+  flex-direction: column;
+}
+.items-center {
+  align-items: center;
+}
+.justify-center {
+  justify-content: center;
+}
+.justify-between {
+  justify-content: space-between;
+}
 
-.text-center { text-align: center; }
-.text-left { text-align: left; }
-.text-right { text-align: right; }
+.text-center {
+  text-align: center;
+}
+.text-left {
+  text-align: left;
+}
+.text-right {
+  text-align: right;
+}
 
 /* ========================================
    10. 响应式设计
@@ -416,32 +467,32 @@ body {
   .heading-1 {
     font-size: 36px;
   }
-  
+
   .heading-2 {
     font-size: 28px;
   }
-  
+
   .heading-3 {
     font-size: 20px;
   }
-  
+
   /* 卡片响应式调整 */
   .glassmorphism-card {
     border-radius: 16px;
     margin: var(--space-md);
   }
-  
+
   .card-content {
     padding: var(--space-md);
   }
-  
+
   /* 按钮响应式调整 */
   .btn-primary,
   .btn-secondary {
     width: 100%;
     padding: 16px 24px;
   }
-  
+
   /* 间距调整 */
   :root {
     --space-lg: 16px;
@@ -454,11 +505,11 @@ body {
   .heading-1 {
     font-size: 28px;
   }
-  
+
   .heading-2 {
     font-size: 24px;
   }
-  
+
   .glassmorphism-card {
     border-radius: 12px;
     margin: var(--space-sm);
@@ -474,7 +525,7 @@ body {
   .glassmorphism-card {
     background: rgba(255, 255, 255, 0.95);
   }
-  
+
   .icon-container {
     background: rgba(255, 255, 255, 0.9);
   }
@@ -510,7 +561,8 @@ body {
 
 /* 脉冲动画 */
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -536,7 +588,7 @@ body {
 }
 
 .gradient-animated {
-  background: linear-gradient(-45deg, #FF8C00, #E025B0, #FF8C00, #E025B0);
+  background: linear-gradient(-45deg, #ff8c00, #e025b0, #ff8c00, #e025b0);
   background-size: 400% 400%;
   animation: gradientShift 3s ease infinite;
 }
@@ -550,9 +602,9 @@ body {
   :root {
     --text-primary: #000000;
     --text-secondary: #333333;
-    --bg-primary: #FFFFFF;
+    --bg-primary: #ffffff;
   }
-  
+
   .glassmorphism-card {
     background: rgba(255, 255, 255, 1);
     border: 2px solid #000000;
@@ -587,14 +639,14 @@ body {
     border: 1px solid #ccc;
     box-shadow: none;
   }
-  
+
   .btn-primary,
   .btn-secondary {
     border: 1px solid #000;
     background: white;
     color: black;
   }
-  
+
   .dot-grid-background::before,
   .circuit-lines::after {
     display: none;

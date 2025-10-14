@@ -3,10 +3,11 @@
  * 提供完整的邀请分享界面
  */
 
-import React, { useState, useEffect } from 'react'
-import { SharePlatform } from '../../lib/invitation/types'
-import { useShare, getPlatformConfig } from '../../hooks/useShare'
-import { ShareService } from '../../lib/invitation/services/ShareService'
+import React, { useState, useEffect } from 'react';
+
+import { ShareService } from '../../lib/invitation/services/ShareService';
+import { SharePlatform } from '../../lib/invitation/types';
+import { useShare, getPlatformConfig } from '../../shared/hooks/useShare';
 
 interface SharePanelProps {
   inviteCode: string
@@ -21,10 +22,10 @@ export const SharePanel: React.FC<SharePanelProps> = ({
   shareService,
   className = '',
   onShareSuccess,
-  onShareError
+  onShareError,
 }) => {
-  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null)
-  const [showQRCode, setShowQRCode] = useState(false)
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [showQRCode, setShowQRCode] = useState(false);
 
   const {
     isSharing,
@@ -35,47 +36,47 @@ export const SharePanel: React.FC<SharePanelProps> = ({
     isPlatformAvailable,
     getAvailablePlatforms,
     generateQRCode,
-    clearError
+    clearError,
   } = useShare(shareService, {
     onShareSuccess: (platform, result) => {
-      console.log(`Share success on ${platform}:`, result)
-      onShareSuccess?.(platform)
+      console.log(`Share success on ${platform}:`, result);
+      onShareSuccess && onShareSuccess(platform);
     },
     onShareError: (platform, error) => {
-      console.error(`Share error on ${platform}:`, error)
-      onShareError?.(platform, error)
-    }
-  })
+      console.error(`Share error on ${platform}:`, error);
+      onShareError && onShareError(platform, error);
+    },
+  });
 
   // 生成二维码
   useEffect(() => {
     const loadQRCode = async () => {
-      const qrCode = await generateQRCode(inviteCode)
-      setQrCodeUrl(qrCode)
-    }
-    loadQRCode()
-  }, [inviteCode, generateQRCode])
+      const qrCode = await generateQRCode(inviteCode);
+      setQrCodeUrl(qrCode);
+    };
+    loadQRCode();
+  }, [inviteCode, generateQRCode]);
 
   // 处理平台分享
   const handlePlatformShare = async (platform: SharePlatform) => {
-    clearError()
-    
+    clearError();
+
     if (platform === SharePlatform.LINK) {
-      await copyShareUrl(inviteCode)
-      return
+      await copyShareUrl(inviteCode);
+      return;
     }
 
     // 优先使用SDK分享，如果不可用则使用URL分享
     if (isPlatformAvailable(platform)) {
-      await shareWithSDK(inviteCode, platform)
+      await shareWithSDK(inviteCode, platform);
     } else {
-      await shareWithUrl(inviteCode, platform)
+      await shareWithUrl(inviteCode, platform);
     }
-  }
+  };
 
   // 获取可分享的平台
-  const availablePlatforms = getAvailablePlatforms()
-  const allPlatforms = Object.values(SharePlatform)
+  const availablePlatforms = getAvailablePlatforms();
+  const allPlatforms = Object.values(SharePlatform);
 
   return (
     <div className={`share-panel ${className}`}>
@@ -91,7 +92,7 @@ export const SharePanel: React.FC<SharePanelProps> = ({
         <div className="share-panel__error">
           <span className="share-panel__error-icon">⚠️</span>
           <span className="share-panel__error-text">{shareError}</span>
-          <button 
+          <button
             className="share-panel__error-close"
             onClick={clearError}
           >
@@ -125,9 +126,9 @@ export const SharePanel: React.FC<SharePanelProps> = ({
         <label className="share-panel__label">选择分享方式</label>
         <div className="share-panel__platform-grid">
           {allPlatforms.map((platform) => {
-            const config = getPlatformConfig(platform)
-            const isAvailable = availablePlatforms.includes(platform) || platform === SharePlatform.LINK
-            
+            const config = getPlatformConfig(platform);
+            const isAvailable = availablePlatforms.includes(platform) || platform === SharePlatform.LINK;
+
             return (
               <button
                 key={platform}
@@ -144,7 +145,7 @@ export const SharePanel: React.FC<SharePanelProps> = ({
                   <span className="share-panel__platform-unavailable">不可用</span>
                 )}
               </button>
-            )
+            );
           })}
         </div>
       </div>
@@ -161,7 +162,7 @@ export const SharePanel: React.FC<SharePanelProps> = ({
             ▼
           </span>
         </button>
-        
+
         {showQRCode && qrCodeUrl && (
           <div className="share-panel__qrcode-container">
             <img
@@ -186,6 +187,7 @@ export const SharePanel: React.FC<SharePanelProps> = ({
         </ul>
       </div>
 
+      {/* eslint-disable-next-line react/no-unknown-property */}
       <style jsx>{`
         .share-panel {
           background: white;
@@ -443,5 +445,5 @@ export const SharePanel: React.FC<SharePanelProps> = ({
         }
       `}</style>
     </div>
-  )
-}
+  );
+};

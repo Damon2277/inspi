@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+
 import { GlassCard } from '@/components/ui/GlassCard';
 
 describe('GlassCard', () => {
@@ -7,9 +8,9 @@ describe('GlassCard', () => {
       <GlassCard>
         <h3>Test Title</h3>
         <p>Test content</p>
-      </GlassCard>
+      </GlassCard>,
     );
-    
+
     expect(screen.getByText('Test Title')).toBeInTheDocument();
     expect(screen.getByText('Test content')).toBeInTheDocument();
   });
@@ -18,9 +19,9 @@ describe('GlassCard', () => {
     const { container } = render(
       <GlassCard className="custom-class">
         <p>Content</p>
-      </GlassCard>
+      </GlassCard>,
     );
-    
+
     const card = container.firstChild;
     expect(card).toHaveClass('glassmorphism-card');
     expect(card).toHaveClass('custom-class');
@@ -30,9 +31,9 @@ describe('GlassCard', () => {
     const { container } = render(
       <GlassCard>
         <p>Content</p>
-      </GlassCard>
+      </GlassCard>,
     );
-    
+
     const card = container.firstChild;
     expect(card).toHaveClass('hover:transform');
   });
@@ -41,9 +42,9 @@ describe('GlassCard', () => {
     const { container } = render(
       <GlassCard hover={false}>
         <p>Content</p>
-      </GlassCard>
+      </GlassCard>,
     );
-    
+
     const card = container.firstChild;
     expect(card).not.toHaveClass('hover:transform');
   });

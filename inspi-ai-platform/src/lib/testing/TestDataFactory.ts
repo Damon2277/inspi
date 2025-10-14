@@ -1,6 +1,7 @@
 import { ObjectId } from 'mongoose';
+
+import { NodeType, EdgeType, GraphType, GraphLayout } from '@/shared/types/knowledgeGraph';
 import { User, Work, TeachingCard, Attribution, KnowledgeGraph, GraphNode, GraphEdge } from '@/types';
-import { NodeType, EdgeType, GraphType, GraphLayout } from '@/types/knowledgeGraph';
 
 /**
  * 测试数据工厂系统
@@ -59,7 +60,7 @@ export class UserFactory implements TestDataFactory<User> {
 
   create(overrides: Partial<User> = {}): User {
     const sequence = SequenceGenerator.next('user');
-    
+
     return {
       _id: new ObjectId(),
       ...UserFactory.defaultUser,
@@ -70,13 +71,13 @@ export class UserFactory implements TestDataFactory<User> {
   }
 
   createMany(count: number, overrides: Partial<User> = {}): User[] {
-    return Array.from({ length: count }, () => this.create(overrides));
+    return Array.from({ length: count }, () => (this.create as any)(overrides));
   }
 
   createWithSubscription(plan: 'free' | 'pro' | 'super', overrides: Partial<User> = {}): User {
     const expiresAt = plan !== 'free' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null;
-    
-    return this.create({
+
+    return (this.create as any)({
       subscription: {
         plan,
         expiresAt,
@@ -87,7 +88,7 @@ export class UserFactory implements TestDataFactory<User> {
   }
 
   createWithUsage(generations: number, reuses: number, overrides: Partial<User> = {}): User {
-    return this.create({
+    return (this.create as any)({
       usage: {
         dailyGenerations: generations,
         dailyReuses: reuses,
@@ -99,8 +100,8 @@ export class UserFactory implements TestDataFactory<User> {
 
   createGoogleUser(overrides: Partial<User> = {}): User {
     const sequence = SequenceGenerator.next('google-user');
-    
-    return this.create({
+
+    return (this.create as any)({
       googleId: `google_${sequence}`,
       password: null,
       ...overrides,
@@ -111,13 +112,13 @@ export class UserFactory implements TestDataFactory<User> {
 // 教学卡片工厂
 export class TeachingCardFactory implements TestDataFactory<TeachingCard> {
   private static readonly cardTypes: TeachingCard['type'][] = [
-    'visualization', 'analogy', 'thinking', 'interaction'
+    'visualization', 'analogy', 'thinking', 'interaction',
   ];
 
   create(overrides: Partial<TeachingCard> = {}): TeachingCard {
     const sequence = SequenceGenerator.next('card');
     const type = TeachingCardFactory.cardTypes[sequence % TeachingCardFactory.cardTypes.length];
-    
+
     return {
       id: `card_${sequence}`,
       type,
@@ -129,11 +130,11 @@ export class TeachingCardFactory implements TestDataFactory<TeachingCard> {
   }
 
   createMany(count: number, overrides: Partial<TeachingCard> = {}): TeachingCard[] {
-    return Array.from({ length: count }, () => this.create(overrides));
+    return Array.from({ length: count }, () => (this.create as any)(overrides));
   }
 
   createByType(type: TeachingCard['type'], overrides: Partial<TeachingCard> = {}): TeachingCard {
-    return this.create({ type, ...overrides });
+    return (this.create as any)({ type, ...overrides });
   }
 
   createSet(): TeachingCard[] {
@@ -153,7 +154,7 @@ export class WorkFactory implements TestDataFactory<Work> {
     const sequence = SequenceGenerator.next('work');
     const subject = WorkFactory.subjects[sequence % WorkFactory.subjects.length];
     const gradeLevel = WorkFactory.gradeLevels[sequence % WorkFactory.gradeLevels.length];
-    
+
     return {
       _id: new ObjectId(),
       title: `Test Work ${sequence}`,
@@ -173,23 +174,23 @@ export class WorkFactory implements TestDataFactory<Work> {
   }
 
   createMany(count: number, overrides: Partial<Work> = {}): Work[] {
-    return Array.from({ length: count }, () => this.create(overrides));
+    return Array.from({ length: count }, () => (this.create as any)(overrides));
   }
 
   createWithAuthor(author: ObjectId, overrides: Partial<Work> = {}): Work {
-    return this.create({ author, ...overrides });
+    return (this.create as any)({ author, ...overrides });
   }
 
   createPublished(overrides: Partial<Work> = {}): Work {
-    return this.create({ 
+    return (this.create as any)({
       status: 'published',
       reuseCount: Math.floor(Math.random() * 50),
-      ...overrides 
+      ...overrides,
     });
   }
 
   createWithCards(cardCount: number, overrides: Partial<Work> = {}): Work {
-    return this.create({
+    return (this.create as any)({
       cards: this.cardFactory.createMany(cardCount),
       ...overrides,
     });
@@ -202,7 +203,7 @@ export class WorkFactory implements TestDataFactory<Work> {
       originalWorkTitle: originalWork.title,
     };
 
-    return this.create({
+    return (this.create as any)({
       title: `${originalWork.title} (Reused)`,
       knowledgePoint: originalWork.knowledgePoint,
       subject: originalWork.subject,
@@ -220,7 +221,7 @@ export class WorkFactory implements TestDataFactory<Work> {
 export class GraphNodeFactory implements TestDataFactory<GraphNode> {
   create(overrides: Partial<GraphNode> = {}): GraphNode {
     const sequence = SequenceGenerator.next('node');
-    
+
     return {
       id: `node_${sequence}`,
       label: `Node ${sequence}`,
@@ -247,26 +248,26 @@ export class GraphNodeFactory implements TestDataFactory<GraphNode> {
   }
 
   createMany(count: number, overrides: Partial<GraphNode> = {}): GraphNode[] {
-    return Array.from({ length: count }, () => this.create(overrides));
+    return Array.from({ length: count }, () => (this.create as any)(overrides));
   }
 
   createWithParent(parentId: string, overrides: Partial<GraphNode> = {}): GraphNode {
-    return this.create({ parentId, level: 1, ...overrides });
+    return (this.create as any)({ parentId, level: 1, ...overrides });
   }
 
   createHierarchy(depth: number, childrenPerLevel: number = 2): GraphNode[] {
     const nodes: GraphNode[] = [];
-    
+
     // Create root node
-    const root = this.create({ level: 0, label: 'Root Node' });
+    const root = (this.create as any)({ level: 0, label: 'Root Node' });
     nodes.push(root);
-    
+
     // Create hierarchy
     let currentLevelNodes = [root];
-    
+
     for (let level = 1; level < depth; level++) {
       const nextLevelNodes: GraphNode[] = [];
-      
+
       for (const parent of currentLevelNodes) {
         for (let i = 0; i < childrenPerLevel; i++) {
           const child = this.createWithParent(parent.id, {
@@ -277,10 +278,10 @@ export class GraphNodeFactory implements TestDataFactory<GraphNode> {
           nextLevelNodes.push(child);
         }
       }
-      
+
       currentLevelNodes = nextLevelNodes;
     }
-    
+
     return nodes;
   }
 }
@@ -289,7 +290,7 @@ export class GraphNodeFactory implements TestDataFactory<GraphNode> {
 export class GraphEdgeFactory implements TestDataFactory<GraphEdge> {
   create(overrides: Partial<GraphEdge> = {}): GraphEdge {
     const sequence = SequenceGenerator.next('edge');
-    
+
     return {
       id: `edge_${sequence}`,
       source: `node_${sequence}`,
@@ -311,16 +312,16 @@ export class GraphEdgeFactory implements TestDataFactory<GraphEdge> {
   }
 
   createMany(count: number, overrides: Partial<GraphEdge> = {}): GraphEdge[] {
-    return Array.from({ length: count }, () => this.create(overrides));
+    return Array.from({ length: count }, () => (this.create as any)(overrides));
   }
 
   createBetween(sourceId: string, targetId: string, overrides: Partial<GraphEdge> = {}): GraphEdge {
-    return this.create({ source: sourceId, target: targetId, ...overrides });
+    return (this.create as any)({ source: sourceId, target: targetId, ...overrides });
   }
 
   createHierarchyEdges(nodes: GraphNode[]): GraphEdge[] {
     const edges: GraphEdge[] = [];
-    
+
     for (const node of nodes) {
       if (node.parentId) {
         const edge = this.createBetween(node.parentId, node.id, {
@@ -329,7 +330,7 @@ export class GraphEdgeFactory implements TestDataFactory<GraphEdge> {
         edges.push(edge);
       }
     }
-    
+
     return edges;
   }
 }
@@ -343,7 +344,7 @@ export class KnowledgeGraphFactory implements TestDataFactory<KnowledgeGraph> {
     const sequence = SequenceGenerator.next('graph');
     const nodes = this.nodeFactory.createMany(5);
     const edges = this.edgeFactory.createMany(4);
-    
+
     return {
       _id: new ObjectId(),
       userId: new ObjectId(),
@@ -389,14 +390,14 @@ export class KnowledgeGraphFactory implements TestDataFactory<KnowledgeGraph> {
   }
 
   createMany(count: number, overrides: Partial<KnowledgeGraph> = {}): KnowledgeGraph[] {
-    return Array.from({ length: count }, () => this.create(overrides));
+    return Array.from({ length: count }, () => (this.create as any)(overrides));
   }
 
   createWithHierarchy(depth: number, childrenPerLevel: number = 2, overrides: Partial<KnowledgeGraph> = {}): KnowledgeGraph {
     const nodes = this.nodeFactory.createHierarchy(depth, childrenPerLevel);
     const edges = this.edgeFactory.createHierarchyEdges(nodes);
-    
-    return this.create({
+
+    return (this.create as any)({
       nodes,
       edges,
       ...overrides,
@@ -404,11 +405,11 @@ export class KnowledgeGraphFactory implements TestDataFactory<KnowledgeGraph> {
   }
 
   createPublic(overrides: Partial<KnowledgeGraph> = {}): KnowledgeGraph {
-    return this.create({ isPublic: true, ...overrides });
+    return (this.create as any)({ isPublic: true, ...overrides });
   }
 
   createForUser(userId: ObjectId, overrides: Partial<KnowledgeGraph> = {}): KnowledgeGraph {
-    return this.create({ userId, ...overrides });
+    return (this.create as any)({ userId, ...overrides });
   }
 }
 
@@ -432,9 +433,9 @@ export class TestDataFactory {
    * 创建完整的用户-作品关系数据
    */
   createUserWithWorks(workCount: number = 3): { user: User; works: Work[] } {
-    const user = this.user.create();
+    const user = this(user.create as any)();
     const works = this.work.createMany(workCount, { author: user._id });
-    
+
     return { user, works };
   }
 
@@ -444,11 +445,11 @@ export class TestDataFactory {
   createReuseChain(length: number): { users: User[]; works: Work[] } {
     const users = this.user.createMany(length);
     const works: Work[] = [];
-    
+
     // 创建原始作品
     const originalWork = this.work.createWithAuthor(users[0]._id, { status: 'published' });
     works.push(originalWork);
-    
+
     // 创建复用链
     let currentWork = originalWork;
     for (let i = 1; i < length; i++) {
@@ -456,7 +457,7 @@ export class TestDataFactory {
       works.push(reusedWork);
       currentWork = reusedWork;
     }
-    
+
     return { users, works };
   }
 
@@ -468,16 +469,16 @@ export class TestDataFactory {
     graph: KnowledgeGraph;
     works: Work[];
   } {
-    const user = this.user.create();
+    const user = this(user.create as any)();
     const graph = this.graph.createForUser(user._id);
     const works = this.work.createMany(workCount, { author: user._id });
-    
+
     // 为节点分配作品
     graph.nodes.forEach((node, index) => {
       const nodeWorks = works.slice(index * 2, (index + 1) * 2);
       node.metadata.workCount = nodeWorks.length;
     });
-    
+
     return { user, graph, works };
   }
 
@@ -491,10 +492,10 @@ export class TestDataFactory {
     graphs: KnowledgeGraph[];
   } {
     const users = this.user.createMany(5);
-    const originalWorks = users.map(user => 
-      this.work.createWithAuthor(user._id, { status: 'published' })
+    const originalWorks = users.map(user =>
+      this.work.createWithAuthor(user._id, { status: 'published' }),
     );
-    
+
     const reusedWorks: Work[] = [];
     // 每个用户复用其他用户的作品
     users.forEach((user, userIndex) => {
@@ -505,9 +506,9 @@ export class TestDataFactory {
         }
       });
     });
-    
+
     const graphs = users.map(user => this.graph.createForUser(user._id));
-    
+
     return { users, originalWorks, reusedWorks, graphs };
   }
 }

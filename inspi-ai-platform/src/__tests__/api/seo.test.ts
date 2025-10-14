@@ -4,8 +4,8 @@ jest.mock('@/lib/seo/service', () => ({
     onContentPublished: jest.fn(),
     monitorSEOHealth: jest.fn(),
     analyzeSEOPerformance: jest.fn(),
-    getKeywordRankings: jest.fn()
-  }
+    getKeywordRankings: jest.fn(),
+  },
 }));
 
 import { seoService } from '@/lib/seo/service';
@@ -59,9 +59,9 @@ describe('SEO Service', () => {
           {
             name: 'Sitemap可访问性',
             status: 'pass' as const,
-            message: 'Sitemap正常'
-          }
-        ]
+            message: 'Sitemap正常',
+          },
+        ],
       };
 
       const mockMonitorSEOHealth = seoService.monitorSEOHealth as jest.Mock;
@@ -80,7 +80,7 @@ describe('SEO Service', () => {
       const mockPerformance = {
         score: 85,
         issues: ['页面加载时间超过3秒'],
-        suggestions: ['优化图片压缩']
+        suggestions: ['优化图片压缩'],
       };
 
       const mockAnalyzeSEOPerformance = seoService.analyzeSEOPerformance as jest.Mock;
@@ -98,7 +98,7 @@ describe('SEO Service', () => {
     it('应该返回关键词排名', async () => {
       const mockRankings = new Map([
         ['AI教学', 15],
-        ['教学创意', 23]
+        ['教学创意', 23],
       ]);
 
       const mockGetKeywordRankings = seoService.getKeywordRankings as jest.Mock;
@@ -115,7 +115,7 @@ describe('SEO Service', () => {
       const mockRankings = new Map([
         ['关键词1', 10],
         ['关键词2', 20],
-        ['关键词3', 30]
+        ['关键词3', 30],
       ]);
 
       const mockGetKeywordRankings = seoService.getKeywordRankings as jest.Mock;

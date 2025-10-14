@@ -10,8 +10,8 @@ import {
   generateAllCardsPrompt,
   validateAllCards,
   cardTemplates,
-  PromptContext
-} from '@/lib/ai/promptTemplates';
+  PromptContext,
+} from '@/core/ai/promptTemplates';
 
 describe('提示词模板系统 - 全面单元测试', () => {
 
@@ -37,13 +37,13 @@ describe('提示词模板系统 - 全面单元测试', () => {
         expect(template).toHaveProperty('prompt');
         expect(template).toHaveProperty('expectedLength');
         expect(template).toHaveProperty('validation');
-        
+
         expect(typeof template.name).toBe('string');
         expect(typeof template.description).toBe('string');
         expect(typeof template.prompt).toBe('string');
         expect(typeof template.expectedLength).toBe('number');
         expect(typeof template.validation).toBe('function');
-        
+
         expect(template.name.length).toBeGreaterThan(0);
         expect(template.description.length).toBeGreaterThan(0);
         expect(template.prompt.length).toBeGreaterThan(0);
@@ -57,7 +57,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
       knowledgePoint: '二次方程',
       subject: '数学',
       gradeLevel: '九年级',
-      difficulty: 'medium'
+      difficulty: 'medium',
     };
 
     it('应该为概念卡片生成正确的提示词', () => {
@@ -114,7 +114,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
     it('应该处理缺失的可选参数', () => {
       // Arrange
       const minimalContext: PromptContext = {
-        knowledgePoint: '测试知识点'
+        knowledgePoint: '测试知识点',
       };
 
       // Act
@@ -131,7 +131,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
       // Arrange
       const contextWithAdditional: PromptContext = {
         knowledgePoint: '测试知识点',
-        additionalContext: '这是额外的上下文信息'
+        additionalContext: '这是额外的上下文信息',
       };
 
       // Act
@@ -241,7 +241,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
 
       // Assert
       expect(cardTypes).toHaveLength(4);
-      
+
       const typeNames = cardTypes.map(ct => ct.type);
       expect(typeNames).toContain('concept');
       expect(typeNames).toContain('example');
@@ -253,7 +253,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
         expect(cardType).toHaveProperty('name');
         expect(cardType).toHaveProperty('description');
         expect(cardType).toHaveProperty('expectedLength');
-        
+
         expect(typeof cardType.type).toBe('string');
         expect(typeof cardType.name).toBe('string');
         expect(typeof cardType.description).toBe('string');
@@ -269,7 +269,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
         knowledgePoint: '圆的面积',
         subject: '数学',
         gradeLevel: '六年级',
-        difficulty: 'easy'
+        difficulty: 'easy',
       };
 
       // Act
@@ -345,7 +345,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
 古代阿基米德用"穷竭法"计算圆面积，中国古代数学家刘徽用"割圆术"
 
 ## 🚀 进一步探索
-可以学习椭圆面积公式、球体表面积公式，以及更复杂的曲面积分`
+可以学习椭圆面积公式、球体表面积公式，以及更复杂的曲面积分`,
       };
 
       // Act
@@ -368,7 +368,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
         concept: '太短',
         example: '',
         practice: '没有正确结构的内容',
-        extension: 'x'.repeat(1000)
+        extension: 'x'.repeat(1000),
       };
 
       // Act
@@ -387,7 +387,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
     const testContext: PromptContext = {
       knowledgePoint: '测试知识点',
       subject: '测试学科',
-      gradeLevel: '测试年级'
+      gradeLevel: '测试年级',
     };
 
     it('应该正确处理简单难度', () => {
@@ -438,7 +438,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
       const longContext: PromptContext = {
         knowledgePoint: '这是一个非常非常长的知识点名称'.repeat(10),
         subject: '数学',
-        gradeLevel: '高中'
+        gradeLevel: '高中',
       };
 
       // Act
@@ -454,14 +454,14 @@ describe('提示词模板系统 - 全面单元测试', () => {
       const specialContext: PromptContext = {
         knowledgePoint: '特殊字符测试!@#$%^&*()_+{}|:"<>?[]\\;\',./',
         subject: '测试学科',
-        gradeLevel: '测试年级'
+        gradeLevel: '测试年级',
       };
 
       // Act
       const prompt = generatePrompt('concept', specialContext);
 
       // Assert
-      expect(prompt).toContain('特殊字符测试!@#$%^&*()_+{}|:"<>?[]\\;\',./')
+      expect(prompt).toContain('特殊字符测试!@#$%^&*()_+{}|:"<>?[]\\;\',./');
     });
 
     it('应该处理Unicode字符', () => {
@@ -469,7 +469,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
       const unicodeContext: PromptContext = {
         knowledgePoint: '数学符号∑∫∂∇∞≈≠≤≥±√π',
         subject: '数学',
-        gradeLevel: '大学'
+        gradeLevel: '大学',
       };
 
       // Act
@@ -484,7 +484,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
       const whitespaceContext: PromptContext = {
         knowledgePoint: '  知识点前后有空格  ',
         subject: '\t制表符学科\t',
-        gradeLevel: '\n换行年级\n'
+        gradeLevel: '\n换行年级\n',
       };
 
       // Act
@@ -504,7 +504,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
         knowledgePoint: '性能测试知识点',
         subject: '计算机科学',
         gradeLevel: '大学',
-        difficulty: 'medium'
+        difficulty: 'medium',
       };
 
       const startTime = Date.now();
@@ -556,12 +556,12 @@ describe('提示词模板系统 - 全面单元测试', () => {
         knowledgePoint: `知识点${index}`,
         subject: `学科${index}`,
         gradeLevel: `年级${index}`,
-        difficulty: 'medium' as const
+        difficulty: 'medium' as const,
       }));
 
       // Act
-      const prompts = contexts.map(context => 
-        generatePrompt('concept', context)
+      const prompts = contexts.map(context =>
+        generatePrompt('concept', context),
       );
 
       // Assert
@@ -588,8 +588,8 @@ describe('提示词模板系统 - 全面单元测试', () => {
 记住概念${index}的核心要点和关键特征`);
 
       // Act
-      const results = contents.map(content => 
-        validateCardContent('concept', content)
+      const results = contents.map(content =>
+        validateCardContent('concept', content),
       );
 
       // Assert
@@ -654,7 +654,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
         subject: '中文学科',
         gradeLevel: '中文年级',
         difficulty: 'medium',
-        language: '中文'
+        language: '中文',
       };
 
       // Act
@@ -673,7 +673,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
         subject: 'English Subject',
         gradeLevel: 'English Grade',
         difficulty: 'medium',
-        language: 'English'
+        language: 'English',
       };
 
       // Act
@@ -691,7 +691,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
         knowledgePoint: 'Mixed 混合 Knowledge 知识点',
         subject: 'Math 数学',
         gradeLevel: 'Grade 9 九年级',
-        difficulty: 'medium'
+        difficulty: 'medium',
       };
 
       // Act
@@ -732,7 +732,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
         knowledgePoint: '旧格式测试',
         subject: undefined,
         gradeLevel: null,
-        difficulty: undefined
+        difficulty: undefined,
       } as any;
 
       // Act

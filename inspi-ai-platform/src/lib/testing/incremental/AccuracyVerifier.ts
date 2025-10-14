@@ -1,8 +1,9 @@
-import { IncrementalTestRunner, IncrementalTestResult } from './IncrementalTestRunner';
-import { TestResult } from './TestCacheManager';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+
+import { IncrementalTestRunner, IncrementalTestResult } from './IncrementalTestRunner';
+import { TestResult } from './TestCacheManager';
 
 export interface VerificationResult {
   isAccurate: boolean;
@@ -62,7 +63,7 @@ export class AccuracyVerifier {
    */
   async verifyAccuracy(
     incrementalRunner: IncrementalTestRunner,
-    sampleSize: number = 0.1 // 10%的采样率
+    sampleSize: number = 0.1, // 10%的采样率
   ): Promise<VerificationResult> {
     try {
       // 1. 运行增量测试
@@ -91,7 +92,7 @@ export class AccuracyVerifier {
   private async runFullTestSuite(sampleSize: number): Promise<Map<string, TestResult>> {
     const allTests = await this.findAllTests();
     const sampleTests = this.sampleTests(allTests, sampleSize);
-    
+
     const results = new Map<string, TestResult>();
 
     for (const testFile of sampleTests) {
@@ -105,7 +106,7 @@ export class AccuracyVerifier {
           status: 'failed',
           duration: 0,
           timestamp: new Date(),
-          errors: [{ message: error.message }]
+          errors: [{ message: error.message }],
         });
       }
     }
@@ -123,10 +124,10 @@ export class AccuracyVerifier {
 
     const sampleCount = Math.max(1, Math.floor(allTests.length * sampleSize));
     const sampled: string[] = [];
-    
+
     // 使用分层采样确保覆盖不同类型的测试
     const testsByType = this.groupTestsByType(allTests);
-    
+
     for (const [type, tests] of testsByType.entries()) {
       const typeCount = Math.max(1, Math.floor(tests.length * sampleSize));
       const typeSample = this.randomSample(tests, typeCount);
@@ -144,7 +145,7 @@ export class AccuracyVerifier {
 
     for (const test of tests) {
       let type = 'other';
-      
+
       if (test.includes('/unit/')) {
         type = 'unit';
       } else if (test.includes('/integration/')) {
@@ -179,16 +180,16 @@ export class AccuracyVerifier {
    */
   private compareResults(
     incrementalResult: IncrementalTestResult,
-    fullResults: Map<string, TestResult>
+    fullResults: Map<string, TestResult>,
   ): VerificationResult {
     const incrementalTests = new Set([
       ...incrementalResult.executionPlan.testsToRun,
-      ...incrementalResult.executionPlan.testsFromCache
+      ...incrementalResult.executionPlan.testsFromCache,
     ]);
 
     const fullTests = new Set(fullResults.keys());
     const incrementalResultsMap = new Map<string, TestResult>();
-    
+
     // 构建增量测试结果映射
     for (const result of incrementalResult.results) {
       incrementalResultsMap.set(result.testFile, result);
@@ -197,7 +198,7 @@ export class AccuracyVerifier {
     // 分析差异
     const missedTests = Array.from(fullTests).filter(test => !incrementalTests.has(test));
     const extraTests = Array.from(incrementalTests).filter(test => !fullTests.has(test));
-    
+
     // 分析结果一致性
     const comparisonReport: ComparisonReport[] = [];
     const falsePositives: string[] = [];
@@ -206,7 +207,7 @@ export class AccuracyVerifier {
     for (const testFile of fullTests) {
       const incrementalResult = incrementalResultsMap.get(testFile);
       const fullResult = fullResults.get(testFile)!;
-      
+
       const incrementalStatus = incrementalResult?.status || 'not_run';
       const fullStatus = fullResult.status;
       const match = incrementalStatus === fullStatus;
@@ -216,7 +217,7 @@ export class AccuracyVerifier {
         incrementalStatus,
         fullStatus,
         match,
-        reason: match ? undefined : `Expected ${fullStatus}, got ${incrementalStatus}`
+        reason: match ? undefined : `Expected ${fullStatus}, got ${incrementalStatus}`,
       });
 
       // 识别假阳性和假阴性
@@ -235,14 +236,14 @@ export class AccuracyVerifier {
     const accuracy = totalTests > 0 ? correctPredictions / totalTests : 1;
 
     // 计算精确率和召回率
-    const truePositives = comparisonReport.filter(r => 
-      r.incrementalStatus === 'failed' && r.fullStatus === 'failed'
+    const truePositives = comparisonReport.filter(r =>
+      r.incrementalStatus === 'failed' && r.fullStatus === 'failed',
     ).length;
-    const predictedPositives = comparisonReport.filter(r => 
-      r.incrementalStatus === 'failed'
+    const predictedPositives = comparisonReport.filter(r =>
+      r.incrementalStatus === 'failed',
     ).length;
-    const actualPositives = comparisonReport.filter(r => 
-      r.fullStatus === 'failed'
+    const actualPositives = comparisonReport.filter(r =>
+      r.fullStatus === 'failed',
     ).length;
 
     const precision = predictedPositives > 0 ? truePositives / predictedPositives : 1;
@@ -262,8 +263,8 @@ export class AccuracyVerifier {
         fullTests: Array.from(fullTests),
         incrementalResults: incrementalResultsMap,
         fullResults,
-        comparisonReport
-      }
+        comparisonReport,
+      },
     };
   }
 
@@ -272,7 +273,7 @@ export class AccuracyVerifier {
    */
   private async findAllTests(): Promise<string[]> {
     const glob = require('glob');
-    
+
     return glob.sync('**/*.{test,spec}.{ts,tsx,js,jsx}', {
       cwd: this.projectRoot,
       absolute: true,
@@ -280,8 +281,8 @@ export class AccuracyVerifier {
         '**/node_modules/**',
         '**/dist/**',
         '**/build/**',
-        '**/.next/**'
-      ]
+        '**/.next/**',
+      ],
     });
   }
 
@@ -291,13 +292,13 @@ export class AccuracyVerifier {
   private async runSingleTest(testFile: string): Promise<TestResult> {
     const startTime = Date.now();
     const relativePath = path.relative(this.projectRoot, testFile);
-    
+
     try {
       const command = `npx jest "${relativePath}" --json --silent`;
       const output = execSync(command, {
         cwd: this.projectRoot,
         encoding: 'utf8',
-        timeout: 30000
+        timeout: 30000,
       });
 
       const duration = Date.now() - startTime;
@@ -308,18 +309,18 @@ export class AccuracyVerifier {
         status: result.success ? 'passed' : 'failed',
         duration,
         timestamp: new Date(),
-        errors: result.success ? undefined : [{ message: 'Test failed' }]
+        errors: result.success ? undefined : [{ message: 'Test failed' }],
       };
 
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       return {
         testFile: relativePath,
         status: 'failed',
         duration,
         timestamp: new Date(),
-        errors: [{ message: error.message }]
+        errors: [{ message: error.message }],
       };
     }
   }
@@ -336,13 +337,13 @@ export class AccuracyVerifier {
         averagePrecision: 0,
         averageRecall: 0,
         commonMissedPatterns: [],
-        improvementSuggestions: []
+        improvementSuggestions: [],
       };
     }
 
     const totalVerifications = this.verificationHistory.length;
     const accurateVerifications = this.verificationHistory.filter(v => v.isAccurate).length;
-    
+
     const averageAccuracy = this.verificationHistory.reduce((sum, v) => sum + v.accuracy, 0) / totalVerifications;
     const averagePrecision = this.verificationHistory.reduce((sum, v) => sum + v.precision, 0) / totalVerifications;
     const averageRecall = this.verificationHistory.reduce((sum, v) => sum + v.recall, 0) / totalVerifications;
@@ -361,7 +362,7 @@ export class AccuracyVerifier {
       averagePrecision,
       averageRecall,
       commonMissedPatterns: missedPatterns,
-      improvementSuggestions: suggestions
+      improvementSuggestions: suggestions,
     };
   }
 
@@ -399,7 +400,7 @@ export class AccuracyVerifier {
     accuracy: number,
     precision: number,
     recall: number,
-    missedPatterns: string[]
+    missedPatterns: string[],
   ): string[] {
     const suggestions: string[] = [];
 
@@ -443,7 +444,7 @@ export class AccuracyVerifier {
       `- Extra Tests: ${result.extraTests.length}`,
       `- False Positives: ${result.falsePositives.length}`,
       `- False Negatives: ${result.falseNegatives.length}`,
-      ''
+      '',
     ];
 
     if (result.missedTests.length > 0) {
@@ -474,7 +475,7 @@ export class AccuracyVerifier {
     report.push('## Detailed Comparison');
     report.push('| Test File | Incremental | Full | Match |');
     report.push('|-----------|-------------|------|-------|');
-    
+
     result.details.comparisonReport.forEach(item => {
       const match = item.match ? '✅' : '❌';
       report.push(`| ${item.testFile} | ${item.incrementalStatus} | ${item.fullStatus} | ${match} |`);
@@ -489,7 +490,7 @@ export class AccuracyVerifier {
   async saveVerificationReport(result: VerificationResult, outputPath?: string): Promise<void> {
     const report = this.generateVerificationReport(result);
     const filePath = outputPath || path.join(this.projectRoot, '.test-cache', 'verification-report.md');
-    
+
     // 确保目录存在
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {
@@ -526,7 +527,7 @@ export class AccuracyVerifier {
 
       const data = {
         lastUpdated: new Date().toISOString(),
-        history: this.verificationHistory.slice(-50) // 保留最近50次验证
+        history: this.verificationHistory.slice(-50), // 保留最近50次验证
       };
 
       fs.writeFileSync(this.metricsFile, JSON.stringify(data, null, 2), 'utf8');

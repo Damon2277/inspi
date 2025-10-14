@@ -3,8 +3,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
 import contributionService from '@/lib/services/contributionService';
-import { LeaderboardType } from '@/types/contribution';
+import { LeaderboardType } from '@/shared/types/contribution';
 
 /**
  * 获取贡献度排行榜
@@ -12,11 +13,11 @@ import { LeaderboardType } from '@/types/contribution';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
+
     // 解析查询参数
     const type = (searchParams.get('type') as keyof typeof LeaderboardType) || 'total';
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
-    const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
     const includeUserRank = searchParams.get('includeUserRank') === 'true';
     const userId = searchParams.get('userId');
 
@@ -24,11 +25,11 @@ export async function GET(request: NextRequest) {
     const validTypes = Object.values(LeaderboardType);
     if (!validTypes.includes(type as LeaderboardType)) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: `无效的排行榜类型。支持的类型: ${validTypes.join(', ')}` 
+        {
+          success: false,
+          error: `无效的排行榜类型。支持的类型: ${validTypes.join(', ')}`,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -38,23 +39,23 @@ export async function GET(request: NextRequest) {
       limit,
       offset,
       includeUserRank,
-      userId: userId || undefined
+      userId: userId || undefined,
     });
 
     return NextResponse.json({
       success: true,
-      data: leaderboard
+      data: leaderboard,
     });
 
   } catch (error) {
     console.error('获取排行榜失败:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: '获取排行榜失败',
-        details: error instanceof Error ? error.message : '未知错误'
+        details: error instanceof Error ? error.message : '未知错误',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

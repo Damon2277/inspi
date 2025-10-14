@@ -2,16 +2,15 @@
  * AI内容过滤器测试
  */
 
+import { geminiService } from '@/core/ai/geminiService';
 import { AIContentFilter } from '@/lib/security/aiContentFilter';
 
 // Mock Gemini服务
-jest.mock('@/lib/ai/geminiService', () => ({
+jest.mock('@/core/ai/geminiService', () => ({
   geminiService: {
-    generateContent: jest.fn()
-  }
+    generateContent: jest.fn(),
+  },
 }));
-
-import { geminiService } from '@/lib/ai/geminiService';
 
 const mockGeminiService = geminiService as jest.Mocked<typeof geminiService>;
 
@@ -31,13 +30,13 @@ describe('AIContentFilter', () => {
           confidence: 0.9,
           categories: ['inappropriate'],
           reasoning: '包含不当言论',
-          suggestedAction: 'block'
+          suggestedAction: 'block',
         }),
-        cached: false
+        cached: false,
       });
 
       const issues = await filter.detect('测试不当内容');
-      
+
       expect(issues).toHaveLength(1);
       expect(issues[0].type).toBe('sensitive_word');
       expect(issues[0].severity).toBe('error');
@@ -51,13 +50,13 @@ describe('AIContentFilter', () => {
           confidence: 0.95,
           categories: [],
           reasoning: '内容正常',
-          suggestedAction: 'allow'
+          suggestedAction: 'allow',
         }),
-        cached: false
+        cached: false,
       });
 
       const issues = await filter.detect('这是正常的教学内容');
-      
+
       expect(issues).toHaveLength(0);
     });
 
@@ -68,13 +67,13 @@ describe('AIContentFilter', () => {
           confidence: 0.6,
           categories: ['uncertain'],
           reasoning: '不确定',
-          suggestedAction: 'review'
+          suggestedAction: 'review',
         }),
-        cached: false
+        cached: false,
       });
 
       const issues = await filter.detect('可能有问题的内容');
-      
+
       expect(issues).toHaveLength(1);
       expect(issues[0].severity).toBe('warning');
       expect(issues[0].message).toContain('可疑内容类别');
@@ -84,18 +83,18 @@ describe('AIContentFilter', () => {
       mockGeminiService.generateContent.mockRejectedValue(new Error('AI服务不可用'));
 
       const issues = await filter.detect('测试内容');
-      
+
       expect(issues).toHaveLength(0); // 错误时不阻止内容
     });
 
     test('应该处理无效的AI响应', async () => {
       mockGeminiService.generateContent.mockResolvedValue({
         content: '无效的JSON响应',
-        cached: false
+        cached: false,
       });
 
       const issues = await filter.detect('测试内容');
-      
+
       // 应该降级到基础判断
       expect(issues).toHaveLength(0);
     });
@@ -104,29 +103,29 @@ describe('AIContentFilter', () => {
   describe('配置管理', () => {
     test('应该支持启用/禁用', async () => {
       filter.setEnabled(false);
-      
+
       const issues = await filter.detect('任何内容');
-      
+
       expect(issues).toHaveLength(0);
       expect(mockGeminiService.generateContent).not.toHaveBeenCalled();
     });
 
     test('应该支持设置置信度阈值', async () => {
       filter.setConfidenceThreshold(0.5);
-      
+
       mockGeminiService.generateContent.mockResolvedValue({
         content: JSON.stringify({
           isAppropriate: true,
           confidence: 0.6,
           categories: ['test'],
           reasoning: '测试',
-          suggestedAction: 'allow'
+          suggestedAction: 'allow',
         }),
-        cached: false
+        cached: false,
       });
 
       const issues = await filter.detect('测试内容');
-      
+
       expect(issues).toHaveLength(1); // 0.6 > 0.5，应该有警告
     });
   });
@@ -138,16 +137,16 @@ describe('AIContentFilter', () => {
         confidence: 0.85,
         categories: ['violence', 'inappropriate'],
         reasoning: '包含暴力内容',
-        suggestedAction: 'block' as const
+        suggestedAction: 'block' as const,
       };
 
       mockGeminiService.generateContent.mockResolvedValue({
         content: `这是一些前缀文本 ${JSON.stringify(mockResponse)} 这是一些后缀文本`,
-        cached: false
+        cached: false,
       });
 
       const issues = await filter.detect('测试内容');
-      
+
       expect(issues).toHaveLength(1);
       expect(issues[0].message).toContain('包含暴力内容');
       expect(issues[0].severity).toBe('error');
@@ -161,11 +160,11 @@ describe('AIContentFilter', () => {
           categories: 'not-array', // 无效类型
           // 缺少其他字段
         }),
-        cached: false
+        cached: false,
       });
 
       const issues = await filter.detect('测试内容');
-      
+
       expect(issues).toHaveLength(0); // 应该降级处理
     });
   });

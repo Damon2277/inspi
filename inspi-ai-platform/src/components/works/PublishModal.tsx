@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { TeachingCard } from '@/types/teaching';
+
+import { TeachingCard } from '@/shared/types/teaching';
 
 interface PublishModalProps {
   isOpen: boolean;
@@ -32,7 +33,7 @@ const CARD_TYPE_NAMES = {
   visualization: '可视化卡',
   analogy: '类比延展卡',
   thinking: '启发思考卡',
-  interaction: '互动氛围卡'
+  interaction: '互动氛围卡',
 };
 
 export default function PublishModal({
@@ -40,7 +41,7 @@ export default function PublishModal({
   onClose,
   onConfirm,
   workData,
-  isLoading = false
+  isLoading = false,
 }: PublishModalProps) {
   const [description, setDescription] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -55,7 +56,7 @@ export default function PublishModal({
 
     onConfirm({
       ...workData,
-      description: description.trim()
+      description: description.trim(),
     });
   };
 
@@ -66,7 +67,7 @@ export default function PublishModal({
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       onClick={handleBackdropClick}
     >
@@ -108,7 +109,7 @@ export default function PublishModal({
                 <span className="font-medium">{workData.gradeLevel}</span>
               </div>
             </div>
-            
+
             {workData.tags.length > 0 && (
               <div className="mt-3">
                 <span className="text-gray-600 text-sm">标签：</span>
@@ -175,7 +176,7 @@ export default function PublishModal({
               <p>• 请确保作品内容健康、积极，符合教育价值观</p>
               <p>• 平台有权对不当内容进行审核和处理</p>
             </div>
-            
+
             <label className="flex items-center mt-3">
               <input
                 type="checkbox"

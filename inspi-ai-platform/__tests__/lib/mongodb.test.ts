@@ -1,13 +1,9 @@
 /**
  * @jest-environment node
  */
+import { it, beforeEach, describe } from 'node:test';
+
 import connectDB from '@/lib/mongodb';
-import { it } from 'node:test';
-import { it } from 'node:test';
-import { it } from 'node:test';
-import { it } from 'node:test';
-import { beforeEach } from 'node:test';
-import { describe } from 'node:test';
 
 // Mock mongoose
 jest.mock('mongoose', () => ({
@@ -31,7 +27,7 @@ describe('MongoDB Connection', () => {
     mongoose.connect.mockResolvedValue(mongoose);
 
     const connection = await connectDB();
-    
+
     expect(mongoose.connect).toHaveBeenCalledWith(
       process.env.MONGODB_URI,
       expect.objectContaining({
@@ -39,20 +35,20 @@ describe('MongoDB Connection', () => {
         maxPoolSize: 10,
         serverSelectionTimeoutMS: 5000,
         socketTimeoutMS: 45000,
-        family: 4
-      })
+        family: 4,
+      }),
     );
     expect(connection).toBe(mongoose);
   });
 
   it('should reuse existing connection', async () => {
     const mongoose = require('mongoose');
-    
+
     // Set up existing connection
     global.mongoose = { conn: mongoose, promise: null };
 
     const connection = await connectDB();
-    
+
     expect(connection).toBe(mongoose);
     expect(mongoose.connect).not.toHaveBeenCalled();
   });
@@ -72,12 +68,12 @@ describe('MongoDB Connection', () => {
   it('should use correct connection options', async () => {
     const mongoose = require('mongoose');
     mongoose.connect.mockResolvedValue(mongoose);
-    
+
     // Clear any existing connections
     global.mongoose = { conn: null, promise: null };
 
     await connectDB();
-    
+
     expect(mongoose.connect).toHaveBeenCalledWith(
       process.env.MONGODB_URI,
       expect.objectContaining({
@@ -85,8 +81,8 @@ describe('MongoDB Connection', () => {
         maxPoolSize: 10,
         serverSelectionTimeoutMS: 5000,
         socketTimeoutMS: 45000,
-        family: 4
-      })
+        family: 4,
+      }),
     );
   });
 });

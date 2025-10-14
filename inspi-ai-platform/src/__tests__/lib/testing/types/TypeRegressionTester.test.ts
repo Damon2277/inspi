@@ -2,15 +2,17 @@
  * Type Regression Tester Tests
  */
 
+import * as fs from 'fs';
+
+import * as ts from 'typescript';
+
 import {
   TypeRegressionTester,
   createTypeRegressionTester,
   RegressionTestConfig,
   TypeSnapshot,
-  TypeDefinition
+  TypeDefinition,
 } from '../../../../lib/testing/types/TypeRegressionTester';
-import * as fs from 'fs';
-import * as ts from 'typescript';
 
 // Mock fs module
 jest.mock('fs');
@@ -32,8 +34,8 @@ describe('TypeRegressionTester', () => {
       compilerOptions: {
         target: ts.ScriptTarget.ES2020,
         module: ts.ModuleKind.CommonJS,
-        strict: true
-      }
+        strict: true,
+      },
     };
 
     baselineSnapshot = {
@@ -48,7 +50,7 @@ describe('TypeRegressionTester', () => {
           location: { file: 'src/types/user.ts', line: 1, column: 1 },
           dependencies: [],
           exported: true,
-          generic: false
+          generic: false,
         },
         {
           name: 'UserService',
@@ -57,10 +59,10 @@ describe('TypeRegressionTester', () => {
           location: { file: 'src/services/user.ts', line: 1, column: 1 },
           dependencies: ['User'],
           exported: true,
-          generic: false
-        }
+          generic: false,
+        },
       ],
-      compilerOptions: config.compilerOptions
+      compilerOptions: config.compilerOptions,
     };
 
     tester = createTypeRegressionTester(config);
@@ -82,7 +84,7 @@ describe('TypeRegressionTester', () => {
       mockFs.readdirSync.mockImplementation((dir: any) => {
         if (dir.includes('src')) {
           return [
-            { name: 'user.ts', isFile: () => true, isDirectory: () => false }
+            { name: 'user.ts', isFile: () => true, isDirectory: () => false },
           ] as any;
         }
         return [];
@@ -105,7 +107,7 @@ describe('TypeRegressionTester', () => {
       mockFs.readdirSync.mockImplementation((dir: any) => {
         if (dir.includes('src')) {
           return [
-            { name: 'user.ts', isFile: () => true, isDirectory: () => false }
+            { name: 'user.ts', isFile: () => true, isDirectory: () => false },
           ] as any;
         }
         return [];
@@ -147,7 +149,7 @@ describe('TypeRegressionTester', () => {
       await tester.createSnapshot('1.0.0');
 
       expect(mockFs.writeFileSync).toHaveBeenCalled();
-      
+
       const writeCall = mockFs.writeFileSync.mock.calls[0];
       expect(writeCall[0]).toContain('snapshot-1.0.0');
       expect(writeCall[0]).toContain('.json');
@@ -155,18 +157,18 @@ describe('TypeRegressionTester', () => {
 
     it('should create baseline snapshot if none exists', async () => {
       mockFs.existsSync.mockReturnValue(false);
-      
+
       await tester.createSnapshot('1.0.0');
 
       const baselineCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('baseline.json')
+        call[0].toString().includes('baseline.json'),
       );
       expect(baselineCall).toBeDefined();
     });
 
     it('should generate unique checksums for different types', async () => {
       const snapshot1 = await tester.createSnapshot('1.0.0');
-      
+
       // Mock different type content
       mockFs.readFileSync.mockImplementation(() => {
         return `
@@ -189,9 +191,9 @@ describe('TypeRegressionTester', () => {
     it('should load baseline from config', async () => {
       const configWithBaseline = {
         ...config,
-        baselineSnapshot
+        baselineSnapshot,
       };
-      
+
       const testerWithBaseline = createTypeRegressionTester(configWithBaseline);
       const loaded = await testerWithBaseline.loadBaselineSnapshot();
 
@@ -259,7 +261,7 @@ describe('TypeRegressionTester', () => {
       mockFs.readdirSync.mockImplementation((dir: any) => {
         if (dir.includes('src')) {
           return [
-            { name: 'user.ts', isFile: () => true, isDirectory: () => false }
+            { name: 'user.ts', isFile: () => true, isDirectory: () => false },
           ] as any;
         }
         return [];
@@ -273,7 +275,7 @@ describe('TypeRegressionTester', () => {
 
       const addedChanges = result.changes.filter(c => c.type === 'added');
       expect(addedChanges.length).toBeGreaterThan(0);
-      
+
       const addedType = addedChanges.find(c => c.typeName === 'UserRole');
       expect(addedType).toBeDefined();
       expect(addedType?.breakingChange).toBe(false);
@@ -284,7 +286,7 @@ describe('TypeRegressionTester', () => {
 
       const modifiedChanges = result.changes.filter(c => c.type === 'modified');
       expect(modifiedChanges.length).toBeGreaterThan(0);
-      
+
       const modifiedUser = modifiedChanges.find(c => c.typeName === 'User');
       expect(modifiedUser).toBeDefined();
     });
@@ -302,7 +304,7 @@ describe('TypeRegressionTester', () => {
       const result = await tester.runRegressionTest();
 
       expect(Array.isArray(result.recommendations)).toBe(true);
-      
+
       for (const recommendation of result.recommendations) {
         expect(typeof recommendation).toBe('string');
         expect(recommendation.length).toBeGreaterThan(0);
@@ -331,9 +333,9 @@ describe('TypeRegressionTester', () => {
       const result = await tester.runRegressionTest();
 
       expect(result.breakingChanges.length).toBeGreaterThan(0);
-      
-      const removedService = result.breakingChanges.find(c => 
-        c.typeName === 'UserService' && c.type === 'removed'
+
+      const removedService = result.breakingChanges.find(c =>
+        c.typeName === 'UserService' && c.type === 'removed',
       );
       expect(removedService).toBeDefined();
       expect(removedService?.breakingChange).toBe(true);
@@ -349,7 +351,7 @@ describe('TypeRegressionTester', () => {
     it('should fail on breaking changes in strict mode', async () => {
       const strictTester = createTypeRegressionTester({
         ...config,
-        strictMode: true
+        strictMode: true,
       });
 
       // Mock breaking change
@@ -371,7 +373,7 @@ describe('TypeRegressionTester', () => {
       mockFs.readdirSync.mockImplementation((dir: any) => {
         if (dir.includes('src')) {
           return [
-            { name: 'user.ts', isFile: () => true, isDirectory: () => false }
+            { name: 'user.ts', isFile: () => true, isDirectory: () => false },
           ] as any;
         }
         return [];
@@ -387,7 +389,7 @@ describe('TypeRegressionTester', () => {
       const allowedTester = createTypeRegressionTester({
         ...config,
         strictMode: true,
-        allowedBreakingChanges: ['UserService']
+        allowedBreakingChanges: ['UserService'],
       });
 
       // Mock removal of whitelisted type
@@ -410,7 +412,7 @@ describe('TypeRegressionTester', () => {
       mockFs.readdirSync.mockImplementation((dir: any) => {
         if (dir.includes('src')) {
           return [
-            { name: 'user.ts', isFile: () => true, isDirectory: () => false }
+            { name: 'user.ts', isFile: () => true, isDirectory: () => false },
           ] as any;
         }
         return [];
@@ -435,7 +437,7 @@ describe('TypeRegressionTester', () => {
       mockFs.readdirSync.mockImplementation((dir: any) => {
         if (dir.includes('src')) {
           return [
-            { name: 'user.ts', isFile: () => true, isDirectory: () => false }
+            { name: 'user.ts', isFile: () => true, isDirectory: () => false },
           ] as any;
         }
         return [];
@@ -512,7 +514,7 @@ describe('TypeRegressionTester', () => {
       mockFs.readdirSync.mockImplementation((dir: any) => {
         if (dir.includes('src')) {
           return [
-            { name: 'invalid.ts', isFile: () => true, isDirectory: () => false }
+            { name: 'invalid.ts', isFile: () => true, isDirectory: () => false },
           ] as any;
         }
         return [];
@@ -530,7 +532,7 @@ describe('TypeRegressionTester', () => {
       mockFs.readdirSync.mockImplementation((dir: any) => {
         if (dir.includes('src')) {
           return [
-            { name: 'user.ts', isFile: () => true, isDirectory: () => false }
+            { name: 'user.ts', isFile: () => true, isDirectory: () => false },
           ] as any;
         }
         return [];
@@ -553,8 +555,8 @@ describe('TypeRegressionTester', () => {
           location: { file: `src/types/type${i}.ts`, line: 1, column: 1 },
           dependencies: [],
           exported: true,
-          generic: false
-        }))
+          generic: false,
+        })),
       };
 
       mockFs.readFileSync.mockImplementation((filePath: any) => {
@@ -565,12 +567,12 @@ describe('TypeRegressionTester', () => {
       });
 
       const startTime = Date.now();
-      
+
       await tester.initialize();
       const result = await tester.runRegressionTest();
-      
+
       const duration = Date.now() - startTime;
-      
+
       expect(duration).toBeLessThan(10000); // Should complete within 10 seconds
       expect(result.changes.length).toBeGreaterThanOrEqual(0);
     });

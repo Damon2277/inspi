@@ -1,12 +1,13 @@
 /**
  * Compliance Utilities
- * 
+ *
  * Helper functions and utilities for compliance checking,
  * validation, and reporting.
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
+
 import { ComplianceResult, ComplianceViolation, ComplianceRecommendation } from './ComplianceChecker';
 
 export class ComplianceUtils {
@@ -52,7 +53,7 @@ export class ComplianceUtils {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -83,7 +84,7 @@ export class ComplianceUtils {
       critical: 10,
       high: 5,
       medium: 2,
-      low: 1
+      low: 1,
     };
 
     const totalWeight = violations.reduce((sum, violation) => {
@@ -110,7 +111,7 @@ export class ComplianceUtils {
       critical: violations.filter(v => v.severity === 'critical'),
       high: violations.filter(v => v.severity === 'high'),
       medium: violations.filter(v => v.severity === 'medium'),
-      low: violations.filter(v => v.severity === 'low')
+      low: violations.filter(v => v.severity === 'low'),
     };
   }
 
@@ -120,7 +121,7 @@ export class ComplianceUtils {
   static generateSummary(result: ComplianceResult): ComplianceSummary {
     const violations = this.categorizeViolations(result.violations);
     const enabledCategories = Object.values(result.categories).filter(c => c.enabled);
-    
+
     return {
       overallScore: result.overall.score,
       overallGrade: result.overall.grade,
@@ -130,13 +131,13 @@ export class ComplianceUtils {
         critical: violations.critical.length,
         high: violations.high.length,
         medium: violations.medium.length,
-        low: violations.low.length
+        low: violations.low.length,
       },
       categoriesEnabled: enabledCategories.length,
       categoriesPassed: enabledCategories.filter(c => c.passed).length,
       recommendationsCount: result.recommendations.length,
       topIssues: this.getTopIssues(result.violations),
-      improvementAreas: this.getImprovementAreas(result.categories)
+      improvementAreas: this.getImprovementAreas(result.categories),
     };
   }
 
@@ -154,7 +155,7 @@ export class ComplianceUtils {
         issueMap.set(key, {
           count: 1,
           severity: violation.severity,
-          example: violation
+          example: violation,
         });
       }
     });
@@ -166,12 +167,12 @@ export class ComplianceUtils {
         severity: data.severity,
         count: data.count,
         message: data.example.message,
-        suggestion: data.example.suggestion
+        suggestion: data.example.suggestion,
       }))
       .sort((a, b) => {
         // Sort by severity first, then by count
         const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
-        const severityDiff = severityOrder[b.severity as keyof typeof severityOrder] - 
+        const severityDiff = severityOrder[b.severity as keyof typeof severityOrder] -
                            severityOrder[a.severity as keyof typeof severityOrder];
         return severityDiff !== 0 ? severityDiff : b.count - a.count;
       })
@@ -189,11 +190,11 @@ export class ComplianceUtils {
         score: category.score,
         failedChecks: category.details.filter(d => !d.passed).length,
         totalChecks: category.details.length,
-        priority: this.calculatePriority(category.score, category.details.filter(d => !d.passed).length)
+        priority: this.calculatePriority(category.score, category.details.filter(d => !d.passed).length),
       }))
       .sort((a, b) => {
         const priorityOrder = { high: 3, medium: 2, low: 1 };
-        return priorityOrder[b.priority as keyof typeof priorityOrder] - 
+        return priorityOrder[b.priority as keyof typeof priorityOrder] -
                priorityOrder[a.priority as keyof typeof priorityOrder];
       });
   }
@@ -242,14 +243,14 @@ export class ComplianceUtils {
       B: '#97ca00',
       C: '#dfb317',
       D: '#fe7d37',
-      F: '#e05d44'
+      F: '#e05d44',
     };
 
     return {
       label: 'compliance',
       message: `${result.overall.score}% (${result.overall.grade})`,
       color: gradeColors[result.overall.grade],
-      status: result.overall.passed ? 'passing' : 'failing'
+      status: result.overall.passed ? 'passing' : 'failing',
     };
   }
 
@@ -286,7 +287,7 @@ export class ComplianceUtils {
           detail.passed ? 'PASSED' : 'FAILED',
           detail.value.toString(),
           detail.threshold.toString(),
-          `"${detail.message.replace(/"/g, '""')}"`
+          `"${detail.message.replace(/"/g, '""')}"`,
         ]);
       });
     });
@@ -377,7 +378,7 @@ export class ComplianceUtils {
       /\.test\.(ts|js|tsx|jsx)$/,
       /\.spec\.(ts|js|tsx|jsx)$/,
       /__tests__\//,
-      /\.stories\.(ts|js|tsx|jsx)$/
+      /\.stories\.(ts|js|tsx|jsx)$/,
     ];
 
     return testPatterns.some(pattern => pattern.test(filePath));
@@ -412,11 +413,11 @@ export class ComplianceUtils {
     peerDependencies: string[];
   } {
     const packageJson = this.parsePackageJson(projectRoot);
-    
+
     return {
       dependencies: packageJson?.dependencies ? Object.keys(packageJson.dependencies) : [],
       devDependencies: packageJson?.devDependencies ? Object.keys(packageJson.devDependencies) : [],
-      peerDependencies: packageJson?.peerDependencies ? Object.keys(packageJson.peerDependencies) : []
+      peerDependencies: packageJson?.peerDependencies ? Object.keys(packageJson.peerDependencies) : [],
     };
   }
 
@@ -443,7 +444,7 @@ export class ComplianceUtils {
       provider: this.getCIProvider(),
       buildNumber: process.env.BUILD_NUMBER || process.env.GITHUB_RUN_NUMBER || 'unknown',
       branch: process.env.BRANCH_NAME || process.env.GITHUB_REF_NAME || 'unknown',
-      commit: process.env.GIT_COMMIT || process.env.GITHUB_SHA || 'unknown'
+      commit: process.env.GIT_COMMIT || process.env.GITHUB_SHA || 'unknown',
     };
   }
 

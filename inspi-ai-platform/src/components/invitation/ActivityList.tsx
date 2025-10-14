@@ -3,17 +3,19 @@
  * 展示可参与的邀请活动列表
  */
 
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { CalendarDays, Trophy, Users, Target, Clock } from 'lucide-react'
-import { InvitationActivity, ActivityType, ActivityStatus } from '@/lib/invitation/types'
-import { formatDistanceToNow, format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
+import { formatDistanceToNow, format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import { CalendarDays, Trophy, Users, Target, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+
+import { InvitationActivity, ActivityType, ActivityStatus } from '@/lib/invitation/types';
+import { Badge } from '@/shared/components/badge';
+import { Button } from '@/shared/components/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/card';
+import { Separator } from '@/shared/components/separator';
+
 
 interface ActivityListProps {
   onActivitySelect?: (activity: InvitationActivity) => void
@@ -22,92 +24,92 @@ interface ActivityListProps {
 }
 
 export function ActivityList({ onActivitySelect, onJoinActivity, className }: ActivityListProps) {
-  const [activities, setActivities] = useState<InvitationActivity[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
+  const [activities, setActivities] = useState<InvitationActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
-    loadActivities()
-  }, [])
+    loadActivities();
+  }, []);
 
   const loadActivities = async (pageNum = 1) => {
     try {
-      setLoading(true)
-      const response = await fetch(`/api/activities?page=${pageNum}&limit=10`)
-      const data = await response.json()
+      setLoading(true);
+      const response = await fetch(`/api/activities?page=${pageNum}&limit=10`);
+      const data = await response.json();
 
       if (data.success) {
         if (pageNum === 1) {
-          setActivities(data.data.activities)
+          setActivities(data.data.activities);
         } else {
-          setActivities(prev => [...prev, ...data.data.activities])
+          setActivities([...activities, ...data.data.activities]);
         }
-        setHasMore(data.data.activities.length === 10)
+        setHasMore(data.data.activities.length === 10);
       } else {
-        setError(data.error || '加载活动失败')
+        setError(data.error || '加载活动失败');
       }
     } catch (err) {
-      setError('网络错误，请稍后重试')
+      setError('网络错误，请稍后重试');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const loadMore = () => {
-    const nextPage = page + 1
-    setPage(nextPage)
-    loadActivities(nextPage)
-  }
+    const nextPage = page + 1;
+    setPage(nextPage);
+    loadActivities(nextPage);
+  };
 
   const getActivityTypeLabel = (type: ActivityType): string => {
     const labels = {
       [ActivityType.CHALLENGE]: '挑战活动',
       [ActivityType.COMPETITION]: '竞赛活动',
       [ActivityType.MILESTONE]: '里程碑活动',
-      [ActivityType.SEASONAL]: '季节活动'
-    }
-    return labels[type] || '未知类型'
-  }
+      [ActivityType.SEASONAL]: '季节活动',
+    };
+    return labels[type] || '未知类型';
+  };
 
   const getActivityTypeColor = (type: ActivityType): string => {
     const colors = {
       [ActivityType.CHALLENGE]: 'bg-blue-100 text-blue-800',
       [ActivityType.COMPETITION]: 'bg-red-100 text-red-800',
       [ActivityType.MILESTONE]: 'bg-green-100 text-green-800',
-      [ActivityType.SEASONAL]: 'bg-purple-100 text-purple-800'
-    }
-    return colors[type] || 'bg-gray-100 text-gray-800'
-  }
+      [ActivityType.SEASONAL]: 'bg-purple-100 text-purple-800',
+    };
+    return colors[type] || 'bg-gray-100 text-gray-800';
+  };
 
   const isActivityActive = (activity: InvitationActivity): boolean => {
-    const now = new Date()
-    return activity.status === ActivityStatus.ACTIVE && 
-           activity.startDate <= now && 
-           activity.endDate >= now
-  }
+    const now = new Date();
+    return activity.status === ActivityStatus.ACTIVE &&
+           activity.startDate <= now &&
+           activity.endDate >= now;
+  };
 
   const getTimeStatus = (activity: InvitationActivity): { label: string; color: string } => {
-    const now = new Date()
-    
+    const now = new Date();
+
     if (now < activity.startDate) {
       return {
         label: `${formatDistanceToNow(activity.startDate, { locale: zhCN })}后开始`,
-        color: 'text-orange-600'
-      }
+        color: 'text-orange-600',
+      };
     } else if (now > activity.endDate) {
       return {
         label: '已结束',
-        color: 'text-gray-500'
-      }
+        color: 'text-gray-500',
+      };
     } else {
       return {
         label: `还剩 ${formatDistanceToNow(activity.endDate, { locale: zhCN })}`,
-        color: 'text-green-600'
-      }
+        color: 'text-green-600',
+      };
     }
-  }
+  };
 
   if (loading && activities.length === 0) {
     return (
@@ -127,7 +129,7 @@ export function ActivityList({ onActivitySelect, onJoinActivity, className }: Ac
           </Card>
         ))}
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -138,7 +140,7 @@ export function ActivityList({ onActivitySelect, onJoinActivity, className }: Ac
           重新加载
         </Button>
       </div>
-    )
+    );
   }
 
   if (activities.length === 0) {
@@ -148,23 +150,23 @@ export function ActivityList({ onActivitySelect, onJoinActivity, className }: Ac
         <h3 className="text-lg font-medium text-gray-900 mb-2">暂无活动</h3>
         <p className="text-gray-500">目前没有可参与的邀请活动，请稍后再来查看</p>
       </div>
-    )
+    );
   }
 
   return (
     <div className={`space-y-6 ${className}`}>
       <div className="space-y-4">
         {activities.map((activity) => {
-          const timeStatus = getTimeStatus(activity)
-          const isActive = isActivityActive(activity)
-          
+          const timeStatus = getTimeStatus(activity);
+          const isActive = isActivityActive(activity);
+
           return (
-            <Card 
-              key={activity.id} 
+            <Card
+              key={activity.id}
               className={`transition-all duration-200 hover:shadow-md cursor-pointer ${
                 !isActive ? 'opacity-75' : ''
               }`}
-              onClick={() => onActivitySelect?.(activity)}
+              onClick={() => onActivitySelect && onActivitySelect(activity)}
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -187,7 +189,7 @@ export function ActivityList({ onActivitySelect, onJoinActivity, className }: Ac
                   </div>
                 </div>
               </CardHeader>
-              
+
               <CardContent>
                 <div className="space-y-4">
                   {/* 活动时间 */}
@@ -209,8 +211,8 @@ export function ActivityList({ onActivitySelect, onJoinActivity, className }: Ac
                       <div className="flex flex-wrap gap-2">
                         {activity.rewards.slice(0, 3).map((reward, index) => (
                           <Badge key={index} variant="secondary" className="text-xs">
-                            {reward.rankRange?.min === reward.rankRange?.max 
-                              ? `第${reward.rankRange.min}名` 
+                            {reward.rankRange?.min === reward.rankRange?.max
+                              ? `第${reward.rankRange?.min}名`
                               : `第${reward.rankRange?.min}-${reward.rankRange?.max}名`
                             }: {reward.amount} {reward.description}
                           </Badge>
@@ -251,12 +253,12 @@ export function ActivityList({ onActivitySelect, onJoinActivity, className }: Ac
                       <Users className="h-4 w-4 mr-1" />
                       <span>点击查看详情</span>
                     </div>
-                    
+
                     {isActive && (
                       <Button
                         onClick={(e) => {
-                          e.stopPropagation()
-                          onJoinActivity?.(activity.id)
+                          e.stopPropagation();
+                          onJoinActivity && onJoinActivity(activity.id);
                         }}
                         size="sm"
                         className="ml-auto"
@@ -264,7 +266,7 @@ export function ActivityList({ onActivitySelect, onJoinActivity, className }: Ac
                         立即参与
                       </Button>
                     )}
-                    
+
                     {!isActive && activity.status === ActivityStatus.COMPLETED && (
                       <Badge variant="outline" className="text-xs">
                         已结束
@@ -274,7 +276,7 @@ export function ActivityList({ onActivitySelect, onJoinActivity, className }: Ac
                 </div>
               </CardContent>
             </Card>
-          )
+          );
         })}
       </div>
 
@@ -292,5 +294,5 @@ export function ActivityList({ onActivitySelect, onJoinActivity, className }: Ac
         </div>
       )}
     </div>
-  )
+  );
 }

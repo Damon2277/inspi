@@ -254,7 +254,8 @@ class PerformanceE2ETester {
     try {
       // 尝试解析JSON输出
       const lines = output.split('\n');
-      const jsonLine = lines.find(line => line.trim().startsWith('{') && line.includes('testResults'));
+      const jsonLine = lines.find(line => line.trim().startsWith('{') &&
+        line.includes('testResults'));
       
       if (jsonLine) {
         const result = JSON.parse(jsonLine);
@@ -362,19 +363,22 @@ class PerformanceE2ETester {
         // 根据性能指标调整分数
         if (testResult.metrics) {
           if (testResult.metrics.lcp) {
-            const avgLcp = testResult.metrics.lcp.reduce((a, b) => a + b, 0) / testResult.metrics.lcp.length;
+            const avgLcp = testResult.metrics.lcp.reduce((a, b) => a + b,
+              0) / testResult.metrics.lcp.length;
             if (avgLcp > 4000) testScore -= 20;
             else if (avgLcp > 2500) testScore -= 10;
           }
 
           if (testResult.metrics.cls) {
-            const avgCls = testResult.metrics.cls.reduce((a, b) => a + b, 0) / testResult.metrics.cls.length;
+            const avgCls = testResult.metrics.cls.reduce((a, b) => a + b,
+              0) / testResult.metrics.cls.length;
             if (avgCls > 0.25) testScore -= 15;
             else if (avgCls > 0.1) testScore -= 5;
           }
 
           if (testResult.metrics.hitRate) {
-            const avgHitRate = testResult.metrics.hitRate.reduce((a, b) => a + b, 0) / testResult.metrics.hitRate.length;
+            const avgHitRate = testResult.metrics.hitRate.reduce((a, b) => a + b,
+              0) / testResult.metrics.hitRate.length;
             if (avgHitRate < 80) testScore -= 20;
             else if (avgHitRate < 90) testScore -= 10;
           }
@@ -393,7 +397,8 @@ class PerformanceE2ETester {
     this.testResults.summary.totalTests = Object.keys(this.testResults.tests).length;
     this.testResults.summary.passedTests = Object.values(this.testResults.tests)
       .filter(test => test.status === 'passed').length;
-    this.testResults.summary.failedTests = this.testResults.summary.totalTests - this.testResults.summary.passedTests;
+    this.testResults.summary.failedTests = this.testResults.summary.totalTests -
+      this.testResults.summary.passedTests;
     this.testResults.summary.totalDuration = Object.values(this.testResults.tests)
       .reduce((sum, test) => sum + (test.duration || 0), 0);
     this.testResults.summary.performanceScore = this.calculatePerformanceScore();
@@ -428,13 +433,18 @@ class PerformanceE2ETester {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>性能测试报告 - E2E</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 8px 8px 0 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background:
+          white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%,
+          #764ba2 100%); color: white; padding: 30px; border-radius: 8px 8px 0 0; }
         .header h1 { margin: 0; font-size: 2.5em; }
         .header p { margin: 10px 0 0 0; opacity: 0.9; }
-        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 30px; }
-        .summary-card { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; }
+        .summary { display: grid; grid-template-columns: repeat(auto-fit,
+          minmax(200px, 1fr)); gap: 20px; padding: 30px; }
+        .summary-card { background: #f8f9fa; padding: 20px; border-radius:
+          8px; text-align: center; }
         .summary-card h3 { margin: 0 0 10px 0; color: #495057; }
         .summary-card .value { font-size: 2em; font-weight: bold; color: #007bff; }
         .summary-card.success .value { color: #28a745; }
@@ -443,21 +453,25 @@ class PerformanceE2ETester {
         .content { padding: 0 30px 30px 30px; }
         .test-section { margin-bottom: 30px; }
         .test-section h2 { color: #495057; border-bottom: 2px solid #e9ecef; padding-bottom: 10px; }
-        .test-result { background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 15px; }
+        .test-result { background: #f8f9fa; border-radius: 8px; padding:
+          20px; margin-bottom: 15px; }
         .test-result.passed { border-left: 4px solid #28a745; }
         .test-result.failed { border-left: 4px solid #dc3545; }
-        .test-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .test-header { display: flex; justify-content:
+          space-between; align-items: center; margin-bottom: 15px; }
         .test-name { font-size: 1.2em; font-weight: bold; }
         .test-status { padding: 5px 15px; border-radius: 20px; color: white; font-size: 0.9em; }
         .test-status.passed { background: #28a745; }
         .test-status.failed { background: #dc3545; }
-        .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px; }
+        .metrics { display: grid; grid-template-columns: repeat(auto-fit,
+          minmax(150px, 1fr)); gap: 15px; margin-top: 15px; }
         .metric { background: white; padding: 15px; border-radius: 6px; text-align: center; }
         .metric-label { font-size: 0.9em; color: #6c757d; margin-bottom: 5px; }
         .metric-value { font-size: 1.3em; font-weight: bold; color: #495057; }
         .environment { background: #e9ecef; padding: 20px; border-radius: 8px; margin-top: 20px; }
         .environment h3 { margin-top: 0; }
-        .environment-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+        .environment-grid { display: grid; grid-template-columns:
+          repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
         .score { font-size: 3em; font-weight: bold; }
         .score.excellent { color: #28a745; }
         .score.good { color: #17a2b8; }
@@ -502,12 +516,14 @@ class PerformanceE2ETester {
                     <div class="test-result ${testResult.status}">
                         <div class="test-header">
                             <div class="test-name">${testResult.name}</div>
-                            <div class="test-status ${testResult.status}">${testResult.status.toUpperCase()}</div>
+                            <div class="test-
+                              status ${testResult.status}">${testResult.status.toUpperCase()}</div>
                         </div>
                         <div>
                             <strong>耗时:</strong> ${Math.round((testResult.duration || 0) / 1000)}秒
                         </div>
-                        ${testResult.error ? `<div style="color: #dc3545; margin-top: 10px;"><strong>错误:</strong> ${testResult.error}</div>` : ''}
+                        ${testResult.error ? `<div style="color: #dc3545; margin-
+                          top: 10px;"><strong>错误:</strong> ${testResult.error}</div>` : ''}
                         ${testResult.metrics ? this.renderMetrics(testResult.metrics) : ''}
                     </div>
                 `).join('')}
@@ -612,7 +628,8 @@ class PerformanceE2ETester {
       this.log('🏁 E2E Performance Test Suite Complete', 'info');
       this.log(`Total Duration: ${Math.round(totalDuration / 1000)}s`, 'info');
       this.log(`Performance Score: ${this.testResults.summary.performanceScore}/100`, 'info');
-      this.log(`Tests Passed: ${this.testResults.summary.passedTests}/${this.testResults.summary.totalTests}`, 'info');
+      this.log(`Tests Passed:
+        ${this.testResults.summary.passedTests}/${this.testResults.summary.totalTests}`, 'info');
 
       if (allPassed) {
         this.log('All tests passed! 🎉', 'success');

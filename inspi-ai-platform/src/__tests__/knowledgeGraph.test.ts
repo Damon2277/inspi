@@ -3,15 +3,7 @@
  * 测试图谱的验证和数据结构
  */
 import { describe, it, expect } from '@jest/globals';
-import { 
-  validateGraphStructure, 
-  validateNodes, 
-  validateEdges,
-  validateKnowledgeGraph,
-  quickValidateGraph,
-  isEmptyGraph,
-  getGraphComplexityScore
-} from '@/lib/utils/graphValidation';
+
 import {
   GraphType,
   NodeType,
@@ -19,13 +11,23 @@ import {
   GraphNode,
   GraphEdge,
   KnowledgeGraph,
-  GraphLayout
-} from '@/types/knowledgeGraph';
-import { 
-  GraphNodeFactory, 
-  GraphEdgeFactory, 
+  GraphLayout,
+} from '@/shared/types/knowledgeGraph';
+import {
+  validateGraphStructure,
+  validateNodes,
+  validateEdges,
+  validateKnowledgeGraph,
+  quickValidateGraph,
+  isEmptyGraph,
+  getGraphComplexityScore,
+} from '@/shared/utils/graphValidation';
+
+import {
+  GraphNodeFactory,
+  GraphEdgeFactory,
   KnowledgeGraphFactory,
-  ScenarioFactory 
+  ScenarioFactory,
 } from './factories';
 import { generateTestId } from './utils/testHelpers';
 
@@ -43,10 +45,10 @@ describe('知识图谱功能测试', () => {
             description: '数学基础知识',
             workCount: 0,
             reuseCount: 0,
-            tags: ['数学']
+            tags: ['数学'],
           },
           isVisible: true,
-          isLocked: false
+          isLocked: false,
         },
         {
           id: 'node2',
@@ -58,11 +60,11 @@ describe('知识图谱功能测试', () => {
             description: '代数概念',
             workCount: 0,
             reuseCount: 0,
-            tags: ['数学', '代数']
+            tags: ['数学', '代数'],
           },
           isVisible: true,
-          isLocked: false
-        }
+          isLocked: false,
+        },
       ];
 
       const edges: GraphEdge[] = [
@@ -74,11 +76,11 @@ describe('知识图谱功能测试', () => {
           weight: 1.0,
           metadata: {
             strength: 0.8,
-            description: '前置关系'
+            description: '前置关系',
           },
           isVisible: true,
-          isDirected: true
-        }
+          isDirected: true,
+        },
       ];
 
       const result = validateGraphStructure(nodes, edges);
@@ -96,8 +98,8 @@ describe('知识图谱功能测试', () => {
           position: { x: 0, y: 0 },
           metadata: { workCount: 0, reuseCount: 0 },
           isVisible: true,
-          isLocked: false
-        }
+          isLocked: false,
+        },
       ];
 
       const result = validateNodes(invalidNodes);
@@ -116,7 +118,7 @@ describe('知识图谱功能测试', () => {
           position: { x: 0, y: 0 },
           metadata: { workCount: 0, reuseCount: 0 },
           isVisible: true,
-          isLocked: false
+          isLocked: false,
         },
         {
           id: 'duplicate-id', // 重复的ID
@@ -126,8 +128,8 @@ describe('知识图谱功能测试', () => {
           position: { x: 100, y: 0 },
           metadata: { workCount: 0, reuseCount: 0 },
           isVisible: true,
-          isLocked: false
-        }
+          isLocked: false,
+        },
       ];
 
       const result = validateNodes(nodesWithDuplicateIds);
@@ -145,7 +147,7 @@ describe('知识图谱功能测试', () => {
           position: { x: 0, y: 0 },
           metadata: { workCount: 0, reuseCount: 0 },
           isVisible: true,
-          isLocked: false
+          isLocked: false,
         },
         {
           id: 'node2',
@@ -155,8 +157,8 @@ describe('知识图谱功能测试', () => {
           position: { x: 100, y: 0 },
           metadata: { workCount: 0, reuseCount: 0 },
           isVisible: true,
-          isLocked: false
-        }
+          isLocked: false,
+        },
       ];
 
       const validEdges: GraphEdge[] = [
@@ -167,8 +169,8 @@ describe('知识图谱功能测试', () => {
           type: EdgeType.PREREQUISITE,
           weight: 1.0,
           isVisible: true,
-          isDirected: true
-        }
+          isDirected: true,
+        },
       ];
 
       const result = validateEdges(validEdges, nodes);
@@ -186,8 +188,8 @@ describe('知识图谱功能测试', () => {
           position: { x: 0, y: 0 },
           metadata: { workCount: 0, reuseCount: 0 },
           isVisible: true,
-          isLocked: false
-        }
+          isLocked: false,
+        },
       ];
 
       const invalidEdges: GraphEdge[] = [
@@ -198,8 +200,8 @@ describe('知识图谱功能测试', () => {
           type: EdgeType.PREREQUISITE,
           weight: 1.0,
           isVisible: true,
-          isDirected: true
-        }
+          isDirected: true,
+        },
       ];
 
       const result = validateEdges(invalidEdges, nodes);
@@ -217,8 +219,8 @@ describe('知识图谱功能测试', () => {
           position: { x: 0, y: 0 },
           metadata: { workCount: 0, reuseCount: 0 },
           isVisible: true,
-          isLocked: false
-        }
+          isLocked: false,
+        },
       ];
 
       const selfLoopEdges: GraphEdge[] = [
@@ -229,8 +231,8 @@ describe('知识图谱功能测试', () => {
           type: EdgeType.PREREQUISITE,
           weight: 1.0,
           isVisible: true,
-          isDirected: true
-        }
+          isDirected: true,
+        },
       ];
 
       const result = validateEdges(selfLoopEdges, nodes);
@@ -258,13 +260,13 @@ describe('知识图谱功能测试', () => {
             position: { x: 0, y: 0 },
             metadata: { workCount: 0, reuseCount: 0 },
             isVisible: true,
-            isLocked: false
-          }
+            isLocked: false,
+          },
         ],
         edges: [],
         layout: {
           type: GraphLayout.FORCE,
-          options: {}
+          options: {},
         },
         view: {
           showLabels: true,
@@ -275,12 +277,12 @@ describe('知识图谱功能测试', () => {
           theme: 'light',
           animations: true,
           minimap: true,
-          toolbar: true
+          toolbar: true,
         },
         version: 1,
         isPublic: false,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       const result = validateKnowledgeGraph(validGraph);
@@ -306,12 +308,12 @@ describe('知识图谱功能测试', () => {
           theme: 'light',
           animations: true,
           minimap: true,
-          toolbar: true
+          toolbar: true,
         },
         version: 1,
         isPublic: false,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       const result = validateKnowledgeGraph(invalidGraph);
@@ -339,12 +341,12 @@ describe('知识图谱功能测试', () => {
           theme: 'light',
           animations: true,
           minimap: true,
-          toolbar: true
+          toolbar: true,
         },
         version: 1,
         isPublic: false,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       expect(isEmptyGraph(emptyGraph)).toBe(true);
@@ -365,8 +367,8 @@ describe('知识图谱功能测试', () => {
             position: { x: 0, y: 0 },
             metadata: { workCount: 0, reuseCount: 0 },
             isVisible: true,
-            isLocked: false
-          }
+            isLocked: false,
+          },
         ],
         edges: [],
         layout: { type: GraphLayout.FORCE, options: {} },
@@ -379,12 +381,12 @@ describe('知识图谱功能测试', () => {
           theme: 'light',
           animations: true,
           minimap: true,
-          toolbar: true
+          toolbar: true,
         },
         version: 1,
         isPublic: false,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       // 添加必要的统计信息
@@ -393,8 +395,8 @@ describe('知识图谱功能测试', () => {
           nodeCount: 1,
           edgeCount: 0,
           maxDepth: 1,
-          workCount: 0
-        }
+          workCount: 0,
+        },
       };
 
       const complexity = getGraphComplexityScore(simpleGraph);
@@ -413,8 +415,8 @@ describe('知识图谱功能测试', () => {
           position: { x: 0, y: 0 },
           metadata: { workCount: 0, reuseCount: 0 },
           isVisible: true,
-          isLocked: false
-        }
+          isLocked: false,
+        },
       ];
 
       const edges: GraphEdge[] = [
@@ -425,8 +427,8 @@ describe('知识图谱功能测试', () => {
           type: EdgeType.PREREQUISITE,
           weight: 1.0,
           isVisible: true,
-          isDirected: true
-        }
+          isDirected: true,
+        },
       ];
 
       expect(quickValidateGraph(nodes, edges)).toBe(false);

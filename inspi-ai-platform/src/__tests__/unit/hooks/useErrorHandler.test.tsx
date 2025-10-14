@@ -4,6 +4,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
+
 import {
   useErrorHandler,
   useGlobalErrorHandler,
@@ -15,8 +16,8 @@ import {
   isApiError,
   AppError,
   ApiError,
-  NetworkError
-} from '@/hooks/useErrorHandler';
+  NetworkError,
+} from '@/shared/hooks/useErrorHandler';
 
 // Mock console methods
 const mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
@@ -57,7 +58,7 @@ describe('useErrorHandler Hook Tests', () => {
 
       expect(result.current.error).toEqual({
         message: 'Something went wrong',
-        timestamp: expect.any(Date)
+        timestamp: expect.any(Date),
       });
       expect(result.current.hasError).toBe(true);
     });
@@ -73,7 +74,7 @@ describe('useErrorHandler Hook Tests', () => {
       expect(result.current.error).toEqual({
         message: 'Test error',
         details: error.stack,
-        timestamp: expect.any(Date)
+        timestamp: expect.any(Date),
       });
     });
 
@@ -82,7 +83,7 @@ describe('useErrorHandler Hook Tests', () => {
       const appError: AppError = {
         message: 'App error',
         code: 'APP_001',
-        status: 400
+        status: 400,
       };
 
       act(() => {
@@ -91,7 +92,7 @@ describe('useErrorHandler Hook Tests', () => {
 
       expect(result.current.error).toEqual({
         ...appError,
-        timestamp: expect.any(Date)
+        timestamp: expect.any(Date),
       });
     });
 
@@ -124,14 +125,14 @@ describe('useErrorHandler Hook Tests', () => {
       expect(mockConsoleError).toHaveBeenCalledWith(
         '[ErrorHandler - test context]:',
         expect.objectContaining({
-          message: 'Test error'
-        })
+          message: 'Test error',
+        }),
       );
     });
 
     it('应该支持禁用错误日志', () => {
-      const { result } = renderHook(() => 
-        useErrorHandler({ logError: false })
+      const { result } = renderHook(() =>
+        useErrorHandler({ logError: false }),
       );
 
       act(() => {
@@ -150,15 +151,15 @@ describe('useErrorHandler Hook Tests', () => {
 
       expect(mockConsoleError).toHaveBeenCalledWith(
         '[ErrorHandler - API call]:',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });
 
   describe('重试功能', () => {
     it('应该支持重试操作', async () => {
-      const { result } = renderHook(() => 
-        useErrorHandler({ retryable: true })
+      const { result } = renderHook(() =>
+        useErrorHandler({ retryable: true }),
       );
 
       const mockRetryFn = jest.fn().mockResolvedValue('success');
@@ -173,8 +174,8 @@ describe('useErrorHandler Hook Tests', () => {
     });
 
     it('应该处理重试失败', async () => {
-      const { result } = renderHook(() => 
-        useErrorHandler({ retryable: true })
+      const { result } = renderHook(() =>
+        useErrorHandler({ retryable: true }),
       );
 
       const mockRetryFn = jest.fn().mockRejectedValue(new Error('Retry failed'));
@@ -189,8 +190,8 @@ describe('useErrorHandler Hook Tests', () => {
     });
 
     it('应该在非重试模式下警告', async () => {
-      const { result } = renderHook(() => 
-        useErrorHandler({ retryable: false })
+      const { result } = renderHook(() =>
+        useErrorHandler({ retryable: false }),
       );
 
       const mockRetryFn = jest.fn();
@@ -200,17 +201,17 @@ describe('useErrorHandler Hook Tests', () => {
       });
 
       expect(mockConsoleWarn).toHaveBeenCalledWith(
-        'Retry attempted on non-retryable error handler'
+        'Retry attempted on non-retryable error handler',
       );
     });
 
     it('应该在重试时设置加载状态', async () => {
-      const { result } = renderHook(() => 
-        useErrorHandler({ retryable: true })
+      const { result } = renderHook(() =>
+        useErrorHandler({ retryable: true }),
       );
 
-      const mockRetryFn = jest.fn().mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve('success'), 100))
+      const mockRetryFn = jest.fn().mockImplementation(() =>
+        new Promise(resolve => setTimeout(() => resolve('success'), 100)),
       );
 
       act(() => {
@@ -234,7 +235,7 @@ describe('useErrorHandler Hook Tests', () => {
         showToast: true,
         logError: false,
         retryable: true,
-        fallbackMessage: 'Custom fallback'
+        fallbackMessage: 'Custom fallback',
       };
 
       const { result } = renderHook(() => useErrorHandler(config));
@@ -271,7 +272,7 @@ describe('useGlobalErrorHandler Hook Tests', () => {
       const { result } = renderHook(() => useGlobalErrorHandler());
       const error: AppError = {
         message: 'Global error',
-        code: 'GLOBAL_001'
+        code: 'GLOBAL_001',
       };
 
       act(() => {
@@ -354,9 +355,9 @@ describe('useApiErrorHandler Hook Tests', () => {
           status: 400,
           data: {
             message: 'Bad Request',
-            code: 'INVALID_INPUT'
-          }
-        }
+            code: 'INVALID_INPUT',
+          },
+        },
       };
 
       act(() => {
@@ -370,7 +371,7 @@ describe('useApiErrorHandler Hook Tests', () => {
         endpoint: '/api/users',
         method: 'POST',
         details: httpError.response.data,
-        timestamp: expect.any(Date)
+        timestamp: expect.any(Date),
       };
 
       expect(result.current.error).toEqual(expectedError);
@@ -380,7 +381,7 @@ describe('useApiErrorHandler Hook Tests', () => {
       const { result } = renderHook(() => useApiErrorHandler());
       const networkError = {
         request: {},
-        message: 'Network Error'
+        message: 'Network Error',
       };
 
       act(() => {
@@ -394,7 +395,7 @@ describe('useApiErrorHandler Hook Tests', () => {
         isOffline: false,
         endpoint: '/api/data',
         method: 'GET',
-        timestamp: expect.any(Date)
+        timestamp: expect.any(Date),
       };
 
       expect(result.current.error).toEqual(expectedError);
@@ -402,11 +403,11 @@ describe('useApiErrorHandler Hook Tests', () => {
 
     it('应该处理离线状态', () => {
       Object.defineProperty(navigator, 'onLine', { value: false });
-      
+
       const { result } = renderHook(() => useApiErrorHandler());
       const networkError = {
         request: {},
-        message: 'Network Error'
+        message: 'Network Error',
       };
 
       act(() => {
@@ -415,15 +416,15 @@ describe('useApiErrorHandler Hook Tests', () => {
 
       expect(result.current.error).toEqual(
         expect.objectContaining({
-          isOffline: true
-        })
+          isOffline: true,
+        }),
       );
     });
 
     it('应该处理未知错误', () => {
       const { result } = renderHook(() => useApiErrorHandler());
       const unknownError = {
-        message: 'Unknown error'
+        message: 'Unknown error',
       };
 
       act(() => {
@@ -436,7 +437,7 @@ describe('useApiErrorHandler Hook Tests', () => {
         endpoint: '/api/test',
         method: 'PUT',
         details: unknownError,
-        timestamp: expect.any(Date)
+        timestamp: expect.any(Date),
       });
     });
 
@@ -452,7 +453,7 @@ describe('useApiErrorHandler Hook Tests', () => {
         code: 'NETWORK_OFFLINE',
         isNetworkError: true,
         isOffline: true,
-        timestamp: expect.any(Date)
+        timestamp: expect.any(Date),
       };
 
       expect(result.current.error).toEqual(expectedError);
@@ -502,13 +503,13 @@ describe('useRetryHandler Hook Tests', () => {
 
       await act(async () => {
         const promise = result.current.executeWithRetry(mockOperation);
-        
+
         // 快进重试延迟
         jest.advanceTimersByTime(100);
         await Promise.resolve();
         jest.advanceTimersByTime(200); // 指数退避：100 * 2^1
         await Promise.resolve();
-        
+
         const operationResult = await promise;
         expect(operationResult).toBe('success');
       });
@@ -523,13 +524,13 @@ describe('useRetryHandler Hook Tests', () => {
 
       await act(async () => {
         const promise = result.current.executeWithRetry(mockOperation);
-        
+
         // 快进所有重试延迟
         jest.advanceTimersByTime(100); // 第一次重试
         await Promise.resolve();
         jest.advanceTimersByTime(200); // 第二次重试
         await Promise.resolve();
-        
+
         await expect(promise).rejects.toThrow('Always fails');
       });
 
@@ -544,12 +545,12 @@ describe('useRetryHandler Hook Tests', () => {
 
       await act(async () => {
         const promise = result.current.executeWithRetry(mockOperation, mockOnError);
-        
+
         jest.advanceTimersByTime(100);
         await Promise.resolve();
         jest.advanceTimersByTime(200);
         await Promise.resolve();
-        
+
         await expect(promise).rejects.toThrow('Test error');
       });
 
@@ -583,19 +584,19 @@ describe('useRetryHandler Hook Tests', () => {
 
       await act(async () => {
         const promise = result.current.executeWithRetry(mockOperation);
-        
+
         // 第一次重试：100ms
         jest.advanceTimersByTime(100);
         await Promise.resolve();
-        
+
         // 第二次重试：200ms (100 * 2^1)
         jest.advanceTimersByTime(200);
         await Promise.resolve();
-        
+
         // 第三次重试：400ms (100 * 2^2)
         jest.advanceTimersByTime(400);
         await Promise.resolve();
-        
+
         await expect(promise).rejects.toThrow();
       });
 
@@ -610,7 +611,7 @@ describe('错误工具函数测试', () => {
     it('应该格式化带代码的错误', () => {
       const error: AppError = {
         message: 'Test error',
-        code: 'TEST_001'
+        code: 'TEST_001',
       };
 
       expect(formatError(error)).toBe('[TEST_001] Test error');
@@ -618,7 +619,7 @@ describe('错误工具函数测试', () => {
 
     it('应该格式化不带代码的错误', () => {
       const error: AppError = {
-        message: 'Test error'
+        message: 'Test error',
       };
 
       expect(formatError(error)).toBe('Test error');
@@ -629,7 +630,7 @@ describe('错误工具函数测试', () => {
     it('应该识别网络错误', () => {
       const networkError: NetworkError = {
         message: 'Network error',
-        isNetworkError: true
+        isNetworkError: true,
       };
 
       expect(isNetworkError(networkError)).toBe(true);
@@ -637,7 +638,7 @@ describe('错误工具函数测试', () => {
 
     it('应该识别非网络错误', () => {
       const appError: AppError = {
-        message: 'App error'
+        message: 'App error',
       };
 
       expect(isNetworkError(appError)).toBe(false);
@@ -648,7 +649,7 @@ describe('错误工具函数测试', () => {
     it('应该识别API错误', () => {
       const apiError: ApiError = {
         message: 'API error',
-        status: 400
+        status: 400,
       };
 
       expect(isApiError(apiError)).toBe(true);
@@ -656,7 +657,7 @@ describe('错误工具函数测试', () => {
 
     it('应该识别非API错误', () => {
       const appError: AppError = {
-        message: 'App error'
+        message: 'App error',
       };
 
       expect(isApiError(appError)).toBe(false);
@@ -668,7 +669,7 @@ describe('错误工具函数测试', () => {
       const networkError: NetworkError = {
         message: 'Network error',
         isNetworkError: true,
-        isOffline: true
+        isOffline: true,
       };
 
       expect(getUserFriendlyMessage(networkError)).toBe('网络连接已断开，请检查网络设置');
@@ -689,7 +690,7 @@ describe('错误工具函数测试', () => {
       testCases.forEach(({ status, expected }) => {
         const apiError: ApiError = {
           message: 'API error',
-          status
+          status,
         };
 
         expect(getUserFriendlyMessage(apiError)).toBe(expected);
@@ -698,7 +699,7 @@ describe('错误工具函数测试', () => {
 
     it('应该返回通用错误的友好消息', () => {
       const appError: AppError = {
-        message: 'Generic error'
+        message: 'Generic error',
       };
 
       expect(getUserFriendlyMessage(appError)).toBe('Generic error');
@@ -706,7 +707,7 @@ describe('错误工具函数测试', () => {
 
     it('应该处理没有消息的错误', () => {
       const appError: AppError = {
-        message: ''
+        message: '',
       };
 
       expect(getUserFriendlyMessage(appError)).toBe('发生未知错误');

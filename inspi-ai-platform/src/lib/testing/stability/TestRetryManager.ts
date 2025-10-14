@@ -1,6 +1,6 @@
 /**
  * Test Retry Manager
- * 
+ *
  * Manages automatic retry logic for unstable tests with intelligent
  * retry strategies and failure analysis.
  */
@@ -51,10 +51,10 @@ export class TestRetryManager {
         'syntax error',
         'module not found',
         'compilation error',
-        'import error'
+        'import error',
       ],
       customRetryStrategies: new Map(),
-      ...config
+      ...config,
     };
 
     this.setupDefaultStrategies();
@@ -65,7 +65,7 @@ export class TestRetryManager {
    */
   async executeWithRetry<T>(
     testFunction: () => Promise<T>,
-    context: TestRetryContext
+    context: TestRetryContext,
   ): Promise<{ result: T; retryInfo: RetryResult }> {
     const startTime = Date.now();
     const errors: Error[] = [];
@@ -83,8 +83,8 @@ export class TestRetryManager {
             attempts: 1,
             totalDuration: Date.now() - startTime,
             errors: [],
-            retryReasons: []
-          }
+            retryReasons: [],
+          },
         };
       } catch (error) {
         throw error; // No retry, just throw
@@ -97,14 +97,14 @@ export class TestRetryManager {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         const result = await testFunction();
-        
+
         // Success - record retry info if there were previous failures
         const retryInfo: RetryResult = {
           success: true,
           attempts: attempt,
           totalDuration: Date.now() - startTime,
           errors,
-          retryReasons
+          retryReasons,
         };
 
         this.recordRetryResult(context, retryInfo);
@@ -122,7 +122,7 @@ export class TestRetryManager {
 
           // Calculate delay
           const delay = strategy.getDelay(attempt, this.config.retryDelay);
-          
+
           if (delay > 0) {
             await this.sleep(delay);
           }
@@ -142,7 +142,7 @@ export class TestRetryManager {
       totalDuration: Date.now() - startTime,
       errors,
       finalError: lastError,
-      retryReasons
+      retryReasons,
     };
 
     this.recordRetryResult(context, retryInfo);
@@ -168,14 +168,14 @@ export class TestRetryManager {
         successfulRetries: 0,
         averageAttempts: 0,
         mostCommonErrors: [],
-        retrySuccessRate: 0
+        retrySuccessRate: 0,
       };
     }
 
     const totalRetries = history.length;
     const successfulRetries = history.filter(r => r.success).length;
     const averageAttempts = history.reduce((sum, r) => sum + r.attempts, 0) / history.length;
-    
+
     // Count error types
     const errorCounts = new Map<string, number>();
     history.forEach(result => {
@@ -197,7 +197,7 @@ export class TestRetryManager {
       successfulRetries,
       averageAttempts,
       mostCommonErrors,
-      retrySuccessRate
+      retrySuccessRate,
     };
   }
 
@@ -246,7 +246,7 @@ export class TestRetryManager {
   private getRetryStrategy(context: TestRetryContext): RetryStrategy {
     // Check for custom strategies
     for (const [pattern, strategy] of this.config.customRetryStrategies) {
-      if (context.testName.includes(pattern) || 
+      if (context.testName.includes(pattern) ||
           context.testFile.includes(pattern) ||
           (context.lastFailurePattern && context.lastFailurePattern.includes(pattern))) {
         return strategy;
@@ -270,28 +270,28 @@ export class TestRetryManager {
 
   private categorizeError(error: Error): string {
     const message = error.message.toLowerCase();
-    
+
     if (message.includes('timeout')) return 'Timeout';
     if (message.includes('network') || message.includes('connection')) return 'Network';
     if (message.includes('memory')) return 'Memory';
     if (message.includes('race') || message.includes('concurrent')) return 'Race Condition';
     if (message.includes('async') || message.includes('promise')) return 'Async';
     if (message.includes('assertion') || message.includes('expect')) return 'Assertion';
-    
+
     return 'Unknown';
   }
 
   private recordRetryResult(context: TestRetryContext, result: RetryResult): void {
     const testKey = `${context.testFile}::${context.testName}`;
     const history = this.retryHistory.get(testKey) || [];
-    
+
     history.push(result);
-    
+
     // Keep only recent history
     if (history.length > 100) {
       history.splice(0, history.length - 100);
     }
-    
+
     this.retryHistory.set(testKey, history);
   }
 
@@ -303,7 +303,7 @@ export class TestRetryManager {
         return (message.includes('timeout') || message.includes('timing')) && attempt <= 3;
       },
       getDelay: (attempt: number, baseDelay: number) => baseDelay * Math.pow(2, attempt - 1),
-      maxAttempts: 3
+      maxAttempts: 3,
     });
 
     // Strategy for network-related issues
@@ -313,7 +313,7 @@ export class TestRetryManager {
         return (message.includes('network') || message.includes('connection')) && attempt <= 5;
       },
       getDelay: (attempt: number, baseDelay: number) => baseDelay * attempt,
-      maxAttempts: 5
+      maxAttempts: 5,
     });
 
     // Strategy for race conditions
@@ -323,7 +323,7 @@ export class TestRetryManager {
         return (message.includes('race') || message.includes('concurrent')) && attempt <= 2;
       },
       getDelay: (attempt: number, baseDelay: number) => baseDelay + Math.random() * 1000,
-      maxAttempts: 2
+      maxAttempts: 2,
     });
   }
 
@@ -331,11 +331,11 @@ export class TestRetryManager {
     return {
       shouldRetry: (error: Error, attempt: number) => attempt <= 3,
       getDelay: (attempt: number, baseDelay: number) => {
-        return this.config.exponentialBackoff 
+        return this.config.exponentialBackoff
           ? baseDelay * Math.pow(2, attempt - 1)
           : baseDelay;
       },
-      maxAttempts: 4
+      maxAttempts: 4,
     };
   }
 
@@ -343,11 +343,11 @@ export class TestRetryManager {
     return {
       shouldRetry: (error: Error, attempt: number) => attempt <= 3,
       getDelay: (attempt: number, baseDelay: number) => {
-        return this.config.exponentialBackoff 
+        return this.config.exponentialBackoff
           ? baseDelay * Math.pow(1.5, attempt - 1)
           : baseDelay;
       },
-      maxAttempts: 3
+      maxAttempts: 3,
     };
   }
 
@@ -357,12 +357,12 @@ export class TestRetryManager {
       getDelay: (attempt: number, baseDelay: number) => {
         // Add some randomization to avoid thundering herd
         const jitter = Math.random() * 500;
-        const delay = this.config.exponentialBackoff 
+        const delay = this.config.exponentialBackoff
           ? baseDelay * Math.pow(1.2, attempt - 1)
           : baseDelay;
         return delay + jitter;
       },
-      maxAttempts: 6
+      maxAttempts: 6,
     };
   }
 

@@ -3,9 +3,9 @@
  * 管理用户AI生成积分的获取、使用和过期
  */
 
-import { DatabaseFactory } from '../database'
-import { generateUUID } from '../utils'
-import { logger } from '../../utils/logger'
+import { logger } from '../../utils/logger';
+import { DatabaseFactory } from '../database';
+import { generateUUID } from '../utils';
 
 // 积分记录
 export interface CreditRecord {
@@ -64,19 +64,19 @@ export interface CreditSystemService {
   // 积分管理
   addCredits(userId: string, amount: number, source: CreditSource, sourceId: string, description: string, expiresAt?: Date): Promise<CreditRecord>
   useCredits(userId: string, amount: number, purpose: string, metadata?: Record<string, any>): Promise<boolean>
-  
+
   // 余额查询
   getUserBalance(userId: string): Promise<UserCreditBalance>
   getAvailableCredits(userId: string): Promise<number>
-  
+
   // 记录查询
   getUserCreditHistory(userId: string, limit?: number): Promise<CreditRecord[]>
   getCreditUsageHistory(userId: string, limit?: number): Promise<CreditUsage[]>
-  
+
   // 过期处理
   expireCredits(): Promise<number>
   getExpiringCredits(userId: string, days?: number): Promise<CreditRecord[]>
-  
+
   // 统计
   getCreditStats(userId: string): Promise<{
     totalEarned: number
@@ -88,22 +88,22 @@ export interface CreditSystemService {
 }
 
 export class CreditSystemServiceImpl implements CreditSystemService {
-  private db = DatabaseFactory.getInstance()
+  private db = DatabaseFactory.getInstance();
 
   async addCredits(
-    userId: string, 
-    amount: number, 
-    source: CreditSource, 
-    sourceId: string, 
-    description: string, 
-    expiresAt?: Date
+    userId: string,
+    amount: number,
+    source: CreditSource,
+    sourceId: string,
+    description: string,
+    expiresAt?: Date,
   ): Promise<CreditRecord> {
     try {
-      const creditId = generateUUID()
-      const createdAt = new Date()
+      const creditId = generateUUID();
+      const createdAt = new Date();
 
       // 默认6个月过期
-      const defaultExpiresAt = expiresAt || new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000)
+      const defaultExpiresAt = expiresAt || new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000);
 
       await this.db.execute(
         `INSERT INTO credit_records 
@@ -118,12 +118,12 @@ export class CreditSystemServiceImpl implements CreditSystemService {
           sourceId,
           description,
           defaultExpiresAt,
-          createdAt
-        ]
-      )
+          createdAt,
+        ],
+      );
 
       // 更新用户积分余额缓存
-      await this.updateUserBalance(userId)
+      await this.updateUserBalance(userId);
 
       const creditRecord: CreditRecord = {
         id: creditId,
@@ -134,15 +134,15 @@ export class CreditSystemServiceImpl implements CreditSystemService {
         sourceId,
         description,
         expiresAt: defaultExpiresAt,
-        createdAt
-      }
+        createdAt,
+      };
 
-      logger.info('Credits added to user', { userId, amount, source, description })
-      return creditRecord
+      logger.info('Credits added to user', { userId, amount, source, description });
+      return creditRecord;
 
     } catch (error) {
-      logger.error('Failed to add credits', { userId, amount, source, error })
-      throw error
+      logger.error('Failed to add credits', { userId, amount, source, error });
+      throw error;
     }
   }
 
@@ -150,10 +150,10 @@ export class CreditSystemServiceImpl implements CreditSystemService {
     return await this.db.transaction(async (connection) => {
       try {
         // 检查可用积分
-        const availableCredits = await this.getAvailableCredits(userId)
+        const availableCredits = await this.getAvailableCredits(userId);
         if (availableCredits < amount) {
-          logger.warn('Insufficient credits', { userId, requested: amount, available: availableCredits })
-          return false
+          logger.warn('Insufficient credits', { userId, requested: amount, available: availableCredits });
+          return false;
         }
 
         // 按过期时间顺序使用积分（先过期先使用）
@@ -161,18 +161,18 @@ export class CreditSystemServiceImpl implements CreditSystemService {
           `SELECT * FROM credit_records 
            WHERE user_id = ? AND type = ? AND used_at IS NULL AND expires_at > NOW()
            ORDER BY expires_at ASC`,
-          [userId, CreditType.EARNED]
-        )
+          [userId, CreditType.EARNED],
+        );
 
-        let remainingAmount = amount
-        const usageId = generateUUID()
-        const usedAt = new Date()
+        let remainingAmount = amount;
+        const usageId = generateUUID();
+        const usedAt = new Date();
 
         for (const credit of earnedCredits) {
-          if (remainingAmount <= 0) break
+          if (remainingAmount <= 0) break;
 
-          const useAmount = Math.min(remainingAmount, credit.amount)
-          
+          const useAmount = Math.min(remainingAmount, credit.amount);
+
           // 记录积分使用
           await connection.execute(
             `INSERT INTO credit_records 
@@ -187,26 +187,26 @@ export class CreditSystemServiceImpl implements CreditSystemService {
               credit.source_id,
               `使用积分: ${purpose}`,
               usedAt,
-              usedAt
-            ]
-          )
+              usedAt,
+            ],
+          );
 
           // 更新原积分记录的使用时间
           if (useAmount === credit.amount) {
             // 完全使用
             await connection.execute(
               'UPDATE credit_records SET used_at = ? WHERE id = ?',
-              [usedAt, credit.id]
-            )
+              [usedAt, credit.id],
+            );
           } else {
             // 部分使用，需要拆分记录
             await connection.execute(
               'UPDATE credit_records SET amount = ? WHERE id = ?',
-              [credit.amount - useAmount, credit.id]
-            )
+              [credit.amount - useAmount, credit.id],
+            );
           }
 
-          remainingAmount -= useAmount
+          remainingAmount -= useAmount;
         }
 
         // 记录使用详情
@@ -220,21 +220,21 @@ export class CreditSystemServiceImpl implements CreditSystemService {
             amount,
             purpose,
             metadata ? JSON.stringify(metadata) : null,
-            usedAt
-          ]
-        )
+            usedAt,
+          ],
+        );
 
         // 更新用户积分余额缓存
-        await this.updateUserBalance(userId)
+        await this.updateUserBalance(userId);
 
-        logger.info('Credits used successfully', { userId, amount, purpose })
-        return true
+        logger.info('Credits used successfully', { userId, amount, purpose });
+        return true;
 
       } catch (error) {
-        logger.error('Failed to use credits', { userId, amount, purpose, error })
-        throw error
+        logger.error('Failed to use credits', { userId, amount, purpose, error });
+        throw error;
       }
-    })
+    });
   }
 
   async getUserBalance(userId: string): Promise<UserCreditBalance> {
@@ -242,11 +242,11 @@ export class CreditSystemServiceImpl implements CreditSystemService {
       // 先尝试从缓存获取
       const cached = await this.db.query<any>(
         'SELECT * FROM user_credit_balances WHERE user_id = ?',
-        [userId]
-      )
+        [userId],
+      );
 
       if (cached.length > 0) {
-        const balance = cached[0]
+        const balance = cached[0];
         return {
           userId: balance.user_id,
           totalEarned: balance.total_earned,
@@ -254,17 +254,17 @@ export class CreditSystemServiceImpl implements CreditSystemService {
           totalExpired: balance.total_expired,
           availableCredits: balance.available_credits,
           expiringCredits: balance.expiring_credits,
-          lastUpdated: balance.last_updated
-        }
+          lastUpdated: balance.last_updated,
+        };
       }
 
       // 缓存不存在，重新计算
-      await this.updateUserBalance(userId)
-      return await this.getUserBalance(userId)
+      await this.updateUserBalance(userId);
+      return await this.getUserBalance(userId);
 
     } catch (error) {
-      logger.error('Failed to get user balance', { userId, error })
-      throw error
+      logger.error('Failed to get user balance', { userId, error });
+      throw error;
     }
   }
 
@@ -277,14 +277,14 @@ export class CreditSystemServiceImpl implements CreditSystemService {
          END), 0) as available
          FROM credit_records 
          WHERE user_id = ?`,
-        [CreditType.EARNED, userId]
-      )
+        [CreditType.EARNED, userId],
+      );
 
-      return result.available
+      return result.available;
 
     } catch (error) {
-      logger.error('Failed to get available credits', { userId, error })
-      throw error
+      logger.error('Failed to get available credits', { userId, error });
+      throw error;
     }
   }
 
@@ -295,8 +295,8 @@ export class CreditSystemServiceImpl implements CreditSystemService {
          WHERE user_id = ? 
          ORDER BY created_at DESC 
          LIMIT ?`,
-        [userId, limit]
-      )
+        [userId, limit],
+      );
 
       return results.map(row => ({
         id: row.id,
@@ -308,12 +308,12 @@ export class CreditSystemServiceImpl implements CreditSystemService {
         description: row.description,
         expiresAt: row.expires_at,
         createdAt: row.created_at,
-        usedAt: row.used_at
-      }))
+        usedAt: row.used_at,
+      }));
 
     } catch (error) {
-      logger.error('Failed to get user credit history', { userId, error })
-      throw error
+      logger.error('Failed to get user credit history', { userId, error });
+      throw error;
     }
   }
 
@@ -324,8 +324,8 @@ export class CreditSystemServiceImpl implements CreditSystemService {
          WHERE user_id = ? 
          ORDER BY created_at DESC 
          LIMIT ?`,
-        [userId, limit]
-      )
+        [userId, limit],
+      );
 
       return results.map(row => ({
         id: row.id,
@@ -333,12 +333,12 @@ export class CreditSystemServiceImpl implements CreditSystemService {
         amount: row.amount,
         purpose: row.purpose,
         metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
-        createdAt: row.created_at
-      }))
+        createdAt: row.created_at,
+      }));
 
     } catch (error) {
-      logger.error('Failed to get credit usage history', { userId, error })
-      throw error
+      logger.error('Failed to get credit usage history', { userId, error });
+      throw error;
     }
   }
 
@@ -348,10 +348,10 @@ export class CreditSystemServiceImpl implements CreditSystemService {
       const expiredCredits = await this.db.query<any>(
         `SELECT * FROM credit_records 
          WHERE type = ? AND used_at IS NULL AND expires_at <= NOW()`,
-        [CreditType.EARNED]
-      )
+        [CreditType.EARNED],
+      );
 
-      let expiredCount = 0
+      let expiredCount = 0;
 
       for (const credit of expiredCredits) {
         // 创建过期记录
@@ -367,43 +367,43 @@ export class CreditSystemServiceImpl implements CreditSystemService {
             credit.source,
             credit.source_id,
             `积分过期: ${credit.description}`,
-            new Date()
-          ]
-        )
+            new Date(),
+          ],
+        );
 
         // 标记原记录为已使用（过期）
         await this.db.execute(
           'UPDATE credit_records SET used_at = NOW() WHERE id = ?',
-          [credit.id]
-        )
+          [credit.id],
+        );
 
-        expiredCount++
+        expiredCount++;
 
         // 更新用户余额
-        await this.updateUserBalance(credit.user_id)
+        await this.updateUserBalance(credit.user_id);
       }
 
-      logger.info('Credits expired', { expiredCount })
-      return expiredCount
+      logger.info('Credits expired', { expiredCount });
+      return expiredCount;
 
     } catch (error) {
-      logger.error('Failed to expire credits', { error })
-      throw error
+      logger.error('Failed to expire credits', { error });
+      throw error;
     }
   }
 
   async getExpiringCredits(userId: string, days: number = 30): Promise<CreditRecord[]> {
     try {
-      const expiryDate = new Date()
-      expiryDate.setDate(expiryDate.getDate() + days)
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + days);
 
       const results = await this.db.query<any>(
         `SELECT * FROM credit_records 
          WHERE user_id = ? AND type = ? AND used_at IS NULL 
          AND expires_at BETWEEN NOW() AND ?
          ORDER BY expires_at ASC`,
-        [userId, CreditType.EARNED, expiryDate]
-      )
+        [userId, CreditType.EARNED, expiryDate],
+      );
 
       return results.map(row => ({
         id: row.id,
@@ -415,12 +415,12 @@ export class CreditSystemServiceImpl implements CreditSystemService {
         description: row.description,
         expiresAt: row.expires_at,
         createdAt: row.created_at,
-        usedAt: row.used_at
-      }))
+        usedAt: row.used_at,
+      }));
 
     } catch (error) {
-      logger.error('Failed to get expiring credits', { userId, days, error })
-      throw error
+      logger.error('Failed to get expiring credits', { userId, days, error });
+      throw error;
     }
   }
 
@@ -437,37 +437,37 @@ export class CreditSystemServiceImpl implements CreditSystemService {
         `SELECT COALESCE(SUM(amount), 0) as total 
          FROM credit_records 
          WHERE user_id = ? AND type = ?`,
-        [userId, CreditType.EARNED]
-      )
+        [userId, CreditType.EARNED],
+      );
 
       // 总使用积分
       const [usedResult] = await this.db.query<{ total: number }>(
         `SELECT COALESCE(SUM(ABS(amount)), 0) as total 
          FROM credit_records 
          WHERE user_id = ? AND type = ?`,
-        [userId, CreditType.USED]
-      )
+        [userId, CreditType.USED],
+      );
 
       // 总过期积分
       const [expiredResult] = await this.db.query<{ total: number }>(
         `SELECT COALESCE(SUM(ABS(amount)), 0) as total 
          FROM credit_records 
          WHERE user_id = ? AND type = ?`,
-        [userId, CreditType.EXPIRED]
-      )
+        [userId, CreditType.EXPIRED],
+      );
 
       // 计算日均获得积分
       const [firstRecord] = await this.db.query<{ first_date: Date }>(
         `SELECT MIN(created_at) as first_date 
          FROM credit_records 
          WHERE user_id = ? AND type = ?`,
-        [userId, CreditType.EARNED]
-      )
+        [userId, CreditType.EARNED],
+      );
 
-      let averageDaily = 0
+      let averageDaily = 0;
       if (firstRecord.first_date) {
-        const daysSinceFirst = Math.max(1, Math.floor((Date.now() - firstRecord.first_date.getTime()) / (24 * 60 * 60 * 1000)))
-        averageDaily = earnedResult.total / daysSinceFirst
+        const daysSinceFirst = Math.max(1, Math.floor((Date.now() - firstRecord.first_date.getTime()) / (24 * 60 * 60 * 1000)));
+        averageDaily = earnedResult.total / daysSinceFirst;
       }
 
       // 按来源统计
@@ -478,30 +478,30 @@ export class CreditSystemServiceImpl implements CreditSystemService {
          GROUP BY source 
          ORDER BY amount DESC 
          LIMIT 5`,
-        [userId, CreditType.EARNED]
-      )
+        [userId, CreditType.EARNED],
+      );
 
       return {
         totalEarned: earnedResult.total,
         totalUsed: usedResult.total,
         totalExpired: expiredResult.total,
         averageDaily: Math.round(averageDaily * 100) / 100,
-        topSources: sourceStats
-      }
+        topSources: sourceStats,
+      };
 
     } catch (error) {
-      logger.error('Failed to get credit stats', { userId, error })
-      throw error
+      logger.error('Failed to get credit stats', { userId, error });
+      throw error;
     }
   }
 
   // 私有方法：更新用户积分余额缓存
   private async updateUserBalance(userId: string): Promise<void> {
     try {
-      const balance = await this.getUserBalance(userId)
-      const availableCredits = await this.getAvailableCredits(userId)
-      const expiringCredits = await this.getExpiringCredits(userId, 30)
-      const expiringAmount = expiringCredits.reduce((sum, credit) => sum + credit.amount, 0)
+      const balance = await this.getUserBalance(userId);
+      const availableCredits = await this.getAvailableCredits(userId);
+      const expiringCredits = await this.getExpiringCredits(userId, 30);
+      const expiringAmount = expiringCredits.reduce((sum, credit) => sum + credit.amount, 0);
 
       await this.db.execute(
         `INSERT INTO user_credit_balances 
@@ -521,12 +521,12 @@ export class CreditSystemServiceImpl implements CreditSystemService {
           balance.totalExpired || 0,
           availableCredits,
           expiringAmount,
-          new Date()
-        ]
-      )
+          new Date(),
+        ],
+      );
 
     } catch (error) {
-      logger.error('Failed to update user balance cache', { userId, error })
+      logger.error('Failed to update user balance cache', { userId, error });
       // 不抛出错误，避免影响主流程
     }
   }

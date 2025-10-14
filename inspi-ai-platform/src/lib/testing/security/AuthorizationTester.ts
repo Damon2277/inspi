@@ -1,6 +1,6 @@
 /**
  * Authorization Security Tester
- * 
+ *
  * 专门用于测试认证授权安全边界的测试器
  * 包括权限提升、访问控制绕过、会话管理等测试
  */
@@ -102,7 +102,7 @@ export class AuthorizationTester {
    */
   private async testScenario(scenario: AuthTestScenario, authService: AuthorizationService): Promise<AuthorizationTestResult> {
     const startTime = Date.now();
-    
+
     try {
       const authResult = await authService.authorize(scenario.user, scenario.resource, scenario.action);
       const executionTime = Date.now() - startTime;
@@ -123,8 +123,8 @@ export class AuthorizationTester {
           resourceContext: scenario.resource,
           authorizationDecision: authResult.decision,
           reasonCode: authResult.reasonCode,
-          additionalInfo: authResult.additionalInfo
-        }
+          additionalInfo: authResult.additionalInfo,
+        },
       };
     } catch (error) {
       return {
@@ -138,8 +138,8 @@ export class AuthorizationTester {
           requestedAction: scenario.action,
           userContext: scenario.user,
           resourceContext: scenario.resource,
-          authorizationDecision: 'error'
-        }
+          authorizationDecision: 'error',
+        },
       };
     }
   }
@@ -160,7 +160,7 @@ export class AuthorizationTester {
           resource: { id: 'res1', type: 'document', visibility: 'private', requiredPermissions: ['read'], requiredRoles: ['user'] },
           action: 'read',
           expectedResult: 'allow',
-          testType: 'role_based'
+          testType: 'role_based',
         },
         {
           name: 'User Limited Access',
@@ -169,7 +169,7 @@ export class AuthorizationTester {
           resource: { id: 'res1', type: 'document', visibility: 'private', owner: 'user1', requiredPermissions: ['read'], requiredRoles: ['user'] },
           action: 'read',
           expectedResult: 'allow',
-          testType: 'role_based'
+          testType: 'role_based',
         },
         {
           name: 'Unauthorized User Access',
@@ -178,8 +178,8 @@ export class AuthorizationTester {
           resource: { id: 'res2', type: 'document', visibility: 'private', owner: 'user2', requiredPermissions: ['read'], requiredRoles: ['user'] },
           action: 'read',
           expectedResult: 'deny',
-          testType: 'role_based'
-        }
+          testType: 'role_based',
+        },
       );
     }
 
@@ -193,7 +193,7 @@ export class AuthorizationTester {
           resource: { id: 'pub1', type: 'document', visibility: 'public', requiredPermissions: [], requiredRoles: [] },
           action: 'read',
           expectedResult: 'allow',
-          testType: 'resource_access'
+          testType: 'resource_access',
         },
         {
           name: 'Restricted Resource Access',
@@ -202,7 +202,7 @@ export class AuthorizationTester {
           resource: { id: 'rest1', type: 'document', visibility: 'restricted', requiredPermissions: ['read'], requiredRoles: ['premium'] },
           action: 'read',
           expectedResult: 'deny',
-          testType: 'resource_access'
+          testType: 'resource_access',
         },
         {
           name: 'Owner Resource Access',
@@ -211,8 +211,8 @@ export class AuthorizationTester {
           resource: { id: 'priv1', type: 'document', visibility: 'private', owner: 'user1', requiredPermissions: ['read'], requiredRoles: ['user'] },
           action: 'write',
           expectedResult: 'allow',
-          testType: 'resource_access'
-        }
+          testType: 'resource_access',
+        },
       );
     }
 
@@ -226,7 +226,7 @@ export class AuthorizationTester {
           resource: { id: 'priv2', type: 'document', visibility: 'private', owner: 'user2', requiredPermissions: ['read'], requiredRoles: ['user'] },
           action: 'read',
           expectedResult: 'deny',
-          testType: 'privilege_escalation'
+          testType: 'privilege_escalation',
         },
         {
           name: 'Vertical Privilege Escalation',
@@ -235,7 +235,7 @@ export class AuthorizationTester {
           resource: { id: 'admin1', type: 'system', visibility: 'restricted', requiredPermissions: ['admin'], requiredRoles: ['admin'] },
           action: 'delete',
           expectedResult: 'deny',
-          testType: 'privilege_escalation'
+          testType: 'privilege_escalation',
         },
         {
           name: 'Role Manipulation Attempt',
@@ -244,8 +244,8 @@ export class AuthorizationTester {
           resource: { id: 'role1', type: 'role', visibility: 'restricted', requiredPermissions: ['admin'], requiredRoles: ['admin'] },
           action: 'update',
           expectedResult: 'deny',
-          testType: 'privilege_escalation'
-        }
+          testType: 'privilege_escalation',
+        },
       );
     }
 
@@ -259,7 +259,7 @@ export class AuthorizationTester {
           resource: { id: 'res1', type: 'document', visibility: 'private', owner: 'user1', requiredPermissions: ['read'], requiredRoles: ['user'] },
           action: 'read',
           expectedResult: 'allow',
-          testType: 'session'
+          testType: 'session',
         },
         {
           name: 'Invalid Session Access',
@@ -268,7 +268,7 @@ export class AuthorizationTester {
           resource: { id: 'res1', type: 'document', visibility: 'private', owner: 'user1', requiredPermissions: ['read'], requiredRoles: ['user'] },
           action: 'read',
           expectedResult: 'deny',
-          testType: 'session'
+          testType: 'session',
         },
         {
           name: 'Expired Session Access',
@@ -277,8 +277,8 @@ export class AuthorizationTester {
           resource: { id: 'res1', type: 'document', visibility: 'private', owner: 'user1', requiredPermissions: ['read'], requiredRoles: ['user'] },
           action: 'read',
           expectedResult: 'deny',
-          testType: 'session'
-        }
+          testType: 'session',
+        },
       );
     }
 
@@ -292,7 +292,7 @@ export class AuthorizationTester {
           resource: { id: 'api1', type: 'api', visibility: 'restricted', requiredPermissions: ['api_access'], requiredRoles: ['user'] },
           action: 'call',
           expectedResult: 'allow',
-          testType: 'token'
+          testType: 'token',
         },
         {
           name: 'Invalid Token Access',
@@ -301,7 +301,7 @@ export class AuthorizationTester {
           resource: { id: 'api1', type: 'api', visibility: 'restricted', requiredPermissions: ['api_access'], requiredRoles: ['user'] },
           action: 'call',
           expectedResult: 'deny',
-          testType: 'token'
+          testType: 'token',
         },
         {
           name: 'Tampered Token Access',
@@ -310,8 +310,8 @@ export class AuthorizationTester {
           resource: { id: 'api1', type: 'api', visibility: 'restricted', requiredPermissions: ['api_access'], requiredRoles: ['user'] },
           action: 'call',
           expectedResult: 'deny',
-          testType: 'token'
-        }
+          testType: 'token',
+        },
       );
     }
 
@@ -377,7 +377,7 @@ export class AuthorizationTester {
     const totalTests = results.length;
     const passedTests = results.filter(r => r.passed).length;
     const failedTests = results.filter(r => !r.passed).length;
-    
+
     const criticalRisks = results.filter(r => r.securityRisk === 'critical').length;
     const highRisks = results.filter(r => r.securityRisk === 'high').length;
     const mediumRisks = results.filter(r => r.securityRisk === 'medium').length;
@@ -393,20 +393,20 @@ export class AuthorizationTester {
         passedTests,
         failedTests,
         passRate: (passedTests / totalTests) * 100,
-        averageExecutionTime
+        averageExecutionTime,
       },
       riskDistribution: {
         critical: criticalRisks,
         high: highRisks,
         medium: mediumRisks,
         low: lowRisks,
-        none: totalTests - criticalRisks - highRisks - mediumRisks - lowRisks
+        none: totalTests - criticalRisks - highRisks - mediumRisks - lowRisks,
       },
       testTypeResults,
       testResults: results,
       securityIssues: this.identifySecurityIssues(results),
       recommendations: this.generateRecommendations(results),
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -421,7 +421,7 @@ export class AuthorizationTester {
       if (!grouped[testType]) {
         grouped[testType] = { passed: 0, failed: 0, total: 0 };
       }
-      
+
       grouped[testType].total++;
       if (result.passed) {
         grouped[testType].passed++;
@@ -448,7 +448,7 @@ export class AuthorizationTester {
         impact: this.getImpactForTestType(result.scenario.testType),
         recommendation: this.getRecommendationForTestType(result.scenario.testType),
         affectedResource: result.scenario.resource.id,
-        testScenario: result.scenario.name
+        testScenario: result.scenario.name,
       });
     }
 
@@ -495,7 +495,7 @@ export class AuthorizationTester {
       role_based: '角色控制失效可能导致未授权访问',
       resource_access: '资源访问控制失效可能导致数据泄露',
       session: '会话管理问题可能导致会话劫持',
-      token: 'Token验证问题可能导致身份伪造'
+      token: 'Token验证问题可能导致身份伪造',
     };
     return impacts[testType as keyof typeof impacts] || '未知安全影响';
   }
@@ -506,7 +506,7 @@ export class AuthorizationTester {
       role_based: '审查和加强基于角色的访问控制',
       resource_access: '完善资源级别的访问控制',
       session: '加强会话管理和超时控制',
-      token: '改进token生成、验证和撤销机制'
+      token: '改进token生成、验证和撤销机制',
     };
     return recommendations[testType as keyof typeof recommendations] || '审查相关安全实现';
   }

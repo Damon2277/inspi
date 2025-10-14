@@ -1,6 +1,6 @@
 /**
  * Test Stability Monitor
- * 
+ *
  * Monitors test execution history and detects flaky tests automatically.
  * Provides stability metrics and analysis for test reliability.
  */
@@ -59,10 +59,10 @@ export class TestStabilityMonitor {
       durationVarianceThreshold: 0.5, // 50% variance
       consecutiveFailureThreshold: 3,
       analysisWindowDays: 30,
-      ...config
+      ...config,
     };
     this.persistenceEnabled = persistenceEnabled;
-    
+
     if (this.persistenceEnabled) {
       this.loadHistoryFromStorage();
     }
@@ -74,22 +74,22 @@ export class TestStabilityMonitor {
   recordTestExecution(record: TestExecutionRecord): void {
     const testKey = this.getTestKey(record.testName, record.testFile);
     const history = this.executionHistory.get(testKey) || [];
-    
+
     history.push(record);
-    
+
     // Keep only records within the analysis window
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - this.config.analysisWindowDays);
-    
+
     const filteredHistory = history.filter(h => h.timestamp >= cutoffDate);
-    
+
     // Limit to reasonable number of records
     if (filteredHistory.length > 1000) {
       filteredHistory.splice(0, filteredHistory.length - 1000);
     }
-    
+
     this.executionHistory.set(testKey, filteredHistory);
-    
+
     if (this.persistenceEnabled) {
       this.saveHistoryToStorage();
     }
@@ -101,7 +101,7 @@ export class TestStabilityMonitor {
   getTestStabilityMetrics(testName: string, testFile: string): TestStabilityMetrics | null {
     const testKey = this.getTestKey(testName, testFile);
     const history = this.executionHistory.get(testKey) || [];
-    
+
     if (history.length < this.config.minRunsForAnalysis) {
       return null;
     }
@@ -132,7 +132,7 @@ export class TestStabilityMonitor {
       lastFailure,
       consecutiveFailures,
       isFlaky,
-      stabilityTrend
+      stabilityTrend,
     };
   }
 
@@ -141,16 +141,16 @@ export class TestStabilityMonitor {
    */
   getFlakyTests(): TestStabilityMetrics[] {
     const flakyTests: TestStabilityMetrics[] = [];
-    
+
     for (const [testKey] of this.executionHistory) {
       const [testName, testFile] = this.parseTestKey(testKey);
       const metrics = this.getTestStabilityMetrics(testName, testFile);
-      
+
       if (metrics && metrics.isFlaky) {
         flakyTests.push(metrics);
       }
     }
-    
+
     // Sort by flakiness score (most flaky first)
     return flakyTests.sort((a, b) => b.flakinessScore - a.flakinessScore);
   }
@@ -166,11 +166,11 @@ export class TestStabilityMonitor {
     mostFlakyTests: TestStabilityMetrics[];
   } {
     const allMetrics: TestStabilityMetrics[] = [];
-    
+
     for (const [testKey] of this.executionHistory) {
       const [testName, testFile] = this.parseTestKey(testKey);
       const metrics = this.getTestStabilityMetrics(testName, testFile);
-      
+
       if (metrics) {
         allMetrics.push(metrics);
       }
@@ -179,9 +179,9 @@ export class TestStabilityMonitor {
     const totalTests = allMetrics.length;
     const flakyTests = allMetrics.filter(m => m.isFlaky).length;
     const stableTests = totalTests - flakyTests;
-    
-    const overallStabilityScore = totalTests > 0 
-      ? (stableTests / totalTests) 
+
+    const overallStabilityScore = totalTests > 0
+      ? (stableTests / totalTests)
       : 1;
 
     const mostFlakyTests = allMetrics
@@ -194,7 +194,7 @@ export class TestStabilityMonitor {
       stableTests,
       flakyTests,
       overallStabilityScore,
-      mostFlakyTests
+      mostFlakyTests,
     };
   }
 
@@ -204,7 +204,7 @@ export class TestStabilityMonitor {
   clearTestHistory(testName: string, testFile: string): void {
     const testKey = this.getTestKey(testName, testFile);
     this.executionHistory.delete(testKey);
-    
+
     if (this.persistenceEnabled) {
       this.saveHistoryToStorage();
     }
@@ -215,7 +215,7 @@ export class TestStabilityMonitor {
    */
   clearAllHistory(): void {
     this.executionHistory.clear();
-    
+
     if (this.persistenceEnabled) {
       this.saveHistoryToStorage();
     }
@@ -223,11 +223,11 @@ export class TestStabilityMonitor {
 
   private calculateFlakinessScore(history: TestExecutionRecord[]): number {
     if (history.length === 0) return 0;
-    
+
     // Calculate failure rate
     const failures = history.filter(h => h.status === 'failed').length;
     const failureRate = failures / history.length;
-    
+
     // Calculate pattern-based flakiness (alternating pass/fail)
     let alternations = 0;
     for (let i = 1; i < history.length; i++) {
@@ -236,7 +236,7 @@ export class TestStabilityMonitor {
       }
     }
     const alternationRate = alternations / (history.length - 1);
-    
+
     // Combine failure rate and alternation pattern
     return Math.min(1, failureRate + (alternationRate * 0.3));
   }
@@ -245,9 +245,9 @@ export class TestStabilityMonitor {
     const validDurations = history
       .filter(h => h.duration > 0)
       .map(h => h.duration);
-    
+
     if (validDurations.length === 0) return 0;
-    
+
     return validDurations.reduce((sum, duration) => sum + duration, 0) / validDurations.length;
   }
 
@@ -255,14 +255,14 @@ export class TestStabilityMonitor {
     const validDurations = history
       .filter(h => h.duration > 0)
       .map(h => h.duration);
-    
+
     if (validDurations.length === 0 || average === 0) return 0;
-    
+
     const variance = validDurations.reduce((sum, duration) => {
       const diff = duration - average;
       return sum + (diff * diff);
     }, 0) / validDurations.length;
-    
+
     const standardDeviation = Math.sqrt(variance);
     return standardDeviation / average; // Coefficient of variation
   }
@@ -270,7 +270,7 @@ export class TestStabilityMonitor {
   private calculateConsecutiveFailures(history: TestExecutionRecord[]): number {
     let maxConsecutive = 0;
     let currentConsecutive = 0;
-    
+
     // Check from most recent backwards
     for (let i = history.length - 1; i >= 0; i--) {
       if (history[i].status === 'failed') {
@@ -280,7 +280,7 @@ export class TestStabilityMonitor {
         break; // Only count consecutive from the end
       }
     }
-    
+
     return currentConsecutive;
   }
 
@@ -295,24 +295,24 @@ export class TestStabilityMonitor {
 
   private calculateStabilityTrend(history: TestExecutionRecord[]): 'improving' | 'degrading' | 'stable' {
     if (history.length < 20) return 'stable';
-    
+
     const recentHalf = history.slice(Math.floor(history.length / 2));
     const olderHalf = history.slice(0, Math.floor(history.length / 2));
-    
+
     const recentFailureRate = recentHalf.filter(h => h.status === 'failed').length / recentHalf.length;
     const olderFailureRate = olderHalf.filter(h => h.status === 'failed').length / olderHalf.length;
-    
+
     const difference = recentFailureRate - olderFailureRate;
-    
+
     if (difference > 0.1) return 'degrading';
     if (difference < -0.1) return 'improving';
     return 'stable';
   }
 
   private isTestFlaky(
-    flakinessScore: number, 
-    durationVariance: number, 
-    consecutiveFailures: number
+    flakinessScore: number,
+    durationVariance: number,
+    consecutiveFailures: number,
   ): boolean {
     return flakinessScore > this.config.flakinessThreshold ||
            durationVariance > this.config.durationVarianceThreshold ||
@@ -338,8 +338,8 @@ export class TestStabilityMonitor {
             key,
             records.map(r => ({
               ...r,
-              timestamp: new Date(r.timestamp)
-            }))
+              timestamp: new Date(r.timestamp),
+            })),
           ]));
         }
       }

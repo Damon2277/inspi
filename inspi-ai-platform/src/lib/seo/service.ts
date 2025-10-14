@@ -1,5 +1,5 @@
-import { updateSitemap } from './sitemap';
 import { SEO_CONFIG } from './config';
+import { updateSitemap } from './sitemap';
 
 /**
  * SEO服务类
@@ -26,7 +26,7 @@ export class SEOService {
     try {
       // 添加到更新队列
       this.updateQueue.add(`${contentType}:${contentId}`);
-      
+
       // 如果没有正在更新，开始更新流程
       if (!this.isUpdating) {
         await this.processUpdateQueue();
@@ -80,7 +80,7 @@ export class SEOService {
     try {
       // 重新生成sitemap
       await updateSitemap();
-      
+
       console.log('Sitemap updated for new content');
     } catch (error) {
       console.error('Error updating sitemap:', error);
@@ -94,7 +94,7 @@ export class SEOService {
     try {
       // 这里可以清理CDN缓存、Redis缓存等
       // 具体实现取决于使用的缓存策略
-      
+
       // 示例：清理Next.js缓存
       if (typeof window === 'undefined') {
         // 服务端环境
@@ -112,7 +112,7 @@ export class SEOService {
    */
   private async notifySearchEngines(): Promise<void> {
     const sitemapUrl = `${SEO_CONFIG.SITE_URL}/sitemap.xml`;
-    
+
     const searchEngines = [
       `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
       `https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
@@ -168,20 +168,20 @@ export class SEOService {
         score: 85,
         issues: [
           '页面加载时间超过3秒',
-          '缺少alt属性的图片'
+          '缺少alt属性的图片',
         ],
         suggestions: [
           '优化图片压缩',
           '添加图片alt属性',
-          '使用CDN加速'
-        ]
+          '使用CDN加速',
+        ],
       };
     } catch (error) {
       console.error('Error analyzing SEO performance:', error);
       return {
         score: 0,
         issues: ['分析失败'],
-        suggestions: []
+        suggestions: [],
       };
     }
   }
@@ -223,7 +223,7 @@ export class SEOService {
       checks.push({
         name: 'Sitemap可访问性',
         status: sitemapResponse.ok ? 'pass' : 'fail',
-        message: sitemapResponse.ok ? 'Sitemap正常' : `Sitemap返回${sitemapResponse.status}`
+        message: sitemapResponse.ok ? 'Sitemap正常' : `Sitemap返回${sitemapResponse.status}`,
       });
 
       // 检查robots.txt
@@ -231,24 +231,24 @@ export class SEOService {
       checks.push({
         name: 'Robots.txt可访问性',
         status: robotsResponse.ok ? 'pass' : 'fail',
-        message: robotsResponse.ok ? 'Robots.txt正常' : `Robots.txt返回${robotsResponse.status}`
+        message: robotsResponse.ok ? 'Robots.txt正常' : `Robots.txt返回${robotsResponse.status}`,
       });
 
       // 检查主页响应时间
       const startTime = Date.now();
       const homeResponse = await fetch(SEO_CONFIG.SITE_URL);
       const responseTime = Date.now() - startTime;
-      
+
       checks.push({
         name: '主页响应时间',
         status: responseTime < 3000 ? 'pass' : responseTime < 5000 ? 'warning' : 'fail',
-        message: `响应时间: ${responseTime}ms`
+        message: `响应时间: ${responseTime}ms`,
       });
 
       // 计算整体状态
       const failCount = checks.filter(c => c.status === 'fail').length;
       const warningCount = checks.filter(c => c.status === 'warning').length;
-      
+
       let status: 'healthy' | 'warning' | 'error';
       if (failCount > 0) {
         status = 'error';
@@ -266,8 +266,8 @@ export class SEOService {
         checks: [{
           name: 'SEO健康检查',
           status: 'fail',
-          message: '检查过程中发生错误'
-        }]
+          message: '检查过程中发生错误',
+        }],
       };
     }
   }

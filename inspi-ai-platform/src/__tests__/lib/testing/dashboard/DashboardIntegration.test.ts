@@ -1,6 +1,6 @@
 /**
  * Dashboard Integration Tests
- * 
+ *
  * End-to-end integration tests for the real-time dashboard system,
  * testing the interaction between all dashboard components.
  */
@@ -15,7 +15,7 @@ describe('Dashboard Integration', () => {
       updateInterval: 100,
       enableNotifications: true,
       enableCollaboration: true,
-      enableCharts: true
+      enableCharts: true,
     });
   });
 
@@ -26,7 +26,7 @@ describe('Dashboard Integration', () => {
   describe('System Initialization', () => {
     it('should initialize all components', () => {
       const status = dashboardSystem.getSystemStatus();
-      
+
       expect(status.initialized).toBe(true);
       expect(status.components.dashboard).toBe(true);
       expect(status.components.charts).toBe(true);
@@ -36,7 +36,7 @@ describe('Dashboard Integration', () => {
 
     it('should initialize with sample data', async () => {
       await dashboardSystem.initializeWithSampleData();
-      
+
       const status = dashboardSystem.getSystemStatus();
       expect(status.metrics.totalTests).toBeGreaterThan(0);
       expect(status.metrics.activeUsers).toBeGreaterThan(0);
@@ -61,16 +61,16 @@ describe('Dashboard Integration', () => {
         file: 'integration.test.ts',
         error: {
           message: 'Integration test failed',
-          stack: 'Error stack trace'
-        }
+          stack: 'Error stack trace',
+        },
       });
 
       // Wait for notification processing
       await new Promise(resolve => setTimeout(resolve, 200));
 
       const notifications = notificationSystem.getActiveNotifications();
-      const failureNotifications = notifications.filter(n => 
-        n.category === 'test_failure' && n.title === 'Test Failed'
+      const failureNotifications = notifications.filter(n =>
+        n.category === 'test_failure' && n.title === 'Test Failed',
       );
 
       expect(failureNotifications.length).toBeGreaterThan(0);
@@ -86,7 +86,7 @@ describe('Dashboard Integration', () => {
         name: 'Chart Integration Test',
         status: 'passed',
         suite: 'Chart Tests',
-        file: 'chart.test.ts'
+        file: 'chart.test.ts',
       });
 
       // Check if charts are updated
@@ -109,14 +109,14 @@ describe('Dashboard Integration', () => {
           runTests: true,
           modifyTests: true,
           viewReports: true,
-          manageTeam: false
-        }
+          manageTeam: false,
+        },
       });
 
       // Check for team notifications
       const notifications = notificationSystem.getActiveNotifications();
-      const teamNotifications = notifications.filter(n => 
-        n.category === 'team_event'
+      const teamNotifications = notifications.filter(n =>
+        n.category === 'team_event',
       );
 
       expect(teamNotifications.length).toBeGreaterThan(0);
@@ -130,7 +130,7 @@ describe('Dashboard Integration', () => {
 
     it('should handle real-time test status updates', (done) => {
       const dashboard = dashboardSystem.getDashboard();
-      
+
       dashboard.on('testStatusUpdated', (testStatus) => {
         if (testStatus.id === 'realtime-test') {
           expect(testStatus.status).toBe('running');
@@ -143,13 +143,13 @@ describe('Dashboard Integration', () => {
         name: 'Real-time Test',
         status: 'running',
         suite: 'Real-time Tests',
-        file: 'realtime.test.ts'
+        file: 'realtime.test.ts',
       });
     });
 
     it('should handle real-time coverage updates', (done) => {
       const dashboard = dashboardSystem.getDashboard();
-      
+
       dashboard.on('coverageUpdated', (coverage) => {
         if (coverage.statements === 88.5) {
           expect(coverage.branches).toBe(82.1);
@@ -163,13 +163,13 @@ describe('Dashboard Integration', () => {
         branches: 82.1,
         functions: 91.3,
         lines: 86.7,
-        files: {}
+        files: {},
       });
     });
 
     it('should handle real-time team collaboration', (done) => {
       const collaborationHub = dashboardSystem.getCollaborationHub();
-      
+
       collaborationHub.on('testRunStarted', ({ userId, testId }) => {
         if (testId === 'collab-test') {
           expect(userId).toBe('collab-user');
@@ -188,8 +188,8 @@ describe('Dashboard Integration', () => {
           runTests: true,
           modifyTests: true,
           viewReports: true,
-          manageTeam: false
-        }
+          manageTeam: false,
+        },
       });
 
       // Start test run
@@ -217,8 +217,8 @@ describe('Dashboard Integration', () => {
           runTests: true,
           modifyTests: false,
           viewReports: true,
-          manageTeam: false
-        }
+          manageTeam: false,
+        },
       });
 
       // Start test run
@@ -230,7 +230,7 @@ describe('Dashboard Integration', () => {
         name: 'Consistency Test',
         status: 'passed',
         suite: 'Consistency Tests',
-        file: 'consistency.test.ts'
+        file: 'consistency.test.ts',
       });
 
       // Complete test run
@@ -263,35 +263,35 @@ describe('Dashboard Integration', () => {
             runTests: true,
             modifyTests: true,
             viewReports: true,
-            manageTeam: false
-          }
+            manageTeam: false,
+          },
         });
       });
 
       // Simulate concurrent test updates
       const testPromises = users.map(async (userId, index) => {
         const testId = `concurrent-test-${index}`;
-        
+
         collaborationHub.startTestRun(userId, testId);
-        
+
         dashboard.updateTestStatus({
           id: testId,
           name: `Concurrent Test ${index}`,
           status: 'running',
           suite: 'Concurrent Tests',
-          file: `concurrent${index}.test.ts`
+          file: `concurrent${index}.test.ts`,
         });
 
         // Simulate test completion after random delay
         await new Promise(resolve => setTimeout(resolve, Math.random() * 100));
-        
+
         dashboard.updateTestStatus({
           id: testId,
           name: `Concurrent Test ${index}`,
           status: 'passed',
           suite: 'Concurrent Tests',
           file: `concurrent${index}.test.ts`,
-          duration: 100 + index * 50
+          duration: 100 + index * 50,
         });
 
         collaborationHub.completeTestRun(userId, testId, 'passed');
@@ -318,7 +318,7 @@ describe('Dashboard Integration', () => {
           name: '',
           status: 'invalid' as any,
           suite: '',
-          file: ''
+          file: '',
         });
       }).not.toThrow();
 
@@ -335,7 +335,7 @@ describe('Dashboard Integration', () => {
         name: 'failing-channel',
         enabled: true,
         config: {},
-        send: jest.fn().mockRejectedValue(new Error('Channel failed'))
+        send: jest.fn().mockRejectedValue(new Error('Channel failed')),
       });
 
       // Add rule to use failing channel
@@ -344,11 +344,11 @@ describe('Dashboard Integration', () => {
         name: 'Failing Rule',
         enabled: true,
         conditions: {
-          category: ['test_failure']
+          category: ['test_failure'],
         },
         actions: {
-          channels: ['failing-channel']
-        }
+          channels: ['failing-channel'],
+        },
       });
 
       // Send notification that should fail
@@ -359,7 +359,7 @@ describe('Dashboard Integration', () => {
         category: 'test_failure',
         title: 'Test Failure',
         message: 'This should trigger the failing channel',
-        priority: 'high'
+        priority: 'high',
       });
 
       // System should continue working despite the failure
@@ -385,8 +385,8 @@ describe('Dashboard Integration', () => {
             status: i % 2 === 0 ? 'passed' : 'failed',
             suite: 'Performance Tests',
             file: `perf${i}.test.ts`,
-            duration: Math.random() * 1000
-          })
+            duration: Math.random() * 1000,
+          }),
         );
       }
 
@@ -411,13 +411,13 @@ describe('Dashboard Integration', () => {
       const chart = chartGenerator.createChart('large-dataset-chart', {
         title: 'Large Dataset Chart',
         type: 'line',
-        maxDataPoints: 1000
+        maxDataPoints: 1000,
       });
 
       chartGenerator.addSeries('large-dataset-chart', {
         name: 'Large Dataset',
         data: [],
-        type: 'line'
+        type: 'line',
       });
 
       const startTime = Date.now();
@@ -426,7 +426,7 @@ describe('Dashboard Integration', () => {
       for (let i = 0; i < 1000; i++) {
         chartGenerator.addDataPoint('large-dataset-chart', 'Large Dataset', {
           timestamp: new Date(Date.now() + i * 1000),
-          value: Math.random() * 100
+          value: Math.random() * 100,
         });
       }
 
@@ -457,7 +457,7 @@ describe('Dashboard Integration', () => {
         name: 'Export Test',
         status: 'passed',
         suite: 'Export Tests',
-        file: 'export.test.ts'
+        file: 'export.test.ts',
       });
 
       collaborationHub.addSharedNote('user1', 'Export test note');
@@ -482,20 +482,20 @@ describe('Dashboard Integration', () => {
 
       // Import data from original system
       const exportedData = dashboardSystem.exportAllData();
-      
+
       // Import into new system
       const newDashboard = newDashboardSystem.getDashboard();
       const newCollaborationHub = newDashboardSystem.getCollaborationHub();
 
       newDashboard.importData({
         testStatuses: exportedData.dashboard.testStatuses,
-        collaborationData: exportedData.dashboard.collaborationData
+        collaborationData: exportedData.dashboard.collaborationData,
       });
 
       newCollaborationHub.importData({
         members: exportedData.collaboration.members,
         sharedState: exportedData.collaboration.sharedState,
-        activities: exportedData.collaboration.activities
+        activities: exportedData.collaboration.activities,
       });
 
       // Verify imported data

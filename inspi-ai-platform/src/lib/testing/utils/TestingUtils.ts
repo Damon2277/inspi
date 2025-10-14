@@ -1,6 +1,6 @@
 /**
  * Testing Utilities Index
- * 
+ *
  * This module provides a centralized export of all testing utilities,
  * making it easy to import and use testing tools throughout the project.
  */
@@ -14,29 +14,29 @@ export { AssertionHelpers } from '../helpers/AssertionHelpers';
 export type { AssertionOptions, AsyncAssertionOptions } from '../helpers/AssertionHelpers';
 
 // Performance Monitoring
-export { 
-  PerformanceMonitor, 
-  measurePerformance, 
-  createPerformanceBenchmark 
+export {
+  PerformanceMonitor,
+  measurePerformance,
+  createPerformanceBenchmark,
 } from '../performance/PerformanceMonitor';
-export type { 
-  PerformanceMetrics, 
-  PerformanceBenchmark, 
-  PerformanceReport 
+export type {
+  PerformanceMetrics,
+  PerformanceBenchmark,
+  PerformanceReport,
 } from '../performance/PerformanceMonitor';
 
 // Error Handling
-export { 
-  TestError, 
-  TestErrorHandler, 
-  DefaultRecoveryStrategies, 
+export {
+  TestError,
+  TestErrorHandler,
+  DefaultRecoveryStrategies,
   ErrorAssertions,
   globalTestErrorHandler,
-  TestErrorType 
+  TestErrorType,
 } from '../errors/TestError';
-export type { 
-  TestErrorContext, 
-  ErrorRecoveryStrategy 
+export type {
+  TestErrorContext,
+  ErrorRecoveryStrategy,
 } from '../errors/TestError';
 
 /**
@@ -67,7 +67,7 @@ export function setupPerformanceMonitoring(suiteName: string): {
   measureTest: (testName: string, fn: () => Promise<any> | any) => Promise<any>;
 } {
   const monitor = PerformanceMonitor.getInstance();
-  
+
   const measureTest = async (testName: string, fn: () => Promise<any> | any) => {
     const fullTestName = `${suiteName}.${testName}`;
     const { result } = await monitor.measureFunction(fullTestName, fn);
@@ -85,10 +85,10 @@ export function setupErrorHandling(): {
   handleTestError: (error: any, context?: Partial<TestErrorContext>) => Promise<boolean>;
 } {
   const handler = globalTestErrorHandler;
-  
+
   const handleTestError = async (error: any, context: Partial<TestErrorContext> = {}) => {
     let testError: TestError;
-    
+
     if (error instanceof TestError) {
       testError = error;
     } else {
@@ -96,10 +96,10 @@ export function setupErrorHandling(): {
       testError = TestError.fromError(
         error instanceof Error ? error : new Error(String(error)),
         TestErrorType.ASSERTION_FAILED,
-        context
+        context,
       );
     }
-    
+
     return handler.handleError(testError);
   };
 
@@ -222,13 +222,13 @@ export class TestDataHelper {
   static createValidJWT(): string {
     // This is a mock JWT for testing purposes only
     const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64');
-    const payload = Buffer.from(JSON.stringify({ 
-      sub: 'test-user-id', 
+    const payload = Buffer.from(JSON.stringify({
+      sub: 'test-user-id',
       email: 'test@example.com',
-      exp: Math.floor(Date.now() / 1000) + 3600 
+      exp: Math.floor(Date.now() / 1000) + 3600,
     })).toString('base64');
     const signature = 'mock-signature';
-    
+
     return `${header}.${payload}.${signature}`;
   }
 }
@@ -249,7 +249,7 @@ export class TestTimingUtils {
    */
   static async waitFor(
     condition: () => boolean | Promise<boolean>,
-    options: { timeout?: number; interval?: number } = {}
+    options: { timeout?: number; interval?: number } = {},
   ): Promise<void> {
     const { timeout = 5000, interval = 100 } = options;
     const startTime = Date.now();
@@ -263,7 +263,7 @@ export class TestTimingUtils {
 
     throw new TestError(
       TestErrorType.TIMEOUT,
-      `Condition did not become true within ${timeout}ms`
+      `Condition did not become true within ${timeout}ms`,
     );
   }
 
@@ -274,7 +274,7 @@ export class TestTimingUtils {
     const startTime = performance.now();
     const result = await fn();
     const duration = performance.now() - startTime;
-    
+
     return { result, duration };
   }
 }

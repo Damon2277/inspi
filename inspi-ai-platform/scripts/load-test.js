@@ -267,7 +267,8 @@ ${scenario.flow.map(step => {
     return `      - get:
           url: "${step.get.url}"${step.get.headers ? `
           headers:
-${Object.entries(step.get.headers).map(([key, value]) => `            ${key}: "${value}"`).join('\n')}` : ''}${step.get.capture ? `
+${Object.entries(step.get.headers).map(([key,
+  value]) => `            ${key}: "${value}"`).join('\n')}` : ''}${step.get.capture ? `
           capture:
             json: "${step.get.capture.json}"
             as: "${step.get.capture.as}"` : ''}`;
@@ -275,9 +276,11 @@ ${Object.entries(step.get.headers).map(([key, value]) => `            ${key}: "$
     return `      - post:
           url: "${step.post.url}"${step.post.headers ? `
           headers:
-${Object.entries(step.post.headers).map(([key, value]) => `            ${key}: "${value}"`).join('\n')}` : ''}
+${Object.entries(step.post.headers).map(([key,
+  value]) => `            ${key}: "${value}"`).join('\n')}` : ''}
           json:
-${Object.entries(step.post.json).map(([key, value]) => `            ${key}: "${value}"`).join('\n')}${step.post.capture ? `
+${Object.entries(step.post.json).map(([key,
+  value]) => `            ${key}: "${value}"`).join('\n')}${step.post.capture ? `
           capture:
             json: "${step.post.capture.json}"
             as: "${step.post.capture.as}"` : ''}`;

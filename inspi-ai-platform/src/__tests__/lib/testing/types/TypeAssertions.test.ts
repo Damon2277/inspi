@@ -23,7 +23,7 @@ import {
   IsOptional,
   IsReadonly,
   TypeTests,
-  RuntimeAssertions
+  RuntimeAssertions,
 } from '../../../../lib/testing/types/TypeAssertions';
 
 describe('TypeAssertions', () => {
@@ -34,13 +34,13 @@ describe('TypeAssertions', () => {
         expectType<string>()<string>();
         expectType<number>()<number>();
         expectType<boolean>()<boolean>();
-        
+
         // Test with complex types
         interface TestInterface {
           id: number;
           name: string;
         }
-        
+
         expectType<TestInterface>()<TestInterface>();
         expectType<TestInterface[]>()<TestInterface[]>();
       });
@@ -53,7 +53,7 @@ describe('TypeAssertions', () => {
         expectAssignable<'hello', string>();
         expectAssignable<number, any>();
         expectAssignable<{ a: string; b: number }, { a: string }>();
-        
+
         // Union types
         expectAssignable<'red' | 'blue', string>();
         expectAssignable<1 | 2 | 3, number>();
@@ -74,11 +74,11 @@ describe('TypeAssertions', () => {
         interface Base {
           id: string;
         }
-        
+
         interface Extended extends Base {
           name: string;
         }
-        
+
         expectExtends<Extended, Base>();
         expectExtends<string, any>();
         expectExtends<never, string>();
@@ -90,11 +90,11 @@ describe('TypeAssertions', () => {
         interface Base {
           id: string;
         }
-        
+
         interface Extended extends Base {
           name: string;
         }
-        
+
         expectNotExtends<Base, Extended>();
         expectNotExtends<string, number>();
         expectNotExtends<number, boolean>();
@@ -108,11 +108,11 @@ describe('TypeAssertions', () => {
         type Test1 = Expect<Equal<string, string>>;
         type Test2 = Expect<Equal<number, number>>;
         type Test3 = Expect<Equal<{ a: string }, { a: string }>>;
-        
+
         // These should be false
         type Test4 = Equal<string, number>; // false
         type Test5 = Equal<{ a: string }, { a: number }>; // false
-        
+
         expect(true).toBe(true); // Runtime assertion to make test pass
       });
     });
@@ -122,9 +122,9 @@ describe('TypeAssertions', () => {
         type Test1 = Expect<NotAny<string>>;
         type Test2 = Expect<NotAny<number>>;
         type Test3 = Expect<NotAny<object>>;
-        
+
         type Test4 = Expect<IsAny<any>>;
-        
+
         expect(true).toBe(true);
       });
     });
@@ -134,7 +134,7 @@ describe('TypeAssertions', () => {
         type Test1 = Expect<IsNever<never>>;
         type Test2 = Expect<Equal<IsNever<string>, false>>;
         type Test3 = Expect<Equal<IsNever<number>, false>>;
-        
+
         expect(true).toBe(true);
       });
     });
@@ -144,7 +144,7 @@ describe('TypeAssertions', () => {
         type Test1 = Expect<IsUnknown<unknown>>;
         type Test2 = Expect<Equal<IsUnknown<any>, false>>;
         type Test3 = Expect<Equal<IsUnknown<string>, false>>;
-        
+
         expect(true).toBe(true);
       });
     });
@@ -156,12 +156,12 @@ describe('TypeAssertions', () => {
           name: string;
           optional?: boolean;
         }
-        
+
         type Test1 = Expect<HasProperty<TestInterface, 'id'>>;
         type Test2 = Expect<HasProperty<TestInterface, 'name'>>;
         type Test3 = Expect<HasProperty<TestInterface, 'optional'>>;
         type Test4 = Expect<Equal<HasProperty<TestInterface, 'nonexistent'>, false>>;
-        
+
         expect(true).toBe(true);
       });
     });
@@ -173,7 +173,7 @@ describe('TypeAssertions', () => {
         type Test3 = Expect<IsFunction<Function>>;
         type Test4 = Expect<Equal<IsFunction<string>, false>>;
         type Test5 = Expect<Equal<IsFunction<object>, false>>;
-        
+
         expect(true).toBe(true);
       });
     });
@@ -185,7 +185,7 @@ describe('TypeAssertions', () => {
         type Test3 = Expect<IsArray<readonly string[]>>;
         type Test4 = Expect<Equal<IsArray<string>, false>>;
         type Test5 = Expect<Equal<IsArray<object>, false>>;
-        
+
         expect(true).toBe(true);
       });
     });
@@ -197,7 +197,7 @@ describe('TypeAssertions', () => {
         type Test3 = Expect<IsTuple<readonly [string, number]>>;
         type Test4 = Expect<Equal<IsTuple<string[]>, false>>;
         type Test5 = Expect<Equal<IsTuple<number[]>, false>>;
-        
+
         expect(true).toBe(true);
       });
     });
@@ -209,7 +209,7 @@ describe('TypeAssertions', () => {
         type Test3 = Expect<IsUnion<boolean | null>>;
         type Test4 = Expect<Equal<IsUnion<string>, false>>;
         type Test5 = Expect<Equal<IsUnion<number>, false>>;
-        
+
         expect(true).toBe(true);
       });
     });
@@ -220,10 +220,10 @@ describe('TypeAssertions', () => {
           required: string;
           optional?: number;
         }
-        
+
         type Test1 = Expect<IsOptional<TestInterface, 'optional'>>;
         type Test2 = Expect<Equal<IsOptional<TestInterface, 'required'>, false>>;
-        
+
         expect(true).toBe(true);
       });
     });
@@ -234,10 +234,10 @@ describe('TypeAssertions', () => {
           mutable: string;
           readonly immutable: number;
         }
-        
+
         type Test1 = Expect<IsReadonly<TestInterface, 'immutable'>>;
         type Test2 = Expect<Equal<IsReadonly<TestInterface, 'mutable'>, false>>;
-        
+
         expect(true).toBe(true);
       });
     });
@@ -258,7 +258,7 @@ describe('TypeAssertions', () => {
       TypeTests.testMappedTypes();
       TypeTests.testTemplateLiteralTypes();
       TypeTests.testRecursiveTypes();
-      
+
       expect(true).toBe(true);
     });
   });
@@ -306,7 +306,7 @@ describe('TypeAssertions', () => {
 
       it('should validate function types', () => {
         expect(RuntimeAssertions.isFunction(() => {})).toBe(true);
-        expect(RuntimeAssertions.isFunction(function() {})).toBe(true);
+        expect(RuntimeAssertions.isFunction(function () {})).toBe(true);
         expect(RuntimeAssertions.isFunction(Math.max)).toBe(true);
         expect(RuntimeAssertions.isFunction('function')).toBe(false);
         expect(RuntimeAssertions.isFunction({})).toBe(false);
@@ -316,7 +316,7 @@ describe('TypeAssertions', () => {
     describe('Property Validation', () => {
       it('should check for property existence', () => {
         const obj = { name: 'test', age: 25 };
-        
+
         expect(RuntimeAssertions.hasProperty(obj, 'name')).toBe(true);
         expect(RuntimeAssertions.hasProperty(obj, 'age')).toBe(true);
         expect(RuntimeAssertions.hasProperty(obj, 'email')).toBe(false);
@@ -330,10 +330,10 @@ describe('TypeAssertions', () => {
           name: string;
           email: string;
         }
-        
+
         const validUser = { id: 1, name: 'John', email: 'john@example.com' };
         const invalidUser = { id: 1, name: 'John' }; // missing email
-        
+
         expect(RuntimeAssertions.hasRequiredProperties<User>(validUser, ['id', 'name', 'email'])).toBe(true);
         expect(RuntimeAssertions.hasRequiredProperties<User>(invalidUser, ['id', 'name', 'email'])).toBe(false);
         expect(RuntimeAssertions.hasRequiredProperties<User>(null, ['id', 'name', 'email'])).toBe(false);
@@ -344,11 +344,11 @@ describe('TypeAssertions', () => {
       it('should assert types successfully', () => {
         const stringValidator = (value: unknown): value is string => typeof value === 'string';
         const numberValidator = (value: unknown): value is number => typeof value === 'number';
-        
+
         expect(() => {
           RuntimeAssertions.assertType('hello', stringValidator);
         }).not.toThrow();
-        
+
         expect(() => {
           RuntimeAssertions.assertType(123, numberValidator);
         }).not.toThrow();
@@ -356,7 +356,7 @@ describe('TypeAssertions', () => {
 
       it('should throw on failed type assertions', () => {
         const stringValidator = (value: unknown): value is string => typeof value === 'string';
-        
+
         expect(() => {
           RuntimeAssertions.assertType(123, stringValidator);
         }).toThrow('Type assertion failed');
@@ -364,7 +364,7 @@ describe('TypeAssertions', () => {
 
       it('should check types without throwing', () => {
         const stringValidator = (value: unknown): value is string => typeof value === 'string';
-        
+
         expect(RuntimeAssertions.isType('hello', stringValidator)).toBe(true);
         expect(RuntimeAssertions.isType(123, stringValidator)).toBe(false);
       });
@@ -376,7 +376,7 @@ describe('TypeAssertions', () => {
           id: number;
           name: string;
         }
-        
+
         const isUser = RuntimeAssertions.createTypeGuard<User>(
           (value: unknown): boolean => {
             return RuntimeAssertions.isObject(value) &&
@@ -384,12 +384,12 @@ describe('TypeAssertions', () => {
                    RuntimeAssertions.hasProperty(value, 'name') &&
                    typeof value.id === 'number' &&
                    typeof value.name === 'string';
-          }
+          },
         );
-        
+
         const validUser = { id: 1, name: 'John' };
         const invalidUser = { id: '1', name: 'John' }; // id should be number
-        
+
         expect(isUser(validUser)).toBe(true);
         expect(isUser(invalidUser)).toBe(false);
         expect(isUser(null)).toBe(false);
@@ -405,16 +405,16 @@ describe('TypeAssertions', () => {
         status: number;
         message?: string;
       }
-      
+
       // Compile-time tests
       type Test1 = Expect<HasProperty<ApiResponse<string>, 'data'>>;
       type Test2 = Expect<HasProperty<ApiResponse<string>, 'status'>>;
       type Test3 = Expect<IsOptional<ApiResponse<string>, 'message'>>;
-      
+
       // Runtime validation
       const isApiResponse = <T>(
         value: unknown,
-        dataValidator: (data: unknown) => data is T
+        dataValidator: (data: unknown) => data is T,
       ): value is ApiResponse<T> => {
         return RuntimeAssertions.isObject(value) &&
                RuntimeAssertions.hasProperty(value, 'data') &&
@@ -422,23 +422,23 @@ describe('TypeAssertions', () => {
                dataValidator(value.data) &&
                typeof value.status === 'number';
       };
-      
+
       const stringResponse = {
         data: 'hello',
         status: 200,
-        message: 'success'
+        message: 'success',
       };
-      
+
       const numberResponse = {
         data: 42,
-        status: 200
+        status: 200,
       };
-      
+
       const invalidResponse = {
         data: 'hello',
-        status: '200' // should be number
+        status: '200', // should be number
       };
-      
+
       expect(isApiResponse(stringResponse, RuntimeAssertions.isString)).toBe(true);
       expect(isApiResponse(numberResponse, RuntimeAssertions.isNumber)).toBe(true);
       expect(isApiResponse(invalidResponse, RuntimeAssertions.isString)).toBe(false);
@@ -450,17 +450,17 @@ describe('TypeAssertions', () => {
         city: string;
         zipCode: string;
       }
-      
+
       interface User {
         id: number;
         name: string;
         addresses: Address[];
       }
-      
+
       // Compile-time tests
       type Test1 = Expect<HasProperty<User, 'addresses'>>;
       type Test2 = Expect<IsArray<User['addresses']>>;
-      
+
       // Runtime validation
       const isAddress = (value: unknown): value is Address => {
         return RuntimeAssertions.isObject(value) &&
@@ -469,7 +469,7 @@ describe('TypeAssertions', () => {
                RuntimeAssertions.isString(value.city) &&
                RuntimeAssertions.isString(value.zipCode);
       };
-      
+
       const isUser = (value: unknown): value is User => {
         return RuntimeAssertions.isObject(value) &&
                RuntimeAssertions.hasRequiredProperties<User>(value, ['id', 'name', 'addresses']) &&
@@ -478,24 +478,24 @@ describe('TypeAssertions', () => {
                RuntimeAssertions.isArray(value.addresses) &&
                value.addresses.every(isAddress);
       };
-      
+
       const validUser = {
         id: 1,
         name: 'John',
         addresses: [
           { street: '123 Main St', city: 'Anytown', zipCode: '12345' },
-          { street: '456 Oak Ave', city: 'Somewhere', zipCode: '67890' }
-        ]
+          { street: '456 Oak Ave', city: 'Somewhere', zipCode: '67890' },
+        ],
       };
-      
+
       const invalidUser = {
         id: 1,
         name: 'John',
         addresses: [
-          { street: '123 Main St', city: 'Anytown' } // missing zipCode
-        ]
+          { street: '123 Main St', city: 'Anytown' }, // missing zipCode
+        ],
       };
-      
+
       expect(isUser(validUser)).toBe(true);
       expect(isUser(invalidUser)).toBe(false);
     });

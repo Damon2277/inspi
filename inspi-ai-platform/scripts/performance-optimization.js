@@ -91,7 +91,8 @@ class PerformanceOptimizer {
       }
       
       if (e2eMetrics.loadTime && e2eMetrics.loadTime.length > 0) {
-        metrics.loadTime = e2eMetrics.loadTime.reduce((a, b) => a + b, 0) / e2eMetrics.loadTime.length;
+        metrics.loadTime = e2eMetrics.loadTime.reduce((a, b) => a + b,
+          0) / e2eMetrics.loadTime.length;
       }
     }
 
@@ -100,7 +101,8 @@ class PerformanceOptimizer {
       const cacheMetrics = reportData.tests.cache.metrics;
       
       if (cacheMetrics.hitRate && cacheMetrics.hitRate.length > 0) {
-        metrics.cacheHitRate = cacheMetrics.hitRate.reduce((a, b) => a + b, 0) / cacheMetrics.hitRate.length / 100;
+        metrics.cacheHitRate = cacheMetrics.hitRate.reduce((a, b) => a + b,
+          0) / cacheMetrics.hitRate.length / 100;
       }
     }
 
@@ -109,7 +111,8 @@ class PerformanceOptimizer {
       const mobileMetrics = reportData.tests.mobile.metrics;
       
       if (mobileMetrics.memory && mobileMetrics.memory.length > 0) {
-        metrics.memoryUsage = mobileMetrics.memory.reduce((a, b) => a + b, 0) / mobileMetrics.memory.length * 1024 * 1024;
+        metrics.memoryUsage = mobileMetrics.memory.reduce((a, b) => a + b,
+          0) / mobileMetrics.memory.length * 1024 * 1024;
       }
     }
 
@@ -260,7 +263,8 @@ class PerformanceOptimizer {
     let layoutContent = fs.readFileSync(layoutPath, 'utf8');
 
     const preloadLinks = `
-        <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/inter-
+          var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="preload" href="/api/works/popular" as="fetch" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />`;
@@ -516,7 +520,8 @@ export class ObjectPool<T> {
       
       // 提取性能指标
       const metrics = this.extractMetrics(reportData);
-      this.log(`Extracted metrics: LCP=${metrics.lcp.toFixed(0)}ms, FCP=${metrics.fcp.toFixed(0)}ms, CLS=${metrics.cls.toFixed(3)}`, 'debug');
+      this.log(`Extracted metrics: LCP=${metrics.lcp.toFixed(0)}ms,
+        FCP=${metrics.fcp.toFixed(0)}ms, CLS=${metrics.cls.toFixed(3)}`, 'debug');
 
       // 生成优化计划
       const optimizations = this.generateOptimizationPlan(metrics);

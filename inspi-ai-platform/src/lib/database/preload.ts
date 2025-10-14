@@ -2,6 +2,7 @@
  * 数据预加载机制
  */
 import { logger } from '@/lib/logging/logger';
+
 import { CacheManager } from '@/lib/cache/manager';
 
 /**
@@ -83,7 +84,7 @@ export class DataPreloader {
       status: 'pending',
       executionCount: 0,
       errorCount: 0,
-      averageExecutionTime: 0
+      averageExecutionTime: 0,
     };
 
     this.tasks.set(task.id, fullTask);
@@ -117,9 +118,9 @@ export class DataPreloader {
           data: cached,
           executionTime: Date.now() - startTime,
           cacheHit: true,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
-        
+
         logger.debug('Preload task cache hit', { taskId, cacheKey: task.config.cacheKey });
         return result;
       }
@@ -134,7 +135,7 @@ export class DataPreloader {
             error: new Error('Execution condition not met'),
             executionTime: Date.now() - startTime,
             cacheHit: false,
-            timestamp: new Date()
+            timestamp: new Date(),
           };
           return result;
         }
@@ -151,7 +152,7 @@ export class DataPreloader {
       await this.cacheManager.set(
         task.config.cacheKey,
         data,
-        { ttl: task.config.ttl }
+        { ttl: task.config.ttl },
       );
 
       // 更新任务统计
@@ -159,7 +160,7 @@ export class DataPreloader {
       task.status = 'completed';
       task.executionCount++;
       task.averageExecutionTime = (
-        (task.averageExecutionTime * (task.executionCount - 1) + executionTime) / 
+        (task.averageExecutionTime * (task.executionCount - 1) + executionTime) /
         task.executionCount
       );
 
@@ -169,13 +170,13 @@ export class DataPreloader {
         data,
         executionTime,
         cacheHit: false,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       logger.info('Preload task completed', {
         taskId,
         executionTime,
-        dataSize: JSON.stringify(data).length
+        dataSize: JSON.stringify(data).length,
       });
 
     } catch (error) {
@@ -189,13 +190,13 @@ export class DataPreloader {
         error: error instanceof Error ? error : new Error(String(error)),
         executionTime,
         cacheHit: false,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       logger.error('Preload task failed', error instanceof Error ? error : new Error(String(error)), {
         taskId,
         executionTime,
-        errorCount: task.errorCount
+        errorCount: task.errorCount,
       });
     }
 
@@ -218,7 +219,7 @@ export class DataPreloader {
     for (const batch of batches) {
       const batchPromises = batch.map(taskId => this.executeTask(taskId));
       const batchResults = await Promise.allSettled(batchPromises);
-      
+
       for (const result of batchResults) {
         if (result.status === 'fulfilled') {
           results.push(result.value);
@@ -273,7 +274,7 @@ export class DataPreloader {
     timeOfDay?: number;
   }): Promise<void> {
     const predictions = await this.generatePreloadPredictions(context);
-    
+
     for (const prediction of predictions) {
       const task = this.tasks.get(prediction.taskId);
       if (task && task.config.strategy === PreloadStrategy.PREDICTIVE) {
@@ -298,7 +299,7 @@ export class DataPreloader {
       predictions.push({
         taskId: 'popular-works',
         probability: 0.8,
-        delay: 1000
+        delay: 1000,
       });
     }
 
@@ -307,7 +308,7 @@ export class DataPreloader {
       predictions.push({
         taskId: 'user-contributions',
         probability: 0.7,
-        delay: 2000
+        delay: 2000,
       });
     }
 
@@ -318,7 +319,7 @@ export class DataPreloader {
       predictions.push({
         taskId: 'education-content',
         probability: 0.6,
-        delay: 5000
+        delay: 5000,
       });
     }
 
@@ -359,12 +360,12 @@ export class DataPreloader {
       stats[taskId] = {
         executionCount: task.executionCount,
         errorCount: task.errorCount,
-        successRate: task.executionCount > 0 
-          ? ((task.executionCount - task.errorCount) / task.executionCount) * 100 
+        successRate: task.executionCount > 0
+          ? ((task.executionCount - task.errorCount) / task.executionCount) * 100
           : 0,
         averageExecutionTime: task.averageExecutionTime,
         lastExecuted: task.lastExecuted,
-        status: task.status
+        status: task.status,
       };
     }
 
@@ -379,7 +380,7 @@ export class DataPreloader {
 
     for (const task of this.tasks.values()) {
       const cacheInfo = await this.cacheManager.getInfo(task.config.cacheKey);
-      if (cacheInfo && cacheInfo.expired) {
+      if (cacheInfo && cacheInfo.expiresAt && cacheInfo.expiresAt < Date.now()) {
         expiredKeys.push(task.config.cacheKey);
       }
     }
@@ -437,19 +438,19 @@ export class PreloadTasks {
         priority: 'high',
         cacheKey: 'preload:popular-works',
         ttl: 30 * 60, // 30分钟
-        batchSize: 20
+        batchSize: 20,
       },
       loader: async () => {
         const works = await this.db.collection('works')
-          .find({ 
-            status: 'published', 
-            visibility: 'public' 
+          .find({
+            status: 'published',
+            visibility: 'public',
           })
           .sort({ 'stats.views': -1, 'stats.likes': -1 })
           .limit(20)
           .toArray();
         return works;
-      }
+      },
     });
 
     // 用户贡献度排行预加载
@@ -461,7 +462,7 @@ export class PreloadTasks {
         priority: 'medium',
         cacheKey: 'preload:user-contributions',
         ttl: 60 * 60, // 1小时
-        batchSize: 50
+        batchSize: 50,
       },
       loader: async () => {
         const rankings = await this.db.collection('users')
@@ -474,11 +475,11 @@ export class PreloadTasks {
             avatar: 1,
             'stats.contributionScore': 1,
             'stats.worksCount': 1,
-            'stats.reusedCount': 1
+            'stats.reusedCount': 1,
           })
           .toArray();
         return rankings;
-      }
+      },
     });
 
     // 知识图谱模板预加载
@@ -496,7 +497,7 @@ export class PreloadTasks {
           .find({ 'metadata.isPreset': true })
           .toArray();
         return templates;
-      }
+      },
     });
 
     // 最新作品预加载
@@ -511,19 +512,19 @@ export class PreloadTasks {
         condition: async () => {
           const hour = new Date().getHours();
           return hour >= 8 && hour <= 22; // 只在活跃时间预加载
-        }
+        },
       },
       loader: async () => {
         const works = await this.db.collection('works')
-          .find({ 
-            status: 'published', 
-            visibility: 'public' 
+          .find({
+            status: 'published',
+            visibility: 'public',
           })
           .sort({ createdAt: -1 })
           .limit(15)
           .toArray();
         return works;
-      }
+      },
     });
 
     // 学科分类统计预加载
@@ -539,16 +540,16 @@ export class PreloadTasks {
       loader: async () => {
         const stats = await this.db.collection('works').aggregate([
           { $match: { status: 'published', visibility: 'public' } },
-          { $group: { 
-            _id: '$subject', 
+          { $group: {
+            _id: '$subject',
             count: { $sum: 1 },
             totalViews: { $sum: '$stats.views' },
-            totalLikes: { $sum: '$stats.likes' }
-          }},
-          { $sort: { count: -1 } }
+            totalLikes: { $sum: '$stats.likes' },
+          } },
+          { $sort: { count: -1 } },
         ]).toArray();
         return stats;
-      }
+      },
     });
   }
 

@@ -3,6 +3,8 @@
  */
 
 import { logger } from '@/lib/logging/logger';
+import { ErrorCode } from '@/shared/errors/types';
+
 import { ApiError } from './client';
 
 /**
@@ -40,7 +42,7 @@ export const DEFAULT_RETRY_STRATEGY: RetryStrategy = {
   retryCondition: (error: ApiError, attempt: number) => {
     // 只对特定错误进行重试
     return error.isRetryable() && attempt < 3;
-  }
+  },
 };
 
 /**
@@ -55,7 +57,7 @@ export const EXPONENTIAL_BACKOFF_STRATEGY: RetryStrategy = {
   retryCondition: (error: ApiError, attempt: number) => {
     // 网络错误和服务器错误可重试
     return (error.isNetworkError() || error.isServerError()) && attempt < 5;
-  }
+  },
 };
 
 /**
@@ -70,7 +72,7 @@ export const LINEAR_RETRY_STRATEGY: RetryStrategy = {
   retryCondition: (error: ApiError, attempt: number) => {
     // 只对5xx错误重试
     return error.isServerError() && attempt < 3;
-  }
+  },
 };
 
 /**
@@ -85,7 +87,7 @@ export const FAST_RETRY_STRATEGY: RetryStrategy = {
   retryCondition: (error: ApiError, attempt: number) => {
     // 只对网络错误快速重试
     return error.isNetworkError() && attempt < 2;
-  }
+  },
 };
 
 /**
@@ -103,7 +105,7 @@ export class RetryManager {
    */
   async execute<T>(
     operation: () => Promise<T>,
-    customStrategy?: Partial<RetryStrategy>
+    customStrategy?: Partial<RetryStrategy>,
   ): Promise<RetryResult<T>> {
     const strategy = { ...this.strategy, ...customStrategy };
     const startTime = Date.now();
@@ -117,31 +119,31 @@ export class RetryManager {
         if (attempt > 0) {
           // 计算延迟时间
           const delay = this.calculateDelay(attempt, strategy);
-          
+
           logger.info('Retrying operation', {
             metadata: {
               attempt,
               maxRetries: strategy.maxRetries,
               delay,
-              lastError: lastError?.message
-            }
+              lastError: lastError?.message,
+            },
           });
 
           await this.delay(delay);
         }
 
         const result = await operation();
-        
+
         return {
           success: true,
           data: result,
           attempts,
-          totalDuration: Date.now() - startTime
+          totalDuration: Date.now() - startTime,
         };
       } catch (error) {
         lastError = error instanceof ApiError ? error : new ApiError(
           error instanceof Error ? error.message : 'Unknown error',
-          0
+          0,
         );
 
         // 检查是否应该重试
@@ -155,7 +157,7 @@ export class RetryManager {
       success: false,
       error: lastError!,
       attempts,
-      totalDuration: Date.now() - startTime
+      totalDuration: Date.now() - startTime,
     };
   }
 
@@ -241,7 +243,7 @@ export class CircuitBreaker {
       recoveryTimeout: 60000, // 1分钟
       monitoringPeriod: 10000, // 10秒
       halfOpenMaxCalls: 3,
-      ...config
+      ...config,
     };
   }
 
@@ -257,17 +259,17 @@ export class CircuitBreaker {
         throw new ApiError(
           '服务暂时不可用，请稍后重试',
           503,
-          'CIRCUIT_BREAKER_OPEN'
+          ErrorCode.CIRCUIT_BREAKER_OPEN,
         );
       }
     }
 
-    if (this.state === CircuitBreakerState.HALF_OPEN && 
+    if (this.state === CircuitBreakerState.HALF_OPEN &&
         this.halfOpenCalls >= this.config.halfOpenMaxCalls) {
       throw new ApiError(
         '服务正在恢复中，请稍后重试',
         503,
-        'CIRCUIT_BREAKER_HALF_OPEN_LIMIT'
+        ErrorCode.CIRCUIT_BREAKER_HALF_OPEN_LIMIT,
       );
     }
 
@@ -286,10 +288,10 @@ export class CircuitBreaker {
    */
   private onSuccess(): void {
     this.failureCount = 0;
-    
+
     if (this.state === CircuitBreakerState.HALF_OPEN) {
       this.halfOpenCalls++;
-      
+
       if (this.halfOpenCalls >= this.config.halfOpenMaxCalls) {
         this.state = CircuitBreakerState.CLOSED;
         this.halfOpenCalls = 0;
@@ -334,7 +336,7 @@ export class CircuitBreaker {
       state: this.state,
       failureCount: this.failureCount,
       lastFailureTime: this.lastFailureTime,
-      halfOpenCalls: this.halfOpenCalls
+      halfOpenCalls: this.halfOpenCalls,
     };
   }
 
@@ -368,18 +370,22 @@ export function createCircuitBreaker(config?: Partial<CircuitBreakerConfig>): Ci
  */
 export function withRetry<T extends any[], R>(
   fn: (...args: T) => Promise<R>,
-  strategy?: Partial<RetryStrategy>
+  strategy?: Partial<RetryStrategy>,
 ): (...args: T) => Promise<R> {
   const retryManager = new RetryManager({ ...DEFAULT_RETRY_STRATEGY, ...strategy });
 
   return async (...args: T): Promise<R> => {
     const result = await retryManager.execute(() => fn(...args));
-    
+
     if (result.success) {
       return result.data!;
-    } else {
-      throw result.error!;
     }
+
+    if (result.error instanceof Error) {
+      throw result.error;
+    }
+
+    throw new Error(String(result.error));
   };
 }
 
@@ -388,7 +394,7 @@ export function withRetry<T extends any[], R>(
  */
 export function withCircuitBreaker<T extends any[], R>(
   fn: (...args: T) => Promise<R>,
-  config?: Partial<CircuitBreakerConfig>
+  config?: Partial<CircuitBreakerConfig>,
 ): (...args: T) => Promise<R> {
   const circuitBreaker = new CircuitBreaker(config);
 
@@ -407,5 +413,5 @@ export default {
   DEFAULT_RETRY_STRATEGY,
   EXPONENTIAL_BACKOFF_STRATEGY,
   LINEAR_RETRY_STRATEGY,
-  FAST_RETRY_STRATEGY
+  FAST_RETRY_STRATEGY,
 };

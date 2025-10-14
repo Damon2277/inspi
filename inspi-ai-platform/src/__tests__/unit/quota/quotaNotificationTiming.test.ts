@@ -3,8 +3,8 @@
  * 测试配额通知的触发时机和时效性
  */
 
-import { QuotaManager, UserQuota } from '@/lib/quota/quotaManager';
 import { redis } from '@/lib/cache/redis';
+import { QuotaManager, UserQuota } from '@/lib/quota/quotaManager';
 
 // Mock dependencies
 jest.mock('@/lib/cache/redis');
@@ -16,11 +16,11 @@ const mockNotificationService = {
   sendQuotaExhausted: jest.fn(),
   sendQuotaReset: jest.fn(),
   scheduleNotification: jest.fn(),
-  cancelNotification: jest.fn()
+  cancelNotification: jest.fn(),
 };
 
 jest.mock('@/lib/notifications/service', () => ({
-  notificationService: mockNotificationService
+  notificationService: mockNotificationService,
 }));
 
 describe('QuotaManager Notification Timing Tests', () => {
@@ -31,7 +31,7 @@ describe('QuotaManager Notification Timing Tests', () => {
     jest.clearAllMocks();
     quotaManager = new QuotaManager();
     mockRedis = redis as jest.Mocked<typeof redis>;
-    
+
     // Mock Redis methods
     mockRedis.get = jest.fn();
     mockRedis.set = jest.fn();
@@ -60,7 +60,7 @@ describe('QuotaManager Notification Timing Tests', () => {
         currentUsage: 8,
         dailyLimit: 10,
         remaining: 2,
-        warningThreshold: 0.8
+        warningThreshold: 0.8,
       });
     });
 
@@ -83,7 +83,7 @@ describe('QuotaManager Notification Timing Tests', () => {
         dailyLimit: 100,
         remaining: 10,
         warningThreshold: 0.9,
-        severity: 'high'
+        severity: 'high',
       });
     });
 
@@ -110,7 +110,7 @@ describe('QuotaManager Notification Timing Tests', () => {
       const testCases = [
         { plan: 'free', limit: 10, threshold80: 8, threshold90: 9 },
         { plan: 'pro', limit: 100, threshold80: 80, threshold90: 90 },
-        { plan: 'super', limit: 1000, threshold80: 800, threshold90: 900 }
+        { plan: 'super', limit: 1000, threshold80: 800, threshold90: 900 },
       ] as const;
 
       for (const testCase of testCases) {
@@ -126,8 +126,8 @@ describe('QuotaManager Notification Timing Tests', () => {
             plan: testCase.plan,
             currentUsage: testCase.threshold80,
             dailyLimit: testCase.limit,
-            warningThreshold: 0.8
-          })
+            warningThreshold: 0.8,
+          }),
         );
       }
     });
@@ -152,7 +152,7 @@ describe('QuotaManager Notification Timing Tests', () => {
         plan,
         dailyLimit: 10,
         exhaustedAt: expect.any(Date),
-        resetTime: expect.any(Date)
+        resetTime: expect.any(Date),
       });
     });
 
@@ -174,7 +174,7 @@ describe('QuotaManager Notification Timing Tests', () => {
         plan,
         requestedAmount: 5,
         availableAmount: 2,
-        rejectedAt: expect.any(Date)
+        rejectedAt: expect.any(Date),
       });
     });
 
@@ -196,9 +196,9 @@ describe('QuotaManager Notification Timing Tests', () => {
           plan,
           upgradeOptions: [
             { plan: 'pro', dailyLimit: 100, benefits: expect.any(Array) },
-            { plan: 'super', dailyLimit: 1000, benefits: expect.any(Array) }
-          ]
-        })
+            { plan: 'super', dailyLimit: 1000, benefits: expect.any(Array) },
+          ],
+        }),
       );
     });
   });
@@ -226,7 +226,7 @@ describe('QuotaManager Notification Timing Tests', () => {
         previousDayUsage: 85,
         dailyLimit: 100,
         resetTime: expect.any(Date),
-        newQuotaAvailable: 100
+        newQuotaAvailable: 100,
       });
 
       jest.restoreAllMocks();
@@ -250,8 +250,8 @@ describe('QuotaManager Notification Timing Tests', () => {
           previousDayUsage: 950,
           usagePercentage: 0.95,
           isHeavyUser: true,
-          recommendations: expect.any(Array)
-        })
+          recommendations: expect.any(Array),
+        }),
       );
     });
 
@@ -260,7 +260,7 @@ describe('QuotaManager Notification Timing Tests', () => {
       const users = [
         { userId: 'user1', plan: 'free', usage: '8' },
         { userId: 'user2', plan: 'pro', usage: '75' },
-        { userId: 'user3', plan: 'super', usage: '500' }
+        { userId: 'user3', plan: 'super', usage: '500' },
       ];
 
       mockRedis.get.mockImplementation((key) => {
@@ -271,19 +271,19 @@ describe('QuotaManager Notification Timing Tests', () => {
       // Act
       await quotaManager.sendBatchResetNotifications(users.map(u => ({
         userId: u.userId,
-        plan: u.plan as any
+        plan: u.plan as any,
       })));
 
       // Assert
       expect(mockNotificationService.sendQuotaReset).toHaveBeenCalledTimes(3);
-      
+
       users.forEach(user => {
         expect(mockNotificationService.sendQuotaReset).toHaveBeenCalledWith(
           expect.objectContaining({
             userId: user.userId,
             plan: user.plan,
-            previousDayUsage: parseInt(user.usage)
-          })
+            previousDayUsage: parseInt(user.usage, 10),
+          }),
         );
       });
     });
@@ -312,8 +312,8 @@ describe('QuotaManager Notification Timing Tests', () => {
         scheduledFor: expect.any(Date),
         data: expect.objectContaining({
           currentUsage: 80,
-          warningThreshold: 0.8
-        })
+          warningThreshold: 0.8,
+        }),
       });
 
       jest.restoreAllMocks();
@@ -338,8 +338,8 @@ describe('QuotaManager Notification Timing Tests', () => {
       // 应该调度到合适的时间发送，而不是立即发送
       expect(mockNotificationService.scheduleNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          scheduledFor: expect.any(Date) // 应该是早上的时间
-        })
+          scheduledFor: expect.any(Date), // 应该是早上的时间
+        }),
       );
 
       const scheduledTime = mockNotificationService.scheduleNotification.mock.calls[0][0].scheduledFor;
@@ -366,8 +366,8 @@ describe('QuotaManager Notification Timing Tests', () => {
         expect.objectContaining({
           userId,
           timezone: userTimezone,
-          scheduledFor: expect.any(Date)
-        })
+          scheduledFor: expect.any(Date),
+        }),
       );
     });
 
@@ -390,7 +390,7 @@ describe('QuotaManager Notification Timing Tests', () => {
       // Assert
       expect(mockNotificationService.cancelNotification).toHaveBeenCalledWith({
         userId,
-        type: 'quota_warning'
+        type: 'quota_warning',
       });
 
       expect(mockNotificationService.scheduleNotification).toHaveBeenCalledWith({
@@ -398,8 +398,8 @@ describe('QuotaManager Notification Timing Tests', () => {
         type: 'plan_upgraded',
         data: expect.objectContaining({
           oldPlan: 'super',
-          newPlan: 'enterprise'
-        })
+          newPlan: 'enterprise',
+        }),
       });
     });
   });
@@ -480,7 +480,7 @@ describe('QuotaManager Notification Timing Tests', () => {
       const historicalPattern = {
         peakHours: [14, 15, 16], // 下午2-4点
         averageDailyUsage: 75,
-        usageGrowthTrend: 'increasing'
+        usageGrowthTrend: 'increasing',
       };
 
       mockRedis.get.mockImplementation((key) => {
@@ -501,10 +501,10 @@ describe('QuotaManager Notification Timing Tests', () => {
             historicalPattern,
             recommendations: expect.arrayContaining([
               expect.stringContaining('peak hours'),
-              expect.stringContaining('usage trend')
-            ])
-          }
-        })
+              expect.stringContaining('usage trend'),
+            ]),
+          },
+        }),
       );
     });
 
@@ -533,9 +533,9 @@ describe('QuotaManager Notification Timing Tests', () => {
           isNewUser: true,
           onboardingTips: expect.arrayContaining([
             expect.stringContaining('quota management'),
-            expect.stringContaining('upgrade options')
-          ])
-        })
+            expect.stringContaining('upgrade options'),
+          ]),
+        }),
       );
     });
 
@@ -563,8 +563,8 @@ describe('QuotaManager Notification Timing Tests', () => {
           userId,
           userTier: 'vip',
           prioritySupport: true,
-          customSolutions: expect.any(Array)
-        })
+          customSolutions: expect.any(Array),
+        }),
       );
     });
   });
@@ -579,8 +579,8 @@ describe('QuotaManager Notification Timing Tests', () => {
       mockRedis.increment.mockResolvedValue(80);
 
       // Mock通知服务有延迟
-      mockNotificationService.sendQuotaWarning.mockImplementation(() => 
-        new Promise(resolve => setTimeout(resolve, 1000))
+      mockNotificationService.sendQuotaWarning.mockImplementation(() =>
+        new Promise(resolve => setTimeout(resolve, 1000)),
       );
 
       // Act
@@ -603,7 +603,7 @@ describe('QuotaManager Notification Timing Tests', () => {
       mockRedis.increment.mockResolvedValue(10);
 
       mockNotificationService.sendQuotaExhausted.mockRejectedValue(
-        new Error('Notification service unavailable')
+        new Error('Notification service unavailable'),
       );
 
       // Act
@@ -611,14 +611,14 @@ describe('QuotaManager Notification Timing Tests', () => {
 
       // Assert
       expect(result).toBe(true); // 主功能不应该受影响
-      
+
       // 应该记录失败并可能重试
       expect(mockNotificationService.scheduleNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'quota_exhausted',
           retryCount: 1,
-          scheduledFor: expect.any(Date)
-        })
+          scheduledFor: expect.any(Date),
+        }),
       );
     });
 
@@ -626,31 +626,31 @@ describe('QuotaManager Notification Timing Tests', () => {
       // Arrange
       const users = Array.from({ length: 100 }, (_, i) => ({
         userId: `batch-user-${i}`,
-        plan: 'pro' as const
+        plan: 'pro' as const,
       }));
 
       mockRedis.get.mockResolvedValue('80');
 
       // Act
       const startTime = Date.now();
-      
+
       await Promise.all(
-        users.map(user => quotaManager.consumeQuota(user.userId, user.plan, 1))
+        users.map(user => quotaManager.consumeQuota(user.userId, user.plan, 1)),
       );
 
       const endTime = Date.now();
 
       // Assert
       expect(endTime - startTime).toBeLessThan(5000); // 批量处理应该高效
-      
+
       // 应该使用批量通知API
       expect(mockNotificationService.sendBatchNotifications).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
             type: 'quota_warning',
-            recipients: expect.any(Array)
-          })
-        ])
+            recipients: expect.any(Array),
+          }),
+        ]),
       );
     });
   });

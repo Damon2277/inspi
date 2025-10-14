@@ -90,36 +90,36 @@ export class DataDeletionTester {
 
     for (const testCase of this.testCases) {
       const startTime = Date.now();
-      
+
       try {
         // 设置测试数据
         await testCase.setupData();
-        
+
         // 执行删除操作
         await this.performDeletion(testCase.entity, testCase.entityId);
-        
+
         // 验证删除结果
         const details = await this.verifyDeletionResults(testCase.expectedDeletions);
-        
+
         const executionTime = Date.now() - startTime;
         const passed = details.every(detail => detail.expected === detail.actual);
-        
+
         results.push({
           testCase: testCase.name,
           passed,
           details,
           executionTime,
-          auditTrail: [...this.auditLog]
+          auditTrail: [...this.auditLog],
         });
-        
+
         // 清理测试数据
         if (testCase.cleanupData) {
           await testCase.cleanupData();
         }
-        
+
       } catch (error) {
         const executionTime = Date.now() - startTime;
-        
+
         results.push({
           testCase: testCase.name,
           passed: false,
@@ -128,12 +128,12 @@ export class DataDeletionTester {
             expected: true,
             actual: false,
             condition: { id: testCase.entityId },
-            error: error instanceof Error ? error.message : String(error)
+            error: error instanceof Error ? error.message : String(error),
           }],
-          executionTime
+          executionTime,
         });
       }
-      
+
       // 清理审计日志
       this.auditLog = [];
     }
@@ -157,7 +157,7 @@ export class DataDeletionTester {
         entity,
         entityId,
         timestamp: new Date(),
-        userId
+        userId,
       });
     }
 
@@ -180,7 +180,7 @@ export class DataDeletionTester {
         entity,
         entityId,
         timestamp: new Date(),
-        userId
+        userId,
       });
     }
   }
@@ -192,12 +192,12 @@ export class DataDeletionTester {
     parentEntity: string,
     parentId: string,
     cascadeRule: DeletionRule['cascadeRules'][0],
-    userId?: string
+    userId?: string,
   ): Promise<void> {
     const relatedEntities = await this.findRelatedEntities(
       parentEntity,
       parentId,
-      cascadeRule
+      cascadeRule,
     );
 
     for (const relatedEntity of relatedEntities) {
@@ -223,7 +223,7 @@ export class DataDeletionTester {
   private async findRelatedEntities(
     parentEntity: string,
     parentId: string,
-    cascadeRule: DeletionRule['cascadeRules'][0]
+    cascadeRule: DeletionRule['cascadeRules'][0],
   ): Promise<Array<{ id: string; [key: string]: any }>> {
     const collection = this.mockDatabase.get(cascadeRule.relatedEntity);
     if (!collection) {
@@ -266,7 +266,7 @@ export class DataDeletionTester {
       entity,
       entityId,
       timestamp: new Date(),
-      userId
+      userId,
     });
   }
 
@@ -289,7 +289,7 @@ export class DataDeletionTester {
       entity,
       entityId,
       timestamp: new Date(),
-      userId
+      userId,
     });
   }
 
@@ -299,7 +299,7 @@ export class DataDeletionTester {
   private async nullifyForeignKey(
     entity: string,
     entityId: string,
-    foreignKey?: string
+    foreignKey?: string,
   ): Promise<void> {
     const collection = this.mockDatabase.get(entity);
     if (!collection) {
@@ -317,19 +317,19 @@ export class DataDeletionTester {
    * 验证删除结果
    */
   private async verifyDeletionResults(
-    expectedDeletions: DeletionTestCase['expectedDeletions']
+    expectedDeletions: DeletionTestCase['expectedDeletions'],
   ): Promise<DeletionTestResult['details']> {
     const details: DeletionTestResult['details'] = [];
 
     for (const expected of expectedDeletions) {
       try {
         const exists = await this.checkEntityExists(expected.entity, expected.condition);
-        
+
         details.push({
           entity: expected.entity,
           expected: expected.shouldExist,
           actual: exists,
-          condition: expected.condition
+          condition: expected.condition,
         });
       } catch (error) {
         details.push({
@@ -337,7 +337,7 @@ export class DataDeletionTester {
           expected: expected.shouldExist,
           actual: false,
           condition: expected.condition,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     }
@@ -356,7 +356,7 @@ export class DataDeletionTester {
 
     for (const [id, entityData] of collection) {
       let matches = true;
-      
+
       for (const [key, value] of Object.entries(condition)) {
         if (key === 'id') {
           if (id !== value) {
@@ -368,7 +368,7 @@ export class DataDeletionTester {
           break;
         }
       }
-      
+
       if (matches) {
         // 检查是否被软删除
         return !entityData.deletedAt;
@@ -404,24 +404,24 @@ export class DataDeletionTester {
           relatedEntity: 'work',
           relationship: 'one-to-many',
           action: 'delete',
-          foreignKey: 'userId'
+          foreignKey: 'userId',
         },
         {
           relatedEntity: 'session',
           relationship: 'one-to-many',
           action: 'delete',
-          foreignKey: 'userId'
+          foreignKey: 'userId',
         },
         {
           relatedEntity: 'subscription',
           relationship: 'one-to-one',
           action: 'delete',
-          foreignKey: 'userId'
-        }
+          foreignKey: 'userId',
+        },
       ],
       softDelete: true,
       retentionPeriod: 30,
-      auditRequired: true
+      auditRequired: true,
     });
 
     // 作品删除规则
@@ -432,17 +432,17 @@ export class DataDeletionTester {
           relatedEntity: 'comment',
           relationship: 'one-to-many',
           action: 'delete',
-          foreignKey: 'workId'
+          foreignKey: 'workId',
         },
         {
           relatedEntity: 'like',
           relationship: 'one-to-many',
           action: 'delete',
-          foreignKey: 'workId'
-        }
+          foreignKey: 'workId',
+        },
       ],
       softDelete: false,
-      auditRequired: true
+      auditRequired: true,
     });
 
     // 订阅删除规则
@@ -453,12 +453,12 @@ export class DataDeletionTester {
           relatedEntity: 'payment',
           relationship: 'one-to-many',
           action: 'nullify',
-          foreignKey: 'subscriptionId'
-        }
+          foreignKey: 'subscriptionId',
+        },
       ],
       softDelete: true,
       retentionPeriod: 90,
-      auditRequired: true
+      auditRequired: true,
     });
   }
 
@@ -473,41 +473,41 @@ export class DataDeletionTester {
       setupData: async () => {
         // 设置用户数据
         this.setMockData('user', new Map([
-          ['user-1', { id: 'user-1', name: 'Test User', email: 'test@example.com' }]
+          ['user-1', { id: 'user-1', name: 'Test User', email: 'test@example.com' }],
         ]));
-        
+
         // 设置相关数据
         this.setMockData('work', new Map([
           ['work-1', { id: 'work-1', title: 'Test Work', userId: 'user-1' }],
-          ['work-2', { id: 'work-2', title: 'Other Work', userId: 'user-2' }]
+          ['work-2', { id: 'work-2', title: 'Other Work', userId: 'user-2' }],
         ]));
-        
+
         this.setMockData('session', new Map([
-          ['session-1', { id: 'session-1', token: 'token1', userId: 'user-1' }]
+          ['session-1', { id: 'session-1', token: 'token1', userId: 'user-1' }],
         ]));
       },
       expectedDeletions: [
         {
           entity: 'user',
           condition: { id: 'user-1' },
-          shouldExist: false
+          shouldExist: false,
         },
         {
           entity: 'work',
           condition: { userId: 'user-1' },
-          shouldExist: false
+          shouldExist: false,
         },
         {
           entity: 'work',
           condition: { id: 'work-2' },
-          shouldExist: true // 其他用户的作品应该保留
+          shouldExist: true, // 其他用户的作品应该保留
         },
         {
           entity: 'session',
           condition: { userId: 'user-1' },
-          shouldExist: false
-        }
-      ]
+          shouldExist: false,
+        },
+      ],
     });
 
     this.addDeletionTestCase({
@@ -516,40 +516,40 @@ export class DataDeletionTester {
       entityId: 'work-1',
       setupData: async () => {
         this.setMockData('work', new Map([
-          ['work-1', { id: 'work-1', title: 'Test Work', userId: 'user-1' }]
+          ['work-1', { id: 'work-1', title: 'Test Work', userId: 'user-1' }],
         ]));
-        
+
         this.setMockData('comment', new Map([
           ['comment-1', { id: 'comment-1', content: 'Great work!', workId: 'work-1' }],
-          ['comment-2', { id: 'comment-2', content: 'Nice!', workId: 'work-2' }]
+          ['comment-2', { id: 'comment-2', content: 'Nice!', workId: 'work-2' }],
         ]));
-        
+
         this.setMockData('like', new Map([
-          ['like-1', { id: 'like-1', userId: 'user-2', workId: 'work-1' }]
+          ['like-1', { id: 'like-1', userId: 'user-2', workId: 'work-1' }],
         ]));
       },
       expectedDeletions: [
         {
           entity: 'work',
           condition: { id: 'work-1' },
-          shouldExist: false
+          shouldExist: false,
         },
         {
           entity: 'comment',
           condition: { workId: 'work-1' },
-          shouldExist: false
+          shouldExist: false,
         },
         {
           entity: 'comment',
           condition: { id: 'comment-2' },
-          shouldExist: true // 其他作品的评论应该保留
+          shouldExist: true, // 其他作品的评论应该保留
         },
         {
           entity: 'like',
           condition: { workId: 'work-1' },
-          shouldExist: false
-        }
-      ]
+          shouldExist: false,
+        },
+      ],
     });
   }
 
@@ -562,8 +562,8 @@ export class DataDeletionTester {
     const failedTests = totalTests - passedTests;
     const avgExecutionTime = results.reduce((sum, r) => sum + r.executionTime, 0) / totalTests;
 
-    let report = `数据删除完整性测试报告\n`;
-    report += `==========================\n`;
+    let report = '数据删除完整性测试报告\n';
+    report += '==========================\n';
     report += `总测试数: ${totalTests}\n`;
     report += `通过: ${passedTests}\n`;
     report += `失败: ${failedTests}\n`;
@@ -571,14 +571,14 @@ export class DataDeletionTester {
     report += `平均执行时间: ${avgExecutionTime.toFixed(2)}ms\n\n`;
 
     if (failedTests > 0) {
-      report += `失败详情:\n`;
-      report += `----------\n`;
-      
+      report += '失败详情:\n';
+      report += '----------\n';
+
       for (const result of results) {
         if (!result.passed) {
           report += `测试用例: ${result.testCase}\n`;
           report += `执行时间: ${result.executionTime}ms\n`;
-          
+
           for (const detail of result.details) {
             if (detail.expected !== detail.actual) {
               report += `  实体: ${detail.entity}\n`;
@@ -588,18 +588,18 @@ export class DataDeletionTester {
               if (detail.error) {
                 report += `  错误: ${detail.error}\n`;
               }
-              report += `\n`;
+              report += '\n';
             }
           }
-          
+
           if (result.auditTrail && result.auditTrail.length > 0) {
-            report += `  审计日志:\n`;
+            report += '  审计日志:\n';
             for (const audit of result.auditTrail) {
               report += `    ${audit.timestamp.toISOString()}: ${audit.action} ${audit.entity}:${audit.entityId}\n`;
             }
           }
-          
-          report += `\n`;
+
+          report += '\n';
         }
       }
     }

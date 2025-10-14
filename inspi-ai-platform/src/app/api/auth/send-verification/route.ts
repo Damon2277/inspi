@@ -4,24 +4,25 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { emailService } from '@/lib/email/service';
-import { verificationManager } from '@/lib/email/verification';
-import { getVerificationEmailTemplate } from '@/lib/email/templates';
-import { logger } from '@/lib/utils/logger';
 import { z } from 'zod';
+
+import { emailService } from '@/lib/email/service';
+import { getVerificationEmailTemplate } from '@/lib/email/templates';
+import { verificationManager } from '@/lib/email/verification';
+import { logger } from '@/shared/utils/logger';
 
 // 请求体验证schema
 const sendVerificationSchema = z.object({
   email: z.string().email('请输入有效的邮箱地址'),
   type: z.enum(['registration', 'login', 'password_reset'], {
-    errorMap: () => ({ message: '验证类型无效' })
+    message: '验证类型无效',
   }),
-  language: z.string().optional().default('zh-CN')
+  language: z.string().optional().default('zh-CN'),
 });
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  
+
   try {
     logger.info('Send verification code request started');
 
@@ -30,10 +31,10 @@ export async function POST(request: NextRequest) {
     const validation = sendVerificationSchema.safeParse(body);
 
     if (!validation.success) {
-      const errors = validation.error.errors.map(err => err.message).join(', ');
+      const errors = validation.error.issues.map(err => err.message).join(', ');
       return NextResponse.json(
         { error: errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -45,37 +46,37 @@ export async function POST(request: NextRequest) {
       logger.error('Email service health check failed');
       return NextResponse.json(
         { error: '邮件服务暂时不可用，请稍后重试' },
-        { status: 503 }
+        { status: 503 },
       );
     }
 
     // 3. 检查发送频率限制
     const rateLimitCheck = await verificationManager.checkRateLimit(email);
     if (!rateLimitCheck.allowed) {
-      logger.warn('Rate limit exceeded for verification email', { 
+      logger.warn('Rate limit exceeded for verification email', {
         email: email.replace(/(.{2}).*(@.*)/, '$1***$2'),
-        remainingTime: rateLimitCheck.remainingTime
+        remainingTime: rateLimitCheck.remainingTime,
       });
-      
+
       return NextResponse.json(
-        { 
+        {
           error: '发送过于频繁，请稍后重试',
-          remainingTime: rateLimitCheck.remainingTime
+          remainingTime: rateLimitCheck.remainingTime,
         },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
     // 4. 生成验证码
     const code = verificationManager.generateCode();
-    
+
     // 5. 存储验证码
     const stored = await verificationManager.storeCode(email, code, type);
     if (!stored) {
       logger.error('Failed to store verification code', { email });
       return NextResponse.json(
         { error: '验证码生成失败，请重试' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
       code,
       email,
       type,
-      expiryMinutes: 10
+      expiryMinutes: 10,
     });
 
     // 7. 发送邮件
@@ -92,21 +93,21 @@ export async function POST(request: NextRequest) {
       to: email,
       subject: emailTemplate.subject,
       html: emailTemplate.html,
-      text: emailTemplate.text
+      text: emailTemplate.text,
     });
 
     if (!emailResult.success) {
-      logger.error('Failed to send verification email', { 
+      logger.error('Failed to send verification email', {
         email,
-        error: emailResult.error
+        error: emailResult.error,
       });
-      
+
       // 发送失败时清除已存储的验证码
       await verificationManager.clearCode(email, type);
-      
+
       return NextResponse.json(
         { error: '邮件发送失败，请检查邮箱地址或稍后重试' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
       email: email.replace(/(.{2}).*(@.*)/, '$1***$2'),
       type,
       duration,
-      messageId: emailResult.messageId
+      messageId: emailResult.messageId,
     });
 
     // 9. 返回成功响应
@@ -124,26 +125,26 @@ export async function POST(request: NextRequest) {
       success: true,
       message: '验证码已发送到您的邮箱',
       expiryMinutes: 10,
-      canResendAfter: 60 // 60秒后可重新发送
+      canResendAfter: 60, // 60秒后可重新发送
     });
 
   } catch (error) {
     const duration = Date.now() - startTime;
     logger.error('Send verification code failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      duration
+      duration,
     });
 
     if (error instanceof SyntaxError) {
       return NextResponse.json(
         { error: '请求格式错误' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { error: '服务器内部错误，请稍后重试' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -158,7 +159,7 @@ export async function GET(request: NextRequest) {
     if (!email || !type) {
       return NextResponse.json(
         { error: '缺少必需参数' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -167,27 +168,27 @@ export async function GET(request: NextRequest) {
     if (!emailValidation.success) {
       return NextResponse.json(
         { error: '邮箱格式无效' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // 获取验证码状态
     const status = await verificationManager.getCodeStatus(email, type);
-    
+
     return NextResponse.json({
       exists: status.exists,
       expiresAt: status.expiresAt,
-      remainingAttempts: status.remainingAttempts
+      remainingAttempts: status.remainingAttempts,
     });
 
   } catch (error) {
     logger.error('Get verification status failed', {
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
 
     return NextResponse.json(
       { error: '获取状态失败' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -24,7 +24,7 @@ export function DesktopModal({
   footer,
   size = 'md',
   closeOnOverlayClick = true,
-  closeOnEscape = true
+  closeOnEscape = true,
 }: DesktopModalProps) {
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -32,7 +32,7 @@ export function DesktopModal({
     sm: 'max-w-md',
     md: 'max-w-lg',
     lg: 'max-w-2xl',
-    xl: 'max-w-4xl'
+    xl: 'max-w-4xl',
   };
 
   useEffect(() => {
@@ -112,7 +112,7 @@ export function DesktopConfirmDialog({
   message,
   confirmText = '确认',
   cancelText = '取消',
-  variant = 'primary'
+  variant = 'primary',
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -145,8 +145,8 @@ export function DesktopConfirmDialog({
           <button
             onClick={handleConfirm}
             className={`desktop-button desktop-button-md ${
-              variant === 'danger' 
-                ? 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500' 
+              variant === 'danger'
+                ? 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500'
                 : 'desktop-button-primary'
             }`}
           >

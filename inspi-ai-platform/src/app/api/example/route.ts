@@ -3,6 +3,7 @@
  */
 
 import { NextRequest } from 'next/server';
+
 import {
   createSuccessResponse,
   createValidationErrorResponse,
@@ -10,11 +11,11 @@ import {
   createBusinessErrorResponse,
   withErrorHandling,
   validateRequestBody,
-  parsePaginationParams
+  parsePaginationParams,
 } from '@/lib/api/responses';
-import { CustomError } from '@/lib/errors/CustomError';
-import { ErrorCode } from '@/lib/errors/types';
 import { logger } from '@/lib/logging/logger';
+import { CustomError } from '@/shared/errors/CustomError';
+import { ErrorCode } from '@/shared/errors/types';
 
 /**
  * 示例数据接口
@@ -48,14 +49,14 @@ const mockData: ExampleData[] = [
     id: '1',
     name: 'John Doe',
     email: 'john@example.com',
-    createdAt: '2024-01-01T00:00:00Z'
+    createdAt: '2024-01-01T00:00:00Z',
   },
   {
     id: '2',
     name: 'Jane Smith',
     email: 'jane@example.com',
-    createdAt: '2024-01-02T00:00:00Z'
-  }
+    createdAt: '2024-01-02T00:00:00Z',
+  },
 ];
 
 /**
@@ -63,25 +64,25 @@ const mockData: ExampleData[] = [
  */
 function validateCreateRequest(data: any): CreateExampleRequest {
   if (!data.name || typeof data.name !== 'string') {
-    throw new CustomError('姓名是必填项且必须是字符串', ErrorCode.VALIDATION_ERROR);
+    throw new CustomError(ErrorCode.VALIDATION_FAILED, '姓名是必填项且必须是字符串');
   }
 
   if (!data.email || typeof data.email !== 'string') {
-    throw new CustomError('邮箱是必填项且必须是字符串', ErrorCode.VALIDATION_ERROR);
+    throw new CustomError(ErrorCode.VALIDATION_FAILED, '邮箱是必填项且必须是字符串');
   }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-    throw new CustomError('邮箱格式不正确', ErrorCode.VALIDATION_ERROR);
+    throw new CustomError(ErrorCode.VALIDATION_FAILED, '邮箱格式不正确');
   }
 
   // 检查邮箱是否已存在
   if (mockData.some(item => item.email === data.email)) {
-    throw new CustomError('邮箱已存在', ErrorCode.BUSINESS_LOGIC_ERROR);
+    throw new CustomError(ErrorCode.DUPLICATE_RESOURCE, '邮箱已存在');
   }
 
   return {
     name: data.name.trim(),
-    email: data.email.toLowerCase().trim()
+    email: data.email.toLowerCase().trim(),
   };
 }
 
@@ -93,18 +94,18 @@ function validateUpdateRequest(data: any): UpdateExampleRequest {
 
   if (data.name !== undefined) {
     if (typeof data.name !== 'string') {
-      throw new CustomError('姓名必须是字符串', ErrorCode.VALIDATION_ERROR);
+      throw new CustomError(ErrorCode.VALIDATION_FAILED, '姓名必须是字符串');
     }
     result.name = data.name.trim();
   }
 
   if (data.email !== undefined) {
     if (typeof data.email !== 'string') {
-      throw new CustomError('邮箱必须是字符串', ErrorCode.VALIDATION_ERROR);
+      throw new CustomError(ErrorCode.VALIDATION_FAILED, '邮箱必须是字符串');
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-      throw new CustomError('邮箱格式不正确', ErrorCode.VALIDATION_ERROR);
+      throw new CustomError(ErrorCode.VALIDATION_FAILED, '邮箱格式不正确');
     }
 
     result.email = data.email.toLowerCase().trim();
@@ -131,8 +132,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       limit,
       search,
       sortBy,
-      sortOrder
-    }
+      sortOrder,
+    },
   });
 
   // 模拟数据过滤和排序
@@ -141,7 +142,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   if (search) {
     filteredData = filteredData.filter(item =>
       item.name.toLowerCase().includes(search.toLowerCase()) ||
-      item.email.toLowerCase().includes(search.toLowerCase())
+      item.email.toLowerCase().includes(search.toLowerCase()),
     );
   }
 
@@ -149,7 +150,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   filteredData.sort((a, b) => {
     const aValue = a[sortBy as keyof ExampleData];
     const bValue = b[sortBy as keyof ExampleData];
-    
+
     if (sortOrder === 'desc') {
       return bValue.localeCompare(aValue);
     } else {
@@ -166,11 +167,11 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       page,
       limit,
       total,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
     },
     performance: {
-      duration: 50 // 模拟查询时间
-    }
+      duration: 50, // 模拟查询时间
+    },
   });
 });
 
@@ -183,8 +184,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   logger.info('POST /api/example', {
     metadata: {
       name: validatedData.name,
-      email: validatedData.email
-    }
+      email: validatedData.email,
+    },
   });
 
   // 模拟创建数据
@@ -192,15 +193,15 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     id: (mockData.length + 1).toString(),
     name: validatedData.name,
     email: validatedData.email,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
   };
 
   mockData.push(newData);
 
   return createSuccessResponse(newData, {
     performance: {
-      duration: 100 // 模拟创建时间
-    }
+      duration: 100, // 模拟创建时间
+    },
   }, 201);
 });
 
@@ -221,8 +222,8 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
   logger.info('PUT /api/example/:id', {
     metadata: {
       id,
-      updateData: validatedData
-    }
+      updateData: validatedData,
+    },
   });
 
   // 查找数据
@@ -232,7 +233,7 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
   }
 
   // 检查邮箱冲突
-  if (validatedData.email && 
+  if (validatedData.email &&
       mockData.some(item => item.id !== id && item.email === validatedData.email)) {
     return createBusinessErrorResponse('邮箱已被其他用户使用');
   }
@@ -240,15 +241,15 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
   // 更新数据
   const updatedData = {
     ...mockData[dataIndex],
-    ...validatedData
+    ...validatedData,
   };
 
   mockData[dataIndex] = updatedData;
 
   return createSuccessResponse(updatedData, {
     performance: {
-      duration: 80 // 模拟更新时间
-    }
+      duration: 80, // 模拟更新时间
+    },
   });
 });
 
@@ -265,7 +266,7 @@ export const DELETE = withErrorHandling(async (request: NextRequest) => {
   }
 
   logger.info('DELETE /api/example/:id', {
-    metadata: { id }
+    metadata: { id },
   });
 
   // 查找数据
@@ -279,7 +280,7 @@ export const DELETE = withErrorHandling(async (request: NextRequest) => {
 
   return createSuccessResponse(deletedData, {
     performance: {
-      duration: 30 // 模拟删除时间
-    }
+      duration: 30, // 模拟删除时间
+    },
   });
 });

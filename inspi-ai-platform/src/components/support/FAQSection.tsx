@@ -23,19 +23,19 @@ export default function FAQSection({ faqs, className = '' }: FAQSectionProps) {
 
   // 获取所有分类
   const categories = ['all', ...Array.from(new Set(faqs.map(faq => faq.category)))];
-  
+
   const categoryLabels: { [key: string]: string } = {
     'all': '全部',
     'getting-started': '入门指南',
     'features': '功能使用',
     'subscription': '订阅相关',
     'technical': '技术问题',
-    'account': '账户管理'
+    'account': '账户管理',
   };
 
   // 过滤FAQ
-  const filteredFAQs = selectedCategory === 'all' 
-    ? faqs 
+  const filteredFAQs = selectedCategory === 'all'
+    ? faqs
     : faqs.filter(faq => faq.category === selectedCategory);
 
   /**
@@ -107,7 +107,7 @@ export default function FAQSection({ faqs, className = '' }: FAQSectionProps) {
                   />
                 </svg>
               </button>
-              
+
               {openItems.has(faq.id) && (
                 <div className="px-6 pb-4">
                   <div className="prose prose-sm max-w-none text-gray-600">

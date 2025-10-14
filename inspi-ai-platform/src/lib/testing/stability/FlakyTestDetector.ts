@@ -1,6 +1,6 @@
 /**
  * Flaky Test Detector
- * 
+ *
  * Advanced detection algorithms for identifying flaky tests using
  * statistical analysis and pattern recognition.
  */
@@ -37,7 +37,7 @@ export class FlakyTestDetector {
     'async',
     'promise',
     'settimeout',
-    'setinterval'
+    'setinterval',
   ];
 
   /**
@@ -47,7 +47,7 @@ export class FlakyTestDetector {
     testName: string,
     testFile: string,
     history: TestExecutionRecord[],
-    metrics: TestStabilityMetrics
+    metrics: TestStabilityMetrics,
   ): FlakyTestAnalysis {
     const patterns = this.detectPatterns(history, metrics);
     const confidence = this.calculateOverallConfidence(patterns);
@@ -63,7 +63,7 @@ export class FlakyTestDetector {
       patterns,
       riskLevel,
       stabilityScore: 1 - metrics.flakinessScore,
-      recommendations
+      recommendations,
     };
   }
 
@@ -76,10 +76,10 @@ export class FlakyTestDetector {
       testFile: string;
       history: TestExecutionRecord[];
       metrics: TestStabilityMetrics;
-    }>
+    }>,
   ): FlakyTestAnalysis[] {
-    return testsData.map(data => 
-      this.analyzeTest(data.testName, data.testFile, data.history, data.metrics)
+    return testsData.map(data =>
+      this.analyzeTest(data.testName, data.testFile, data.history, data.metrics),
     );
   }
 
@@ -93,18 +93,18 @@ export class FlakyTestDetector {
     low: FlakyTestAnalysis[];
   } {
     const flaky = analyses.filter(a => a.isFlaky);
-    
+
     return {
       critical: flaky.filter(a => a.riskLevel === 'critical'),
       high: flaky.filter(a => a.riskLevel === 'high'),
       medium: flaky.filter(a => a.riskLevel === 'medium'),
-      low: flaky.filter(a => a.riskLevel === 'low')
+      low: flaky.filter(a => a.riskLevel === 'low'),
     };
   }
 
   private detectPatterns(
     history: TestExecutionRecord[],
-    metrics: TestStabilityMetrics
+    metrics: TestStabilityMetrics,
   ): FlakyTestPattern[] {
     const patterns: FlakyTestPattern[] = [];
 
@@ -133,7 +133,7 @@ export class FlakyTestDetector {
 
   private detectIntermittentPattern(
     history: TestExecutionRecord[],
-    metrics: TestStabilityMetrics
+    metrics: TestStabilityMetrics,
   ): FlakyTestPattern | null {
     if (metrics.flakinessScore < this.INTERMITTENT_THRESHOLD) return null;
 
@@ -164,20 +164,20 @@ export class FlakyTestDetector {
       evidence: [
         `Alternation rate: ${(alternationRate * 100).toFixed(1)}%`,
         `Failure rate: ${(metrics.flakinessScore * 100).toFixed(1)}%`,
-        `Max consecutive runs: ${maxConsecutive}`
+        `Max consecutive runs: ${maxConsecutive}`,
       ],
       recommendations: [
         'Review test setup and teardown for state leakage',
         'Check for shared resources or global state',
         'Add more deterministic assertions',
-        'Consider test isolation improvements'
-      ]
+        'Consider test isolation improvements',
+      ],
     };
   }
 
   private detectTimingPattern(
     history: TestExecutionRecord[],
-    metrics: TestStabilityMetrics
+    metrics: TestStabilityMetrics,
   ): FlakyTestPattern | null {
     if (metrics.durationVariance < this.TIMING_VARIANCE_THRESHOLD) return null;
 
@@ -205,14 +205,14 @@ export class FlakyTestDetector {
         `Duration variance: ${(metrics.durationVariance * 100).toFixed(1)}%`,
         `Outlier rate: ${(outlierRate * 100).toFixed(1)}%`,
         `Median duration: ${median.toFixed(0)}ms`,
-        `IQR: ${iqr.toFixed(0)}ms`
+        `IQR: ${iqr.toFixed(0)}ms`,
       ],
       recommendations: [
         'Review async operations and timeouts',
         'Add proper wait conditions instead of fixed delays',
         'Check for network or I/O dependencies',
-        'Consider mocking time-dependent operations'
-      ]
+        'Consider mocking time-dependent operations',
+      ],
     };
   }
 
@@ -220,14 +220,14 @@ export class FlakyTestDetector {
     // Group by environment characteristics
     const ciRuns = history.filter(h => h.environment.ci);
     const localRuns = history.filter(h => !h.environment.ci);
-    
+
     if (ciRuns.length < 3 || localRuns.length < 3) return null;
 
     const ciFailureRate = ciRuns.filter(h => h.status === 'failed').length / ciRuns.length;
     const localFailureRate = localRuns.filter(h => h.status === 'failed').length / localRuns.length;
-    
+
     const failureRateDiff = Math.abs(ciFailureRate - localFailureRate);
-    
+
     if (failureRateDiff < 0.3) return null;
 
     const confidence = Math.min(1, failureRateDiff * 1.5);
@@ -240,20 +240,20 @@ export class FlakyTestDetector {
       evidence: [
         `CI failure rate: ${(ciFailureRate * 100).toFixed(1)}%`,
         `Local failure rate: ${(localFailureRate * 100).toFixed(1)}%`,
-        `Difference: ${(failureRateDiff * 100).toFixed(1)}%`
+        `Difference: ${(failureRateDiff * 100).toFixed(1)}%`,
       ],
       recommendations: [
         'Check environment-specific configurations',
         'Review CI/CD pipeline setup',
         'Ensure consistent test data and dependencies',
-        'Add environment detection and conditional logic if needed'
-      ]
+        'Add environment detection and conditional logic if needed',
+      ],
     };
   }
 
   private detectRaceConditionPattern(
     history: TestExecutionRecord[],
-    metrics: TestStabilityMetrics
+    metrics: TestStabilityMetrics,
   ): FlakyTestPattern | null {
     // Look for race condition indicators in error messages
     const failures = history.filter(h => h.status === 'failed' && h.error);
@@ -265,7 +265,7 @@ export class FlakyTestDetector {
     failures.forEach(failure => {
       if (failure.error) {
         const errorText = (failure.error.message + ' ' + (failure.error.stack || '')).toLowerCase();
-        
+
         this.RACE_CONDITION_INDICATORS.forEach(indicator => {
           if (errorText.includes(indicator)) {
             raceIndicators++;
@@ -289,8 +289,8 @@ export class FlakyTestDetector {
         'Review async/await usage and promise handling',
         'Add proper synchronization mechanisms',
         'Use deterministic timing in tests',
-        'Consider using test utilities for async operations'
-      ]
+        'Consider using test utilities for async operations',
+      ],
     };
   }
 
@@ -301,7 +301,7 @@ export class FlakyTestDetector {
 
     const resourceErrors = failures.filter(failure => {
       if (!failure.error) return false;
-      
+
       const errorText = failure.error.message.toLowerCase();
       return errorText.includes('memory') ||
              errorText.includes('disk') ||
@@ -323,38 +323,38 @@ export class FlakyTestDetector {
       evidence: [
         `Resource-related errors: ${resourceErrors.length}/${failures.length}`,
         `Resource error rate: ${(resourceErrorRate * 100).toFixed(1)}%`,
-        ...resourceErrors.slice(0, 2).map(e => `Error: ${e.error!.message.substring(0, 80)}`)
+        ...resourceErrors.slice(0, 2).map(e => `Error: ${e.error!.message.substring(0, 80)}`),
       ],
       recommendations: [
         'Mock external dependencies and resources',
         'Add resource availability checks',
         'Implement proper cleanup and resource management',
-        'Consider using test containers or isolated environments'
-      ]
+        'Consider using test containers or isolated environments',
+      ],
     };
   }
 
   private calculateOverallConfidence(patterns: FlakyTestPattern[]): number {
     if (patterns.length === 0) return 0;
-    
+
     // Use weighted average with higher weight for higher confidence patterns
     const weightedSum = patterns.reduce((sum, pattern) => {
       const weight = pattern.confidence;
       return sum + (pattern.confidence * weight);
     }, 0);
-    
+
     const totalWeight = patterns.reduce((sum, pattern) => sum + pattern.confidence, 0);
-    
+
     return totalWeight > 0 ? weightedSum / totalWeight : 0;
   }
 
   private calculateRiskLevel(
     confidence: number,
-    patterns: FlakyTestPattern[]
+    patterns: FlakyTestPattern[],
   ): 'low' | 'medium' | 'high' | 'critical' {
     const hasHighConfidencePattern = patterns.some(p => p.confidence > 0.8);
     const hasMultiplePatterns = patterns.length > 2;
-    
+
     if (confidence > 0.8 || hasHighConfidencePattern) return 'critical';
     if (confidence > 0.6 || hasMultiplePatterns) return 'high';
     if (confidence > 0.4) return 'medium';
@@ -363,18 +363,18 @@ export class FlakyTestDetector {
 
   private generateRecommendations(patterns: FlakyTestPattern[]): string[] {
     const allRecommendations = patterns.flatMap(p => p.recommendations);
-    
+
     // Remove duplicates and prioritize
     const uniqueRecommendations = Array.from(new Set(allRecommendations));
-    
+
     // Add general recommendations
     const generalRecommendations = [
       'Increase test isolation and independence',
       'Add comprehensive logging for debugging',
       'Consider splitting complex tests into smaller units',
-      'Implement proper test data management'
+      'Implement proper test data management',
     ];
-    
+
     return [...uniqueRecommendations, ...generalRecommendations].slice(0, 8);
   }
 }

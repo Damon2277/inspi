@@ -3,17 +3,19 @@
  * 测试邮件发送功能的可靠性、错误恢复和限流机制
  */
 
+import nodemailer from 'nodemailer';
+
 import { EmailService, EmailOptions, EmailResult } from '@/lib/email/service';
 import { MockEmailService } from '@/lib/testing/mocks/MockEmailService';
+
 // Simple test data creation without complex dependencies
 const createTestUser = (overrides = {}) => ({
   _id: 'test-user-id',
   email: 'test@example.com',
   name: 'Test User',
   isEmailVerified: false,
-  ...overrides
+  ...overrides,
 });
-import nodemailer from 'nodemailer';
 
 // Mock nodemailer
 jest.mock('nodemailer');
@@ -38,7 +40,7 @@ describe('EmailService Reliability Tests', () => {
         return duration;
       }
       return 0;
-    }
+    },
   };
 
   beforeEach(() => {
@@ -49,7 +51,7 @@ describe('EmailService Reliability Tests', () => {
     mockTransporter = {
       sendMail: jest.fn(),
       verify: jest.fn(),
-      close: jest.fn()
+      close: jest.fn(),
     };
 
     (nodemailer.createTransporter as jest.Mock).mockReturnValue(mockTransporter);
@@ -69,7 +71,7 @@ describe('EmailService Reliability Tests', () => {
   afterEach(() => {
     jest.useRealTimers();
     jest.clearAllMocks();
-    
+
     // Clean up environment variables
     delete process.env.EMAIL_SMTP_HOST;
     delete process.env.EMAIL_SMTP_PORT;
@@ -86,7 +88,7 @@ describe('EmailService Reliability Tests', () => {
         to: 'user@example.com',
         subject: 'Test Email',
         html: '<p>Test content</p>',
-        text: 'Test content'
+        text: 'Test content',
       };
 
       // 模拟网络错误，然后成功
@@ -109,7 +111,7 @@ describe('EmailService Reliability Tests', () => {
       const emailOptions: EmailOptions = {
         to: 'user@example.com',
         subject: 'Test Email',
-        html: '<p>Test content</p>'
+        html: '<p>Test content</p>',
       };
 
       // 模拟持续失败
@@ -129,20 +131,20 @@ describe('EmailService Reliability Tests', () => {
       const testCases = [
         {
           error: Object.assign(new Error('Authentication failed'), { code: 'EAUTH' }),
-          expectedError: 'Authentication failed'
+          expectedError: 'Authentication failed',
         },
         {
           error: Object.assign(new Error('Connection timeout'), { code: 'ETIMEDOUT' }),
-          expectedError: 'Connection timeout'
+          expectedError: 'Connection timeout',
         },
         {
           error: Object.assign(new Error('Invalid recipient'), { responseCode: 550 }),
-          expectedError: 'Invalid recipient'
+          expectedError: 'Invalid recipient',
         },
         {
           error: Object.assign(new Error('Mailbox full'), { responseCode: 552 }),
-          expectedError: 'Mailbox full'
-        }
+          expectedError: 'Mailbox full',
+        },
       ];
 
       for (const testCase of testCases) {
@@ -152,7 +154,7 @@ describe('EmailService Reliability Tests', () => {
         const emailOptions: EmailOptions = {
           to: 'user@example.com',
           subject: 'Test Email',
-          html: '<p>Test content</p>'
+          html: '<p>Test content</p>',
         };
 
         // Act
@@ -170,17 +172,17 @@ describe('EmailService Reliability Tests', () => {
       const emails = Array.from({ length: emailCount }, (_, i) => ({
         to: `user${i}@example.com`,
         subject: `Test Email ${i}`,
-        html: `<p>Test content ${i}</p>`
+        html: `<p>Test content ${i}</p>`,
       }));
 
-      mockTransporter.sendMail.mockImplementation(() => 
-        Promise.resolve({ messageId: `msg-${Date.now()}-${Math.random()}` })
+      mockTransporter.sendMail.mockImplementation(() =>
+        Promise.resolve({ messageId: `msg-${Date.now()}-${Math.random()}` }),
       );
 
       // Act
       const startTime = Date.now();
       const results = await Promise.all(
-        emails.map(email => emailService.sendEmail(email))
+        emails.map(email => emailService.sendEmail(email)),
       );
       const endTime = Date.now();
 
@@ -200,13 +202,13 @@ describe('EmailService Reliability Tests', () => {
       const emails = Array.from({ length: concurrentCount }, (_, i) => ({
         to: `concurrent${i}@example.com`,
         subject: `Concurrent Email ${i}`,
-        html: `<p>Concurrent content ${i}</p>`
+        html: `<p>Concurrent content ${i}</p>`,
       }));
 
-      mockTransporter.sendMail.mockImplementation(() => 
-        new Promise(resolve => 
-          setTimeout(() => resolve({ messageId: `concurrent-${Date.now()}` }), 100)
-        )
+      mockTransporter.sendMail.mockImplementation(() =>
+        new Promise(resolve =>
+          setTimeout(() => resolve({ messageId: `concurrent-${Date.now()}` }), 100),
+        ),
       );
 
       // Act
@@ -222,7 +224,7 @@ describe('EmailService Reliability Tests', () => {
         .filter(r => r.success)
         .map(r => r.messageId)
         .filter(Boolean);
-      
+
       const uniqueMessageIds = new Set(messageIds);
       expect(uniqueMessageIds.size).toBe(concurrentCount);
     });
@@ -234,7 +236,7 @@ describe('EmailService Reliability Tests', () => {
       const emailOptions: EmailOptions = {
         to: 'user@example.com',
         subject: 'Test Email',
-        html: '<p>Test content</p>'
+        html: '<p>Test content</p>',
       };
 
       // 模拟连接断开，然后重连成功
@@ -260,7 +262,7 @@ describe('EmailService Reliability Tests', () => {
       const emailOptions: EmailOptions = {
         to: 'user@example.com',
         subject: 'Test Email',
-        html: '<p>Test content</p>'
+        html: '<p>Test content</p>',
       };
 
       // 模拟认证失败，然后重新认证成功
@@ -281,7 +283,7 @@ describe('EmailService Reliability Tests', () => {
       const emailOptions: EmailOptions = {
         to: 'user@example.com',
         subject: 'Test Email',
-        html: '<p>Test content</p>'
+        html: '<p>Test content</p>',
       };
 
       const delays: number[] = [];
@@ -291,7 +293,7 @@ describe('EmailService Reliability Tests', () => {
         callCount++;
         const delay = Math.pow(2, callCount - 1) * 1000; // 指数退避
         delays.push(delay);
-        
+
         if (callCount < 3) {
           return Promise.reject(new Error('Temporary failure'));
         }
@@ -304,7 +306,7 @@ describe('EmailService Reliability Tests', () => {
       // Assert
       expect(result.success).toBe(true);
       expect(callCount).toBe(3);
-      
+
       // 验证指数退避延迟
       expect(delays[0]).toBe(1000);  // 1秒
       expect(delays[1]).toBe(2000);  // 2秒
@@ -316,12 +318,12 @@ describe('EmailService Reliability Tests', () => {
       const emailOptions: EmailOptions = {
         to: 'user@example.com',
         subject: 'Test Email',
-        html: '<p>Test content</p>'
+        html: '<p>Test content</p>',
       };
 
       // 模拟队列满的情况
       mockTransporter.sendMail.mockRejectedValue(
-        Object.assign(new Error('Queue full'), { code: 'EQUEUE' })
+        Object.assign(new Error('Queue full'), { code: 'EQUEUE' }),
       );
 
       // Act
@@ -340,7 +342,7 @@ describe('EmailService Reliability Tests', () => {
       const emailOptions: EmailOptions = {
         to: recipient,
         subject: 'Rate Limited Email',
-        html: '<p>Test content</p>'
+        html: '<p>Test content</p>',
       };
 
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'rate-limit-test' });
@@ -351,13 +353,13 @@ describe('EmailService Reliability Tests', () => {
         emailService.sendEmail(emailOptions),
         emailService.sendEmail(emailOptions),
         emailService.sendEmail(emailOptions),
-        emailService.sendEmail(emailOptions)
+        emailService.sendEmail(emailOptions),
       ]);
 
       // Assert
       const successCount = results.filter(r => r.success).length;
-      const rateLimitedCount = results.filter(r => 
-        !r.success && r.error?.includes('rate limit')
+      const rateLimitedCount = results.filter(r =>
+        !r.success && r.error?.includes('rate limit'),
       ).length;
 
       expect(successCount).toBeLessThanOrEqual(3); // 最多允许3封
@@ -369,22 +371,22 @@ describe('EmailService Reliability Tests', () => {
       const emailOptions: EmailOptions = {
         to: 'window@example.com',
         subject: 'Window Rate Limited Email',
-        html: '<p>Test content</p>'
+        html: '<p>Test content</p>',
       };
 
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'window-test' });
 
       // Act - 在时间窗口内发送邮件
       const result1 = await emailService.sendEmail(emailOptions);
-      
+
       // 快进时间但不超过窗口
       jest.advanceTimersByTime(30000); // 30秒
-      
+
       const result2 = await emailService.sendEmail(emailOptions);
-      
+
       // 快进超过窗口
       jest.advanceTimersByTime(60000); // 再60秒，总共90秒
-      
+
       const result3 = await emailService.sendEmail(emailOptions);
 
       // Assert
@@ -399,20 +401,20 @@ describe('EmailService Reliability Tests', () => {
       const emails = Array.from({ length: 200 }, (_, i) => ({
         to: `global${i}@example.com`,
         subject: `Global Email ${i}`,
-        html: `<p>Global content ${i}</p>`
+        html: `<p>Global content ${i}</p>`,
       }));
 
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'global-test' });
 
       // Act
       const results = await Promise.all(
-        emails.map(email => emailService.sendEmail(email))
+        emails.map(email => emailService.sendEmail(email)),
       );
 
       // Assert
       const successCount = results.filter(r => r.success).length;
-      const rateLimitedCount = results.filter(r => 
-        !r.success && r.error?.includes('global rate limit')
+      const rateLimitedCount = results.filter(r =>
+        !r.success && r.error?.includes('global rate limit'),
       ).length;
 
       expect(successCount).toBeLessThan(200); // 应该有全局限制
@@ -426,14 +428,14 @@ describe('EmailService Reliability Tests', () => {
         to: 'verify@example.com',
         subject: 'Verification Code',
         html: '<p>Your code is 123456</p>',
-        headers: { 'X-Email-Type': 'verification' }
+        headers: { 'X-Email-Type': 'verification' },
       };
 
       const marketingEmail: EmailOptions = {
         to: 'marketing@example.com',
         subject: 'Marketing Newsletter',
         html: '<p>Check out our new features!</p>',
-        headers: { 'X-Email-Type': 'marketing' }
+        headers: { 'X-Email-Type': 'marketing' },
       };
 
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'type-test' });
@@ -442,7 +444,7 @@ describe('EmailService Reliability Tests', () => {
       const verificationResults = await Promise.all([
         emailService.sendEmail(verificationEmail),
         emailService.sendEmail(verificationEmail),
-        emailService.sendEmail(verificationEmail)
+        emailService.sendEmail(verificationEmail),
       ]);
 
       const marketingResults = await Promise.all([
@@ -450,7 +452,7 @@ describe('EmailService Reliability Tests', () => {
         emailService.sendEmail(marketingEmail),
         emailService.sendEmail(marketingEmail),
         emailService.sendEmail(marketingEmail),
-        emailService.sendEmail(marketingEmail)
+        emailService.sendEmail(marketingEmail),
       ]);
 
       // Assert
@@ -459,7 +461,7 @@ describe('EmailService Reliability Tests', () => {
 
       // 验证邮件应该有更宽松的限制
       expect(verificationSuccess).toBeGreaterThanOrEqual(2);
-      
+
       // 营销邮件应该有更严格的限制
       expect(marketingSuccess).toBeLessThanOrEqual(2);
     });
@@ -471,13 +473,13 @@ describe('EmailService Reliability Tests', () => {
       const emailOptions: EmailOptions = {
         to: 'performance@example.com',
         subject: 'Performance Test',
-        html: '<p>Performance content</p>'
+        html: '<p>Performance content</p>',
       };
 
-      mockTransporter.sendMail.mockImplementation(() => 
-        new Promise(resolve => 
-          setTimeout(() => resolve({ messageId: 'perf-test' }), 500)
-        )
+      mockTransporter.sendMail.mockImplementation(() =>
+        new Promise(resolve =>
+          setTimeout(() => resolve({ messageId: 'perf-test' }), 500),
+        ),
       );
 
       // Act
@@ -496,29 +498,29 @@ describe('EmailService Reliability Tests', () => {
       const emailOptions: EmailOptions = {
         to: 'regression@example.com',
         subject: 'Regression Test',
-        html: '<p>Regression content</p>'
+        html: '<p>Regression content</p>',
       };
 
       const baselines: number[] = [];
-      
+
       // 建立性能基线
       for (let i = 0; i < 10; i++) {
         mockTransporter.sendMail.mockResolvedValueOnce({ messageId: `baseline-${i}` });
-        
+
         const startTime = Date.now();
         await emailService.sendEmail(emailOptions);
         const duration = Date.now() - startTime;
-        
+
         baselines.push(duration);
       }
 
       const averageBaseline = baselines.reduce((a, b) => a + b, 0) / baselines.length;
 
       // 模拟性能回归
-      mockTransporter.sendMail.mockImplementation(() => 
-        new Promise(resolve => 
-          setTimeout(() => resolve({ messageId: 'regression-test' }), averageBaseline * 3)
-        )
+      mockTransporter.sendMail.mockImplementation(() =>
+        new Promise(resolve =>
+          setTimeout(() => resolve({ messageId: 'regression-test' }), averageBaseline * 3),
+        ),
       );
 
       // Act
@@ -529,7 +531,7 @@ describe('EmailService Reliability Tests', () => {
       // Assert
       expect(result.success).toBe(true);
       expect(regressionDuration).toBeGreaterThan(averageBaseline * 2);
-      
+
       // 应该记录性能警告
       const performanceWarnings = performanceMonitor.getWarnings();
       expect(performanceWarnings.some(w => w.includes('performance regression'))).toBe(true);
@@ -541,16 +543,16 @@ describe('EmailService Reliability Tests', () => {
       const emails = Array.from({ length: largeEmailCount }, (_, i) => ({
         to: `memory${i}@example.com`,
         subject: `Memory Test ${i}`,
-        html: `<p>${'Large content '.repeat(1000)}</p>` // 大内容
+        html: `<p>${'Large content '.repeat(1000)}</p>`, // 大内容
       }));
 
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'memory-test' });
 
       // Act
       const initialMemory = process.memoryUsage().heapUsed;
-      
+
       await Promise.all(
-        emails.map(email => emailService.sendEmail(email))
+        emails.map(email => emailService.sendEmail(email)),
       );
 
       const finalMemory = process.memoryUsage().heapUsed;
@@ -568,7 +570,7 @@ describe('EmailService Reliability Tests', () => {
       const emailOptions: EmailOptions = {
         to: 'mock@example.com',
         subject: 'Mock Test',
-        html: '<p>Mock content</p>'
+        html: '<p>Mock content</p>',
       };
 
       // Act - 使用真实服务
@@ -581,7 +583,7 @@ describe('EmailService Reliability Tests', () => {
       // Assert - 结果结构应该一致
       expect(realResult).toHaveProperty('success');
       expect(mockResult).toHaveProperty('success');
-      
+
       if (realResult.success && mockResult.success) {
         expect(realResult).toHaveProperty('messageId');
         expect(mockResult).toHaveProperty('messageId');
@@ -599,13 +601,13 @@ describe('EmailService Reliability Tests', () => {
         {
           to: 'test1@example.com',
           subject: 'Test Email 1',
-          html: '<p>Content 1</p>'
+          html: '<p>Content 1</p>',
         },
         {
           to: 'test2@example.com',
           subject: 'Test Email 2',
-          html: '<p>Content 2</p>'
-        }
+          html: '<p>Content 2</p>',
+        },
       ];
 
       // Act
@@ -637,7 +639,7 @@ describe('EmailService Reliability Tests', () => {
       const emailOptions: EmailOptions = {
         to: 'assertion@example.com',
         subject: 'Assertion Test',
-        html: '<p>Assertion content</p>'
+        html: '<p>Assertion content</p>',
       };
 
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'assertion-test' });
@@ -648,12 +650,12 @@ describe('EmailService Reliability Tests', () => {
       // Assert - 使用自定义断言
       AssertionHelpers.assertEmailResult(result, {
         success: true,
-        hasMessageId: true
+        hasMessageId: true,
       });
 
       AssertionHelpers.assertObjectHasProperties(result, {
         success: true,
-        messageId: expect.stringMatching(/^assertion-test$/)
+        messageId: expect.stringMatching(/^assertion-test$/),
       });
     });
 
@@ -661,14 +663,14 @@ describe('EmailService Reliability Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'content@example.com',
-        name: 'Content Tester'
+        name: 'Content Tester',
       });
 
       const emailOptions: EmailOptions = {
         to: user.email,
         subject: 'Content Validation Test',
         html: `<p>Hello ${user.name}</p>`,
-        text: `Hello ${user.name}`
+        text: `Hello ${user.name}`,
       };
 
       // Act
@@ -687,7 +689,7 @@ describe('EmailService Reliability Tests', () => {
         hasHtml: true,
         hasText: true,
         containsUserName: user.name,
-        isWellFormed: true
+        isWellFormed: true,
       });
     });
   });

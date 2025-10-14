@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import workService from '@/lib/services/workService';
-import Work from '@/lib/models/Work';
-import User from '@/lib/models/User';
+import mongoose from 'mongoose';
+
 import ContributionLog from '@/lib/models/ContributionLog';
+import User from '@/lib/models/User';
+import Work from '@/lib/models/Work';
+import workService from '@/lib/services/workService';
 
 let mongoServer: MongoMemoryServer;
 
@@ -28,7 +29,7 @@ describe('WorkService', () => {
     testUser = await User.create({
       email: 'test@example.com',
       name: 'Test User',
-      contributionScore: 0
+      contributionScore: 0,
     });
 
     testWorkData = {
@@ -42,10 +43,10 @@ describe('WorkService', () => {
           type: 'visualization' as const,
           title: '可视化卡片',
           content: '这是一个可视化卡片',
-          editable: true
-        }
+          editable: true,
+        },
       ],
-      tags: ['数学', '函数']
+      tags: ['数学', '函数'],
     };
   });
 
@@ -53,7 +54,7 @@ describe('WorkService', () => {
     it('应该成功创建草稿作品', async () => {
       const work = await workService.createWork(testUser._id.toString(), {
         ...testWorkData,
-        status: 'draft'
+        status: 'draft',
       });
 
       expect(work).toBeDefined();
@@ -65,7 +66,7 @@ describe('WorkService', () => {
     it('应该成功创建并发布作品', async () => {
       const work = await workService.createWork(testUser._id.toString(), {
         ...testWorkData,
-        status: 'published'
+        status: 'published',
       });
 
       expect(work.status).toBe('published');
@@ -74,7 +75,7 @@ describe('WorkService', () => {
       const contributionLog = await ContributionLog.findOne({
         userId: testUser._id,
         workId: work._id,
-        type: 'creation'
+        type: 'creation',
       });
       expect(contributionLog).toBeDefined();
       expect(contributionLog?.points).toBe(10);
@@ -91,8 +92,8 @@ describe('WorkService', () => {
           knowledgePoint: '',
           subject: '',
           gradeLevel: '',
-          cards: []
-        })
+          cards: [],
+        }),
       ).rejects.toThrow();
     });
   });
@@ -100,11 +101,11 @@ describe('WorkService', () => {
   describe('updateWork', () => {
     it('应该成功更新作品', async () => {
       const work = await workService.createWork(testUser._id.toString(), testWorkData);
-      
+
       const updatedWork = await workService.updateWork(
         work._id.toString(),
         testUser._id.toString(),
-        { title: '更新后的标题' }
+        { title: '更新后的标题' },
       );
 
       expect(updatedWork.title).toBe('更新后的标题');
@@ -114,34 +115,34 @@ describe('WorkService', () => {
       const work = await workService.createWork(testUser._id.toString(), testWorkData);
       const otherUser = await User.create({
         email: 'other@example.com',
-        name: 'Other User'
+        name: 'Other User',
       });
 
       await expect(
         workService.updateWork(
           work._id.toString(),
           otherUser._id.toString(),
-          { title: '恶意更新' }
-        )
+          { title: '恶意更新' },
+        ),
       ).rejects.toThrow('作品不存在或无权限修改');
     });
 
     it('从草稿发布应该记录贡献度', async () => {
       const work = await workService.createWork(testUser._id.toString(), {
         ...testWorkData,
-        status: 'draft'
+        status: 'draft',
       });
 
       await workService.updateWork(
         work._id.toString(),
         testUser._id.toString(),
-        { status: 'published' }
+        { status: 'published' },
       );
 
       const contributionLog = await ContributionLog.findOne({
         userId: testUser._id,
         workId: work._id,
-        type: 'creation'
+        type: 'creation',
       });
       expect(contributionLog).toBeDefined();
     });
@@ -151,7 +152,7 @@ describe('WorkService', () => {
     it('应该获取已发布的作品', async () => {
       const work = await workService.createWork(testUser._id.toString(), {
         ...testWorkData,
-        status: 'published'
+        status: 'published',
       });
 
       const retrievedWork = await workService.getWorkById(work._id.toString());
@@ -162,7 +163,7 @@ describe('WorkService', () => {
     it('未登录用户不能查看草稿', async () => {
       const work = await workService.createWork(testUser._id.toString(), {
         ...testWorkData,
-        status: 'draft'
+        status: 'draft',
       });
 
       const retrievedWork = await workService.getWorkById(work._id.toString());
@@ -172,12 +173,12 @@ describe('WorkService', () => {
     it('作者可以查看自己的草稿', async () => {
       const work = await workService.createWork(testUser._id.toString(), {
         ...testWorkData,
-        status: 'draft'
+        status: 'draft',
       });
 
       const retrievedWork = await workService.getWorkById(
         work._id.toString(),
-        testUser._id.toString()
+        testUser._id.toString(),
       );
       expect(retrievedWork).toBeDefined();
     });
@@ -190,26 +191,26 @@ describe('WorkService', () => {
         ...testWorkData,
         title: '作品1',
         subject: '数学',
-        status: 'published'
+        status: 'published',
       });
 
       await workService.createWork(testUser._id.toString(), {
         ...testWorkData,
         title: '作品2',
         subject: '语文',
-        status: 'published'
+        status: 'published',
       });
 
       await workService.createWork(testUser._id.toString(), {
         ...testWorkData,
         title: '草稿作品',
-        status: 'draft'
+        status: 'draft',
       });
     });
 
     it('应该获取已发布作品列表', async () => {
       const result = await workService.getWorksList({});
-      
+
       expect(result.works).toHaveLength(2);
       expect(result.total).toBe(2);
       expect(result.works.every(work => work.status === 'published')).toBe(true);
@@ -217,7 +218,7 @@ describe('WorkService', () => {
 
     it('应该按学科筛选作品', async () => {
       const result = await workService.getWorksList({ subject: '数学' });
-      
+
       expect(result.works).toHaveLength(1);
       expect(result.works[0].subject).toBe('数学');
     });
@@ -225,9 +226,9 @@ describe('WorkService', () => {
     it('应该获取指定作者的作品', async () => {
       const result = await workService.getWorksList({
         author: testUser._id.toString(),
-        status: 'draft'
+        status: 'draft',
       });
-      
+
       expect(result.works).toHaveLength(1);
       expect(result.works[0].title).toBe('草稿作品');
     });
@@ -235,9 +236,9 @@ describe('WorkService', () => {
     it('应该支持分页', async () => {
       const result = await workService.getWorksList({
         page: 1,
-        limit: 1
+        limit: 1,
       });
-      
+
       expect(result.works).toHaveLength(1);
       expect(result.totalPages).toBe(2);
     });
@@ -247,12 +248,12 @@ describe('WorkService', () => {
     it('应该成功发布草稿', async () => {
       const work = await workService.createWork(testUser._id.toString(), {
         ...testWorkData,
-        status: 'draft'
+        status: 'draft',
       });
 
       const publishedWork = await workService.publishWork(
         work._id.toString(),
-        testUser._id.toString()
+        testUser._id.toString(),
       );
 
       expect(publishedWork.status).toBe('published');
@@ -261,11 +262,11 @@ describe('WorkService', () => {
     it('不能发布已发布的作品', async () => {
       const work = await workService.createWork(testUser._id.toString(), {
         ...testWorkData,
-        status: 'published'
+        status: 'published',
       });
 
       await expect(
-        workService.publishWork(work._id.toString(), testUser._id.toString())
+        workService.publishWork(work._id.toString(), testUser._id.toString()),
       ).rejects.toThrow('草稿不存在或已发布');
     });
   });
@@ -274,7 +275,7 @@ describe('WorkService', () => {
     it('应该创建新草稿', async () => {
       const draft = await workService.saveDraft(testUser._id.toString(), {
         title: '自动保存草稿',
-        knowledgePoint: '测试知识点'
+        knowledgePoint: '测试知识点',
       });
 
       expect(draft.status).toBe('draft');
@@ -285,13 +286,13 @@ describe('WorkService', () => {
       // 先创建一个草稿
       await workService.saveDraft(testUser._id.toString(), {
         title: '未命名作品',
-        knowledgePoint: '测试知识点'
+        knowledgePoint: '测试知识点',
       });
 
       // 再次保存应该更新现有草稿
       const updatedDraft = await workService.saveDraft(testUser._id.toString(), {
         title: '更新的标题',
-        knowledgePoint: '测试知识点'
+        knowledgePoint: '测试知识点',
       });
 
       expect(updatedDraft.title).toBe('更新的标题');
@@ -309,7 +310,7 @@ describe('WorkService', () => {
         title: '二次函数教学设计',
         knowledgePoint: '二次函数',
         tags: ['数学', '函数'],
-        status: 'published'
+        status: 'published',
       });
 
       await workService.createWork(testUser._id.toString(), {
@@ -317,34 +318,34 @@ describe('WorkService', () => {
         title: '一次函数教学设计',
         knowledgePoint: '一次函数',
         tags: ['数学', '函数'],
-        status: 'published'
+        status: 'published',
       });
     });
 
     it('应该按标题搜索作品', async () => {
       const results = await workService.searchWorks('二次函数');
-      
+
       expect(results).toHaveLength(1);
       expect(results[0].title).toContain('二次函数');
     });
 
     it('应该按知识点搜索作品', async () => {
       const results = await workService.searchWorks('函数');
-      
+
       expect(results).toHaveLength(2);
     });
 
     it('应该按标签搜索作品', async () => {
       const results = await workService.searchWorks('数学');
-      
+
       expect(results).toHaveLength(2);
     });
 
     it('应该支持筛选条件', async () => {
       const results = await workService.searchWorks('函数', {
-        limit: 1
+        limit: 1,
       });
-      
+
       expect(results).toHaveLength(1);
     });
   });
@@ -352,9 +353,9 @@ describe('WorkService', () => {
   describe('deleteWork', () => {
     it('应该成功删除作品', async () => {
       const work = await workService.createWork(testUser._id.toString(), testWorkData);
-      
+
       await workService.deleteWork(work._id.toString(), testUser._id.toString());
-      
+
       const deletedWork = await Work.findById(work._id);
       expect(deletedWork).toBeNull();
     });
@@ -363,11 +364,11 @@ describe('WorkService', () => {
       const work = await workService.createWork(testUser._id.toString(), testWorkData);
       const otherUser = await User.create({
         email: 'other@example.com',
-        name: 'Other User'
+        name: 'Other User',
       });
 
       await expect(
-        workService.deleteWork(work._id.toString(), otherUser._id.toString())
+        workService.deleteWork(work._id.toString(), otherUser._id.toString()),
       ).rejects.toThrow('作品不存在或无权限删除');
     });
   });

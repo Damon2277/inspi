@@ -3,9 +3,9 @@
  * 管理测试环境中的数据库连接，包括MongoDB和Redis
  */
 
+import Redis from 'ioredis';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
-import Redis from 'ioredis';
 
 export interface DatabaseConfig {
   mongodb: {
@@ -60,7 +60,7 @@ export class TestDatabaseManager {
     try {
       // 初始化MongoDB
       await this.initializeMongoDB(config.mongodb);
-      
+
       // 初始化Redis
       await this.initializeRedis(config.redis);
 
@@ -79,18 +79,18 @@ export class TestDatabaseManager {
     try {
       // 如果是测试环境，使用内存数据库
       if (process.env.NODE_ENV === 'test' && !config.uri.includes('mongodb://')) {
-        this.mongoServer = await MongoMemoryServer.create({
+        this.mongoServer = await (MongoMemoryServer.create as any)({
           instance: {
             dbName: config.dbName,
           },
         });
-        
+
         const uri = this.mongoServer.getUri();
         this.mongoConnection = await mongoose.connect(uri, {
           ...config.options,
           bufferCommands: false,
         });
-        
+
         console.log(`📦 MongoDB Memory Server started: ${uri}`);
       } else {
         // 使用真实数据库连接
@@ -118,7 +118,7 @@ export class TestDatabaseManager {
             maxRetriesPerRequest: 1,
             lazyConnect: true,
           });
-          
+
           await this.redisClient.connect();
           console.log(`🔗 Connected to Redis: ${config.url}`);
         } catch (error) {
@@ -140,41 +140,41 @@ export class TestDatabaseManager {
    */
   private createMockRedis(): any {
     const mockData = new Map<string, string>();
-    
+
     return {
       get: jest.fn().mockImplementation((key: string) => {
         return Promise.resolve(mockData.get(key) || null);
       }),
-      
+
       set: jest.fn().mockImplementation((key: string, value: string, ...args: any[]) => {
         mockData.set(key, value);
         return Promise.resolve('OK');
       }),
-      
+
       del: jest.fn().mockImplementation((key: string) => {
         const existed = mockData.has(key);
         mockData.delete(key);
         return Promise.resolve(existed ? 1 : 0);
       }),
-      
+
       exists: jest.fn().mockImplementation((key: string) => {
         return Promise.resolve(mockData.has(key) ? 1 : 0);
       }),
-      
+
       expire: jest.fn().mockImplementation((key: string, seconds: number) => {
         // 在真实实现中，这里会设置过期时间
         return Promise.resolve(mockData.has(key) ? 1 : 0);
       }),
-      
+
       flushall: jest.fn().mockImplementation(() => {
         mockData.clear();
         return Promise.resolve('OK');
       }),
-      
+
       disconnect: jest.fn().mockImplementation(() => {
         return Promise.resolve();
       }),
-      
+
       // 标记为Mock客户端
       isMock: true,
     };
@@ -203,7 +203,7 @@ export class TestDatabaseManager {
       if (this.mongoConnection) {
         const collections = await this.mongoConnection.connection.db.collections();
         await Promise.all(
-          collections.map(collection => collection.deleteMany({}))
+          collections.map(collection => (collection.deleteMany as any)({})),
         );
       }
 
@@ -261,9 +261,9 @@ export class TestDatabaseManager {
 
       return { healthy: true };
     } catch (error) {
-      return { 
-        healthy: false, 
-        message: `Database health check failed: ${error}` 
+      return {
+        healthy: false,
+        message: `Database health check failed: ${error}`,
       };
     }
   }
@@ -352,14 +352,14 @@ export class TestDatabaseManager {
         const db = this.mongoConnection.connection.db;
         const collections = await db.collections();
         let totalDocuments = 0;
-        
+
         for (const collection of collections) {
-          const count = await collection.countDocuments();
+          const count = await (collection.countDocuments as any)();
           totalDocuments += count;
         }
 
         const dbStats = await db.stats();
-        
+
         stats.mongodb = {
           collections: collections.length,
           documents: totalDocuments,
@@ -371,12 +371,12 @@ export class TestDatabaseManager {
       if (this.redisClient && !(this.redisClient as any).isMock) {
         const info = await this.redisClient.info('memory');
         const keyspace = await this.redisClient.info('keyspace');
-        
+
         // 解析keyspace信息获取key数量
         const keyCount = keyspace.match(/keys=(\d+)/)?.[1] || '0';
-        
+
         stats.redis = {
-          keys: parseInt(keyCount),
+          keys: parseInt(keyCount, 10),
           memory: 0, // 从info中解析内存使用情况
         };
       } else if ((this.redisClient as any)?.isMock) {

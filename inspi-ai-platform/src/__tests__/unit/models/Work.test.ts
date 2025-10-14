@@ -4,6 +4,7 @@
  */
 
 import mongoose from 'mongoose';
+
 import Work, { WorkDocument, TeachingCard, Attribution } from '@/lib/models/Work';
 
 // Mock mongoose
@@ -96,11 +97,11 @@ describe('Work模型关系处理测试', () => {
       const indexes = workSchema.indexes();
 
       // Assert
-      const authorStatusIndex = indexes.find(index => 
-        index[0].author === 1 && index[0].status === 1
+      const authorStatusIndex = indexes.find(index =>
+        index[0].author === 1 && index[0].status === 1,
       );
-      const subjectGradeIndex = indexes.find(index => 
-        index[0].subject === 1 && index[0].gradeLevel === 1
+      const subjectGradeIndex = indexes.find(index =>
+        index[0].subject === 1 && index[0].gradeLevel === 1,
       );
       const reuseCountIndex = indexes.find(index => index[0].reuseCount === -1);
       const createdAtIndex = indexes.find(index => index[0].createdAt === -1);
@@ -867,12 +868,12 @@ describe('Work模型关系处理测试', () => {
       // Act - 模拟完整生命周期
       // 1. 发布作品
       work.status = 'published';
-      
+
       // 2. 被复用多次
       for (let i = 0; i < 5; i++) {
         await work.incrementReuseCount();
       }
-      
+
       // 3. 添加归属信息
       await work.addAttribution({
         originalAuthor: new mongoose.Types.ObjectId(),
@@ -931,7 +932,7 @@ describe('Work模型关系处理测试', () => {
       expect(validationError).toBeNull();
       expect(work.cards).toHaveLength(4);
       expect(work.cards.map(card => card.type)).toEqual([
-        'visualization', 'analogy', 'thinking', 'interaction'
+        'visualization', 'analogy', 'thinking', 'interaction',
       ]);
     });
 

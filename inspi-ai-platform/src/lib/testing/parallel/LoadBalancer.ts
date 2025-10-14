@@ -57,12 +57,12 @@ export class LoadBalancer extends EventEmitter {
     options: {
       rebalanceThreshold?: number;
       rebalanceIntervalMs?: number;
-    } = {}
+    } = {},
   ) {
     super();
     this.strategy = strategy;
     this.rebalanceThreshold = options.rebalanceThreshold || 0.3;
-    
+
     this.metrics = {
       totalTasks: 0,
       completedTasks: 0,
@@ -70,7 +70,7 @@ export class LoadBalancer extends EventEmitter {
       averageWaitTime: 0,
       workerUtilization: [],
       loadDistribution: [],
-      rebalanceCount: 0
+      rebalanceCount: 0,
     };
 
     // 启动定期重平衡
@@ -92,7 +92,7 @@ export class LoadBalancer extends EventEmitter {
       totalDuration: 0,
       errors: 0,
       averageTaskTime: 0,
-      successRate: 1.0
+      successRate: 1.0,
     };
 
     this.workers.set(workerId, worker);
@@ -112,7 +112,7 @@ export class LoadBalancer extends EventEmitter {
    */
   assignTask(task: Task): number | null {
     const worker = this.strategy.selectWorker(Array.from(this.workers.values()), task);
-    
+
     if (!worker) {
       // 没有可用工作节点，加入队列
       this.taskQueue.push(task);
@@ -136,7 +136,7 @@ export class LoadBalancer extends EventEmitter {
     // 记录分配信息
     this.assignedTasks.set(task.id, {
       workerId: worker.id,
-      assignedAt: Date.now()
+      assignedAt: Date.now(),
     });
 
     // 更新指标
@@ -146,7 +146,7 @@ export class LoadBalancer extends EventEmitter {
       taskId: task.id,
       workerId: worker.id,
       workerLoad: worker.currentLoad,
-      queueLength: this.taskQueue.length
+      queueLength: this.taskQueue.length,
     });
   }
 
@@ -177,7 +177,7 @@ export class LoadBalancer extends EventEmitter {
       workerId: worker.id,
       duration,
       success,
-      workerStats: this.getWorkerStats(worker.id)
+      workerStats: this.getWorkerStats(worker.id),
     });
   }
 
@@ -207,7 +207,7 @@ export class LoadBalancer extends EventEmitter {
    */
   private updateMetrics(assignedAt: number, success: boolean): void {
     const waitTime = Date.now() - assignedAt;
-    
+
     if (success) {
       this.metrics.completedTasks++;
     } else {
@@ -216,7 +216,7 @@ export class LoadBalancer extends EventEmitter {
 
     // 更新平均等待时间
     const totalCompleted = this.metrics.completedTasks + this.metrics.failedTasks;
-    this.metrics.averageWaitTime = 
+    this.metrics.averageWaitTime =
       (this.metrics.averageWaitTime * (totalCompleted - 1) + waitTime) / totalCompleted;
 
     // 更新工作节点利用率
@@ -228,13 +228,13 @@ export class LoadBalancer extends EventEmitter {
    */
   private updateWorkerUtilization(): void {
     const workers = Array.from(this.workers.values());
-    
-    this.metrics.workerUtilization = workers.map(worker => 
-      worker.currentLoad / worker.maxLoad
+
+    this.metrics.workerUtilization = workers.map(worker =>
+      worker.currentLoad / worker.maxLoad,
     );
 
-    this.metrics.loadDistribution = workers.map(worker => 
-      worker.tasksCompleted
+    this.metrics.loadDistribution = workers.map(worker =>
+      worker.tasksCompleted,
     );
   }
 
@@ -245,7 +245,7 @@ export class LoadBalancer extends EventEmitter {
     while (this.taskQueue.length > 0) {
       const task = this.taskQueue[0];
       const worker = this.strategy.selectWorker(Array.from(this.workers.values()), task);
-      
+
       if (!worker) break;
 
       // 移除队列中的任务并分配
@@ -268,7 +268,7 @@ export class LoadBalancer extends EventEmitter {
    */
   private performRebalancing(): void {
     const workers = Array.from(this.workers.values());
-    
+
     if (!this.strategy.shouldRebalance(workers)) {
       return;
     }
@@ -283,12 +283,12 @@ export class LoadBalancer extends EventEmitter {
 
     // 执行任务迁移
     this.migrateTasks(overloadedWorkers, underloadedWorkers);
-    
+
     this.metrics.rebalanceCount++;
     this.emit('rebalance:completed', {
       overloadedWorkers: overloadedWorkers.length,
       underloadedWorkers: underloadedWorkers.length,
-      rebalanceCount: this.metrics.rebalanceCount
+      rebalanceCount: this.metrics.rebalanceCount,
     });
   }
 
@@ -297,15 +297,15 @@ export class LoadBalancer extends EventEmitter {
    */
   private migrateTasks(overloaded: WorkerNode[], underloaded: WorkerNode[]): void {
     for (const overloadedWorker of overloaded) {
-      const targetWorker = underloaded.find(w => 
-        w.currentLoad + overloadedWorker.averageTaskTime < w.maxLoad
+      const targetWorker = (underloaded.find as any)(w =>
+        w.currentLoad + overloadedWorker.averageTaskTime < w.maxLoad,
       );
 
       if (targetWorker) {
         // 模拟任务迁移（实际实现需要与任务执行器协调）
         const migrationLoad = Math.min(
           overloadedWorker.currentLoad * 0.2,
-          targetWorker.maxLoad - targetWorker.currentLoad
+          targetWorker.maxLoad - targetWorker.currentLoad,
         );
 
         overloadedWorker.currentLoad -= migrationLoad;
@@ -314,7 +314,7 @@ export class LoadBalancer extends EventEmitter {
         this.emit('task:migrated', {
           fromWorkerId: overloadedWorker.id,
           toWorkerId: targetWorker.id,
-          load: migrationLoad
+          load: migrationLoad,
         });
       }
     }
@@ -357,7 +357,7 @@ export class LoadBalancer extends EventEmitter {
     return {
       queueLength: this.taskQueue.length,
       averageWaitTime: this.metrics.averageWaitTime,
-      oldestTaskAge: waitTimes.length > 0 ? Math.max(...waitTimes) : 0
+      oldestTaskAge: waitTimes.length > 0 ? Math.max(...waitTimes) : 0,
     };
   }
 
@@ -369,7 +369,7 @@ export class LoadBalancer extends EventEmitter {
       clearInterval(this.rebalanceInterval);
       this.rebalanceInterval = null;
     }
-    
+
     this.workers.clear();
     this.taskQueue = [];
     this.assignedTasks.clear();
@@ -410,7 +410,7 @@ export class WeightedStrategy implements LoadBalancingStrategy {
     // 根据工作节点性能和当前负载计算权重
     const weightedWorkers = availableWorkers.map(worker => ({
       worker,
-      weight: this.calculateWeight(worker, task)
+      weight: this.calculateWeight(worker, task),
     }));
 
     // 选择权重最高的工作节点
@@ -421,13 +421,13 @@ export class WeightedStrategy implements LoadBalancingStrategy {
   private calculateWeight(worker: WorkerNode, task: Task): number {
     // 基础权重：剩余容量
     const capacityWeight = (worker.maxLoad - worker.currentLoad) / worker.maxLoad;
-    
+
     // 性能权重：基于历史表现
     const performanceWeight = worker.successRate * (1 / (worker.averageTaskTime || 1));
-    
+
     // 优先级权重：P0任务优先分配给性能好的工作节点
     const priorityWeight = task.priority === 'P0' ? performanceWeight * 2 : 1;
-    
+
     return capacityWeight * performanceWeight * priorityWeight;
   }
 
@@ -460,7 +460,7 @@ export class DynamicStrategy implements LoadBalancingStrategy {
     // 预测每个工作节点完成任务的时间
     const predictions = availableWorkers.map(worker => ({
       worker,
-      predictedTime: this.predictCompletionTime(worker, task)
+      predictedTime: this.predictCompletionTime(worker, task),
     }));
 
     // 选择预测完成时间最短的工作节点
@@ -471,13 +471,13 @@ export class DynamicStrategy implements LoadBalancingStrategy {
   private predictCompletionTime(worker: WorkerNode, task: Task): number {
     // 获取历史负载数据
     const history = this.loadHistory.get(worker.id) || [];
-    
+
     // 基于历史数据预测
     if (history.length > 0) {
       const avgHistoricalTime = history.reduce((sum, time) => sum + time, 0) / history.length;
-      const trend = history.length > 1 ? 
+      const trend = history.length > 1 ?
         (history[history.length - 1] - history[0]) / (history.length - 1) : 0;
-      
+
       return avgHistoricalTime + trend + (worker.currentLoad / worker.maxLoad) * task.estimatedDuration;
     }
 
@@ -488,8 +488,8 @@ export class DynamicStrategy implements LoadBalancingStrategy {
   shouldRebalance(workers: WorkerNode[]): boolean {
     // 动态策略基于实时负载变化决定是否重平衡
     const now = Date.now();
-    const recentlyActive = workers.filter(w => 
-      w.lastTaskTime && (now - w.lastTaskTime) < 60000 // 1分钟内活跃
+    const recentlyActive = workers.filter(w =>
+      w.lastTaskTime && (now - w.lastTaskTime) < 60000, // 1分钟内活跃
     );
 
     if (recentlyActive.length < 2) return false;
@@ -498,7 +498,7 @@ export class DynamicStrategy implements LoadBalancingStrategy {
     const loadVariations = recentlyActive.map(worker => {
       const history = this.loadHistory.get(worker.id) || [];
       if (history.length < 3) return 0;
-      
+
       const recent = history.slice(-3);
       return Math.max(...recent) - Math.min(...recent);
     });
@@ -513,11 +513,11 @@ export class DynamicStrategy implements LoadBalancingStrategy {
   updateLoadHistory(workerId: number, completionTime: number): void {
     let history = this.loadHistory.get(workerId) || [];
     history.push(completionTime);
-    
+
     if (history.length > this.historySize) {
       history = history.slice(-this.historySize);
     }
-    
+
     this.loadHistory.set(workerId, history);
   }
 }

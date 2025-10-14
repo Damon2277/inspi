@@ -3,8 +3,9 @@
  * 处理邀请系统的后台异步任务，提升响应性能
  */
 
-import { logger } from '@/lib/utils/logger'
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'events';
+
+import { logger } from '@/shared/utils/logger';
 
 export interface AsyncTask {
   id: string
@@ -42,17 +43,17 @@ export interface AsyncTaskConfig {
 }
 
 export class AsyncTaskProcessor extends EventEmitter {
-  private config: AsyncTaskConfig
-  private taskQueue: AsyncTask[] = []
-  private runningTasks: Map<string, AsyncTask> = new Map()
-  private processors: Map<string, TaskProcessor> = new Map()
-  private isProcessing = false
-  private persistenceTimer?: NodeJS.Timeout
+  private config: AsyncTaskConfig;
+  private taskQueue: AsyncTask[] = [];
+  private runningTasks: Map<string, AsyncTask> = new Map();
+  private processors: Map<string, TaskProcessor> = new Map();
+  private isProcessing = false;
+  private persistenceTimer?: NodeJS.Timeout;
 
   constructor(config: AsyncTaskConfig) {
-    super()
-    this.config = config
-    this.setupPersistence()
+    super();
+    this.config = config;
+    this.setupPersistence();
   }
 
   /**
@@ -61,8 +62,8 @@ export class AsyncTaskProcessor extends EventEmitter {
   private setupPersistence(): void {
     if (this.config.enablePersistence) {
       this.persistenceTimer = setInterval(() => {
-        this.persistTasks()
-      }, this.config.persistenceInterval)
+        this.persistTasks();
+      }, this.config.persistenceInterval);
     }
   }
 
@@ -73,18 +74,18 @@ export class AsyncTaskProcessor extends EventEmitter {
     try {
       // 这里应该将任务持久化到数据库或Redis
       // 为了演示，我们只记录日志
-      const pendingTasks = this.taskQueue.length
-      const runningTasks = this.runningTasks.size
-      
+      const pendingTasks = this.taskQueue.length;
+      const runningTasks = this.runningTasks.size;
+
       if (pendingTasks > 0 || runningTasks > 0) {
         logger.debug('Task persistence checkpoint', {
           pendingTasks,
           runningTasks,
-          totalProcessors: this.processors.size
-        })
+          totalProcessors: this.processors.size,
+        });
       }
     } catch (error) {
-      logger.error('Failed to persist tasks', { error })
+      logger.error('Failed to persist tasks', { error });
     }
   }
 
@@ -92,12 +93,12 @@ export class AsyncTaskProcessor extends EventEmitter {
    * 注册任务处理器
    */
   registerProcessor(processor: TaskProcessor): void {
-    this.processors.set(processor.type, processor)
+    this.processors.set(processor.type, processor);
     logger.info('Task processor registered', {
       type: processor.type,
       concurrency: processor.concurrency || 1,
-      timeout: processor.timeout || this.config.defaultTimeout
-    })
+      timeout: processor.timeout || this.config.defaultTimeout,
+    });
   }
 
   /**
@@ -111,7 +112,7 @@ export class AsyncTaskProcessor extends EventEmitter {
       scheduledAt?: Date
       timeout?: number
       maxRetries?: number
-    } = {}
+    } = {},
   ): Promise<string> {
     const task: AsyncTask = {
       id: this.generateTaskId(),
@@ -122,168 +123,167 @@ export class AsyncTaskProcessor extends EventEmitter {
       maxRetries: options.maxRetries || this.config.maxRetries,
       createdAt: new Date(),
       scheduledAt: options.scheduledAt,
-      timeout: options.timeout
-    }
+      timeout: options.timeout,
+    };
 
     // 按优先级插入队列
-    this.insertTaskByPriority(task)
+    this.insertTaskByPriority(task);
 
     logger.debug('Task added to queue', {
       taskId: task.id,
       type: task.type,
       priority: task.priority,
-      queueSize: this.taskQueue.length
-    })
+      queueSize: this.taskQueue.length,
+    });
 
-    this.emit('taskAdded', task)
+    this.emit('taskAdded', task);
 
     // 启动处理器
     if (!this.isProcessing) {
-      this.startProcessing()
+      this.startProcessing();
     }
-
-    return task.id
+    return task.id;
   }
 
   /**
    * 按优先级插入任务
    */
   private insertTaskByPriority(task: AsyncTask): void {
-    let insertIndex = this.taskQueue.length
-    
+    let insertIndex = this.taskQueue.length;
+
     for (let i = 0; i < this.taskQueue.length; i++) {
       if (this.taskQueue[i].priority < task.priority) {
-        insertIndex = i
-        break
+        insertIndex = i;
+        break;
       }
     }
-    
-    this.taskQueue.splice(insertIndex, 0, task)
+
+    this.taskQueue.splice(insertIndex, 0, task);
   }
 
   /**
    * 生成任务ID
    */
   private generateTaskId(): string {
-    return `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    return `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
    * 启动任务处理
    */
   private async startProcessing(): Promise<void> {
-    if (this.isProcessing) return
+    if (this.isProcessing) return;
 
-    this.isProcessing = true
-    logger.info('Task processing started')
+    this.isProcessing = true;
+    logger.info('Task processing started');
 
     while (this.taskQueue.length > 0 || this.runningTasks.size > 0) {
       // 处理可执行的任务
-      await this.processAvailableTasks()
-      
+      await this.processAvailableTasks();
+
       // 等待一段时间再检查
-      await this.sleep(100)
+      await this.sleep(100);
     }
 
-    this.isProcessing = false
-    logger.info('Task processing stopped')
+    this.isProcessing = false;
+    logger.info('Task processing stopped');
   }
 
   /**
    * 处理可用任务
    */
   private async processAvailableTasks(): Promise<void> {
-    const now = new Date()
-    const availableSlots = this.config.maxConcurrency - this.runningTasks.size
+    const now = new Date();
+    const availableSlots = this.config.maxConcurrency - this.runningTasks.size;
 
-    if (availableSlots <= 0) return
+    if (availableSlots <= 0) return;
 
     // 找到可执行的任务
     const executableTasks = this.taskQueue
       .filter(task => !task.scheduledAt || task.scheduledAt <= now)
       .filter(task => this.processors.has(task.type))
-      .slice(0, availableSlots)
+      .slice(0, availableSlots);
 
     // 移除已选择的任务
     executableTasks.forEach(task => {
-      const index = this.taskQueue.indexOf(task)
+      const index = this.taskQueue.indexOf(task);
       if (index !== -1) {
-        this.taskQueue.splice(index, 1)
+        this.taskQueue.splice(index, 1);
       }
-    })
+    });
 
     // 执行任务
-    const executionPromises = executableTasks.map(task => this.executeTask(task))
-    await Promise.all(executionPromises)
+    const executionPromises = executableTasks.map(task => this.executeTask(task));
+    await Promise.all(executionPromises);
   }
 
   /**
    * 执行单个任务
    */
   private async executeTask(task: AsyncTask): Promise<void> {
-    const processor = this.processors.get(task.type)
+    const processor = this.processors.get(task.type);
     if (!processor) {
-      logger.error('No processor found for task type', { taskId: task.id, type: task.type })
-      return
+      logger.error('No processor found for task type', { taskId: task.id, type: task.type });
+      return;
     }
 
-    this.runningTasks.set(task.id, task)
-    const startTime = Date.now()
+    this.runningTasks.set(task.id, task);
+    const startTime = Date.now();
 
     try {
-      logger.debug('Task execution started', { taskId: task.id, type: task.type })
+      logger.debug('Task execution started', { taskId: task.id, type: task.type });
 
       // 设置超时
-      const timeout = task.timeout || processor.timeout || this.config.defaultTimeout
+      const timeout = task.timeout || processor.timeout || this.config.defaultTimeout;
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Task timeout')), timeout)
-      )
+        setTimeout(() => reject(new Error('Task timeout')), timeout),
+      );
 
       // 执行任务
       const result = await Promise.race([
         processor.handler(task.payload),
-        timeoutPromise
-      ])
+        timeoutPromise,
+      ]);
 
-      const duration = Date.now() - startTime
+      const duration = Date.now() - startTime;
       const taskResult: TaskResult = {
         success: true,
         result,
-        duration
-      }
+        duration,
+      };
 
       logger.info('Task completed successfully', {
         taskId: task.id,
         type: task.type,
         duration,
-        retries: task.retries
-      })
+        retries: task.retries,
+      });
 
-      this.emit('taskCompleted', task, taskResult)
+      this.emit('taskCompleted', task, taskResult);
 
     } catch (error) {
-      const duration = Date.now() - startTime
+      const duration = Date.now() - startTime;
       const taskResult: TaskResult = {
         success: false,
         error: error instanceof Error ? error : new Error(String(error)),
-        duration
-      }
+        duration,
+      };
 
       logger.error('Task execution failed', {
         taskId: task.id,
         type: task.type,
         duration,
         retries: task.retries,
-        error: taskResult.error?.message
-      })
+        error: taskResult.error?.message,
+      });
 
       // 处理重试
-      await this.handleTaskFailure(task, taskResult.error!)
+      await this.handleTaskFailure(task, taskResult.error!);
 
-      this.emit('taskFailed', task, taskResult)
+      this.emit('taskFailed', task, taskResult);
 
     } finally {
-      this.runningTasks.delete(task.id)
+      this.runningTasks.delete(task.id);
     }
   }
 
@@ -291,30 +291,30 @@ export class AsyncTaskProcessor extends EventEmitter {
    * 处理任务失败
    */
   private async handleTaskFailure(task: AsyncTask, error: Error): Promise<void> {
-    task.retries++
+    task.retries++;
 
     if (task.retries < task.maxRetries) {
       // 重新加入队列，延迟执行
-      const delay = this.calculateRetryDelay(task.retries)
-      task.scheduledAt = new Date(Date.now() + delay)
-      
-      this.insertTaskByPriority(task)
-      
+      const delay = this.calculateRetryDelay(task.retries);
+      task.scheduledAt = new Date(Date.now() + delay);
+
+      this.insertTaskByPriority(task);
+
       logger.info('Task scheduled for retry', {
         taskId: task.id,
         retries: task.retries,
         maxRetries: task.maxRetries,
-        delay
-      })
+        delay,
+      });
     } else {
       logger.error('Task failed permanently', {
         taskId: task.id,
         type: task.type,
         retries: task.retries,
-        error: error.message
-      })
+        error: error.message,
+      });
 
-      this.emit('taskFailedPermanently', task, error)
+      this.emit('taskFailedPermanently', task, error);
     }
   }
 
@@ -322,14 +322,14 @@ export class AsyncTaskProcessor extends EventEmitter {
    * 计算重试延迟（指数退避）
    */
   private calculateRetryDelay(retryCount: number): number {
-    return this.config.retryDelay * Math.pow(2, retryCount - 1)
+    return this.config.retryDelay * Math.pow(2, retryCount - 1);
   }
 
   /**
    * 睡眠函数
    */
-  private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
+  protected sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**
@@ -340,18 +340,17 @@ export class AsyncTaskProcessor extends EventEmitter {
     task?: AsyncTask
   } {
     // 检查运行中的任务
-    const runningTask = this.runningTasks.get(taskId)
+    const runningTask = this.runningTasks.get(taskId);
     if (runningTask) {
-      return { status: 'running', task: runningTask }
+      return { status: 'running', task: runningTask };
     }
 
     // 检查队列中的任务
-    const pendingTask = this.taskQueue.find(task => task.id === taskId)
+    const pendingTask = (this.taskQueue as any).find(task => task.id === taskId);
     if (pendingTask) {
-      return { status: 'pending', task: pendingTask }
+      return { status: 'pending', task: pendingTask };
     }
-
-    return { status: 'not_found' }
+    return { status: 'not_found' };
   }
 
   /**
@@ -359,21 +358,20 @@ export class AsyncTaskProcessor extends EventEmitter {
    */
   cancelTask(taskId: string): boolean {
     // 从队列中移除
-    const queueIndex = this.taskQueue.findIndex(task => task.id === taskId)
+    const queueIndex = this.taskQueue.findIndex(task => task.id === taskId);
     if (queueIndex !== -1) {
-      const task = this.taskQueue.splice(queueIndex, 1)[0]
-      logger.info('Task cancelled from queue', { taskId })
-      this.emit('taskCancelled', task)
-      return true
+      const task = this.taskQueue.splice(queueIndex, 1)[0];
+      logger.info('Task cancelled from queue', { taskId });
+      this.emit('taskCancelled', task);
+      return true;
     }
 
     // 运行中的任务无法取消（可以考虑添加取消信号）
     if (this.runningTasks.has(taskId)) {
-      logger.warn('Cannot cancel running task', { taskId })
-      return false
+      logger.warn('Cannot cancel running task', { taskId });
+      return false;
     }
-
-    return false
+    return false;
   }
 
   /**
@@ -386,36 +384,36 @@ export class AsyncTaskProcessor extends EventEmitter {
     totalCapacity: number
     utilizationRate: number
   } {
-    const runningTasks = this.runningTasks.size
-    const utilizationRate = runningTasks / this.config.maxConcurrency
+    const runningTasks = this.runningTasks.size;
+    const utilizationRate = runningTasks / this.config.maxConcurrency;
 
     return {
       pendingTasks: this.taskQueue.length,
       runningTasks,
       registeredProcessors: this.processors.size,
       totalCapacity: this.config.maxConcurrency,
-      utilizationRate
-    }
+      utilizationRate,
+    };
   }
 
   /**
    * 清空队列
    */
   clearQueue(): void {
-    const clearedCount = this.taskQueue.length
-    this.taskQueue = []
-    
-    logger.info('Task queue cleared', { clearedCount })
-    this.emit('queueCleared', clearedCount)
+    const clearedCount = this.taskQueue.length;
+    this.taskQueue = [];
+
+    logger.info('Task queue cleared', { clearedCount });
+    this.emit('queueCleared', clearedCount);
   }
 
   /**
    * 暂停处理
    */
   pause(): void {
-    this.isProcessing = false
-    logger.info('Task processing paused')
-    this.emit('processingPaused')
+    this.isProcessing = false;
+    logger.info('Task processing paused');
+    this.emit('processingPaused');
   }
 
   /**
@@ -423,9 +421,9 @@ export class AsyncTaskProcessor extends EventEmitter {
    */
   resume(): void {
     if (!this.isProcessing && (this.taskQueue.length > 0 || this.runningTasks.size > 0)) {
-      this.startProcessing()
-      logger.info('Task processing resumed')
-      this.emit('processingResumed')
+      this.startProcessing();
+      logger.info('Task processing resumed');
+      this.emit('processingResumed');
     }
   }
 
@@ -433,29 +431,29 @@ export class AsyncTaskProcessor extends EventEmitter {
    * 关闭处理器
    */
   async shutdown(): Promise<void> {
-    logger.info('Shutting down task processor')
+    logger.info('Shutting down task processor');
 
     // 停止接受新任务
-    this.isProcessing = false
+    this.isProcessing = false;
 
     // 等待运行中的任务完成
     while (this.runningTasks.size > 0) {
-      logger.info('Waiting for running tasks to complete', { runningTasks: this.runningTasks.size })
-      await this.sleep(1000)
+      logger.info('Waiting for running tasks to complete', { runningTasks: this.runningTasks.size });
+      await this.sleep(1000);
     }
 
     // 清理定时器
     if (this.persistenceTimer) {
-      clearInterval(this.persistenceTimer)
+      clearInterval(this.persistenceTimer);
     }
 
     // 最后一次持久化
     if (this.config.enablePersistence) {
-      await this.persistTasks()
+      await this.persistTasks();
     }
 
-    logger.info('Task processor shutdown completed')
-    this.emit('shutdown')
+    logger.info('Task processor shutdown completed');
+    this.emit('shutdown');
   }
 }
 
@@ -464,8 +462,8 @@ export class AsyncTaskProcessor extends EventEmitter {
  */
 export class InvitationTaskProcessor extends AsyncTaskProcessor {
   constructor(config: AsyncTaskConfig) {
-    super(config)
-    this.registerInvitationProcessors()
+    super(config);
+    this.registerInvitationProcessors();
   }
 
   /**
@@ -477,101 +475,101 @@ export class InvitationTaskProcessor extends AsyncTaskProcessor {
       type: 'grant_reward',
       handler: async (payload: { userId: string; rewards: any[]; sourceType: string; sourceId: string }) => {
         // 这里应该调用实际的奖励发放服务
-        logger.info('Processing reward grant task', { userId: payload.userId, rewardsCount: payload.rewards.length })
-        
+        logger.info('Processing reward grant task', { userId: payload.userId, rewardsCount: payload.rewards.length });
+
         // 模拟异步奖励发放
-        await this.sleep(Math.random() * 1000 + 500) // 0.5-1.5秒
-        
-        return { success: true, grantedRewards: payload.rewards.length }
+        await this.sleep(Math.random() * 1000 + 500); // 0.5-1.5秒
+
+        return { success: true, grantedRewards: payload.rewards.length };
       },
       concurrency: 5,
-      timeout: 10000
-    })
+      timeout: 10000,
+    });
 
     // 通知发送任务
     this.registerProcessor({
       type: 'send_notification',
       handler: async (payload: { userId: string; type: string; content: any }) => {
-        logger.info('Processing notification task', { userId: payload.userId, type: payload.type })
-        
+        logger.info('Processing notification task', { userId: payload.userId, type: payload.type });
+
         // 模拟异步通知发送
-        await this.sleep(Math.random() * 500 + 200) // 0.2-0.7秒
-        
-        return { success: true, notificationId: `notif_${Date.now()}` }
+        await this.sleep(Math.random() * 500 + 200); // 0.2-0.7秒
+
+        return { success: true, notificationId: `notif_${Date.now()}` };
       },
       concurrency: 10,
-      timeout: 5000
-    })
+      timeout: 5000,
+    });
 
     // 统计数据更新任务
     this.registerProcessor({
       type: 'update_statistics',
       handler: async (payload: { userId: string; eventType: string; data: any }) => {
-        logger.info('Processing statistics update task', { userId: payload.userId, eventType: payload.eventType })
-        
+        logger.info('Processing statistics update task', { userId: payload.userId, eventType: payload.eventType });
+
         // 模拟异步统计更新
-        await this.sleep(Math.random() * 800 + 300) // 0.3-1.1秒
-        
-        return { success: true, updatedFields: Object.keys(payload.data) }
+        await this.sleep(Math.random() * 800 + 300); // 0.3-1.1秒
+
+        return { success: true, updatedFields: Object.keys(payload.data) };
       },
       concurrency: 3,
-      timeout: 15000
-    })
+      timeout: 15000,
+    });
 
     // 防作弊分析任务
     this.registerProcessor({
       type: 'fraud_analysis',
       handler: async (payload: { userId: string; activityData: any }) => {
-        logger.info('Processing fraud analysis task', { userId: payload.userId })
-        
+        logger.info('Processing fraud analysis task', { userId: payload.userId });
+
         // 模拟异步防作弊分析
-        await this.sleep(Math.random() * 2000 + 1000) // 1-3秒
-        
-        return { 
-          success: true, 
+        await this.sleep(Math.random() * 2000 + 1000); // 1-3秒
+
+        return {
+          success: true,
           riskScore: Math.random() * 100,
-          flags: Math.random() > 0.8 ? ['suspicious_pattern'] : []
-        }
+          flags: Math.random() > 0.8 ? ['suspicious_pattern'] : [],
+        };
       },
       concurrency: 2,
-      timeout: 30000
-    })
+      timeout: 30000,
+    });
 
     // 邮件发送任务
     this.registerProcessor({
       type: 'send_email',
       handler: async (payload: { to: string; subject: string; content: string; template?: string }) => {
-        logger.info('Processing email task', { to: payload.to, subject: payload.subject })
-        
+        logger.info('Processing email task', { to: payload.to, subject: payload.subject });
+
         // 模拟异步邮件发送
-        await this.sleep(Math.random() * 1500 + 500) // 0.5-2秒
-        
-        return { success: true, messageId: `email_${Date.now()}` }
+        await this.sleep(Math.random() * 1500 + 500); // 0.5-2秒
+
+        return { success: true, messageId: `email_${Date.now()}` };
       },
       concurrency: 8,
-      timeout: 10000
-    })
+      timeout: 10000,
+    });
 
     // 数据导出任务
     this.registerProcessor({
       type: 'export_data',
       handler: async (payload: { userId: string; exportType: string; filters: any }) => {
-        logger.info('Processing data export task', { userId: payload.userId, exportType: payload.exportType })
-        
+        logger.info('Processing data export task', { userId: payload.userId, exportType: payload.exportType });
+
         // 模拟异步数据导出
-        await this.sleep(Math.random() * 5000 + 2000) // 2-7秒
-        
-        return { 
-          success: true, 
+        await this.sleep(Math.random() * 5000 + 2000); // 2-7秒
+
+        return {
+          success: true,
           exportUrl: `https://example.com/exports/export_${Date.now()}.csv`,
-          recordCount: Math.floor(Math.random() * 1000) + 100
-        }
+          recordCount: Math.floor(Math.random() * 1000) + 100,
+        };
       },
       concurrency: 1,
-      timeout: 60000
-    })
+      timeout: 60000,
+    });
 
-    logger.info('Invitation task processors registered')
+    logger.info('Invitation task processors registered');
   }
 
   /**
@@ -582,8 +580,8 @@ export class InvitationTaskProcessor extends AsyncTaskProcessor {
       userId,
       rewards,
       sourceType,
-      sourceId
-    }, { priority: 8 }) // 高优先级
+      sourceId,
+    }, { priority: 8 }); // 高优先级
   }
 
   /**
@@ -593,8 +591,8 @@ export class InvitationTaskProcessor extends AsyncTaskProcessor {
     return await this.addTask('send_notification', {
       userId,
       type,
-      content
-    }, { priority: 6 })
+      content,
+    }, { priority: 6 });
   }
 
   /**
@@ -604,8 +602,8 @@ export class InvitationTaskProcessor extends AsyncTaskProcessor {
     return await this.addTask('update_statistics', {
       userId,
       eventType,
-      data
-    }, { priority: 4 })
+      data,
+    }, { priority: 4 });
   }
 
   /**
@@ -614,8 +612,8 @@ export class InvitationTaskProcessor extends AsyncTaskProcessor {
   async analyzeFraudAsync(userId: string, activityData: any): Promise<string> {
     return await this.addTask('fraud_analysis', {
       userId,
-      activityData
-    }, { priority: 7 })
+      activityData,
+    }, { priority: 7 });
   }
 
   /**
@@ -626,8 +624,8 @@ export class InvitationTaskProcessor extends AsyncTaskProcessor {
       to,
       subject,
       content,
-      template
-    }, { priority: 5 })
+      template,
+    }, { priority: 5 });
   }
 
   /**
@@ -637,14 +635,7 @@ export class InvitationTaskProcessor extends AsyncTaskProcessor {
     return await this.addTask('export_data', {
       userId,
       exportType,
-      filters
-    }, { priority: 2 })
-  }
-
-  /**
-   * 睡眠函数（用于模拟异步操作）
-   */
-  private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
+      filters,
+    }, { priority: 2 });
   }
 }

@@ -108,7 +108,8 @@ function checkBranchStatus(branchName) {
     if (branchExists(branchName, true)) {
       hasRemote = true;
       try {
-        const trackingInfo = execGit(`rev-list --left-right --count origin/${branchName}...${branchName}`, true);
+        const trackingInfo = execGit(`rev-list --left-right --
+          count origin/${branchName}...${branchName}`, true);
         const [behindCount, aheadCount] = trackingInfo.split('\t').map(Number);
         ahead = aheadCount || 0;
         behind = behindCount || 0;
@@ -348,7 +349,8 @@ async function mergeHotfix(hotfixBranch) {
     console.log(`\n📍 Step 2: Merging into ${CONFIG.developBranch}`);
     execGit(`checkout ${CONFIG.developBranch}`);
     execGit(`pull origin ${CONFIG.developBranch}`);
-    execGit(`merge --no-ff ${hotfixBranch} -m "Merge ${hotfixBranch} into ${CONFIG.developBranch}"`);
+    execGit(`merge --no-ff ${hotfixBranch} -
+      m "Merge ${hotfixBranch} into ${CONFIG.developBranch}"`);
     console.log(`✅ Hotfix merged into ${CONFIG.developBranch}`);
     
     // Ask if user wants to delete the hotfix branch
@@ -419,7 +421,8 @@ async function mergeRelease(releaseBranch) {
     console.log(`\n📍 Step 2: Merging back into ${CONFIG.developBranch}`);
     execGit(`checkout ${CONFIG.developBranch}`);
     execGit(`pull origin ${CONFIG.developBranch}`);
-    execGit(`merge --no-ff ${releaseBranch} -m "Merge ${releaseBranch} back into ${CONFIG.developBranch}"`);
+    execGit(`merge --no-ff ${releaseBranch} -
+      m "Merge ${releaseBranch} back into ${CONFIG.developBranch}"`);
     console.log(`✅ Release merged back into ${CONFIG.developBranch}`);
     
     // Ask if user wants to delete the release branch
@@ -470,7 +473,8 @@ function showHelp() {
   console.log('  node merge-helper.js feature feature/user-authentication');
   console.log('  node merge-helper.js hotfix critical-security-fix');
   console.log('  node merge-helper.js release v1.2.0');
-  console.log('\nNote: Branch prefixes (feature/, hotfix/, release/) are added automatically if not provided.');
+  console.log('\nNote: Branch prefixes (feature/, hotfix/,
+    release/) are added automatically if not provided.');
 }
 
 /**

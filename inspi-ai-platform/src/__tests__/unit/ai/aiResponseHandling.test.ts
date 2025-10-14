@@ -3,11 +3,11 @@
  * 测试AI服务响应的各种边界条件和异常情况
  */
 
-import { AIGenerationOptions, AIGenerationResult, GeminiService } from '@/lib/ai/geminiService';
-import { generatePrompt, validateCardContent } from '@/lib/ai/promptTemplates';
-import { env } from '@/config/environment';
-import { logger } from '@/lib/utils/logger';
+import { AIGenerationOptions, AIGenerationResult, GeminiService } from '@/core/ai/geminiService';
+import { generatePrompt, validateCardContent } from '@/core/ai/promptTemplates';
 import { redis } from '@/lib/cache/redis';
+import { env } from '@/shared/config/environment';
+import { logger } from '@/shared/utils/logger';
 
 // Mock dependencies
 jest.mock('@google/generative-ai');
@@ -21,20 +21,20 @@ jest.mock('@/config/environment', () => ({
       RETRY_DELAY: 1000,
     },
     CACHE: { TTL: 3600 },
-  }
+  },
 }));
 jest.mock('@/lib/utils/logger', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
-  }
+  },
 }));
 jest.mock('@/lib/cache/redis', () => ({
   redis: {
     get: jest.fn().mockResolvedValue(null),
     setex: jest.fn().mockResolvedValue('OK'),
-  }
+  },
 }));
 
 describe('AI响应处理边界测试', () => {
@@ -66,13 +66,13 @@ describe('AI响应处理边界测试', () => {
         title: '标准响应',
         content: '这是一个标准的JSON响应',
         tags: ['标准', '响应'],
-        difficulty: 'medium'
+        difficulty: 'medium',
       };
 
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => JSON.stringify(validJsonResponse)
-        }
+          text: () => JSON.stringify(validJsonResponse),
+        },
       });
 
       // Act
@@ -88,8 +88,8 @@ describe('AI响应处理边界测试', () => {
 
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => textResponse
-        }
+          text: () => textResponse,
+        },
       });
 
       // Act
@@ -105,8 +105,8 @@ describe('AI响应处理边界测试', () => {
 
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => specialCharResponse
-        }
+          text: () => specialCharResponse,
+        },
       });
 
       // Act
@@ -126,8 +126,8 @@ describe('AI响应处理边界测试', () => {
 
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => multilineResponse
-        }
+          text: () => multilineResponse,
+        },
       });
 
       // Act
@@ -143,8 +143,8 @@ describe('AI响应处理边界测试', () => {
 
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => longResponse
-        }
+          text: () => longResponse,
+        },
       });
 
       // Act
@@ -161,8 +161,8 @@ describe('AI响应处理边界测试', () => {
 
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => unicodeResponse
-        }
+          text: () => unicodeResponse,
+        },
       });
 
       // Act
@@ -178,8 +178,8 @@ describe('AI响应处理边界测试', () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => null
-        }
+          text: () => null,
+        },
       });
 
       // Act & Assert
@@ -190,8 +190,8 @@ describe('AI响应处理边界测试', () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => undefined
-        }
+          text: () => undefined,
+        },
       });
 
       // Act & Assert
@@ -212,8 +212,8 @@ describe('AI响应处理边界测试', () => {
         response: {
           text: () => {
             throw new Error('Text extraction failed');
-          }
-        }
+          },
+        },
       });
 
       // Act & Assert
@@ -226,8 +226,8 @@ describe('AI响应处理边界测试', () => {
         response: {
           text: () => {
             throw new TypeError('Cannot read property');
-          }
-        }
+          },
+        },
       });
 
       // Act & Assert
@@ -238,10 +238,10 @@ describe('AI响应处理边界测试', () => {
   describe('网络异常边界测试', () => {
     it('应该处理网络超时', async () => {
       // Arrange
-      mockGenerateContent.mockImplementation(() => 
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Network timeout')), 100)
-        )
+      mockGenerateContent.mockImplementation(() =>
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Network timeout')), 100),
+        ),
       );
 
       // Act & Assert
@@ -312,8 +312,8 @@ describe('AI响应处理边界测试', () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => '[CONTENT_FILTERED] This content was filtered for safety reasons'
-        }
+          text: () => '[CONTENT_FILTERED] This content was filtered for safety reasons',
+        },
       });
 
       // Act
@@ -343,17 +343,17 @@ describe('AI响应处理边界测试', () => {
   describe('并发处理边界测试', () => {
     it('应该处理高并发请求', async () => {
       // Arrange
-      mockGenerateContent.mockImplementation((prompt) => 
+      mockGenerateContent.mockImplementation((prompt) =>
         Promise.resolve({
           response: {
-            text: () => `响应: ${prompt}`
-          }
-        })
+            text: () => `响应: ${prompt}`,
+          },
+        }),
       );
 
       const concurrentRequests = 50;
-      const promises = Array(concurrentRequests).fill(null).map((_, index) => 
-        geminiService.generateContent(`并发测试 ${index}`)
+      const promises = Array(concurrentRequests).fill(null).map((_, index) =>
+        geminiService.generateContent(`并发测试 ${index}`),
       );
 
       // Act
@@ -374,8 +374,8 @@ describe('AI响应处理边界测试', () => {
         }
         return Promise.resolve({
           response: {
-            text: () => `成功响应: ${prompt}`
-          }
+            text: () => `成功响应: ${prompt}`,
+          },
         });
       });
 
@@ -401,8 +401,8 @@ describe('AI响应处理边界测试', () => {
       (redis as any).get.mockResolvedValue('invalid json data');
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => '新生成的内容'
-        }
+          text: () => '新生成的内容',
+        },
       });
 
       // Act
@@ -412,7 +412,7 @@ describe('AI响应处理边界测试', () => {
       expect(result.content).toBe('新生成的内容');
       expect(logger.warn).toHaveBeenCalledWith(
         'Failed to get cached AI result',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -422,8 +422,8 @@ describe('AI响应处理边界测试', () => {
       (redis as any).setex.mockRejectedValue(new Error('Redis connection failed'));
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => '无缓存内容'
-        }
+          text: () => '无缓存内容',
+        },
       });
 
       // Act
@@ -440,7 +440,7 @@ describe('AI响应处理边界测试', () => {
         content: '冲突的缓存数据',
         usage: { promptTokens: 1, completionTokens: 1, totalTokens: 2 },
         model: 'different-model',
-        cached: false
+        cached: false,
       };
       (redis as any).get.mockResolvedValue(JSON.stringify(conflictingData));
 
@@ -458,8 +458,8 @@ describe('AI响应处理边界测试', () => {
       const longPrompt = 'a'.repeat(50000); // 50KB提示词
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => '长提示词响应'
-        }
+          text: () => '长提示词响应',
+        },
       });
 
       // Act
@@ -474,8 +474,8 @@ describe('AI响应处理边界测试', () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => '空提示词响应'
-        }
+          text: () => '空提示词响应',
+        },
       });
 
       // Act
@@ -489,8 +489,8 @@ describe('AI响应处理边界测试', () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => '空白字符响应'
-        }
+          text: () => '空白字符响应',
+        },
       });
 
       // Act
@@ -506,15 +506,15 @@ describe('AI响应处理边界测试', () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => '极端温度响应'
-        }
+          text: () => '极端温度响应',
+        },
       });
 
       const extremeOptions: AIGenerationOptions = {
         temperature: 2.0, // 超出正常范围
         maxTokens: 0, // 极小值
         topP: 1.1, // 超出范围
-        topK: -1 // 负值
+        topK: -1, // 负值
       };
 
       // Act
@@ -528,15 +528,15 @@ describe('AI响应处理边界测试', () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => 'NaN参数响应'
-        }
+          text: () => 'NaN参数响应',
+        },
       });
 
       const nanOptions: AIGenerationOptions = {
         temperature: NaN,
         maxTokens: NaN,
         topP: NaN,
-        topK: NaN
+        topK: NaN,
       };
 
       // Act
@@ -550,15 +550,15 @@ describe('AI响应处理边界测试', () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => 'Infinity参数响应'
-        }
+          text: () => 'Infinity参数响应',
+        },
       });
 
       const infinityOptions: AIGenerationOptions = {
         temperature: Infinity,
         maxTokens: Infinity,
         topP: Infinity,
-        topK: Infinity
+        topK: Infinity,
       };
 
       // Act
@@ -582,8 +582,8 @@ describe('AI响应处理边界测试', () => {
       // Arrange
       const largeResponse = {
         response: {
-          text: () => 'x'.repeat(1000000) // 1MB响应
-        }
+          text: () => 'x'.repeat(1000000), // 1MB响应
+        },
       };
       mockGenerateContent.mockResolvedValue(largeResponse);
 
@@ -592,7 +592,7 @@ describe('AI响应处理边界测试', () => {
 
       // Assert
       expect(result.content.length).toBe(1000000);
-      
+
       // 模拟垃圾回收
       if (global.gc) {
         global.gc();
@@ -605,11 +605,11 @@ describe('AI响应处理边界测试', () => {
       // Arrange
       const originalTimezone = process.env.TZ;
       process.env.TZ = 'Asia/Tokyo';
-      
+
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => '时区测试响应'
-        }
+          text: () => '时区测试响应',
+        },
       });
 
       // Act
@@ -617,7 +617,7 @@ describe('AI响应处理边界测试', () => {
 
       // Assert
       expect(result.content).toBe('时区测试响应');
-      
+
       // Cleanup
       process.env.TZ = originalTimezone;
     });
@@ -627,8 +627,8 @@ describe('AI响应处理边界测试', () => {
       const encodedText = Buffer.from('编码测试', 'utf8').toString('base64');
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => Buffer.from(encodedText, 'base64').toString('utf8')
-        }
+          text: () => Buffer.from(encodedText, 'base64').toString('utf8'),
+        },
       });
 
       // Act

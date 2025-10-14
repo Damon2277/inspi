@@ -3,8 +3,8 @@
  * 测试配额检查和消费的并发安全性
  */
 
-import { QuotaManager, UserQuota } from '@/lib/quota/quotaManager';
 import { redis } from '@/lib/cache/redis';
+import { QuotaManager, UserQuota } from '@/lib/quota/quotaManager';
 
 // Mock dependencies
 jest.mock('@/lib/cache/redis');
@@ -18,7 +18,7 @@ describe('QuotaManager Concurrency Tests', () => {
     jest.clearAllMocks();
     quotaManager = new QuotaManager();
     mockRedis = redis as jest.Mocked<typeof redis>;
-    
+
     // Mock Redis methods
     mockRedis.get = jest.fn();
     mockRedis.set = jest.fn();
@@ -38,7 +38,7 @@ describe('QuotaManager Concurrency Tests', () => {
 
       // Act
       const promises = Array.from({ length: concurrentRequests }, () =>
-        quotaManager.checkQuota(userId, plan)
+        quotaManager.checkQuota(userId, plan),
       );
 
       const results = await Promise.all(promises);
@@ -62,18 +62,18 @@ describe('QuotaManager Concurrency Tests', () => {
       const userCount = 20;
       const users = Array.from({ length: userCount }, (_, i) => ({
         userId: `user-${i}`,
-        plan: i % 2 === 0 ? 'free' : 'pro' as 'free' | 'pro'
+        plan: i % 2 === 0 ? 'free' : 'pro' as 'free' | 'pro',
       }));
 
       mockRedis.get.mockImplementation((key) => {
         const userId = key.split(':')[1];
-        const userIndex = parseInt(userId.split('-')[1]);
+        const userIndex = parseInt(userId.split('-', 10)[1], 10);
         return Promise.resolve((userIndex * 2).toString()); // 不同的使用量
       });
 
       // Act
       const promises = users.map(user =>
-        quotaManager.checkQuota(user.userId, user.plan)
+        quotaManager.checkQuota(user.userId, user.plan),
       );
 
       const results = await Promise.all(promises);
@@ -83,7 +83,7 @@ describe('QuotaManager Concurrency Tests', () => {
       results.forEach((result, index) => {
         const expectedUsage = index * 2;
         const expectedLimit = users[index].plan === 'free' ? 10 : 100;
-        
+
         expect(result.userId).toBe(users[index].userId);
         expect(result.plan).toBe(users[index].plan);
         expect(result.currentUsage).toBe(expectedUsage);
@@ -100,8 +100,8 @@ describe('QuotaManager Concurrency Tests', () => {
       const concurrentRequests = 10;
       let currentUsage = 90; // 接近限制
 
-      mockRedis.get.mockImplementation(() => 
-        Promise.resolve(currentUsage.toString())
+      mockRedis.get.mockImplementation(() =>
+        Promise.resolve(currentUsage.toString()),
       );
 
       mockRedis.increment.mockImplementation(() => {
@@ -111,7 +111,7 @@ describe('QuotaManager Concurrency Tests', () => {
 
       // Act
       const promises = Array.from({ length: concurrentRequests }, () =>
-        quotaManager.consumeQuota(userId, plan, 1)
+        quotaManager.consumeQuota(userId, plan, 1),
       );
 
       const results = await Promise.all(promises);
@@ -133,8 +133,8 @@ describe('QuotaManager Concurrency Tests', () => {
       const concurrentRequests = 20;
 
       let currentUsage = 8; // 接近限制
-      mockRedis.get.mockImplementation(() => 
-        Promise.resolve(currentUsage.toString())
+      mockRedis.get.mockImplementation(() =>
+        Promise.resolve(currentUsage.toString()),
       );
 
       mockRedis.increment.mockImplementation(() => {
@@ -147,7 +147,7 @@ describe('QuotaManager Concurrency Tests', () => {
 
       // Act
       const promises = Array.from({ length: concurrentRequests }, () =>
-        quotaManager.consumeQuota(userId, plan, 1)
+        quotaManager.consumeQuota(userId, plan, 1),
       );
 
       const results = await Promise.all(promises);
@@ -170,8 +170,8 @@ describe('QuotaManager Concurrency Tests', () => {
       const consumeAmount = 5;
 
       let currentUsage = 0;
-      mockRedis.get.mockImplementation(() => 
-        Promise.resolve(currentUsage.toString())
+      mockRedis.get.mockImplementation(() =>
+        Promise.resolve(currentUsage.toString()),
       );
 
       mockRedis.increment.mockImplementation(() => {
@@ -181,17 +181,17 @@ describe('QuotaManager Concurrency Tests', () => {
 
       // Act
       const promises = Array.from({ length: concurrentRequests }, () =>
-        quotaManager.consumeQuota(userId, plan, consumeAmount)
+        quotaManager.consumeQuota(userId, plan, consumeAmount),
       );
 
       const results = await Promise.all(promises);
 
       // Assert
       const successCount = results.filter(r => r === true).length;
-      
+
       // 验证总消费量不超过限制
       expect(successCount * consumeAmount).toBeLessThanOrEqual(1000);
-      
+
       // 验证至少有一些成功的消费
       expect(successCount).toBeGreaterThan(0);
     });
@@ -201,19 +201,19 @@ describe('QuotaManager Concurrency Tests', () => {
     it('应该处理并发的配额重置请求', async () => {
       // Arrange
       const userIds = Array.from({ length: 10 }, (_, i) => `reset-user-${i}`);
-      
+
       mockRedis.del.mockResolvedValue(undefined);
 
       // Act
       const promises = userIds.map(userId =>
-        quotaManager.resetQuota(userId)
+        quotaManager.resetQuota(userId),
       );
 
       await Promise.all(promises);
 
       // Assert
       expect(mockRedis.del).toHaveBeenCalledTimes(userIds.length);
-      
+
       // 验证每个用户都被重置
       userIds.forEach(userId => {
         const today = new Date().toISOString().split('T')[0];
@@ -234,18 +234,18 @@ describe('QuotaManager Concurrency Tests', () => {
       // Act - 同时进行重置和消费操作
       const resetPromise = quotaManager.resetQuota(userId);
       const consumePromises = Array.from({ length: 5 }, () =>
-        quotaManager.consumeQuota(userId, plan, 1)
+        quotaManager.consumeQuota(userId, plan, 1),
       );
 
       const [resetResult, ...consumeResults] = await Promise.all([
         resetPromise,
-        ...consumePromises
+        ...consumePromises,
       ]);
 
       // Assert
       expect(mockRedis.del).toHaveBeenCalled();
       expect(mockRedis.increment).toHaveBeenCalled();
-      
+
       // 消费操作应该基于重置前的状态进行
       const successCount = consumeResults.filter(r => r === true).length;
       expect(successCount).toBeGreaterThan(0);
@@ -269,7 +269,7 @@ describe('QuotaManager Concurrency Tests', () => {
 
       // Act
       const promises = Array.from({ length: concurrentRequests }, () =>
-        quotaManager.getQuotaStats(userId, plan)
+        quotaManager.getQuotaStats(userId, plan),
       );
 
       const results = await Promise.all(promises);
@@ -290,8 +290,8 @@ describe('QuotaManager Concurrency Tests', () => {
       const plan = 'free';
 
       let currentUsage = 5;
-      mockRedis.get.mockImplementation(() => 
-        Promise.resolve(currentUsage.toString())
+      mockRedis.get.mockImplementation(() =>
+        Promise.resolve(currentUsage.toString()),
       );
 
       mockRedis.increment.mockImplementation(() => {
@@ -301,22 +301,22 @@ describe('QuotaManager Concurrency Tests', () => {
 
       // Act - 同时进行统计查询和配额消费
       const statsPromises = Array.from({ length: 5 }, () =>
-        quotaManager.getQuotaStats(userId, plan)
+        quotaManager.getQuotaStats(userId, plan),
       );
-      
+
       const consumePromises = Array.from({ length: 3 }, () =>
-        quotaManager.consumeQuota(userId, plan, 1)
+        quotaManager.consumeQuota(userId, plan, 1),
       );
 
       const [statsResults, consumeResults] = await Promise.all([
         Promise.all(statsPromises),
-        Promise.all(consumePromises)
+        Promise.all(consumePromises),
       ]);
 
       // Assert
       expect(statsResults).toHaveLength(5);
       expect(consumeResults).toHaveLength(3);
-      
+
       // 统计结果应该是一致的
       statsResults.forEach(result => {
         expect(result.today.userId).toBe(userId);
@@ -341,7 +341,7 @@ describe('QuotaManager Concurrency Tests', () => {
 
       // Act
       const promises = Array.from({ length: concurrentRequests }, () =>
-        quotaManager.checkQuota(userId, plan)
+        quotaManager.checkQuota(userId, plan),
       );
 
       const results = await Promise.all(promises);
@@ -374,18 +374,18 @@ describe('QuotaManager Concurrency Tests', () => {
 
       // Act
       const promises = Array.from({ length: concurrentRequests }, () =>
-        quotaManager.checkQuota(userId, plan)
+        quotaManager.checkQuota(userId, plan),
       );
 
       const results = await Promise.all(promises);
 
       // Assert
       expect(results).toHaveLength(concurrentRequests);
-      
+
       // 验证错误处理
       const successfulResults = results.filter(r => r.currentUsage === 3);
       const errorResults = results.filter(r => r.currentUsage === 0);
-      
+
       expect(successfulResults.length).toBeGreaterThan(0);
       expect(errorResults.length).toBeGreaterThan(0);
       expect(successfulResults.length + errorResults.length).toBe(concurrentRequests);
@@ -404,7 +404,7 @@ describe('QuotaManager Concurrency Tests', () => {
 
       // Act
       const startTime = Date.now();
-      
+
       const promises = Array.from({ length: concurrentRequests }, (_, i) => {
         if (i % 2 === 0) {
           return quotaManager.checkQuota(userId, plan);
@@ -420,7 +420,7 @@ describe('QuotaManager Concurrency Tests', () => {
       // Assert
       expect(results).toHaveLength(concurrentRequests);
       expect(duration).toBeLessThan(5000); // 应该在5秒内完成
-      
+
       // 验证平均响应时间
       const avgResponseTime = duration / concurrentRequests;
       expect(avgResponseTime).toBeLessThan(50); // 平均响应时间小于50ms
@@ -430,18 +430,18 @@ describe('QuotaManager Concurrency Tests', () => {
       // Arrange
       const userCount = 50;
       const requestsPerUser = 20;
-      
+
       mockRedis.get.mockResolvedValue('10');
       mockRedis.increment.mockResolvedValue(11);
 
       // Act
       const initialMemory = process.memoryUsage().heapUsed;
-      
+
       const allPromises = [];
       for (let i = 0; i < userCount; i++) {
         const userId = `memory-user-${i}`;
         const plan = i % 3 === 0 ? 'free' : i % 3 === 1 ? 'pro' : 'super';
-        
+
         for (let j = 0; j < requestsPerUser; j++) {
           if (j % 2 === 0) {
             allPromises.push(quotaManager.checkQuota(userId, plan as any));
@@ -452,18 +452,18 @@ describe('QuotaManager Concurrency Tests', () => {
       }
 
       await Promise.all(allPromises);
-      
+
       // 强制垃圾回收（如果可用）
       if (global.gc) {
         global.gc();
       }
-      
+
       const finalMemory = process.memoryUsage().heapUsed;
       const memoryIncrease = finalMemory - initialMemory;
 
       // Assert
       expect(allPromises).toHaveLength(userCount * requestsPerUser);
-      
+
       // 内存增长应该在合理范围内（小于50MB）
       expect(memoryIncrease).toBeLessThan(50 * 1024 * 1024);
     });
@@ -512,7 +512,7 @@ describe('QuotaManager Concurrency Tests', () => {
 
       // Assert
       expect(operations.length).toBeGreaterThan(0);
-      
+
       // 验证操作顺序的合理性
       const checkOperations = operations.filter(op => op.type === 'check');
       const consumeOperations = operations.filter(op => op.type === 'consume');

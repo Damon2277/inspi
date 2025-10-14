@@ -2,6 +2,7 @@
  * 关联查询和数据获取优化
  */
 import { logger } from '@/lib/logging/logger';
+
 import { CacheManager } from '@/lib/cache/manager';
 
 /**
@@ -52,7 +53,7 @@ export class RelationOptimizer {
     batchSize: 100,
     maxConcurrency: 5,
     cacheResults: true,
-    cacheTTL: 300 // 5分钟
+    cacheTTL: 300, // 5分钟
   };
 
   constructor(database: any, cacheManager: CacheManager) {
@@ -67,14 +68,14 @@ export class RelationOptimizer {
     collection: string,
     query: any,
     relations: RelationConfig[],
-    options: any = {}
+    options: any = {},
   ): Promise<LoadResult<T>> {
     const startTime = Date.now();
-    
+
     try {
       // 构建聚合管道
       const pipeline = this.buildRelationPipeline(query, relations, options);
-      
+
       // 检查缓存
       const cacheKey = this.generateCacheKey(collection, pipeline);
       if (relations.some(r => r.cacheKey)) {
@@ -83,32 +84,32 @@ export class RelationOptimizer {
           return {
             data: cached,
             fromCache: true,
-            executionTime: Date.now() - startTime
+            executionTime: Date.now() - startTime,
           };
         }
       }
 
       // 执行聚合查询
       const coll = this.db.collection(collection);
-      const data = await coll.aggregate(pipeline).toArray();
+      const data = await (coll.aggregate as any)(pipeline).toArray();
 
       // 缓存结果
       if (relations.some(r => r.cacheKey)) {
-        const ttl = relations.find(r => r.cacheTTL)?.cacheTTL || 300;
+        const ttl = (relations.find as any)(r => r.cacheTTL)?.cacheTTL || 300;
         await this.cacheManager.set(cacheKey, data, { ttl });
       }
 
       return {
         data,
         fromCache: false,
-        executionTime: Date.now() - startTime
+        executionTime: Date.now() - startTime,
       };
 
     } catch (error) {
       logger.error('Relation query failed', error instanceof Error ? error : new Error(String(error)), {
         collection,
         query: JSON.stringify(query),
-        relations: relations.map(r => ({ from: r.from, as: r.as }))
+        relations: relations.map(r => ({ from: r.from, as: r.as })),
       });
       throw error;
     }
@@ -121,18 +122,18 @@ export class RelationOptimizer {
     collection: string,
     keys: K[],
     keyField: string,
-    config?: Partial<BatchLoadConfig>
+    config?: Partial<BatchLoadConfig>,
   ): Promise<LoadResult<T>> {
     const startTime = Date.now();
     const finalConfig = { ...this.defaultBatchConfig, ...config };
-    
+
     try {
       if (keys.length === 0) {
         return {
           data: [],
           fromCache: false,
           executionTime: Date.now() - startTime,
-          batchInfo: { batchSize: 0, batchCount: 0, totalItems: 0 }
+          batchInfo: { batchSize: 0, batchCount: 0, totalItems: 0 },
         };
       }
 
@@ -154,7 +155,7 @@ export class RelationOptimizer {
         uncachedKeys.push(...keys);
       }
 
-      let dbResults: T[] = [];
+      const dbResults: T[] = [];
       let batchCount = 0;
 
       // 批量查询未缓存的数据
@@ -163,12 +164,12 @@ export class RelationOptimizer {
         batchCount = batches.length;
 
         // 并发执行批次
-        const batchPromises = batches.map(batch => 
-          this.executeBatch<T, K>(collection, batch, keyField)
+        const batchPromises = batches.map(batch =>
+          this.executeBatch<T, K>(collection, batch, keyField),
         );
 
         const concurrentBatches = this.createBatches(batchPromises, finalConfig.maxConcurrency);
-        
+
         for (const concurrentBatch of concurrentBatches) {
           const batchResults = await Promise.all(concurrentBatch);
           dbResults.push(...batchResults.flat());
@@ -195,15 +196,15 @@ export class RelationOptimizer {
         batchInfo: {
           batchSize: finalConfig.batchSize,
           batchCount,
-          totalItems: allResults.length
-        }
+          totalItems: allResults.length,
+        },
       };
 
     } catch (error) {
       logger.error('Batch load failed', error instanceof Error ? error : new Error(String(error)), {
         collection,
         keyField,
-        keyCount: keys.length
+        keyCount: keys.length,
       });
       throw error;
     }
@@ -215,7 +216,7 @@ export class RelationOptimizer {
   createDataLoader<T, K>(
     collection: string,
     keyField: string,
-    config?: Partial<BatchLoadConfig>
+    config?: Partial<BatchLoadConfig>,
   ): (keys: K[]) => Promise<T[]> {
     return async (keys: K[]): Promise<T[]> => {
       const result = await this.batchLoad<T, K>(collection, keys, keyField, config);
@@ -234,7 +235,7 @@ export class RelationOptimizer {
       foreignField: string;
       targetField: string;
       config?: Partial<BatchLoadConfig>;
-    }>
+    }>,
   ): Promise<T[]> {
     const enrichedItems = [...items];
 
@@ -252,7 +253,7 @@ export class RelationOptimizer {
           mapping.collection,
           keys,
           mapping.foreignField,
-          mapping.config
+          mapping.config,
         );
 
         // 创建查找映射
@@ -274,7 +275,7 @@ export class RelationOptimizer {
       } catch (error) {
         logger.error('Failed to preload relation', error instanceof Error ? error : new Error(String(error)), {
           collection: mapping.collection,
-          field: mapping.itemField
+          field: mapping.itemField,
         });
         // 继续处理其他关联，不中断整个流程
       }
@@ -290,11 +291,11 @@ export class RelationOptimizer {
     collection: string,
     query: any,
     relations: RelationConfig[],
-    options: any = {}
+    options: any = {},
   ): Promise<LoadResult<T>> {
     // 分析查询复杂度
     const complexity = this.analyzeQueryComplexity(query, relations);
-    
+
     if (complexity.score > 0.7) {
       // 高复杂度：使用批量加载策略
       logger.debug('Using batch loading strategy for complex query', { complexity });
@@ -312,7 +313,7 @@ export class RelationOptimizer {
   private buildRelationPipeline(
     query: any,
     relations: RelationConfig[],
-    options: any
+    options: any,
   ): any[] {
     const pipeline: any[] = [];
 
@@ -328,8 +329,8 @@ export class RelationOptimizer {
           from: relation.from,
           localField: relation.localField,
           foreignField: relation.foreignField,
-          as: relation.as
-        }
+          as: relation.as,
+        },
       };
 
       if (relation.pipeline) {
@@ -342,8 +343,8 @@ export class RelationOptimizer {
       if (!relation.preserveNullAndEmptyArrays) {
         pipeline.push({
           $match: {
-            [relation.as]: { $ne: [] }
-          }
+            [relation.as]: { $ne: [] },
+          },
         });
       }
     }
@@ -375,10 +376,10 @@ export class RelationOptimizer {
   private async executeBatch<T, K>(
     collection: string,
     keys: K[],
-    keyField: string
+    keyField: string,
   ): Promise<T[]> {
     const coll = this.db.collection(collection);
-    return await coll.find({ [keyField]: { $in: keys } }).toArray();
+    return await (coll.find as any)({ [keyField]: { $in: keys } }).toArray();
   }
 
   /**
@@ -409,8 +410,8 @@ export class RelationOptimizer {
     }
 
     // 嵌套管道复杂度
-    const hasComplexPipeline = relations.some(r => 
-      r.pipeline && r.pipeline.length > 2
+    const hasComplexPipeline = relations.some(r =>
+      r.pipeline && r.pipeline.length > 2,
     );
     if (hasComplexPipeline) {
       score += 0.2;
@@ -425,8 +426,8 @@ export class RelationOptimizer {
     }
 
     // 关联字段类型
-    const hasArrayFields = relations.some(r => 
-      r.localField.includes('.') || r.foreignField.includes('.')
+    const hasArrayFields = relations.some(r =>
+      r.localField.includes('.') || r.foreignField.includes('.'),
     );
     if (hasArrayFields) {
       score += 0.2;
@@ -441,7 +442,7 @@ export class RelationOptimizer {
    */
   private calculateQueryComplexity(query: any): number {
     let complexity = 0;
-    
+
     const traverse = (obj: any, depth: number = 0): void => {
       if (depth > 3) {
         complexity += 0.2;
@@ -452,7 +453,7 @@ export class RelationOptimizer {
         if (key.startsWith('$')) {
           complexity += 0.1;
         }
-        
+
         if (typeof value === 'object' && value !== null) {
           if (Array.isArray(value)) {
             complexity += 0.05;
@@ -474,21 +475,21 @@ export class RelationOptimizer {
     collection: string,
     query: any,
     relations: RelationConfig[],
-    options: any
+    options: any,
   ): Promise<LoadResult<T>> {
     const startTime = Date.now();
 
     try {
       // 首先获取主数据
       const coll = this.db.collection(collection);
-      let cursor = coll.find(query);
+      let cursor = (coll.find as any)(query);
 
       if (options.sort) cursor = cursor.sort(options.sort);
       if (options.skip) cursor = cursor.skip(options.skip);
       if (options.limit) cursor = cursor.limit(options.limit);
       if (options.projection) cursor = cursor.project(options.projection);
 
-      const mainData = await cursor.toArray();
+      const mainData = (await cursor.toArray()) as T[];
 
       // 预加载所有关联数据
       const relationMappings = relations.map(relation => ({
@@ -498,16 +499,16 @@ export class RelationOptimizer {
         targetField: relation.as,
         config: {
           cacheResults: !!relation.cacheKey,
-          cacheTTL: relation.cacheTTL || 300
-        }
+          cacheTTL: relation.cacheTTL || 300,
+        },
       }));
 
-      const enrichedData = await this.preloadRelations(mainData, relationMappings);
+      const enrichedData = await this.preloadRelations<T>(mainData, relationMappings);
 
       return {
         data: enrichedData,
         fromCache: false,
-        executionTime: Date.now() - startTime
+        executionTime: Date.now() - startTime,
       };
 
     } catch (error) {
@@ -537,14 +538,14 @@ export class RelationUtils {
     from: string,
     localField: string,
     foreignField: string = '_id',
-    as?: string
+    as?: string,
   ): RelationConfig {
     return {
       from,
       localField,
       foreignField,
       as: as || `${from}Data`,
-      preserveNullAndEmptyArrays: false
+      preserveNullAndEmptyArrays: false,
     };
   }
 
@@ -563,12 +564,12 @@ export class RelationUtils {
             _id: 1,
             username: 1,
             avatar: 1,
-            'stats.contributionScore': 1
-          }
-        }
+            'stats.contributionScore': 1,
+          },
+        },
       ],
       cacheKey: 'user-relation',
-      cacheTTL: 600 // 10分钟
+      cacheTTL: 600, // 10分钟
     };
   }
 
@@ -591,12 +592,12 @@ export class RelationUtils {
             grade: 1,
             'stats.views': 1,
             'stats.likes': 1,
-            createdAt: 1
-          }
-        }
+            createdAt: 1,
+          },
+        },
       ],
       cacheKey: 'work-relation',
-      cacheTTL: 300 // 5分钟
+      cacheTTL: 300, // 5分钟
     };
   }
 
@@ -631,7 +632,7 @@ export class RelationUtils {
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 }

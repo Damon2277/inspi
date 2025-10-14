@@ -1,6 +1,6 @@
 /**
  * RealTimeDashboard Unit Tests
- * 
+ *
  * Comprehensive test suite for the real-time dashboard system,
  * covering test execution monitoring, coverage tracking, notifications,
  * and team collaboration features.
@@ -18,8 +18,8 @@ describe('RealTimeDashboard', () => {
       thresholds: {
         failureRate: 10,
         coverageDropThreshold: 5,
-        performanceDegradation: 50
-      }
+        performanceDegradation: 50,
+      },
     }, 100); // Fast update interval for testing
   });
 
@@ -30,7 +30,7 @@ describe('RealTimeDashboard', () => {
   describe('Initialization', () => {
     it('should initialize with default metrics', () => {
       const metrics = dashboard.getMetrics();
-      
+
       expect(metrics.totalTests).toBe(0);
       expect(metrics.passedTests).toBe(0);
       expect(metrics.failedTests).toBe(0);
@@ -41,7 +41,7 @@ describe('RealTimeDashboard', () => {
 
     it('should initialize with empty collaboration data', () => {
       const collabData = dashboard.getCollaborationData();
-      
+
       expect(collabData.activeUsers).toHaveLength(0);
       expect(collabData.sharedState.currentBranch).toBe('main');
       expect(collabData.collaborativeMetrics.totalContributors).toBe(0);
@@ -61,11 +61,11 @@ describe('RealTimeDashboard', () => {
         status: 'running',
         startTime: new Date(),
         suite: 'Test Suite',
-        file: 'test.spec.ts'
+        file: 'test.spec.ts',
       };
 
       dashboard.updateTestStatus(testStatus);
-      
+
       const metrics = dashboard.getMetrics();
       expect(metrics.totalTests).toBe(1);
       expect(metrics.runningTests).toBe(1);
@@ -80,11 +80,11 @@ describe('RealTimeDashboard', () => {
         endTime: new Date(),
         duration: 1000,
         suite: 'Test Suite',
-        file: 'test.spec.ts'
+        file: 'test.spec.ts',
       };
 
       dashboard.updateTestStatus(testStatus);
-      
+
       const metrics = dashboard.getMetrics();
       expect(metrics.totalTests).toBe(1);
       expect(metrics.passedTests).toBe(1);
@@ -104,12 +104,12 @@ describe('RealTimeDashboard', () => {
         file: 'test.spec.ts',
         error: {
           message: 'Test failed',
-          stack: 'Error stack trace'
-        }
+          stack: 'Error stack trace',
+        },
       };
 
       dashboard.updateTestStatus(testStatus);
-      
+
       const metrics = dashboard.getMetrics();
       expect(metrics.totalTests).toBe(1);
       expect(metrics.failedTests).toBe(1);
@@ -123,7 +123,7 @@ describe('RealTimeDashboard', () => {
         name: 'Sample Test',
         status: 'running',
         suite: 'Test Suite',
-        file: 'test.spec.ts'
+        file: 'test.spec.ts',
       };
 
       dashboard.on('testStatusUpdated', (status) => {
@@ -143,7 +143,7 @@ describe('RealTimeDashboard', () => {
           status: 'passed' as const,
           startTime: new Date(Date.now() - 2000),
           suite: 'Suite 1',
-          file: 'test1.spec.ts'
+          file: 'test1.spec.ts',
         },
         {
           id: 'test2',
@@ -151,12 +151,12 @@ describe('RealTimeDashboard', () => {
           status: 'failed' as const,
           startTime: new Date(Date.now() - 1000),
           suite: 'Suite 2',
-          file: 'test2.spec.ts'
-        }
+          file: 'test2.spec.ts',
+        },
       ];
 
       tests.forEach(test => dashboard.updateTestStatus(test));
-      
+
       const timeline = dashboard.getTestTimeline();
       expect(timeline).toHaveLength(2);
       expect(timeline[0].id).toBe('test2'); // Most recent first
@@ -177,13 +177,13 @@ describe('RealTimeDashboard', () => {
             statements: 90,
             branches: 85,
             functions: 95,
-            lines: 88
-          }
-        }
+            lines: 88,
+          },
+        },
       };
 
       dashboard.updateCoverage(coverage);
-      
+
       const metrics = dashboard.getMetrics();
       expect(metrics.coverage.statements).toBe(85.5);
       expect(metrics.coverage.branches).toBe(78.2);
@@ -197,7 +197,7 @@ describe('RealTimeDashboard', () => {
         branches: 75,
         functions: 90,
         lines: 78,
-        files: {}
+        files: {},
       };
 
       const coverage2: CoverageSnapshot = {
@@ -206,12 +206,12 @@ describe('RealTimeDashboard', () => {
         branches: 80,
         functions: 92,
         lines: 83,
-        files: {}
+        files: {},
       };
 
       dashboard.updateCoverage(coverage1);
       dashboard.updateCoverage(coverage2);
-      
+
       const history = dashboard.getCoverageHistory();
       expect(history).toHaveLength(2);
       expect(history[0].statements).toBe(80);
@@ -225,7 +225,7 @@ describe('RealTimeDashboard', () => {
         branches: 80,
         functions: 90,
         lines: 82,
-        files: {}
+        files: {},
       };
 
       dashboard.on('coverageUpdated', (updatedCoverage) => {
@@ -245,7 +245,7 @@ describe('RealTimeDashboard', () => {
           branches: 75,
           functions: 90,
           lines: 78,
-          files: {}
+          files: {},
         });
       }
 
@@ -259,7 +259,7 @@ describe('RealTimeDashboard', () => {
       dashboard.addTeamMember({
         id: 'user1',
         name: 'Alice Developer',
-        currentTests: ['test1', 'test2']
+        currentTests: ['test1', 'test2'],
       });
 
       const collabData = dashboard.getCollaborationData();
@@ -271,7 +271,7 @@ describe('RealTimeDashboard', () => {
     it('should remove team members', () => {
       dashboard.addTeamMember({
         id: 'user1',
-        name: 'Alice Developer'
+        name: 'Alice Developer',
       });
 
       dashboard.removeTeamMember('user1');
@@ -283,7 +283,7 @@ describe('RealTimeDashboard', () => {
     it('should update shared state', () => {
       dashboard.updateSharedState({
         currentBranch: 'feature/new-feature',
-        lastCommit: 'abc123'
+        lastCommit: 'abc123',
       });
 
       const collabData = dashboard.getCollaborationData();
@@ -299,7 +299,7 @@ describe('RealTimeDashboard', () => {
 
       dashboard.addTeamMember({
         id: 'user2',
-        name: 'Bob Tester'
+        name: 'Bob Tester',
       });
     });
   });
@@ -315,7 +315,7 @@ describe('RealTimeDashboard', () => {
           startTime: new Date(Date.now() - 1000),
           endTime: new Date(Date.now() - 900),
           suite: 'Suite 1',
-          file: 'test1.spec.ts'
+          file: 'test1.spec.ts',
         },
         {
           id: 'test2',
@@ -325,8 +325,8 @@ describe('RealTimeDashboard', () => {
           startTime: new Date(Date.now() - 800),
           endTime: new Date(Date.now() - 300),
           suite: 'Suite 2',
-          file: 'test2.spec.ts'
-        }
+          file: 'test2.spec.ts',
+        },
       ];
 
       tests.forEach(test => dashboard.updateTestStatus(test));
@@ -352,16 +352,16 @@ describe('RealTimeDashboard', () => {
         name: 'Test 1',
         status: 'passed',
         suite: 'Suite 1',
-        file: 'test1.spec.ts'
+        file: 'test1.spec.ts',
       });
 
       dashboard.addTeamMember({
         id: 'user1',
-        name: 'Alice'
+        name: 'Alice',
       });
 
       const exportedData = dashboard.exportData();
-      
+
       expect(exportedData.metrics).toBeDefined();
       expect(exportedData.testStatuses).toHaveLength(1);
       expect(exportedData.collaborationData.activeUsers).toHaveLength(1);
@@ -375,8 +375,8 @@ describe('RealTimeDashboard', () => {
             name: 'Imported Test',
             status: 'passed' as const,
             suite: 'Imported Suite',
-            file: 'imported.spec.ts'
-          }
+            file: 'imported.spec.ts',
+          },
         ],
         collaborationData: {
           activeUsers: [
@@ -384,17 +384,17 @@ describe('RealTimeDashboard', () => {
               id: 'imported-user',
               name: 'Imported User',
               lastActivity: new Date(),
-              currentTests: []
-            }
-          ]
-        }
+              currentTests: [],
+            },
+          ],
+        },
       };
 
       dashboard.importData(importData);
 
       const timeline = dashboard.getTestTimeline();
       const collabData = dashboard.getCollaborationData();
-      
+
       expect(timeline).toHaveLength(1);
       expect(timeline[0].id).toBe('imported-test');
       expect(collabData.activeUsers).toHaveLength(1);
@@ -410,12 +410,12 @@ describe('RealTimeDashboard', () => {
         name: 'Test 1',
         status: 'passed',
         suite: 'Suite 1',
-        file: 'test1.spec.ts'
+        file: 'test1.spec.ts',
       });
 
       dashboard.addTeamMember({
         id: 'user1',
-        name: 'Alice'
+        name: 'Alice',
       });
 
       // Reset
@@ -423,7 +423,7 @@ describe('RealTimeDashboard', () => {
 
       const metrics = dashboard.getMetrics();
       const collabData = dashboard.getCollaborationData();
-      
+
       expect(metrics.totalTests).toBe(0);
       expect(collabData.activeUsers).toHaveLength(0);
     });
@@ -451,7 +451,7 @@ describe('RealTimeDashboard', () => {
         name: 'Test 1',
         status: 'running',
         suite: 'Suite 1',
-        file: 'test1.spec.ts'
+        file: 'test1.spec.ts',
       });
     });
 
@@ -470,7 +470,7 @@ describe('RealTimeDashboard', () => {
           name: '',
           status: 'invalid' as any,
           suite: '',
-          file: ''
+          file: '',
         });
       }).not.toThrow();
     });
@@ -483,7 +483,7 @@ describe('RealTimeDashboard', () => {
           branches: 150,
           functions: NaN,
           lines: undefined as any,
-          files: null as any
+          files: null as any,
         });
       }).not.toThrow();
     });
@@ -496,16 +496,16 @@ describe('RealTimeDashboard', () => {
         name: 'Test 1',
         status: 'passed',
         suite: 'Suite 1',
-        file: 'test1.spec.ts'
+        file: 'test1.spec.ts',
       });
 
       dashboard.addTeamMember({
         id: 'user1',
-        name: 'Alice'
+        name: 'Alice',
       });
 
       const status = dashboard.getStatus();
-      
+
       expect(status.isRunning).toBe(true);
       expect(status.totalTests).toBe(1);
       expect(status.activeUsers).toBe(1);

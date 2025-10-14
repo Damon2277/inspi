@@ -162,7 +162,7 @@ class TaskChecker {
 // 命令行使用
 if (require.main === module) {
   const taskNumber = process.argv[2] || '1';
-  const checker = new TaskChecker(parseInt(taskNumber));
+  const checker = new TaskChecker(parseInt(taskNumber, 10));
   
   const success = checker.runAllChecks();
   process.exit(success ? 0 : 1);

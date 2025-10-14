@@ -21,13 +21,9 @@ jest.doMock('ioredis', () => {
   return jest.fn().mockImplementation(() => mockRedisClient);
 });
 
+import { it, beforeEach, describe } from 'node:test';
+
 import { getRedisClient, getRedisStatus, RedisService } from '@/lib/redis';
-import { it } from 'node:test';
-import { it } from 'node:test';
-import { it } from 'node:test';
-import { it } from 'node:test';
-import { beforeEach } from 'node:test';
-import { describe } from 'node:test';
 
 describe('Redis Connection', () => {
   beforeEach(() => {
@@ -43,7 +39,7 @@ describe('Redis Connection', () => {
 
   it('should create Redis client successfully', () => {
     const client = getRedisClient();
-    
+
     expect(client).toBeDefined();
     expect(client.ping).toBeDefined();
     expect(client.set).toBeDefined();
@@ -52,7 +48,7 @@ describe('Redis Connection', () => {
 
   it('should return connection status', async () => {
     const status = await getRedisStatus();
-    
+
     expect(status).toHaveProperty('isConnected');
     expect(status).toHaveProperty('status');
     // URL might not be present in error cases, so make it optional
@@ -63,28 +59,28 @@ describe('Redis Connection', () => {
 
   it('should handle Redis operations through RedisService', async () => {
     const redisService = new RedisService();
-    
+
     // Mock the operations to avoid actual Redis calls
     jest.spyOn(redisService, 'set').mockResolvedValue();
     jest.spyOn(redisService, 'get').mockResolvedValue('test_value');
-    
+
     await redisService.set('test_key', 'test_value');
     const value = await redisService.get('test_key');
-    
+
     expect(value).toBe('test_value');
   });
 
   it('should handle JSON operations', async () => {
     const redisService = new RedisService();
     const testObject = { name: 'test', value: 123 };
-    
+
     // Mock the operations to avoid actual Redis calls
     jest.spyOn(redisService, 'set').mockResolvedValue();
     jest.spyOn(redisService, 'getJSON').mockResolvedValue(testObject);
-    
+
     await redisService.set('test_json', testObject);
     const retrieved = await redisService.getJSON('test_json');
-    
+
     expect(retrieved).toEqual(testObject);
   });
 });

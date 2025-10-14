@@ -23,20 +23,20 @@ export function DesktopCard({
   size = 'md',
   hover = true,
   onClick,
-  padding = true
+  padding = true,
 }: DesktopCardProps) {
   const baseClasses = 'desktop-card';
-  
+
   const variantClasses = {
     default: '',
     elevated: 'desktop-card-elevated',
-    outlined: 'desktop-card-outlined'
+    outlined: 'desktop-card-outlined',
   };
 
   const sizeClasses = {
     sm: 'desktop-card-sm',
     md: 'desktop-card-md',
-    lg: 'desktop-card-lg'
+    lg: 'desktop-card-lg',
   };
 
   const classes = `
@@ -68,7 +68,7 @@ export function DesktopCard({
  */
 export function DesktopCardHeader({
   children,
-  className = ''
+  className = '',
 }: {
   children: React.ReactNode;
   className?: string;
@@ -85,7 +85,7 @@ export function DesktopCardHeader({
  */
 export function DesktopCardTitle({
   children,
-  className = ''
+  className = '',
 }: {
   children: React.ReactNode;
   className?: string;
@@ -102,7 +102,7 @@ export function DesktopCardTitle({
  */
 export function DesktopCardContent({
   children,
-  className = ''
+  className = '',
 }: {
   children: React.ReactNode;
   className?: string;
@@ -119,7 +119,7 @@ export function DesktopCardContent({
  */
 export function DesktopCardFooter({
   children,
-  className = ''
+  className = '',
 }: {
   children: React.ReactNode;
   className?: string;

@@ -3,7 +3,7 @@
  */
 'use client';
 
-import { TrendingWorks } from '@/components/shared/TrendingWorks';
+import { TrendingWorks } from '@/shared/components/TrendingWorks';
 
 export { TrendingWorks };
 export default TrendingWorks;

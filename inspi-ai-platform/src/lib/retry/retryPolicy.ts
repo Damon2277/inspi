@@ -2,9 +2,10 @@
  * 重试策略管理器
  */
 
-import { ExponentialBackoffRetry, ExponentialBackoffConfig, RETRY_STRATEGIES } from './exponentialBackoff';
-import { CircuitBreaker, CircuitBreakerConfig, CIRCUIT_BREAKER_CONFIGS } from './circuitBreaker';
 import { logger } from '@/lib/logging/logger';
+
+import { CircuitBreaker, CircuitBreakerConfig, CIRCUIT_BREAKER_CONFIGS } from './circuitBreaker';
+import { ExponentialBackoffRetry, ExponentialBackoffConfig, RETRY_STRATEGIES } from './exponentialBackoff';
 
 /**
  * 重试策略类型
@@ -60,8 +61,8 @@ export class RetryPolicyManager {
         name,
         config,
         hasRetry: this.retryInstances.has(name),
-        hasCircuitBreaker: this.circuitBreakerInstances.has(name)
-      }
+        hasCircuitBreaker: this.circuitBreakerInstances.has(name),
+      },
     });
   }
 
@@ -74,7 +75,7 @@ export class RetryPolicyManager {
     this.circuitBreakerInstances.delete(name);
 
     logger.info('Retry policy unregistered', {
-      metadata: { name }
+      metadata: { name },
     });
   }
 
@@ -83,7 +84,7 @@ export class RetryPolicyManager {
    */
   async executeWithPolicy<T>(
     policyName: string,
-    operation: () => Promise<T>
+    operation: () => Promise<T>,
   ): Promise<T> {
     const policy = this.policies.get(policyName);
     if (!policy) {
@@ -107,7 +108,11 @@ export class RetryPolicyManager {
       if (result.success) {
         return result.data!;
       } else {
-        throw result.error!;
+        if (result.error instanceof Error) {
+          throw result.error;
+        }
+
+        throw new Error(String(result.error));
       }
     } else {
       return wrappedOperation();
@@ -122,9 +127,9 @@ export class RetryPolicyManager {
     circuitBreaker?: any;
   } {
     const circuitBreaker = this.circuitBreakerInstances.get(policyName);
-    
+
     return {
-      circuitBreaker: circuitBreaker?.getMetrics()
+      circuitBreaker: circuitBreaker?.getMetrics(),
     };
   }
 
@@ -137,7 +142,7 @@ export class RetryPolicyManager {
     this.policies.forEach((policy, name) => {
       status[name] = {
         config: policy,
-        metrics: this.getPolicyMetrics(name)
+        metrics: this.getPolicyMetrics(name),
       };
     });
 
@@ -154,7 +159,7 @@ export class RetryPolicyManager {
     }
 
     logger.info('Retry policy reset', {
-      metadata: { policyName }
+      metadata: { policyName },
     });
   }
 
@@ -224,7 +229,7 @@ export function registerDefaultPolicies(): void {
     retryStrategy: 'standard',
     circuitBreakerStrategy: 'standard',
     enableRetry: true,
-    enableCircuitBreaker: true
+    enableCircuitBreaker: true,
   });
 
   // 数据库操作策略
@@ -232,7 +237,7 @@ export function registerDefaultPolicies(): void {
     retryStrategy: 'conservative',
     circuitBreakerStrategy: 'conservative',
     enableRetry: true,
-    enableCircuitBreaker: true
+    enableCircuitBreaker: true,
   });
 
   // 外部服务策略
@@ -240,7 +245,7 @@ export function registerDefaultPolicies(): void {
     retryStrategy: 'aggressive',
     circuitBreakerStrategy: 'fast',
     enableRetry: true,
-    enableCircuitBreaker: true
+    enableCircuitBreaker: true,
   });
 
   // 实时操作策略
@@ -248,7 +253,7 @@ export function registerDefaultPolicies(): void {
     retryStrategy: 'fast',
     circuitBreakerStrategy: 'fast',
     enableRetry: true,
-    enableCircuitBreaker: false
+    enableCircuitBreaker: false,
   });
 
   // 批量操作策略
@@ -256,7 +261,7 @@ export function registerDefaultPolicies(): void {
     retryStrategy: 'conservative',
     circuitBreakerStrategy: 'conservative',
     enableRetry: true,
-    enableCircuitBreaker: true
+    enableCircuitBreaker: true,
   });
 
   logger.info('Default retry policies registered');
@@ -267,7 +272,7 @@ export function registerDefaultPolicies(): void {
  */
 export function withRetryPolicy<T extends any[], R>(
   policyName: string,
-  fn: (...args: T) => Promise<R>
+  fn: (...args: T) => Promise<R>,
 ): (...args: T) => Promise<R> {
   return async (...args: T): Promise<R> => {
     return retryPolicyManager.executeWithPolicy(policyName, () => fn(...args));
@@ -280,7 +285,7 @@ export function withRetryPolicy<T extends any[], R>(
 export function createCustomPolicy(
   name: string,
   retryConfig?: Partial<ExponentialBackoffConfig>,
-  circuitBreakerConfig?: Partial<CircuitBreakerConfig>
+  circuitBreakerConfig?: Partial<CircuitBreakerConfig>,
 ): void {
   retryPolicyManager.registerPolicy(name, {
     retryStrategy: 'custom',
@@ -288,7 +293,7 @@ export function createCustomPolicy(
     customRetryConfig: retryConfig,
     customCircuitBreakerConfig: circuitBreakerConfig,
     enableRetry: Boolean(retryConfig),
-    enableCircuitBreaker: Boolean(circuitBreakerConfig)
+    enableCircuitBreaker: Boolean(circuitBreakerConfig),
   });
 }
 

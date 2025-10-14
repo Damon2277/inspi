@@ -4,19 +4,21 @@
  */
 
 import mongoose from 'mongoose';
+
 import User from '@/lib/models/User';
 import Work from '@/lib/models/Work';
+
 import Contribution from '@/lib/models/Contribution';
 
 // Mock performance monitoring
 const performanceMonitor = {
   marks: new Map(),
   measures: new Map(),
-  
+
   mark: (name: string) => {
     performanceMonitor.marks.set(name, Date.now());
   },
-  
+
   measure: (name: string, startMark: string, endMark?: string) => {
     const startTime = performanceMonitor.marks.get(startMark);
     const endTime = endMark ? performanceMonitor.marks.get(endMark) : Date.now();
@@ -24,19 +26,19 @@ const performanceMonitor = {
     performanceMonitor.measures.set(name, duration);
     return duration;
   },
-  
+
   getEntriesByType: (type: string) => {
     if (type === 'measure') {
       return Array.from(performanceMonitor.measures.entries()).map(([name, duration]) => ({
         name,
-        duration
+        duration,
       }));
     }
     return [];
   },
-  
+
   clearMarks: () => performanceMonitor.marks.clear(),
-  clearMeasures: () => performanceMonitor.measures.clear()
+  clearMeasures: () => performanceMonitor.measures.clear(),
 };
 
 // Mock global performance object
@@ -50,8 +52,8 @@ const mockConnection = {
       serverStatus: jest.fn().mockResolvedValue({
         connections: { current: 10, available: 990 },
         opcounters: { query: 1000, insert: 500, update: 300, delete: 100 },
-        mem: { resident: 100, virtual: 200 }
-      })
+        mem: { resident: 100, virtual: 200 },
+      }),
     }),
     stats: jest.fn().mockResolvedValue({
       collections: 5,
@@ -60,16 +62,16 @@ const mockConnection = {
       dataSize: 10240000,
       storageSize: 20480000,
       indexes: 15,
-      indexSize: 5120000
-    })
-  }
+      indexSize: 5120000,
+    }),
+  },
 };
 
 jest.mock('mongoose', () => ({
   connection: mockConnection,
   Types: {
-    ObjectId: jest.fn().mockImplementation((id) => id || `mock-id-${Date.now()}`)
-  }
+    ObjectId: jest.fn().mockImplementation((id) => id || `mock-id-${Date.now()}`),
+  },
 }));
 
 // Enhanced mock models with performance tracking
@@ -79,29 +81,29 @@ const createPerformanceMockModel = (name: string) => {
     totalQueries: 0,
     slowQueries: 0,
     averageQueryTime: 0,
-    queryTimes: []
+    queryTimes: [],
   };
-  
+
   const trackQuery = async (queryName: string, queryFn: () => Promise<any>) => {
     const startTime = Date.now();
     queryStats.totalQueries++;
-    
+
     try {
       const result = await queryFn();
       const duration = Date.now() - startTime;
       queryStats.queryTimes.push(duration);
       queryStats.averageQueryTime = queryStats.queryTimes.reduce((a, b) => a + b, 0) / queryStats.queryTimes.length;
-      
+
       if (duration > 100) { // 超过100ms认为是慢查询
         queryStats.slowQueries++;
       }
-      
+
       return result;
     } catch (error) {
       throw error;
     }
   };
-  
+
   return {
     // Basic CRUD with performance tracking
     create: jest.fn().mockImplementation(async (data) => {
@@ -109,13 +111,13 @@ const createPerformanceMockModel = (name: string) => {
         const doc = {
           ...data,
           _id: `mock-${name.toLowerCase()}-id-${Date.now()}-${Math.random()}`,
-          save: jest.fn().mockResolvedValue(data)
+          save: jest.fn().mockResolvedValue(data),
         };
         mockData.set(doc._id, doc);
         return doc;
       });
     }),
-    
+
     find: jest.fn().mockImplementation((query = {}) => ({
       limit: jest.fn().mockReturnThis(),
       skip: jest.fn().mockReturnThis(),
@@ -128,19 +130,19 @@ const createPerformanceMockModel = (name: string) => {
         return trackQuery('find', async () => {
           // 模拟查询延迟
           await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
-          
-          return Array.from(mockData.values()).filter(item => 
+
+          return Array.from(mockData.values()).filter(item =>
             Object.keys(query).every(key => {
               if (typeof query[key] === 'object' && query[key].$regex) {
                 return new RegExp(query[key].$regex, query[key].$options || '').test(item[key]);
               }
               return item[key] === query[key];
-            })
+            }),
           );
         });
-      })
+      }),
     })),
-    
+
     findById: jest.fn().mockImplementation((id) => ({
       populate: jest.fn().mockReturnThis(),
       lean: jest.fn().mockReturnThis(),
@@ -149,22 +151,22 @@ const createPerformanceMockModel = (name: string) => {
           await new Promise(resolve => setTimeout(resolve, Math.random() * 20));
           return mockData.get(id) || null;
         });
-      })
+      }),
     })),
-    
+
     findOne: jest.fn().mockImplementation((query) => ({
       populate: jest.fn().mockReturnThis(),
       lean: jest.fn().mockReturnThis(),
       exec: jest.fn().mockImplementation(() => {
         return trackQuery('findOne', async () => {
           await new Promise(resolve => setTimeout(resolve, Math.random() * 30));
-          return Array.from(mockData.values()).find(item => 
-            Object.keys(query).every(key => item[key] === query[key])
+          return Array.from(mockData.values()).find(item =>
+            Object.keys(query).every(key => item[key] === query[key]),
           ) || null;
         });
-      })
+      }),
     })),
-    
+
     aggregate: jest.fn().mockImplementation((pipeline) => ({
       allowDiskUse: jest.fn().mockReturnThis(),
       hint: jest.fn().mockReturnThis(),
@@ -172,7 +174,7 @@ const createPerformanceMockModel = (name: string) => {
         return trackQuery('aggregate', async () => {
           // 模拟聚合查询的复杂性
           await new Promise(resolve => setTimeout(resolve, Math.random() * 200));
-          
+
           // 简单的聚合模拟
           const data = Array.from(mockData.values());
           if (pipeline.some(stage => stage.$group)) {
@@ -180,37 +182,37 @@ const createPerformanceMockModel = (name: string) => {
           }
           return data;
         });
-      })
+      }),
     })),
-    
+
     countDocuments: jest.fn().mockImplementation((query = {}) => ({
       exec: jest.fn().mockImplementation(() => {
         return trackQuery('countDocuments', async () => {
           await new Promise(resolve => setTimeout(resolve, Math.random() * 10));
-          return Array.from(mockData.values()).filter(item => 
-            Object.keys(query).every(key => item[key] === query[key])
+          return Array.from(mockData.values()).filter(item =>
+            Object.keys(query).every(key => item[key] === query[key]),
           ).length;
         });
-      })
+      }),
     })),
-    
+
     // Index operations
     createIndex: jest.fn().mockImplementation((index, options = {}) => {
       return Promise.resolve({ ok: 1, createdCollectionAutomatically: false, numIndexesBefore: 1, numIndexesAfter: 2 });
     }),
-    
+
     dropIndex: jest.fn().mockImplementation((index) => {
       return Promise.resolve({ ok: 1, nIndexesWas: 2 });
     }),
-    
+
     getIndexes: jest.fn().mockImplementation(() => {
       return Promise.resolve([
         { v: 2, key: { _id: 1 }, name: '_id_' },
         { v: 2, key: { email: 1 }, name: 'email_1', unique: true },
-        { v: 2, key: { createdAt: -1 }, name: 'createdAt_-1' }
+        { v: 2, key: { createdAt: -1 }, name: 'createdAt_-1' },
       ]);
     }),
-    
+
     // Performance utilities
     __getQueryStats: () => queryStats,
     __resetQueryStats: () => {
@@ -225,7 +227,7 @@ const createPerformanceMockModel = (name: string) => {
         const doc = { ...item, _id: `mock-${name.toLowerCase()}-${index}` };
         mockData.set(doc._id, doc);
       });
-    }
+    },
   };
 };
 
@@ -258,7 +260,7 @@ describe('数据库性能和优化测试', () => {
       MockUser.__addMockData([
         { email: 'user1@example.com', name: 'User 1' },
         { email: 'user2@example.com', name: 'User 2' },
-        { email: 'user3@example.com', name: 'User 3' }
+        { email: 'user3@example.com', name: 'User 3' },
       ]);
 
       performance.mark('query-start');
@@ -279,9 +281,9 @@ describe('数据库性能和优化测试', () => {
       const largeDataSet = Array(1000).fill(null).map((_, index) => ({
         email: `user${index}@example.com`,
         name: `User ${index}`,
-        contributionScore: Math.floor(Math.random() * 1000)
+        contributionScore: Math.floor(Math.random() * 1000),
       }));
-      
+
       MockUser.__addMockData(largeDataSet);
 
       performance.mark('large-query-start');
@@ -302,9 +304,9 @@ describe('数据库性能和优化测试', () => {
       const testData = Array(100).fill(null).map((_, index) => ({
         email: `page${index}@example.com`,
         name: `Page User ${index}`,
-        createdAt: new Date(Date.now() - index * 1000)
+        createdAt: new Date(Date.now() - index * 1000),
       }));
-      
+
       MockUser.__addMockData(testData);
 
       performance.mark('pagination-start');
@@ -328,7 +330,7 @@ describe('数据库性能和优化测试', () => {
         { title: 'Work 1', author: 'user1', subject: 'Math', likes: 10 },
         { title: 'Work 2', author: 'user1', subject: 'Science', likes: 15 },
         { title: 'Work 3', author: 'user2', subject: 'Math', likes: 8 },
-        { title: 'Work 4', author: 'user2', subject: 'Math', likes: 12 }
+        { title: 'Work 4', author: 'user2', subject: 'Math', likes: 12 },
       ]);
 
       performance.mark('aggregation-start');
@@ -336,7 +338,7 @@ describe('数据库性能和优化测试', () => {
       // Act
       const stats = await MockWork.aggregate([
         { $group: { _id: '$subject', totalLikes: { $sum: '$likes' }, count: { $sum: 1 } } },
-        { $sort: { totalLikes: -1 } }
+        { $sort: { totalLikes: -1 } },
       ]).exec();
 
       performance.mark('aggregation-end');
@@ -350,7 +352,7 @@ describe('数据库性能和优化测试', () => {
     it('应该监控慢查询', async () => {
       // Arrange
       MockUser.__addMockData([
-        { email: 'slow@example.com', name: 'Slow User' }
+        { email: 'slow@example.com', name: 'Slow User' },
       ]);
 
       // Act - 执行多个查询
@@ -380,7 +382,7 @@ describe('数据库性能和优化测试', () => {
       // Act
       const result = await MockUser.createIndex(
         { subject: 1, createdAt: -1 },
-        { name: 'subject_createdAt_compound' }
+        { name: 'subject_createdAt_compound' },
       );
 
       // Assert
@@ -391,7 +393,7 @@ describe('数据库性能和优化测试', () => {
       // Act
       const result = await MockWork.createIndex(
         { title: 'text', description: 'text' },
-        { name: 'text_search_index' }
+        { name: 'text_search_index' },
       );
 
       // Assert
@@ -423,7 +425,7 @@ describe('数据库性能和优化测试', () => {
       MockUser.__addMockData(Array(1000).fill(null).map((_, index) => ({
         email: `indexed${index}@example.com`,
         name: `Indexed User ${index}`,
-        contributionScore: index
+        contributionScore: index,
       })));
 
       // Act - 使用索引的查询
@@ -507,7 +509,7 @@ describe('数据库性能和优化测试', () => {
       MockUser.__addMockData(Array(100).fill(null).map((_, index) => ({
         email: `lean${index}@example.com`,
         name: `Lean User ${index}`,
-        profile: { bio: 'A'.repeat(1000) } // 大对象
+        profile: { bio: 'A'.repeat(1000) }, // 大对象
       })));
 
       const initialMemory = process.memoryUsage().heapUsed;
@@ -525,10 +527,10 @@ describe('数据库性能和优化测试', () => {
       // Assert
       expect(leanResults).toHaveLength(100);
       expect(normalResults).toHaveLength(100);
-      
+
       const leanMemoryIncrease = leanMemory - initialMemory;
       const normalMemoryIncrease = normalMemory - leanMemory;
-      
+
       // lean查询通常使用更少内存
       expect(leanMemoryIncrease).toBeLessThan(normalMemoryIncrease * 2);
     });
@@ -536,12 +538,12 @@ describe('数据库性能和优化测试', () => {
     it('应该优化populate查询', async () => {
       // Arrange
       MockUser.__addMockData([
-        { _id: 'user1', email: 'author@example.com', name: 'Author' }
+        { _id: 'user1', email: 'author@example.com', name: 'Author' },
       ]);
-      
+
       MockWork.__addMockData([
         { title: 'Work 1', author: 'user1', content: { concept: 'test' } },
-        { title: 'Work 2', author: 'user1', content: { concept: 'test' } }
+        { title: 'Work 2', author: 'user1', content: { concept: 'test' } },
       ]);
 
       performance.mark('populate-start');
@@ -565,11 +567,11 @@ describe('数据库性能和优化测试', () => {
       for (let i = 0; i < 100; i++) {
         await MockUser.create({
           email: `memory${i}@example.com`,
-          name: `Memory User ${i}`
+          name: `Memory User ${i}`,
         });
-        
+
         await MockUser.find().limit(10).exec();
-        
+
         // 强制垃圾回收（如果可用）
         if (global.gc) {
           global.gc();
@@ -589,10 +591,10 @@ describe('数据库性能和优化测试', () => {
       // Arrange
       const cache = new Map();
       const cacheKey = 'user_list_page_1';
-      
+
       MockUser.__addMockData([
         { email: 'cache1@example.com', name: 'Cache User 1' },
-        { email: 'cache2@example.com', name: 'Cache User 2' }
+        { email: 'cache2@example.com', name: 'Cache User 2' },
       ]);
 
       // Act - 第一次查询
@@ -619,7 +621,7 @@ describe('数据库性能和优化测试', () => {
       const cache = new Map();
       const cacheKey = 'user_count';
       const ttl = 1000; // 1秒TTL
-      
+
       // Act - 设置缓存
       const count = await MockUser.countDocuments().exec();
       cache.set(cacheKey, { value: count, timestamp: Date.now() });
@@ -641,13 +643,13 @@ describe('数据库性能和优化测试', () => {
       const cache = new Map();
       const popularQueries = [
         { query: {}, options: { limit: 10, sort: { createdAt: -1 } } },
-        { query: { isPublic: true }, options: { limit: 20 } }
+        { query: { isPublic: true }, options: { limit: 20 } },
       ];
 
       MockWork.__addMockData(Array(50).fill(null).map((_, index) => ({
         title: `Popular Work ${index}`,
         isPublic: index % 2 === 0,
-        createdAt: new Date(Date.now() - index * 1000)
+        createdAt: new Date(Date.now() - index * 1000),
       })));
 
       performance.mark('cache-warmup-start');
@@ -685,10 +687,10 @@ describe('数据库性能和优化测试', () => {
     it('应该监控查询性能趋势', async () => {
       // Arrange
       const performanceHistory = [];
-      
+
       MockUser.__addMockData(Array(100).fill(null).map((_, index) => ({
         email: `trend${index}@example.com`,
-        name: `Trend User ${index}`
+        name: `Trend User ${index}`,
       })));
 
       // Act - 执行多次查询并记录性能
@@ -715,7 +717,7 @@ describe('数据库性能和优化测试', () => {
 
       MockUser.__addMockData(Array(50).fill(null).map((_, index) => ({
         email: `anomaly${index}@example.com`,
-        name: `Anomaly User ${index}`
+        name: `Anomaly User ${index}`,
       })));
 
       // Act - 执行查询并检测异常
@@ -723,7 +725,7 @@ describe('数据库性能和优化测试', () => {
         const startTime = Date.now();
         await MockUser.find().exec();
         const duration = Date.now() - startTime;
-        
+
         if (duration > performanceThreshold) {
           anomalies.push({ query: 'find_all', duration, timestamp: Date.now() });
         }
@@ -756,7 +758,7 @@ describe('数据库性能和优化测试', () => {
         slowQueries: userStats.slowQueries,
         averageQueryTime: userStats.averageQueryTime,
         slowQueryPercentage: (userStats.slowQueries / userStats.totalQueries) * 100,
-        recommendations: []
+        recommendations: [],
       };
 
       if (report.slowQueryPercentage > 10) {
@@ -780,7 +782,7 @@ describe('数据库性能和优化测试', () => {
       // Arrange
       const batchData = Array(1000).fill(null).map((_, index) => ({
         email: `batch${index}@example.com`,
-        name: `Batch User ${index}`
+        name: `Batch User ${index}`,
       }));
 
       performance.mark('batch-insert-start');
@@ -794,7 +796,7 @@ describe('数据库性能和优化测试', () => {
 
       // Assert
       expect(duration).toBeLessThan(5000); // 1000条记录应该在5秒内完成
-      
+
       const count = await MockUser.countDocuments().exec();
       expect(count).toBe(1000);
     });
@@ -805,7 +807,7 @@ describe('数据库性能和优化测试', () => {
         _id: `batch-update-${index}`,
         email: `update${index}@example.com`,
         name: `Update User ${index}`,
-        isActive: false
+        isActive: false,
       })));
 
       performance.mark('batch-update-start');
@@ -815,8 +817,8 @@ describe('数据库性能和优化测试', () => {
         MockUser.findByIdAndUpdate(
           `batch-update-${index}`,
           { isActive: true },
-          { new: true }
-        ).exec()
+          { new: true },
+        ).exec(),
       );
 
       await Promise.all(updatePromises);
@@ -834,12 +836,12 @@ describe('数据库性能和优化测试', () => {
         { email: 'valid1@example.com', name: 'Valid User 1' },
         { email: 'valid2@example.com', name: 'Valid User 2' },
         { email: null, name: 'Invalid User' }, // 无效数据
-        { email: 'valid3@example.com', name: 'Valid User 3' }
+        { email: 'valid3@example.com', name: 'Valid User 3' },
       ];
 
       // Act
       const results = await Promise.allSettled(
-        mixedData.map(data => MockUser.create(data))
+        mixedData.map(data => MockUser.create(data)),
       );
 
       // Assert

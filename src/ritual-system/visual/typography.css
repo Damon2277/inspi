@@ -1,0 +1,342 @@
+/**
+ * 仪式感设计系统 - 仪式感排版系统
+ * Sacred Typography System for Ritual Design
+ */
+
+/* 仪式感字体导入 - Ritual Font Imports */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* 仪式感字体族 - Ritual Font Families */
+  --ritual-font-ceremonial: 'Cinzel', serif; /* 仪式感标题字体 */
+  --ritual-font-elegant: 'Playfair Display', serif; /* 优雅装饰字体 */
+  --ritual-font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; /* 正文字体 */
+  --ritual-font-monospace: 'SF Mono', Monaco, 'Cascadia Code', monospace; /* 等宽字体 */
+
+  /* 仪式感字体大小 - Ritual Font Sizes */
+  --ritual-text-xs: 0.75rem;    /* 12px */
+  --ritual-text-sm: 0.875rem;   /* 14px */
+  --ritual-text-base: 1rem;     /* 16px */
+  --ritual-text-lg: 1.125rem;   /* 18px */
+  --ritual-text-xl: 1.25rem;    /* 20px */
+  --ritual-text-2xl: 1.5rem;    /* 24px */
+  --ritual-text-3xl: 1.875rem;  /* 30px */
+  --ritual-text-4xl: 2.25rem;   /* 36px */
+  --ritual-text-5xl: 3rem;      /* 48px */
+  --ritual-text-6xl: 3.75rem;   /* 60px */
+  --ritual-text-7xl: 4.5rem;    /* 72px */
+  --ritual-text-8xl: 6rem;      /* 96px */
+  --ritual-text-9xl: 8rem;      /* 128px */
+
+  /* 仪式感行高 - Ritual Line Heights */
+  --ritual-leading-none: 1;
+  --ritual-leading-tight: 1.25;
+  --ritual-leading-snug: 1.375;
+  --ritual-leading-normal: 1.5;
+  --ritual-leading-relaxed: 1.625;
+  --ritual-leading-loose: 2;
+  --ritual-leading-ceremonial: 1.2; /* 仪式感专用行高 */
+
+  /* 仪式感字重 - Ritual Font Weights */
+  --ritual-font-light: 300;
+  --ritual-font-normal: 400;
+  --ritual-font-medium: 500;
+  --ritual-font-semibold: 600;
+  --ritual-font-bold: 700;
+  --ritual-font-extrabold: 800;
+  --ritual-font-black: 900;
+
+  /* 仪式感字间距 - Ritual Letter Spacing */
+  --ritual-tracking-tighter: -0.05em;
+  --ritual-tracking-tight: -0.025em;
+  --ritual-tracking-normal: 0em;
+  --ritual-tracking-wide: 0.025em;
+  --ritual-tracking-wider: 0.05em;
+  --ritual-tracking-widest: 0.1em;
+  --ritual-tracking-ceremonial: 0.15em; /* 仪式感专用字间距 */
+
+  /* 仪式感文本效果 - Ritual Text Effects */
+  --ritual-text-shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --ritual-text-shadow-moderate: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --ritual-text-shadow-dramatic: 0 4px 8px rgba(0, 0, 0, 0.3);
+  --ritual-text-shadow-epic: 0 8px 16px rgba(0, 0, 0, 0.4);
+  --ritual-text-shadow-glow: 0 0 10px var(--ritual-gold-glow);
+  --ritual-text-shadow-divine: 0 0 20px var(--ritual-gold-glow), 0 0 40px var(--ritual-purple-glow);
+}
+
+/* 仪式感排版基础类 - Ritual Typography Base Classes */
+.ritual-text {
+  font-family: var(--ritual-font-body);
+  line-height: var(--ritual-leading-normal);
+  color: var(--ritual-text, #374151);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 仪式感标题系统 - Ritual Heading System */
+.ritual-heading {
+  font-family: var(--ritual-font-ceremonial);
+  font-weight: var(--ritual-font-bold);
+  line-height: var(--ritual-leading-ceremonial);
+  letter-spacing: var(--ritual-tracking-ceremonial);
+  margin: 0;
+  color: var(--ritual-primary, var(--ritual-gold));
+}
+
+.ritual-heading-hero {
+  font-size: var(--ritual-text-6xl);
+  font-weight: var(--ritual-font-black);
+  text-shadow: var(--ritual-text-shadow-epic);
+  background: var(--ritual-gradient-divine);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ritual-heading-1 {
+  font-size: var(--ritual-text-5xl);
+  font-weight: var(--ritual-font-extrabold);
+  text-shadow: var(--ritual-text-shadow-dramatic);
+}
+
+.ritual-heading-2 {
+  font-size: var(--ritual-text-4xl);
+  font-weight: var(--ritual-font-bold);
+  text-shadow: var(--ritual-text-shadow-moderate);
+}
+
+.ritual-heading-3 {
+  font-size: var(--ritual-text-3xl);
+  font-weight: var(--ritual-font-semibold);
+  text-shadow: var(--ritual-text-shadow-subtle);
+}
+
+.ritual-heading-4 {
+  font-size: var(--ritual-text-2xl);
+  font-weight: var(--ritual-font-medium);
+}
+
+.ritual-heading-5 {
+  font-size: var(--ritual-text-xl);
+  font-weight: var(--ritual-font-medium);
+}
+
+.ritual-heading-6 {
+  font-size: var(--ritual-text-lg);
+  font-weight: var(--ritual-font-medium);
+}
+
+/* 仪式感正文样式 - Ritual Body Text Styles */
+.ritual-body {
+  font-family: var(--ritual-font-body);
+  font-size: var(--ritual-text-base);
+  line-height: var(--ritual-leading-relaxed);
+  color: var(--ritual-text-secondary, #6B7280);
+}
+
+.ritual-body-large {
+  font-size: var(--ritual-text-lg);
+  line-height: var(--ritual-leading-relaxed);
+}
+
+.ritual-body-small {
+  font-size: var(--ritual-text-sm);
+  line-height: var(--ritual-leading-normal);
+}
+
+/* 仪式感装饰文本 - Ritual Decorative Text */
+.ritual-text-elegant {
+  font-family: var(--ritual-font-elegant);
+  font-style: italic;
+  font-weight: var(--ritual-font-medium);
+  letter-spacing: var(--ritual-tracking-wide);
+}
+
+.ritual-text-ceremonial {
+  font-family: var(--ritual-font-ceremonial);
+  text-transform: uppercase;
+  letter-spacing: var(--ritual-tracking-ceremonial);
+  font-weight: var(--ritual-font-semibold);
+}
+
+.ritual-text-sacred {
+  font-family: var(--ritual-font-ceremonial);
+  font-size: var(--ritual-text-2xl);
+  font-weight: var(--ritual-font-bold);
+  text-align: center;
+  letter-spacing: var(--ritual-tracking-wider);
+  text-shadow: var(--ritual-text-shadow-glow);
+  color: var(--ritual-gold);
+}
+
+/* 仪式感文本效果 - Ritual Text Effects */
+.ritual-text-glow {
+  text-shadow: var(--ritual-text-shadow-glow);
+}
+
+.ritual-text-divine {
+  background: var(--ritual-gradient-divine);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: var(--ritual-text-shadow-divine);
+}
+
+.ritual-text-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--ritual-silver) 0%,
+    var(--ritual-gold) 25%,
+    var(--ritual-silver) 50%,
+    var(--ritual-gold) 75%,
+    var(--ritual-silver) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: ritual-shimmer 3s ease-in-out infinite;
+}
+
+@keyframes ritual-shimmer {
+  0%, 100% {
+    background-position: 200% 0;
+  }
+  50% {
+    background-position: -200% 0;
+  }
+}
+
+/* 仪式感对齐和间距 - Ritual Alignment and Spacing */
+.ritual-text-center {
+  text-align: center;
+}
+
+.ritual-text-sacred-center {
+  text-align: center;
+  margin: 2rem 0;
+  padding: 1rem 0;
+  position: relative;
+}
+
+.ritual-text-sacred-center::before,
+.ritual-text-sacred-center::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 3rem;
+  height: 1px;
+  background: var(--ritual-gradient-gold);
+}
+
+.ritual-text-sacred-center::before {
+  left: calc(50% - 6rem);
+}
+
+.ritual-text-sacred-center::after {
+  right: calc(50% - 6rem);
+}
+
+/* 仪式感引用样式 - Ritual Quote Styles */
+.ritual-quote {
+  font-family: var(--ritual-font-elegant);
+  font-size: var(--ritual-text-xl);
+  font-style: italic;
+  line-height: var(--ritual-leading-relaxed);
+  text-align: center;
+  margin: 2rem 0;
+  padding: 1.5rem;
+  position: relative;
+  color: var(--ritual-primary, var(--ritual-gold));
+}
+
+.ritual-quote::before {
+  content: '"';
+  font-size: var(--ritual-text-4xl);
+  font-family: var(--ritual-font-ceremonial);
+  position: absolute;
+  top: 0;
+  left: 1rem;
+  color: var(--ritual-gold-glow);
+}
+
+.ritual-quote::after {
+  content: '"';
+  font-size: var(--ritual-text-4xl);
+  font-family: var(--ritual-font-ceremonial);
+  position: absolute;
+  bottom: 0;
+  right: 1rem;
+  color: var(--ritual-gold-glow);
+}
+
+/* 仪式感列表样式 - Ritual List Styles */
+.ritual-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.ritual-list-item {
+  position: relative;
+  padding-left: 2rem;
+  margin-bottom: 0.5rem;
+  font-family: var(--ritual-font-body);
+  line-height: var(--ritual-leading-relaxed);
+}
+
+.ritual-list-item::before {
+  content: '✦';
+  position: absolute;
+  left: 0;
+  color: var(--ritual-gold);
+  font-weight: var(--ritual-font-bold);
+}
+
+/* 响应式排版 - Responsive Typography */
+@media (max-width: 768px) {
+  .ritual-heading-hero {
+    font-size: var(--ritual-text-4xl);
+  }
+  
+  .ritual-heading-1 {
+    font-size: var(--ritual-text-3xl);
+  }
+  
+  .ritual-heading-2 {
+    font-size: var(--ritual-text-2xl);
+  }
+  
+  .ritual-heading-3 {
+    font-size: var(--ritual-text-xl);
+  }
+}
+
+/* 可访问性支持 - Accessibility Support */
+@media (prefers-reduced-motion: reduce) {
+  .ritual-text-shimmer {
+    animation: none;
+    background: var(--ritual-gold);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .ritual-heading,
+  .ritual-text-sacred,
+  .ritual-quote {
+    text-shadow: none;
+    color: var(--ritual-high-contrast-fg);
+  }
+  
+  .ritual-text-divine,
+  .ritual-text-shimmer {
+    background: none;
+    -webkit-text-fill-color: var(--ritual-high-contrast-fg);
+    color: var(--ritual-high-contrast-fg);
+  }
+}

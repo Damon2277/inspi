@@ -3,9 +3,10 @@
  * 提供验证码生成、存储、验证功能
  */
 
-import { redis } from '@/lib/cache/redis';
-import { logger } from '@/lib/utils/logger';
 import crypto from 'crypto';
+
+import { redis } from '@/lib/cache/redis';
+import { logger } from '@/shared/utils/logger';
 
 export interface VerificationCode {
   code: string;
@@ -52,28 +53,28 @@ export class VerificationManager {
    * 存储验证码
    */
   async storeCode(
-    email: string, 
-    code: string, 
-    type: 'registration' | 'login' | 'password_reset'
+    email: string,
+    code: string,
+    type: 'registration' | 'login' | 'password_reset',
   ): Promise<boolean> {
     try {
       const key = this.getCodeKey(email, type);
       const expiresAt = new Date(Date.now() + this.CODE_EXPIRY * 1000);
-      
+
       const verificationData: VerificationCode = {
         code,
         email,
         type,
         expiresAt,
-        attempts: 0
+        attempts: 0,
       };
 
       await redis.setJSON(key, verificationData, { ttl: this.CODE_EXPIRY });
-      
-      logger.info('Verification code stored', { 
-        email: this.maskEmail(email), 
-        type, 
-        expiresAt 
+
+      logger.info('Verification code stored', {
+        email: this.maskEmail(email),
+        type,
+        expiresAt,
       });
 
       return true;
@@ -81,7 +82,7 @@ export class VerificationManager {
       logger.error('Failed to store verification code', {
         email: this.maskEmail(email),
         type,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return false;
     }
@@ -91,61 +92,61 @@ export class VerificationManager {
    * 验证验证码
    */
   async verifyCode(
-    email: string, 
-    code: string, 
-    type: 'registration' | 'login' | 'password_reset'
+    email: string,
+    code: string,
+    type: 'registration' | 'login' | 'password_reset',
   ): Promise<VerificationResult> {
     try {
       const key = this.getCodeKey(email, type);
       const storedData = await redis.getJSON<VerificationCode>(key);
 
       if (!storedData) {
-        logger.warn('Verification code not found or expired', { 
-          email: this.maskEmail(email), 
-          type 
+        logger.warn('Verification code not found or expired', {
+          email: this.maskEmail(email),
+          type,
         });
         return {
           success: false,
-          error: '验证码不存在或已过期'
+          error: '验证码不存在或已过期',
         };
       }
 
       // 检查是否过期
       if (new Date() > new Date(storedData.expiresAt)) {
         await redis.del(key);
-        logger.warn('Verification code expired', { 
-          email: this.maskEmail(email), 
-          type 
+        logger.warn('Verification code expired', {
+          email: this.maskEmail(email),
+          type,
         });
         return {
           success: false,
-          error: '验证码已过期'
+          error: '验证码已过期',
         };
       }
 
       // 检查尝试次数
       if (storedData.attempts >= this.MAX_ATTEMPTS) {
         await redis.del(key);
-        logger.warn('Too many verification attempts', { 
-          email: this.maskEmail(email), 
+        logger.warn('Too many verification attempts', {
+          email: this.maskEmail(email),
           type,
-          attempts: storedData.attempts 
+          attempts: storedData.attempts,
         });
         return {
           success: false,
-          error: '验证失败次数过多，请重新获取验证码'
+          error: '验证失败次数过多，请重新获取验证码',
         };
       }
 
       // 验证码匹配
       if (storedData.code === code.toUpperCase()) {
         await redis.del(key); // 验证成功后删除验证码
-        logger.info('Verification code verified successfully', { 
-          email: this.maskEmail(email), 
-          type 
+        logger.info('Verification code verified successfully', {
+          email: this.maskEmail(email),
+          type,
         });
         return {
-          success: true
+          success: true,
         };
       }
 
@@ -153,27 +154,27 @@ export class VerificationManager {
       storedData.attempts += 1;
       await redis.setJSON(key, storedData, { ttl: this.CODE_EXPIRY });
 
-      logger.warn('Invalid verification code', { 
-        email: this.maskEmail(email), 
+      logger.warn('Invalid verification code', {
+        email: this.maskEmail(email),
         type,
-        attempts: storedData.attempts 
+        attempts: storedData.attempts,
       });
 
       return {
         success: false,
         error: '验证码错误',
-        remainingAttempts: this.MAX_ATTEMPTS - storedData.attempts
+        remainingAttempts: this.MAX_ATTEMPTS - storedData.attempts,
       };
 
     } catch (error) {
       logger.error('Failed to verify code', {
         email: this.maskEmail(email),
         type,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return {
         success: false,
-        error: '验证失败，请重试'
+        error: '验证失败，请重试',
       };
     }
   }
@@ -188,14 +189,14 @@ export class VerificationManager {
 
       if (count > this.MAX_REQUESTS_PER_WINDOW) {
         const ttl = await this.getRemainingTTL(rateLimitKey);
-        logger.warn('Rate limit exceeded for email verification', { 
+        logger.warn('Rate limit exceeded for email verification', {
           email: this.maskEmail(email),
           count,
-          remainingTime: ttl
+          remainingTime: ttl,
         });
         return {
           allowed: false,
-          remainingTime: ttl
+          remainingTime: ttl,
         };
       }
 
@@ -203,7 +204,7 @@ export class VerificationManager {
     } catch (error) {
       logger.error('Failed to check rate limit', {
         email: this.maskEmail(email),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       // 出错时允许发送，避免阻塞正常用户
       return { allowed: true };
@@ -217,16 +218,16 @@ export class VerificationManager {
     try {
       const key = this.getCodeKey(email, type);
       await redis.del(key);
-      
-      logger.info('Verification code cleared', { 
-        email: this.maskEmail(email), 
-        type 
+
+      logger.info('Verification code cleared', {
+        email: this.maskEmail(email),
+        type,
       });
     } catch (error) {
       logger.error('Failed to clear verification code', {
         email: this.maskEmail(email),
         type,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -235,8 +236,8 @@ export class VerificationManager {
    * 获取验证码状态
    */
   async getCodeStatus(
-    email: string, 
-    type: 'registration' | 'login' | 'password_reset'
+    email: string,
+    type: 'registration' | 'login' | 'password_reset',
   ): Promise<{
     exists: boolean;
     expiresAt?: Date;
@@ -255,13 +256,13 @@ export class VerificationManager {
         exists: true,
         expiresAt: new Date(storedData.expiresAt),
         attempts: storedData.attempts,
-        remainingAttempts: this.MAX_ATTEMPTS - storedData.attempts
+        remainingAttempts: this.MAX_ATTEMPTS - storedData.attempts,
       };
     } catch (error) {
       logger.error('Failed to get code status', {
         email: this.maskEmail(email),
         type,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return { exists: false };
     }
@@ -316,11 +317,11 @@ export class VerificationManager {
     try {
       const testEmail = 'test@example.com';
       const testCode = this.generateCode();
-      
+
       // 测试存储和验证流程
       await this.storeCode(testEmail, testCode, 'registration');
       const result = await this.verifyCode(testEmail, testCode, 'registration');
-      
+
       return result.success;
     } catch (error) {
       logger.error('Verification manager health check failed', { error });

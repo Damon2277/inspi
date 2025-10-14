@@ -1,18 +1,18 @@
 /**
  * Historical Data Analysis System
- * 
+ *
  * Comprehensive system for analyzing test execution history, identifying trends,
  * predicting quality metrics, and generating actionable recommendations for
  * continuous improvement of test quality and effectiveness.
  */
 
-export { 
+export {
   HistoricalDataManager,
   type TestExecutionRecord,
   type TestSuiteRecord,
   type DataRetentionPolicy,
   type QueryOptions,
-  type AggregationOptions
+  type AggregationOptions,
 } from './HistoricalDataManager';
 
 export {
@@ -24,7 +24,7 @@ export {
   type QualityTrend,
   type SeasonalPattern,
   type Anomaly,
-  type TrendInsight
+  type TrendInsight,
 } from './TrendAnalyzer';
 
 export {
@@ -35,7 +35,7 @@ export {
   type RiskAssessment,
   type QualityRecommendation,
   type ModelFeatures,
-  type PredictionModel
+  type PredictionModel,
 } from './QualityPredictor';
 
 export {
@@ -46,18 +46,18 @@ export {
   type RecommendationContext,
   type RecommendationTemplate,
   type RecommendationTrigger,
-  type RecommendationReport
+  type RecommendationReport,
 } from './RecommendationEngine';
 
 // Import the classes for internal use
 import { HistoricalDataManager } from './HistoricalDataManager';
-import { TrendAnalyzer } from './TrendAnalyzer';
 import { QualityPredictor } from './QualityPredictor';
 import { RecommendationEngine } from './RecommendationEngine';
+import { TrendAnalyzer } from './TrendAnalyzer';
 
 /**
  * Integrated Historical Data Analysis System
- * 
+ *
  * Provides a unified interface for all historical data analysis capabilities
  * including data management, trend analysis, quality prediction, and
  * recommendation generation.
@@ -80,7 +80,7 @@ export class HistoricalAnalysisSystem {
       this.dataManager,
       this.trendAnalyzer,
       this.qualityPredictor,
-      options?.context
+      options?.context,
     );
 
     // Set up event forwarding
@@ -120,7 +120,7 @@ export class HistoricalAnalysisSystem {
    */
   async storeTestExecution(record: TestSuiteRecord): Promise<void> {
     await this.dataManager.storeTestSuiteRecord(record);
-    
+
     // Trigger background analysis
     this.triggerBackgroundAnalysis();
   }
@@ -147,7 +147,7 @@ export class HistoricalAnalysisSystem {
       predictions,
       recommendations,
       insights,
-      anomalies
+      anomalies,
     ] = await Promise.all([
       this.trendAnalyzer.analyzeCoverageTrends(days),
       this.trendAnalyzer.analyzePerformanceTrends(days),
@@ -155,19 +155,19 @@ export class HistoricalAnalysisSystem {
       this.qualityPredictor.predictQualityMetrics(),
       this.recommendationEngine.generateRecommendations(days),
       this.trendAnalyzer.generateTrendInsights(days),
-      this.trendAnalyzer.detectAnomalies(days)
+      this.trendAnalyzer.detectAnomalies(days),
     ]);
 
     return {
       trends: {
         coverage: coverageTrends,
         performance: performanceTrends,
-        quality: qualityTrends
+        quality: qualityTrends,
       },
       predictions,
       recommendations,
       insights,
-      anomalies
+      anomalies,
     };
   }
 
@@ -193,27 +193,27 @@ export class HistoricalAnalysisSystem {
   }> {
     const stats = this.dataManager.getStorageStats();
     const recentRecommendations = await this.recommendationEngine.generateRecommendations(7);
-    
+
     // Get recent trends (simplified)
     const recentRecords = await this.dataManager.queryTestSuiteRecords(undefined, {
       limit: 10,
       sortBy: 'timestamp',
-      sortOrder: 'desc'
+      sortOrder: 'desc',
     });
 
-    let recentTrends = { coverage: 0, performance: 0, quality: 0 };
+    const recentTrends = { coverage: 0, performance: 0, quality: 0 };
     if (recentRecords.length >= 2) {
       const latest = recentRecords[0];
       const previous = recentRecords[1];
-      
-      const latestCoverage = (latest.coverage.statements + latest.coverage.branches + 
+
+      const latestCoverage = (latest.coverage.statements + latest.coverage.branches +
                              latest.coverage.functions + latest.coverage.lines) / 4;
-      const previousCoverage = (previous.coverage.statements + previous.coverage.branches + 
+      const previousCoverage = (previous.coverage.statements + previous.coverage.branches +
                                previous.coverage.functions + previous.coverage.lines) / 4;
-      
+
       recentTrends.coverage = latestCoverage - previousCoverage;
       recentTrends.performance = (previous.duration - latest.duration) / previous.duration;
-      recentTrends.quality = (latest.passedTests / latest.totalTests) - 
+      recentTrends.quality = (latest.passedTests / latest.totalTests) -
                             (previous.passedTests / previous.totalTests);
     }
 
@@ -225,16 +225,16 @@ export class HistoricalAnalysisSystem {
         totalRecords: stats.totalSuiteRecords,
         timeRange: {
           start: stats.oldestRecord,
-          end: stats.newestRecord
+          end: stats.newestRecord,
         },
-        storageSize: stats.storageSize
+        storageSize: stats.storageSize,
       },
       recentTrends,
       alerts: {
         critical: criticalCount,
-        warnings: warningCount
+        warnings: warningCount,
       },
-      topRecommendations: recentRecommendations.recommendations.slice(0, 5)
+      topRecommendations: recentRecommendations.recommendations.slice(0, 5),
     };
   }
 
@@ -243,7 +243,7 @@ export class HistoricalAnalysisSystem {
    */
   async initializeWithSampleData(): Promise<void> {
     const sampleRecords = this.generateSampleData();
-    
+
     for (const record of sampleRecords) {
       await this.dataManager.storeTestSuiteRecord(record);
     }
@@ -267,7 +267,7 @@ export class HistoricalAnalysisSystem {
     return {
       historicalData,
       recommendations,
-      modelStats
+      modelStats,
     };
   }
 
@@ -282,19 +282,19 @@ export class HistoricalAnalysisSystem {
   } {
     const stats = this.dataManager.getStorageStats();
     const modelStats = this.qualityPredictor.getModelStats();
-    
+
     // Check component health
     const components = {
       dataManager: stats.totalSuiteRecords > 0 ? 'ok' : 'warning',
       trendAnalyzer: 'ok',
       qualityPredictor: Object.keys(modelStats).length > 0 ? 'ok' : 'warning',
-      recommendationEngine: 'ok'
+      recommendationEngine: 'ok',
     } as Record<string, 'ok' | 'warning' | 'error'>;
 
     // Determine overall status
     const hasErrors = Object.values(components).includes('error');
     const hasWarnings = Object.values(components).includes('warning');
-    
+
     const status = hasErrors ? 'critical' : hasWarnings ? 'warning' : 'healthy';
 
     return {
@@ -303,10 +303,10 @@ export class HistoricalAnalysisSystem {
       metrics: {
         totalRecords: stats.totalSuiteRecords,
         storageSize: stats.storageSize,
-        modelAccuracy: Object.values(modelStats).reduce((sum: number, model: any) => 
-          sum + (model.accuracy || 0), 0) / Object.keys(modelStats).length || 0
+        modelAccuracy: Object.values(modelStats).reduce((sum: number, model: any) =>
+          sum + (model.accuracy || 0), 0) / Object.keys(modelStats).length || 0,
       },
-      lastAnalysis: stats.newestRecord
+      lastAnalysis: stats.newestRecord,
     };
   }
 
@@ -352,13 +352,13 @@ export class HistoricalAnalysisSystem {
   private generateSampleData(): TestSuiteRecord[] {
     const records: TestSuiteRecord[] = [];
     const now = new Date();
-    
+
     for (let i = 0; i < 30; i++) {
       const timestamp = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
       const totalTests = 100 + Math.floor(Math.random() * 50);
       const passedTests = Math.floor(totalTests * (0.85 + Math.random() * 0.1));
       const failedTests = totalTests - passedTests;
-      
+
       records.push({
         id: `sample_${i}`,
         timestamp,
@@ -372,24 +372,24 @@ export class HistoricalAnalysisSystem {
           statements: 80 + Math.random() * 15,
           branches: 75 + Math.random() * 15,
           functions: 85 + Math.random() * 10,
-          lines: 82 + Math.random() * 12
+          lines: 82 + Math.random() * 12,
         },
         performance: {
           totalMemory: 128 + Math.random() * 64,
           peakMemory: 256 + Math.random() * 128,
-          averageExecutionTime: 0.5 + Math.random() * 2
+          averageExecutionTime: 0.5 + Math.random() * 2,
         },
         environment: {
           nodeVersion: '18.0.0',
           platform: 'linux',
           ci: true,
           branch: 'main',
-          commit: `commit_${i}`
+          commit: `commit_${i}`,
         },
-        tests: []
+        tests: [],
       });
     }
-    
+
     return records;
   }
 

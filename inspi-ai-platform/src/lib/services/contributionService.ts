@@ -2,34 +2,37 @@
  * 贡献度计算服务
  */
 
+import { ObjectId } from 'mongodb';
+
+import {
+  CONTRIBUTION_POINTS,
+  CACHE_CONFIG,
+  LEADERBOARD_CONFIG,
+  ACHIEVEMENTS,
+  TRENDING_WORKS_CONFIG,
+  TIME_PERIODS,
+} from '@/lib/config/contribution';
 import ContributionLog, { ContributionLogDocument } from '@/lib/models/ContributionLog';
 import User from '@/lib/models/User';
 import Work from '@/lib/models/Work';
 import redis from '@/lib/redis';
-import { 
+import {
   ContributionType,
-  ContributionRecord, 
+  ContributionRecord,
   ContributionStats,
   ContributionHistoryQuery,
   ContributionHistory,
   LeaderboardQuery,
   LeaderboardResponse,
   LeaderboardType,
+  LeaderboardEntry,
   TrendingWork,
   TrendingWorksResponse,
   ContributionCalculationRequest,
-  Achievement
-} from '@/types/contribution';
-import { 
-  CONTRIBUTION_POINTS,
-  CACHE_CONFIG, 
-  LEADERBOARD_CONFIG,
-  ACHIEVEMENTS,
-  TRENDING_WORKS_CONFIG,
-  TIME_PERIODS
-} from '@/lib/config/contribution';
-import { handleServiceError } from '@/lib/utils/standardErrorHandler';
-import { ObjectId } from 'mongodb';
+  Achievement,
+} from '@/shared/types/contribution';
+import { handleServiceError } from '@/shared/utils/standardErrorHandler';
+
 
 class ContributionService {
   /**
@@ -43,17 +46,17 @@ class ContributionService {
         points: request.points || this.getPointsForType(request.type),
         workId: request.workId ? new ObjectId(request.workId) : undefined,
         description: request.metadata?.description || `获得${request.type}贡献度`,
-        metadata: request.metadata || {}
+        metadata: request.metadata || {},
       });
 
       const savedLog = await contributionLog.save();
-      
+
       // 更新用户总贡献度缓存
       await this.invalidateUserCache(request.userId);
-      
+
       // 检查成就解锁
       await this.checkAchievements(request.userId);
-      
+
       // 异步更新排行榜缓存
       this.updateLeaderboardCache().catch(console.error);
 
@@ -75,8 +78,8 @@ class ContributionService {
       metadata: {
         description: `发布作品《${workTitle}》`,
         workTitle,
-        contributionType: 'creation'
-      }
+        contributionType: 'creation',
+      },
     });
   }
 
@@ -84,10 +87,10 @@ class ContributionService {
    * 记录作品复用贡献度
    */
   async recordReuseContribution(
-    originalAuthorId: string, 
-    workId: string, 
+    originalAuthorId: string,
+    workId: string,
     workTitle: string,
-    reuserUserId: string
+    reuserUserId: string,
   ): Promise<ContributionRecord> {
     return await this.createContribution({
       userId: originalAuthorId,
@@ -97,8 +100,8 @@ class ContributionService {
         description: `作品《${workTitle}》被复用`,
         workTitle,
         reuserUserId,
-        contributionType: 'reuse'
-      }
+        contributionType: 'reuse',
+      },
     });
   }
 
@@ -109,31 +112,31 @@ class ContributionService {
     try {
       const cacheKey = CACHE_CONFIG.KEYS.USER_CONTRIBUTION(userId);
       const cached = await redis.get(cacheKey);
-      
+
       if (cached) {
         return JSON.parse(cached);
       }
 
       // 聚合查询用户贡献度统计
-      const stats = await ContributionLog.aggregate([
+      const stats = await (ContributionLog.aggregate as any)([
         { $match: { userId: new ObjectId(userId) } },
         {
           $group: {
             _id: null,
             totalPoints: { $sum: '$points' },
             creationPoints: {
-              $sum: { $cond: [{ $eq: ['$type', ContributionType.WORK_CREATION] }, '$points', 0] }
+              $sum: { $cond: [{ $eq: ['$type', ContributionType.WORK_CREATION] }, '$points', 0] },
             },
             reusePoints: {
-              $sum: { $cond: [{ $eq: ['$type', ContributionType.WORK_REUSED] }, '$points', 0] }
+              $sum: { $cond: [{ $eq: ['$type', ContributionType.WORK_REUSED] }, '$points', 0] },
             },
             bonusPoints: {
-              $sum: { $cond: [{ $eq: ['$type', ContributionType.MILESTONE_REACHED] }, '$points', 0] }
+              $sum: { $cond: [{ $eq: ['$type', ContributionType.MILESTONE_REACHED] }, '$points', 0] },
             },
             recordCount: { $sum: 1 },
-            lastActivity: { $max: '$createdAt' }
-          }
-        }
+            lastActivity: { $max: '$createdAt' },
+          },
+        },
       ]);
 
       const userStats = stats[0] || {
@@ -142,16 +145,16 @@ class ContributionService {
         reusePoints: 0,
         bonusPoints: 0,
         recordCount: 0,
-        lastActivity: new Date()
+        lastActivity: new Date(),
       };
-      
+
       // 获取作品数量统计
-      const worksCount = await Work.countDocuments({ author: new ObjectId(userId), status: 'published' });
-      
+      const worksCount = await (Work.countDocuments as any)({ author: new ObjectId(userId), status: 'published' });
+
       // 获取被复用次数
-      const reuseCount = await ContributionLog.countDocuments({ 
-        userId: new ObjectId(userId), 
-        type: ContributionType.WORK_REUSED 
+      const reuseCount = await (ContributionLog.countDocuments as any)({
+        userId: new ObjectId(userId),
+        type: ContributionType.WORK_REUSED,
       });
 
       const result: ContributionStats = {
@@ -162,7 +165,7 @@ class ContributionService {
         bonusPoints: userStats.bonusPoints,
         worksCount,
         reuseCount,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       };
 
       // 缓存结果
@@ -180,23 +183,23 @@ class ContributionService {
    */
   async getLeaderboard(query: LeaderboardQuery = {}): Promise<LeaderboardResponse> {
     try {
-      const { 
-        type = 'total', 
+      const {
+        type = 'total',
         limit = LEADERBOARD_CONFIG.DEFAULT_LIMIT,
         offset = 0,
         includeUserRank = false,
-        userId
+        userId,
       } = query;
 
       const cacheKey = `${CACHE_CONFIG.KEYS.LEADERBOARD_ALL}:${type}:${limit}:${offset}`;
       const cached = await redis.get(cacheKey);
-      
+
       if (cached && !includeUserRank) {
         return JSON.parse(cached);
       }
 
       let startDate: Date | undefined;
-      
+
       // 根据类型设置时间范围
       if (type === 'weekly') {
         startDate = new Date(Date.now() - TIME_PERIODS.WEEKLY.duration);
@@ -210,21 +213,21 @@ class ContributionService {
         matchCondition = { createdAt: { $gte: startDate } };
       }
 
-      const leaderboardData = await ContributionLog.aggregate([
+      const leaderboardData = await (ContributionLog.aggregate as any)([
         { $match: matchCondition },
         {
           $group: {
             _id: '$userId',
             totalPoints: { $sum: '$points' },
             creationPoints: {
-              $sum: { $cond: [{ $eq: ['$type', ContributionType.WORK_CREATION] }, '$points', 0] }
+              $sum: { $cond: [{ $eq: ['$type', ContributionType.WORK_CREATION] }, '$points', 0] },
             },
             reusePoints: {
-              $sum: { $cond: [{ $eq: ['$type', ContributionType.WORK_REUSED] }, '$points', 0] }
+              $sum: { $cond: [{ $eq: ['$type', ContributionType.WORK_REUSED] }, '$points', 0] },
             },
             recordCount: { $sum: 1 },
-            lastActivity: { $max: '$createdAt' }
-          }
+            lastActivity: { $max: '$createdAt' },
+          },
         },
         { $sort: { totalPoints: -1 } },
         { $skip: offset },
@@ -234,8 +237,8 @@ class ContributionService {
             from: 'users',
             localField: '_id',
             foreignField: '_id',
-            as: 'user'
-          }
+            as: 'user',
+          },
         },
         { $unwind: '$user' },
         {
@@ -244,10 +247,10 @@ class ContributionService {
             let: { userId: '$_id' },
             pipeline: [
               { $match: { $expr: { $eq: ['$author', '$$userId'] }, status: 'published' } },
-              { $count: 'count' }
+              { $count: 'count' },
             ],
-            as: 'worksCount'
-          }
+            as: 'worksCount',
+          },
         },
         {
           $project: {
@@ -260,9 +263,9 @@ class ContributionService {
             creationCount: { $ifNull: [{ $arrayElemAt: ['$worksCount.count', 0] }, 0] },
             reuseCount: { $divide: ['$reusePoints', CONTRIBUTION_POINTS.reuse.points] },
             recordCount: 1,
-            lastActivity: 1
-          }
-        }
+            lastActivity: 1,
+          },
+        },
       ]);
 
       // 格式化排行榜数据
@@ -274,11 +277,11 @@ class ContributionService {
         rank: offset + index + 1,
         creationCount: entry.creationCount,
         reuseCount: Math.floor(entry.reuseCount),
-        lastActivity: entry.lastActivity.toISOString()
+        lastActivity: entry.lastActivity.toISOString(),
       }));
 
       let userRank: LeaderboardEntry | undefined;
-      
+
       // 如果需要包含用户排名信息
       if (includeUserRank && userId) {
         userRank = await this.getUserRankInLeaderboard(userId, type);
@@ -289,7 +292,7 @@ class ContributionService {
         entries,
         total: entries.length,
         userRank,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       };
 
       // 缓存结果（不包含用户特定信息）
@@ -310,7 +313,7 @@ class ContributionService {
   async getUserRankInLeaderboard(userId: string, type: string = 'total'): Promise<LeaderboardEntry | undefined> {
     try {
       let startDate: Date | undefined;
-      
+
       if (type === 'weekly') {
         startDate = new Date(Date.now() - TIME_PERIODS.WEEKLY.duration);
       } else if (type === 'monthly') {
@@ -323,15 +326,15 @@ class ContributionService {
       }
 
       // 获取用户积分
-      const userStats = await ContributionLog.aggregate([
+      const userStats = await (ContributionLog.aggregate as any)([
         { $match: { ...matchCondition, userId: new ObjectId(userId) } },
         {
           $group: {
             _id: null,
             totalPoints: { $sum: '$points' },
-            lastActivity: { $max: '$createdAt' }
-          }
-        }
+            lastActivity: { $max: '$createdAt' },
+          },
+        },
       ]);
 
       if (!userStats.length) {
@@ -341,35 +344,35 @@ class ContributionService {
       const userPoints = userStats[0].totalPoints;
 
       // 计算排名
-      const rankData = await ContributionLog.aggregate([
+      const rankData = await (ContributionLog.aggregate as any)([
         { $match: matchCondition },
         {
           $group: {
             _id: '$userId',
-            totalPoints: { $sum: '$points' }
-          }
+            totalPoints: { $sum: '$points' },
+          },
         },
         {
           $match: {
-            totalPoints: { $gt: userPoints }
-          }
+            totalPoints: { $gt: userPoints },
+          },
         },
-        { $count: 'count' }
+        { $count: 'count' },
       ]);
 
       const rank = (rankData[0]?.count || 0) + 1;
 
       // 获取用户信息
-      const user = await User.findById(userId).select('name avatar');
+      const user = await (User.findById as any)(userId).select('name avatar');
       if (!user) {
         return undefined;
       }
 
       // 获取创作和复用统计
-      const worksCount = await Work.countDocuments({ author: new ObjectId(userId), status: 'published' });
-      const reuseCount = await ContributionLog.countDocuments({ 
-        userId: new ObjectId(userId), 
-        type: ContributionType.WORK_REUSED 
+      const worksCount = await (Work.countDocuments as any)({ author: new ObjectId(userId), status: 'published' });
+      const reuseCount = await (ContributionLog.countDocuments as any)({
+        userId: new ObjectId(userId),
+        type: ContributionType.WORK_REUSED,
       });
 
       return {
@@ -380,7 +383,7 @@ class ContributionService {
         rank,
         creationCount: worksCount,
         reuseCount,
-        lastActivity: userStats[0].lastActivity.toISOString()
+        lastActivity: userStats[0].lastActivity.toISOString(),
       };
     } catch (error) {
       handleServiceError(error, '获取用户排名');
@@ -395,14 +398,14 @@ class ContributionService {
     try {
       const cacheKey = CACHE_CONFIG.KEYS.TRENDING_WORKS(period);
       const cached = await redis.get(cacheKey);
-      
+
       if (cached) {
         return JSON.parse(cached);
       }
 
       const now = new Date();
       let startDate: Date;
-      
+
       switch (period) {
         case 'daily':
           startDate = new Date(now.getTime() - TIME_PERIODS.DAILY.duration);
@@ -418,12 +421,12 @@ class ContributionService {
       }
 
       // 计算热门作品
-      const trendingWorks = await Work.aggregate([
+      const trendingWorks = await (Work.aggregate as any)([
         {
           $match: {
             status: 'published',
-            publishedAt: { $gte: startDate }
-          }
+            publishedAt: { $gte: startDate },
+          },
         },
         {
           $lookup: {
@@ -434,12 +437,12 @@ class ContributionService {
                 $match: {
                   $expr: { $eq: ['$workId', '$$workId'] },
                   type: ContributionType.WORK_REUSED,
-                  createdAt: { $gte: startDate }
-                }
-              }
+                  createdAt: { $gte: startDate },
+                },
+              },
             ],
-            as: 'recentReuses'
-          }
+            as: 'recentReuses',
+          },
         },
         {
           $lookup: {
@@ -449,20 +452,20 @@ class ContributionService {
               {
                 $match: {
                   $expr: { $eq: ['$workId', '$$workId'] },
-                  type: ContributionType.WORK_REUSED
-                }
-              }
+                  type: ContributionType.WORK_REUSED,
+                },
+              },
             ],
-            as: 'totalReuses'
-          }
+            as: 'totalReuses',
+          },
         },
         {
           $lookup: {
             from: 'users',
             localField: 'author',
             foreignField: '_id',
-            as: 'authorInfo'
-          }
+            as: 'authorInfo',
+          },
         },
         { $unwind: '$authorInfo' },
         {
@@ -473,10 +476,10 @@ class ContributionService {
             timeDecay: {
               $divide: [
                 { $subtract: [now, '$publishedAt'] },
-                1000 * 60 * 60 * 24 // 转换为天数
-              ]
-            }
-          }
+                1000 * 60 * 60 * 24, // 转换为天数
+              ],
+            },
+          },
         },
         {
           $addFields: {
@@ -485,20 +488,20 @@ class ContributionService {
               $add: [
                 { $multiply: ['$recentReuseCount', TRENDING_WORKS_CONFIG.WEIGHT_FACTORS.RECENT_REUSE] },
                 { $multiply: ['$totalReuseCount', TRENDING_WORKS_CONFIG.WEIGHT_FACTORS.TOTAL_REUSE] },
-                { 
+                {
                   $multiply: [
                     { $max: [0, { $subtract: [30, '$timeDecay'] }] }, // 30天内的新作品加分
-                    TRENDING_WORKS_CONFIG.WEIGHT_FACTORS.CREATION_TIME
-                  ]
-                }
-              ]
-            }
-          }
+                    TRENDING_WORKS_CONFIG.WEIGHT_FACTORS.CREATION_TIME,
+                  ],
+                },
+              ],
+            },
+          },
         },
         {
           $match: {
-            totalReuseCount: { $gte: TRENDING_WORKS_CONFIG.MIN_REUSE_COUNT }
-          }
+            totalReuseCount: { $gte: TRENDING_WORKS_CONFIG.MIN_REUSE_COUNT },
+          },
         },
         { $sort: { trendingScore: -1 } },
         { $limit: limit },
@@ -513,15 +516,15 @@ class ContributionService {
             trendingScore: { $round: ['$trendingScore', 2] },
             createdAt: '$publishedAt',
             thumbnail: '$thumbnail',
-            tags: { $ifNull: ['$tags', []] }
-          }
-        }
+            tags: { $ifNull: ['$tags', []] },
+          },
+        },
       ]);
 
       const result: TrendingWorksResponse = {
         works: trendingWorks,
         period,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       };
 
       // 缓存结果
@@ -540,9 +543,9 @@ class ContributionService {
   async getUserRank(userId: string): Promise<{ rank: number; totalPoints: number } | null> {
     try {
       // 获取用户积分
-      const userStats = await ContributionLog.aggregate([
+      const userStats = await (ContributionLog.aggregate as any)([
         { $match: { userId: new ObjectId(userId) } },
-        { $group: { _id: null, totalPoints: { $sum: '$points' } } }
+        { $group: { _id: null, totalPoints: { $sum: '$points' } } },
       ]);
 
       if (!userStats.length) {
@@ -552,22 +555,22 @@ class ContributionService {
       const userPoints = userStats[0].totalPoints;
 
       // 计算排名
-      const rankData = await ContributionLog.aggregate([
+      const rankData = await (ContributionLog.aggregate as any)([
         {
           $group: {
             _id: '$userId',
-            totalPoints: { $sum: '$points' }
-          }
+            totalPoints: { $sum: '$points' },
+          },
         },
         {
           $group: {
             _id: null,
             totalUsers: { $sum: 1 },
             higherRanked: {
-              $sum: { $cond: [{ $gt: ['$totalPoints', userPoints] }, 1, 0] }
-            }
-          }
-        }
+              $sum: { $cond: [{ $gt: ['$totalPoints', userPoints] }, 1, 0] },
+            },
+          },
+        },
       ]);
 
       if (!rankData.length) {
@@ -579,7 +582,7 @@ class ContributionService {
 
       return {
         rank,
-        totalPoints: userPoints
+        totalPoints: userPoints,
       };
     } catch (error) {
       handleServiceError(error, '获取用户排名');
@@ -598,16 +601,16 @@ class ContributionService {
         startDate,
         endDate,
         limit = 20,
-        offset = 0
+        offset = 0,
       } = query;
 
       // 构建查询条件
       const matchCondition: any = { userId: new ObjectId(userId) };
-      
+
       if (type) {
         matchCondition.type = type;
       }
-      
+
       if (startDate || endDate) {
         matchCondition.createdAt = {};
         if (startDate) matchCondition.createdAt.$gte = startDate;
@@ -617,45 +620,45 @@ class ContributionService {
       // 分页查询
       const [records, totalCount] = await Promise.all([
         // 获取记录
-        ContributionLog.find(matchCondition)
+        (ContributionLog.find as any)(matchCondition)
           .sort({ createdAt: -1 })
           .skip(offset)
           .limit(limit)
           .populate('workId', 'title')
-          .lean(),
-        
+        .lean(),
+
         // 获取总数
-        ContributionLog.countDocuments(matchCondition)
+        (ContributionLog.countDocuments as any)(matchCondition),
       ]);
 
       const formattedRecords: ContributionRecord[] = records.map(record => this.formatContributionRecord(record));
 
       // 获取汇总统计
       const userStats = await this.getUserContributionStats(userId);
-      
+
       // 获取本周和本月的积分
       const now = new Date();
       const weekStart = new Date(now.getTime() - TIME_PERIODS.WEEKLY.duration);
       const monthStart = new Date(now.getTime() - TIME_PERIODS.MONTHLY.duration);
-      
-      const weeklyStats = await ContributionLog.aggregate([
-        { 
-          $match: { 
-            userId: new ObjectId(userId), 
-            createdAt: { $gte: weekStart, $lte: now } 
-          } 
+
+      const weeklyStats = await (ContributionLog.aggregate as any)([
+        {
+          $match: {
+            userId: new ObjectId(userId),
+            createdAt: { $gte: weekStart, $lte: now },
+          },
         },
-        { $group: { _id: null, totalPoints: { $sum: '$points' } } }
+        { $group: { _id: null, totalPoints: { $sum: '$points' } } },
       ]);
-      
-      const monthlyStats = await ContributionLog.aggregate([
-        { 
-          $match: { 
-            userId: new ObjectId(userId), 
-            createdAt: { $gte: monthStart, $lte: now } 
-          } 
+
+      const monthlyStats = await (ContributionLog.aggregate as any)([
+        {
+          $match: {
+            userId: new ObjectId(userId),
+            createdAt: { $gte: monthStart, $lte: now },
+          },
         },
-        { $group: { _id: null, totalPoints: { $sum: '$points' } } }
+        { $group: { _id: null, totalPoints: { $sum: '$points' } } },
       ]);
 
       // 按类型统计
@@ -663,17 +666,17 @@ class ContributionService {
       Object.values(ContributionType).forEach(type => {
         byType[type] = 0;
       });
-      
-      const typeStats = await ContributionLog.aggregate([
+
+      const typeStats = await (ContributionLog.aggregate as any)([
         { $match: { userId: new ObjectId(userId) } },
         {
           $group: {
             _id: '$type',
-            points: { $sum: '$points' }
-          }
-        }
+            points: { $sum: '$points' },
+          },
+        },
       ]);
-      
+
       typeStats.forEach(stat => {
         byType[stat._id as ContributionType] = stat.points;
       });
@@ -686,125 +689,11 @@ class ContributionService {
           totalPoints: userStats.totalPoints,
           thisWeek: weeklyStats[0]?.totalPoints || 0,
           thisMonth: monthlyStats[0]?.totalPoints || 0,
-          byType
-        }
+          byType,
+        },
       };
     } catch (error) {
       handleServiceError(error, '获取贡献度历史');
-      throw error;
-    }
-  }
-
-  /**
-   * 获取热门作品
-   */
-  async getTrendingWorks(period: 'daily' | 'weekly' | 'monthly' = 'weekly', limit: number = 20): Promise<TrendingWorksResponse> {
-    try {
-      const cacheKey = CACHE_CONFIG.KEYS.TRENDING_WORKS(period);
-      const cached = await redis.get(cacheKey);
-      
-      if (cached) {
-        return JSON.parse(cached);
-      }
-
-      const now = new Date();
-      let startDate: Date;
-      
-      switch (period) {
-        case 'daily':
-          startDate = new Date(now.getTime() - TIME_PERIODS.DAILY.duration);
-          break;
-        case 'weekly':
-          startDate = new Date(now.getTime() - TIME_PERIODS.WEEKLY.duration);
-          break;
-        case 'monthly':
-          startDate = new Date(now.getTime() - TIME_PERIODS.MONTHLY.duration);
-          break;
-        default:
-          startDate = new Date(now.getTime() - TIME_PERIODS.WEEKLY.duration);
-      }
-
-      // 获取热门作品数据
-      const trendingData = await ContributionLog.aggregate([
-        {
-          $match: {
-            type: ContributionType.WORK_REUSED,
-            createdAt: { $gte: startDate }
-          }
-        },
-        {
-          $group: {
-            _id: '$workId',
-            reuseCount: { $sum: 1 },
-            trendingScore: { $sum: '$points' }
-          }
-        },
-        {
-          $lookup: {
-            from: 'works',
-            localField: '_id',
-            foreignField: '_id',
-            as: 'work'
-          }
-        },
-        { $unwind: '$work' },
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'work.author',
-            foreignField: '_id',
-            as: 'author'
-          }
-        },
-        { $unwind: '$author' },
-        {
-          $match: {
-            'work.status': 'published'
-          }
-        },
-        {
-          $project: {
-            workId: { $toString: '$_id' },
-            title: '$work.title',
-            authorId: { $toString: '$work.author' },
-            authorName: '$author.name',
-            reuseCount: 1,
-            viewCount: '$work.viewCount',
-            trendingScore: 1,
-            createdAt: '$work.createdAt',
-            thumbnail: '$work.thumbnail',
-            tags: '$work.tags'
-          }
-        },
-        { $sort: { trendingScore: -1 } },
-        { $limit: limit }
-      ]);
-
-      const works: TrendingWork[] = trendingData.map(item => ({
-        workId: item.workId,
-        title: item.title,
-        authorId: item.authorId,
-        authorName: item.authorName,
-        reuseCount: item.reuseCount,
-        viewCount: item.viewCount || 0,
-        trendingScore: item.trendingScore,
-        createdAt: item.createdAt,
-        thumbnail: item.thumbnail,
-        tags: item.tags || []
-      }));
-
-      const result: TrendingWorksResponse = {
-        works,
-        period,
-        lastUpdated: new Date()
-      };
-
-      // 缓存结果
-      await redis.set(cacheKey, JSON.stringify(result), CACHE_CONFIG.TTL.TRENDING_WORKS);
-
-      return result;
-    } catch (error) {
-      handleServiceError(error, '获取热门作品');
       throw error;
     }
   }
@@ -842,7 +731,7 @@ class ContributionService {
           await this.unlockAchievement(userId, achievement);
           unlockedAchievements.push({
             ...achievement,
-            unlockedAt: new Date().toISOString()
+            unlockedAt: new Date().toISOString(),
           });
         }
       }
@@ -855,32 +744,15 @@ class ContributionService {
   }
 
   /**
-   * 更新排行榜缓存
-   */
-  async updateLeaderboardCache(): Promise<void> {
-    try {
-      const types = ['total', 'weekly', 'monthly'];
-      
-      for (const type of types) {
-        const leaderboard = await this.getLeaderboard({ type });
-        const cacheKey = `${CACHE_CONFIG.KEYS.LEADERBOARD_ALL}:${type}:${LEADERBOARD_CONFIG.DEFAULT_LIMIT}:0`;
-        await redis.set(cacheKey, JSON.stringify(leaderboard), CACHE_CONFIG.TTL.LEADERBOARD);
-      }
-    } catch (error) {
-      console.error('更新排行榜缓存失败:', error);
-    }
-  }
-
-  /**
    * 清除用户相关缓存
    */
   async invalidateUserCache(userId: string): Promise<void> {
     try {
       const keys = [
         CACHE_CONFIG.KEYS.USER_CONTRIBUTION(userId),
-        CACHE_CONFIG.KEYS.CONTRIBUTION_STATS(userId)
+        CACHE_CONFIG.KEYS.CONTRIBUTION_STATS(userId),
       ];
-      
+
       await Promise.all(keys.map(key => redis.del(key)));
     } catch (error) {
       console.error('清除用户缓存失败:', error);
@@ -922,7 +794,7 @@ class ContributionService {
       description: record.description,
       displayText: this.getDisplayText(record),
       createdAt: record.createdAt,
-      metadata: record.metadata
+      metadata: record.metadata,
     };
   }
 
@@ -970,8 +842,8 @@ class ContributionService {
           metadata: {
             description: `解锁成就：${achievement.title}`,
             achievementId: achievement.id,
-            achievementTitle: achievement.title
-          }
+            achievementTitle: achievement.title,
+          },
         });
       }
 
@@ -1040,25 +912,25 @@ class ContributionService {
       const monthStart = new Date(now.getTime() - TIME_PERIODS.MONTHLY.duration);
 
       // 总用户数
-      const totalUsers = await User.countDocuments();
+      const totalUsers = await (User.countDocuments as any)();
 
       // 本周活跃用户数
-      const activeUsersThisWeek = await ContributionLog.distinct('userId', {
-        createdAt: { $gte: weekStart }
+      const activeUsersThisWeek = await (ContributionLog.distinct as any)('userId', {
+        createdAt: { $gte: weekStart },
       }).then(users => users.length);
 
       // 本月活跃用户数
-      const activeUsersThisMonth = await ContributionLog.distinct('userId', {
-        createdAt: { $gte: monthStart }
+      const activeUsersThisMonth = await (ContributionLog.distinct as any)('userId', {
+        createdAt: { $gte: monthStart },
       }).then(users => users.length);
 
       // 总贡献度最高的用户
-      const topContributorData = await ContributionLog.aggregate([
+      const topContributorData = await (ContributionLog.aggregate as any)([
         {
           $group: {
             _id: '$userId',
-            totalPoints: { $sum: '$points' }
-          }
+            totalPoints: { $sum: '$points' },
+          },
         },
         { $sort: { totalPoints: -1 } },
         { $limit: 1 },
@@ -1067,17 +939,17 @@ class ContributionService {
             from: 'users',
             localField: '_id',
             foreignField: '_id',
-            as: 'user'
-          }
+            as: 'user',
+          },
         },
         { $unwind: '$user' },
         {
           $project: {
             userId: { $toString: '$_id' },
             userName: '$user.name',
-            totalPoints: 1
-          }
-        }
+            totalPoints: 1,
+          },
+        },
       ]);
 
       const topContributor = topContributorData.length > 0 ? topContributorData[0] : null;
@@ -1086,7 +958,7 @@ class ContributionService {
         totalUsers,
         activeUsersThisWeek,
         activeUsersThisMonth,
-        topContributor
+        topContributor,
       };
     } catch (error) {
       handleServiceError(error, '获取排行榜统计信息');

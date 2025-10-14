@@ -2,10 +2,11 @@
  * API客户端错误处理
  */
 
-import { CustomError } from '@/lib/errors/CustomError';
-import { ErrorCode } from '@/lib/errors/types';
 import { logger } from '@/lib/logging/logger';
 import { reportError, monitoringContext } from '@/lib/monitoring';
+import { CustomError } from '@/shared/errors/CustomError';
+import { ErrorCode } from '@/shared/errors/types';
+
 import { ApiResponse } from './responses';
 
 /**
@@ -33,12 +34,12 @@ export class ApiError extends CustomError {
   constructor(
     message: string,
     status: number,
-    code: string = ErrorCode.API_ERROR,
+    code: ErrorCode = ErrorCode.API_ERROR,
     response?: Response,
     data?: any,
-    traceId?: string
+    traceId?: string,
   ) {
-    super(message, code);
+    super(code, message);
     this.name = 'ApiError';
     this.status = status;
     this.response = response;
@@ -72,8 +73,8 @@ export class ApiError extends CustomError {
    */
   isRetryable(): boolean {
     // 网络错误、服务器错误、超时错误可重试
-    return this.isNetworkError() || 
-           this.isServerError() || 
+    return this.isNetworkError() ||
+           this.isServerError() ||
            this.status === 408 || // Request Timeout
            this.status === 429;   // Too Many Requests
   }
@@ -104,9 +105,9 @@ export class ApiClient {
       retryDelay: 1000,
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
       },
-      ...config
+      ...config,
     };
   }
 
@@ -115,7 +116,7 @@ export class ApiClient {
    */
   async request<T = any>(
     url: string,
-    config: RequestConfig = {}
+    config: RequestConfig = {},
   ): Promise<ApiResponse<T>> {
     const requestId = this.generateRequestId();
     const fullUrl = this.buildUrl(url);
@@ -126,18 +127,18 @@ export class ApiClient {
       id: requestId,
       method: requestConfig.method || 'GET',
       url: fullUrl,
-      startTime: Date.now()
+      startTime: Date.now(),
     });
 
     try {
       const response = await this.executeRequest<T>(fullUrl, requestConfig, requestId);
-      
+
       // 更新请求上下文
       monitoringContext.setRequest({
         id: requestId,
         endTime: Date.now(),
         duration: Date.now() - (monitoringContext.getCurrentContext().request.startTime || Date.now()),
-        statusCode: response.status
+        statusCode: response.status,
       });
 
       return response;
@@ -147,7 +148,7 @@ export class ApiClient {
         id: requestId,
         endTime: Date.now(),
         duration: Date.now() - (monitoringContext.getCurrentContext().request.startTime || Date.now()),
-        statusCode: error instanceof ApiError ? error.status : 0
+        statusCode: error instanceof ApiError ? error.status : 0,
       });
 
       throw error;
@@ -170,7 +171,7 @@ export class ApiClient {
     return this.request<T>(url, {
       ...config,
       method: 'POST',
-      body: data ? JSON.stringify(data) : undefined
+      body: data ? JSON.stringify(data) : undefined,
     });
   }
 
@@ -181,7 +182,7 @@ export class ApiClient {
     return this.request<T>(url, {
       ...config,
       method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined
+      body: data ? JSON.stringify(data) : undefined,
     });
   }
 
@@ -199,7 +200,7 @@ export class ApiClient {
     return this.request<T>(url, {
       ...config,
       method: 'PATCH',
-      body: data ? JSON.stringify(data) : undefined
+      body: data ? JSON.stringify(data) : undefined,
     });
   }
 
@@ -228,7 +229,7 @@ export class ApiClient {
   private async executeRequest<T>(
     url: string,
     config: RequestConfig & { signal: AbortSignal },
-    requestId: string
+    requestId: string,
   ): Promise<ApiResponse<T>> {
     const maxRetries = config.retries ?? this.config.retries ?? 3;
     const retryDelay = config.retryDelay ?? this.config.retryDelay ?? 1000;
@@ -240,7 +241,7 @@ export class ApiClient {
         if (attempt > 0) {
           // 等待重试延迟
           await this.delay(retryDelay * Math.pow(2, attempt - 1)); // 指数退避
-          
+
           // 调用重试回调
           if (this.config.onRetry) {
             this.config.onRetry(attempt, lastError!);
@@ -252,12 +253,12 @@ export class ApiClient {
               url,
               attempt,
               maxRetries,
-              lastError: lastError!.message
-            }
+              lastError: lastError!.message,
+            },
           });
         }
 
-        const response = await this.fetchWithTimeout(url, config);
+        const response = await this.fetchWithTimeout(url, config, requestId);
         const data = await this.parseResponse<T>(response);
 
         // 检查业务错误
@@ -268,7 +269,7 @@ export class ApiClient {
             data.error.code,
             response,
             data,
-            data.error.traceId
+            data.error.traceId,
           );
         }
 
@@ -278,22 +279,36 @@ export class ApiClient {
 
         // 如果不可重试或已达到最大重试次数，抛出错误
         if (!lastError.isRetryable() || attempt === maxRetries) {
-          throw lastError;
+          if (lastError instanceof Error) {
+            throw lastError;
+          }
+
+          throw new Error(String(lastError));
         }
       }
     }
 
-    throw lastError!;
+    if (lastError instanceof Error) {
+      throw lastError;
+    }
+
+    throw new Error('API request failed');
   }
 
   /**
    * 带超时的fetch
    */
-  private async fetchWithTimeout(url: string, config: RequestConfig & { signal: AbortSignal }): Promise<Response> {
+  private async fetchWithTimeout(
+    url: string,
+    config: RequestConfig & { signal: AbortSignal },
+    requestId: string,
+  ): Promise<Response> {
     const timeout = config.timeout ?? this.config.timeout ?? 10000;
-    
+
+    const controller = this.abortControllers.get(requestId);
+
     const timeoutId = setTimeout(() => {
-      config.signal.abort();
+      controller?.abort();
     }, timeout);
 
     try {
@@ -311,16 +326,20 @@ export class ApiClient {
    */
   private async parseResponse<T>(response: Response): Promise<ApiResponse<T>> {
     const contentType = response.headers.get('content-type');
-    
+
     if (contentType?.includes('application/json')) {
       try {
-        return await response.json();
+        const json = await response.json();
+        return {
+          ...json,
+          status: response.status,
+        };
       } catch (error) {
         throw new ApiError(
           '响应解析失败：无效的JSON格式',
           response.status,
           ErrorCode.PARSE_ERROR,
-          response
+          response,
         );
       }
     } else {
@@ -331,13 +350,14 @@ export class ApiClient {
           text || `HTTP ${response.status}: ${response.statusText}`,
           response.status,
           ErrorCode.HTTP_ERROR,
-          response
+          response,
         );
       }
-      
+
       return {
         success: true,
-        data: text as any
+        data: text as any,
+        status: response.status,
       };
     }
   }
@@ -354,19 +374,19 @@ export class ApiClient {
       apiError = new ApiError(
         '请求已取消',
         0,
-        ErrorCode.REQUEST_CANCELLED
+        ErrorCode.REQUEST_CANCELLED,
       );
     } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
       apiError = new ApiError(
         '网络连接失败，请检查网络连接',
         0,
-        ErrorCode.NETWORK_ERROR
+        ErrorCode.NETWORK_ERROR,
       );
     } else {
       apiError = new ApiError(
         error.message || '请求失败',
         0,
-        ErrorCode.UNKNOWN_ERROR
+        ErrorCode.UNKNOWN_ERROR,
       );
     }
 
@@ -376,8 +396,8 @@ export class ApiClient {
         requestId,
         url,
         status: apiError.status,
-        code: apiError.code
-      }
+        code: apiError.code,
+      },
     });
 
     // 报告错误到监控系统
@@ -386,12 +406,12 @@ export class ApiClient {
         tags: {
           api_client: 'true',
           request_id: requestId,
-          status: apiError.status.toString()
+          status: apiError.status.toString(),
         },
         extra: {
           url,
-          traceId: apiError.traceId
-        }
+          traceId: apiError.traceId,
+        },
       });
     }
 
@@ -410,7 +430,7 @@ export class ApiClient {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
-    
+
     const baseURL = this.config.baseURL || '';
     return `${baseURL}${url.startsWith('/') ? url : `/${url}`}`;
   }
@@ -427,9 +447,9 @@ export class ApiClient {
       headers: {
         ...this.config.headers,
         ...config.headers,
-        'X-Request-ID': requestId
+        'X-Request-ID': requestId,
       },
-      signal: controller.signal
+      signal: controller.signal,
     };
   }
 

@@ -3,8 +3,8 @@
  * Tests compatibility across different browser environments
  */
 
-import { BrowserInfo, BrowserFeature, CompatibilityTestResult, BrowserConfig } from './types';
 import { EnvironmentDetector } from './EnvironmentDetector';
+import { BrowserInfo, BrowserFeature, CompatibilityTestResult, BrowserConfig } from './types';
 
 export class BrowserCompatibilityTester {
   private supportedBrowsers: BrowserConfig[] = [
@@ -12,26 +12,26 @@ export class BrowserCompatibilityTester {
       name: 'chrome',
       versions: ['latest', '119', '118', '117'],
       headless: true,
-      viewport: { width: 1920, height: 1080 }
+      viewport: { width: 1920, height: 1080 },
     },
     {
       name: 'firefox',
       versions: ['latest', '119', '118'],
       headless: true,
-      viewport: { width: 1920, height: 1080 }
+      viewport: { width: 1920, height: 1080 },
     },
     {
       name: 'safari',
       versions: ['latest', '16', '15'],
       headless: false,
-      viewport: { width: 1920, height: 1080 }
+      viewport: { width: 1920, height: 1080 },
     },
     {
       name: 'edge',
       versions: ['latest', '119', '118'],
       headless: true,
-      viewport: { width: 1920, height: 1080 }
-    }
+      viewport: { width: 1920, height: 1080 },
+    },
   ];
 
   private testTimeout = 300000; // 5 minutes
@@ -41,7 +41,7 @@ export class BrowserCompatibilityTester {
    */
   async testMultipleBrowsers(
     testCommand: string,
-    browsers?: BrowserConfig[]
+    browsers?: BrowserConfig[],
   ): Promise<CompatibilityTestResult[]> {
     const browsersToTest = browsers || this.supportedBrowsers;
     const results: CompatibilityTestResult[] = [];
@@ -61,10 +61,10 @@ export class BrowserCompatibilityTester {
               type: 'platform',
               message: `Failed to test ${browser.name} ${version}: ${error}`,
               severity: 'critical',
-              affectedTests: ['all']
+              affectedTests: ['all'],
             }],
             warnings: [],
-            performance: this.getEmptyPerformanceMetrics()
+            performance: this.getEmptyPerformanceMetrics(),
           });
         }
       }
@@ -79,7 +79,7 @@ export class BrowserCompatibilityTester {
   async testSingleBrowser(
     browser: BrowserConfig,
     version: string,
-    testCommand: string
+    testCommand: string,
   ): Promise<CompatibilityTestResult> {
     const startTime = Date.now();
     const environment = await EnvironmentDetector.getEnvironmentInfo();
@@ -97,10 +97,10 @@ export class BrowserCompatibilityTester {
           message: `Browser ${browser.name} ${version} is not available`,
           severity: 'critical',
           suggestion: 'Install the required browser or use a different testing strategy',
-          affectedTests: ['all']
+          affectedTests: ['all'],
         }],
         warnings: [],
-        performance: this.getEmptyPerformanceMetrics()
+        performance: this.getEmptyPerformanceMetrics(),
       };
     }
 
@@ -115,7 +115,7 @@ export class BrowserCompatibilityTester {
         duration,
         errors: testResult.errors,
         warnings: testResult.warnings,
-        performance: testResult.performance
+        performance: testResult.performance,
       };
     } catch (error) {
       return {
@@ -127,10 +127,10 @@ export class BrowserCompatibilityTester {
           type: 'platform',
           message: `Error running browser tests: ${error}`,
           severity: 'critical',
-          affectedTests: ['all']
+          affectedTests: ['all'],
         }],
         warnings: [],
-        performance: this.getEmptyPerformanceMetrics()
+        performance: this.getEmptyPerformanceMetrics(),
       };
     }
   }
@@ -151,7 +151,7 @@ export class BrowserCompatibilityTester {
         matrix.push({
           browser: browser.name,
           version,
-          features
+          features,
         });
       }
     }
@@ -164,7 +164,7 @@ export class BrowserCompatibilityTester {
    */
   async detectBrowserCapabilities(
     browserName: string,
-    version: string
+    version: string,
   ): Promise<BrowserInfo> {
     const features = await this.getBrowserFeatures(browserName, version);
     const supported = this.isBrowserSupported(browserName, version);
@@ -176,7 +176,7 @@ export class BrowserCompatibilityTester {
       platform: process.platform,
       mobile: false, // Assuming desktop for now
       supported,
-      features
+      features,
     };
   }
 
@@ -187,7 +187,7 @@ export class BrowserCompatibilityTester {
     try {
       // For headless testing, we typically use Playwright or Puppeteer
       // This is a simplified check - in practice, you'd use the actual browser automation tools
-      
+
       if (process.env.CI) {
         // In CI, assume browsers are available via browser automation tools
         return true;
@@ -195,10 +195,10 @@ export class BrowserCompatibilityTester {
 
       // Local development - check if browser automation tools are available
       const { spawn } = require('child_process');
-      
+
       return new Promise((resolve) => {
         const child = spawn('npx', ['playwright', 'install', '--dry-run'], {
-          stdio: 'pipe'
+          stdio: 'pipe',
         });
 
         child.on('close', (code) => {
@@ -226,7 +226,7 @@ export class BrowserCompatibilityTester {
   private async runBrowserTest(
     browser: BrowserConfig,
     version: string,
-    testCommand: string
+    testCommand: string,
   ): Promise<{
     passed: boolean;
     errors: any[];
@@ -243,13 +243,13 @@ export class BrowserCompatibilityTester {
       BROWSER_VERSION: version,
       HEADLESS: browser.headless ? 'true' : 'false',
       VIEWPORT_WIDTH: browser.viewport?.width?.toString() || '1920',
-      VIEWPORT_HEIGHT: browser.viewport?.height?.toString() || '1080'
+      VIEWPORT_HEIGHT: browser.viewport?.height?.toString() || '1080',
     };
 
     try {
       // Run the test command with browser-specific configuration
       const result = await this.runCommand(testCommand, { env, timeout: this.testTimeout });
-      
+
       const endTime = Date.now();
       const endMemory = process.memoryUsage();
 
@@ -258,12 +258,12 @@ export class BrowserCompatibilityTester {
         memoryUsage: {
           peak: Math.max(endMemory.heapUsed, startMemory.heapUsed),
           average: (endMemory.heapUsed + startMemory.heapUsed) / 2,
-          final: endMemory.heapUsed
+          final: endMemory.heapUsed,
         },
         cpuUsage: {
           peak: 0,
-          average: 0
-        }
+          average: 0,
+        },
       };
 
       return {
@@ -272,10 +272,10 @@ export class BrowserCompatibilityTester {
           type: 'platform',
           message: `Browser tests failed: ${result.stderr}`,
           severity: 'major',
-          affectedTests: this.parseFailedTests(result.stderr)
+          affectedTests: this.parseFailedTests(result.stderr),
         }] : [],
         warnings: this.parseBrowserWarnings(result.stdout, result.stderr),
-        performance
+        performance,
       };
     } catch (error) {
       return {
@@ -284,10 +284,10 @@ export class BrowserCompatibilityTester {
           type: 'platform',
           message: `Browser test execution failed: ${error}`,
           severity: 'critical',
-          affectedTests: ['all']
+          affectedTests: ['all'],
         }],
         warnings: [],
-        performance: this.getEmptyPerformanceMetrics()
+        performance: this.getEmptyPerformanceMetrics(),
       };
     }
   }
@@ -306,7 +306,7 @@ export class BrowserCompatibilityTester {
         'service-workers': { minVersion: 45, supported: true },
         'webassembly': { minVersion: 57, supported: true },
         'css-grid': { minVersion: 57, supported: true },
-        'fetch-api': { minVersion: 42, supported: true }
+        'fetch-api': { minVersion: 42, supported: true },
       },
       firefox: {
         'es6-modules': { minVersion: 60, supported: true },
@@ -314,7 +314,7 @@ export class BrowserCompatibilityTester {
         'service-workers': { minVersion: 44, supported: true },
         'webassembly': { minVersion: 52, supported: true },
         'css-grid': { minVersion: 52, supported: true },
-        'fetch-api': { minVersion: 39, supported: true }
+        'fetch-api': { minVersion: 39, supported: true },
       },
       safari: {
         'es6-modules': { minVersion: 10.1, supported: true },
@@ -322,7 +322,7 @@ export class BrowserCompatibilityTester {
         'service-workers': { minVersion: 11.1, supported: true },
         'webassembly': { minVersion: 11, supported: true },
         'css-grid': { minVersion: 10.1, supported: true },
-        'fetch-api': { minVersion: 10.1, supported: true }
+        'fetch-api': { minVersion: 10.1, supported: true },
       },
       edge: {
         'es6-modules': { minVersion: 16, supported: true },
@@ -330,8 +330,8 @@ export class BrowserCompatibilityTester {
         'service-workers': { minVersion: 17, supported: true },
         'webassembly': { minVersion: 16, supported: true },
         'css-grid': { minVersion: 16, supported: true },
-        'fetch-api': { minVersion: 14, supported: true }
-      }
+        'fetch-api': { minVersion: 14, supported: true },
+      },
     };
 
     const browserFeatures = featureMatrix[browserName as keyof typeof featureMatrix];
@@ -347,7 +347,7 @@ export class BrowserCompatibilityTester {
         name: featureName,
         supported,
         version: supported ? version : undefined,
-        polyfillRequired: !supported
+        polyfillRequired: !supported,
       });
     }
 
@@ -362,7 +362,7 @@ export class BrowserCompatibilityTester {
       chrome: 90,
       firefox: 88,
       safari: 14,
-      edge: 90
+      edge: 90,
     };
 
     const minVersion = supportedBrowsers[browserName as keyof typeof supportedBrowsers];
@@ -380,7 +380,7 @@ export class BrowserCompatibilityTester {
       chrome: 'Blink',
       firefox: 'Gecko',
       safari: 'WebKit',
-      edge: 'Blink'
+      edge: 'Blink',
     };
 
     return engines[browserName as keyof typeof engines] || 'Unknown';
@@ -391,7 +391,7 @@ export class BrowserCompatibilityTester {
    */
   private parseVersionNumber(version: string): number {
     if (version === 'latest') return 999; // Assume latest is always supported
-    
+
     const match = version.match(/^(\d+)/);
     return match ? parseInt(match[1], 10) : 0;
   }
@@ -401,18 +401,18 @@ export class BrowserCompatibilityTester {
    */
   private async runCommand(
     command: string,
-    options: { env?: any; timeout?: number } = {}
+    options: { env?: any; timeout?: number } = {},
   ): Promise<{
     exitCode: number;
     stdout: string;
     stderr: string;
   }> {
     const { spawn } = require('child_process');
-    
+
     return new Promise((resolve, reject) => {
       const child = spawn('sh', ['-c', command], {
         stdio: 'pipe',
-        env: options.env || process.env
+        env: options.env || process.env,
       });
 
       let stdout = '';
@@ -437,7 +437,7 @@ export class BrowserCompatibilityTester {
         resolve({
           exitCode: code || 0,
           stdout,
-          stderr
+          stderr,
         });
       });
 
@@ -484,7 +484,7 @@ export class BrowserCompatibilityTester {
         warnings.push({
           type: 'compatibility' as const,
           message: match,
-          affectedTests: ['all']
+          affectedTests: ['all'],
         });
       }
     }
@@ -496,7 +496,7 @@ export class BrowserCompatibilityTester {
         warnings.push({
           type: 'performance' as const,
           message: match,
-          affectedTests: ['all']
+          affectedTests: ['all'],
         });
       }
     }
@@ -513,12 +513,12 @@ export class BrowserCompatibilityTester {
       memoryUsage: {
         peak: 0,
         average: 0,
-        final: 0
+        final: 0,
       },
       cpuUsage: {
         peak: 0,
-        average: 0
-      }
+        average: 0,
+      },
     };
   }
 }

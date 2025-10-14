@@ -3,12 +3,12 @@
  * Validates deployments with health checks, smoke tests, and rollback capabilities
  */
 
-import { 
-  DeploymentConfig, 
-  ValidationConfig, 
-  HealthCheck, 
-  SmokeTest, 
-  RollbackConfig 
+import {
+  DeploymentConfig,
+  ValidationConfig,
+  HealthCheck,
+  SmokeTest,
+  RollbackConfig,
 } from './types';
 
 export class DeploymentValidator {
@@ -27,10 +27,10 @@ export class DeploymentValidator {
     try {
       // Run health checks
       const healthResults = await this.runHealthChecks(config.validation.healthChecks);
-      
+
       // Run smoke tests
       const smokeResults = await this.runSmokeTests(config.validation.smokeTests);
-      
+
       // Check overall validation status
       const allHealthPassed = healthResults.every(r => r.passed);
       const allSmokesPassed = smokeResults.every(r => r.passed);
@@ -44,7 +44,7 @@ export class DeploymentValidator {
         duration: Date.now() - startTime,
         healthChecks: healthResults,
         smokeTests: smokeResults,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       // Record deployment
@@ -53,7 +53,7 @@ export class DeploymentValidator {
         environment: config.environment,
         strategy: config.strategy,
         validation: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       // Handle rollback if validation failed
@@ -73,7 +73,7 @@ export class DeploymentValidator {
         healthChecks: [],
         smokeTests: [],
         error: error instanceof Error ? error.message : String(error),
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       return result;
@@ -88,17 +88,17 @@ export class DeploymentValidator {
 
     for (const check of healthChecks) {
       const startTime = Date.now();
-      
+
       try {
         const response = await this.performHealthCheck(check);
-        
+
         results.push({
           name: check.name,
           url: check.url,
           passed: response.status === check.expectedStatus,
           status: response.status,
           duration: Date.now() - startTime,
-          response: response.body?.substring(0, 500) // Limit response size
+          response: response.body?.substring(0, 500), // Limit response size
         });
       } catch (error) {
         results.push({
@@ -107,7 +107,7 @@ export class DeploymentValidator {
           passed: false,
           status: 0,
           duration: Date.now() - startTime,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     }
@@ -133,7 +133,7 @@ export class DeploymentValidator {
       // This is a placeholder - replace with actual HTTP client
       setTimeout(() => {
         clearTimeout(timeout);
-        
+
         // Simulate different responses based on URL
         if (check.url.includes('/health')) {
           resolve({ status: 200, body: '{"status":"healthy"}' });
@@ -154,16 +154,16 @@ export class DeploymentValidator {
 
     for (const test of smokeTests) {
       const startTime = Date.now();
-      
+
       try {
         const exitCode = await this.runSmokeTest(test);
-        
+
         results.push({
           name: test.name,
           command: test.command,
           passed: exitCode === test.expectedExitCode,
           exitCode,
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         });
       } catch (error) {
         results.push({
@@ -172,7 +172,7 @@ export class DeploymentValidator {
           passed: false,
           exitCode: -1,
           duration: Date.now() - startTime,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     }
@@ -193,7 +193,7 @@ export class DeploymentValidator {
       // In a real implementation, you'd use child_process.spawn
       setTimeout(() => {
         clearTimeout(timeout);
-        
+
         // Simulate different exit codes based on command
         if (test.command.includes('curl')) {
           resolve(0); // Success
@@ -236,14 +236,14 @@ export class DeploymentValidator {
         success: true,
         targetVersion,
         duration: Date.now() - startTime,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     } catch (error) {
       return {
         success: false,
         duration: Date.now() - startTime,
         error: error instanceof Error ? error.message : String(error),
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -254,7 +254,7 @@ export class DeploymentValidator {
   private async performRollback(targetVersion: string): Promise<void> {
     // Simulate rollback process
     console.log(`Rolling back to version: ${targetVersion}`);
-    
+
     return new Promise((resolve) => {
       setTimeout(() => {
         console.log('Rollback completed');
@@ -280,7 +280,7 @@ export class DeploymentValidator {
    */
   private recordDeployment(record: DeploymentRecord): void {
     this.deploymentHistory.push(record);
-    
+
     // Keep only the last 10 deployments
     if (this.deploymentHistory.length > 10) {
       this.deploymentHistory = this.deploymentHistory.slice(-10);
@@ -301,8 +301,8 @@ export class DeploymentValidator {
     const total = this.deploymentHistory.length;
     const successful = this.deploymentHistory.filter(d => d.validation.passed).length;
     const failed = total - successful;
-    
-    const avgDuration = total > 0 
+
+    const avgDuration = total > 0
       ? this.deploymentHistory.reduce((sum, d) => sum + d.validation.duration, 0) / total
       : 0;
 
@@ -311,7 +311,7 @@ export class DeploymentValidator {
       successful,
       failed,
       successRate: total > 0 ? (successful / total) * 100 : 0,
-      averageDuration: avgDuration
+      averageDuration: avgDuration,
     };
   }
 
@@ -329,39 +329,39 @@ export class DeploymentValidator {
             url: `https://${environment}.example.com/health`,
             method: 'GET',
             expectedStatus: 200,
-            timeout: 10000
+            timeout: 10000,
           },
           {
             name: 'Database Connection',
             url: `https://${environment}.example.com/health/db`,
             method: 'GET',
             expectedStatus: 200,
-            timeout: 15000
+            timeout: 15000,
           },
           {
             name: 'API Readiness',
             url: `https://${environment}.example.com/ready`,
             method: 'GET',
             expectedStatus: 200,
-            timeout: 10000
-          }
+            timeout: 10000,
+          },
         ],
         smokeTests: [
           {
             name: 'API Smoke Test',
             command: `curl -f https://${environment}.example.com/api/status`,
             timeout: 30000,
-            expectedExitCode: 0
+            expectedExitCode: 0,
           },
           {
             name: 'Authentication Test',
             command: `npm run test:smoke:auth -- --env=${environment}`,
             timeout: 60000,
-            expectedExitCode: 0
-          }
+            expectedExitCode: 0,
+          },
         ],
         timeout: 300000,
-        retries: 3
+        retries: 3,
       },
       rollback: {
         enabled: true,
@@ -370,15 +370,15 @@ export class DeploymentValidator {
           {
             type: 'health',
             threshold: 0.8, // 80% health check success rate
-            duration: 60000 // 1 minute
+            duration: 60000, // 1 minute
           },
           {
             type: 'error-rate',
             threshold: 0.05, // 5% error rate
-            duration: 120000 // 2 minutes
-          }
+            duration: 120000, // 2 minutes
+          },
         ],
-        strategy: 'previous'
+        strategy: 'previous',
       },
       monitoring: {
         enabled: true,
@@ -388,11 +388,11 @@ export class DeploymentValidator {
             name: 'High Error Rate',
             condition: 'error_rate > 0.05',
             severity: 'high',
-            channels: ['slack', 'email']
-          }
+            channels: ['slack', 'email'],
+          },
         ],
-        duration: 600000 // 10 minutes
-      }
+        duration: 600000, // 10 minutes
+      },
     };
   }
 

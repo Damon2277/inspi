@@ -1,11 +1,12 @@
 /**
  * UI Testing Framework Integration Tests
- * 
+ *
  * Comprehensive integration tests for the complete UI testing framework
  */
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
+
 import {
   UITestingSuite,
   createUITestingSuite,
@@ -13,13 +14,13 @@ import {
   createAccessibilityTest,
   createResponsiveTest,
   createInteractionTest,
-  ComponentTestSuite
+  ComponentTestSuite,
 } from '../../../../lib/testing/ui';
 
 // Mock jest-axe
 jest.mock('jest-axe', () => ({
   axe: jest.fn().mockResolvedValue({ violations: [] }),
-  toHaveNoViolations: {}
+  toHaveNoViolations: {},
 }));
 
 // Complex test components
@@ -35,8 +36,8 @@ const TodoApp: React.FC = () => {
   };
 
   const toggleTodo = (id: number) => {
-    setTodos(todos.map(todo => 
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    setTodos(todos.map(todo =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo,
     ));
   };
 
@@ -110,11 +111,14 @@ const ResponsiveCard: React.FC<{
 }> = ({ title, content, imageUrl, actions = [] }) => (
   <div data-testid="responsive-card" className="card">
     {imageUrl && (
-      <img
-        src={imageUrl}
-        alt={`Image for ${title}`}
-        className="card-image"
-      />
+      <>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={imageUrl}
+          alt={`Image for ${title}`}
+          className="card-image"
+        />
+      </>
     )}
     <div className="card-content">
       <h2 className="card-title">{title}</h2>
@@ -200,27 +204,27 @@ const FormWithValidation: React.FC<{
   const [formData, setFormData] = React.useState({
     name: '',
     email: '',
-    message: ''
+    message: '',
   });
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
     }
-    
+
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-    
+
     if (!formData.message.trim()) {
       newErrors.message = 'Message is required';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -304,19 +308,19 @@ describe('UI Testing Framework Integration', () => {
         viewport: { width: 1024, height: 768 },
         accessibility: { enabled: true },
         performance: { enabled: true },
-        styles: { enabled: true }
+        styles: { enabled: true },
       },
       interaction: {
         delay: 0,
-        pointerEventsCheck: false
+        pointerEventsCheck: false,
       },
       accessibility: {
         wcagLevel: 'AA',
         keyboardNavigation: true,
         screenReaderTesting: true,
         colorContrastTesting: true,
-        focusManagement: true
-      }
+        focusManagement: true,
+      },
     });
   });
 
@@ -335,7 +339,7 @@ describe('UI Testing Framework Integration', () => {
             action: async (user, container) => {
               const input = container.querySelector('[data-testid="todo-input"]') as HTMLElement;
               const addButton = container.querySelector('[data-testid="add-button"]') as HTMLElement;
-              
+
               await user.type(input, 'Test todo item');
               await user.click(addButton);
             },
@@ -343,34 +347,34 @@ describe('UI Testing Framework Integration', () => {
               const todoList = container.querySelector('[data-testid="todo-list"]');
               expect(todoList?.children.length).toBe(1);
               expect(todoList?.textContent).toContain('Test todo item');
-            }
+            },
           },
           {
             name: 'Toggle Todo Completion',
             action: async (user, container) => {
               const input = container.querySelector('[data-testid="todo-input"]') as HTMLElement;
               const addButton = container.querySelector('[data-testid="add-button"]') as HTMLElement;
-              
+
               await user.type(input, 'Toggle test');
               await user.click(addButton);
-              
+
               const checkbox = container.querySelector('input[type="checkbox"]') as HTMLElement;
               await user.click(checkbox);
             },
             assertions: async (container) => {
               const todoItem = container.querySelector('.todo-item');
               expect(todoItem).toHaveClass('completed');
-            }
+            },
           },
           {
             name: 'Delete Todo Item',
             action: async (user, container) => {
               const input = container.querySelector('[data-testid="todo-input"]') as HTMLElement;
               const addButton = container.querySelector('[data-testid="add-button"]') as HTMLElement;
-              
+
               await user.type(input, 'Delete test');
               await user.click(addButton);
-              
+
               const deleteButton = container.querySelector('.delete-button') as HTMLElement;
               await user.click(deleteButton);
             },
@@ -378,9 +382,9 @@ describe('UI Testing Framework Integration', () => {
               const todoList = container.querySelector('[data-testid="todo-list"]');
               expect(todoList?.children.length).toBe(0);
               expect(container.querySelector('[data-testid="empty-message"]')).toBeInTheDocument();
-            }
-          }
-        ]
+            },
+          },
+        ],
       };
 
       const results = await testingSuite.runCompleteTest(suite);
@@ -402,8 +406,8 @@ describe('UI Testing Framework Integration', () => {
           imageUrl: 'https://example.com/image.jpg',
           actions: [
             { label: 'Action 1', onClick: mockAction },
-            { label: 'Action 2', onClick: mockAction }
-          ]
+            { label: 'Action 2', onClick: mockAction },
+          ],
         },
         variants: [
           {
@@ -411,17 +415,17 @@ describe('UI Testing Framework Integration', () => {
             props: {
               title: 'No Image Card',
               content: 'Card without image',
-              actions: [{ label: 'Single Action', onClick: mockAction }]
-            }
+              actions: [{ label: 'Single Action', onClick: mockAction }],
+            },
           },
           {
             name: 'No Actions',
             props: {
               title: 'Simple Card',
               content: 'Card with no actions',
-              imageUrl: 'https://example.com/simple.jpg'
-            }
-          }
+              imageUrl: 'https://example.com/simple.jpg',
+            },
+          },
         ],
         interactions: [
           {
@@ -432,9 +436,9 @@ describe('UI Testing Framework Integration', () => {
             },
             assertions: async (container) => {
               expect(mockAction).toHaveBeenCalledTimes(1);
-            }
-          }
-        ]
+            },
+          },
+        ],
       };
 
       const results = await testingSuite.runCompleteTest(suite);
@@ -447,7 +451,7 @@ describe('UI Testing Framework Integration', () => {
     it('should test modal dialog with focus management', async () => {
       const ModalTestWrapper: React.FC = () => {
         const [isOpen, setIsOpen] = React.useState(false);
-        
+
         return (
           <div>
             <button onClick={() => setIsOpen(true)} data-testid="open-modal">
@@ -474,11 +478,11 @@ describe('UI Testing Framework Integration', () => {
             action: async (user, container) => {
               const openButton = container.querySelector('[data-testid="open-modal"]') as HTMLElement;
               await user.click(openButton);
-              
+
               await waitFor(() => {
                 expect(container.querySelector('[data-testid="modal"]')).toBeInTheDocument();
               });
-              
+
               const closeButton = container.querySelector('[data-testid="modal-close"]') as HTMLElement;
               await user.click(closeButton);
             },
@@ -486,27 +490,27 @@ describe('UI Testing Framework Integration', () => {
               await waitFor(() => {
                 expect(container.querySelector('[data-testid="modal"]')).not.toBeInTheDocument();
               });
-            }
+            },
           },
           {
             name: 'Close Modal with Escape Key',
             action: async (user, container) => {
               const openButton = container.querySelector('[data-testid="open-modal"]') as HTMLElement;
               await user.click(openButton);
-              
+
               await waitFor(() => {
                 expect(container.querySelector('[data-testid="modal"]')).toBeInTheDocument();
               });
-              
+
               await user.keyboard('{Escape}');
             },
             assertions: async (container) => {
               await waitFor(() => {
                 expect(container.querySelector('[data-testid="modal"]')).not.toBeInTheDocument();
               });
-            }
-          }
-        ]
+            },
+          },
+        ],
       };
 
       const results = await testingSuite.runCompleteTest(suite);
@@ -531,7 +535,7 @@ describe('UI Testing Framework Integration', () => {
             assertions: async (container) => {
               expect(container.querySelectorAll('.error-message')).toHaveLength(3);
               expect(mockSubmit).not.toHaveBeenCalled();
-            }
+            },
           },
           {
             name: 'Submit Valid Form',
@@ -540,7 +544,7 @@ describe('UI Testing Framework Integration', () => {
               const emailInput = container.querySelector('[data-testid="email-input"]') as HTMLElement;
               const messageInput = container.querySelector('[data-testid="message-input"]') as HTMLElement;
               const submitButton = container.querySelector('[data-testid="submit-button"]') as HTMLElement;
-              
+
               await user.type(nameInput, 'John Doe');
               await user.type(emailInput, 'john@example.com');
               await user.type(messageInput, 'This is a test message');
@@ -550,11 +554,11 @@ describe('UI Testing Framework Integration', () => {
               expect(mockSubmit).toHaveBeenCalledWith({
                 name: 'John Doe',
                 email: 'john@example.com',
-                message: 'This is a test message'
+                message: 'This is a test message',
               });
-            }
-          }
-        ]
+            },
+          },
+        ],
       };
 
       const results = await testingSuite.runCompleteTest(suite);
@@ -567,7 +571,7 @@ describe('UI Testing Framework Integration', () => {
   describe('Helper Functions', () => {
     it('should create basic component test', () => {
       const test = createBasicComponentTest(TodoApp, {});
-      
+
       expect(test.name).toBe('TodoApp');
       expect(test.component).toBe(TodoApp);
       expect(test.props).toEqual({});
@@ -576,9 +580,9 @@ describe('UI Testing Framework Integration', () => {
     it('should create accessibility-focused test', () => {
       const test = createAccessibilityTest(ResponsiveCard, {
         title: 'Accessibility Test',
-        content: 'Testing accessibility'
+        content: 'Testing accessibility',
       });
-      
+
       expect(test.name).toBe('ResponsiveCard Accessibility');
       expect(test.config?.accessibility?.enabled).toBe(true);
       expect(test.config?.performance?.enabled).toBe(false);
@@ -588,9 +592,9 @@ describe('UI Testing Framework Integration', () => {
     it('should create responsive design test', () => {
       const test = createResponsiveTest(ResponsiveCard, {
         title: 'Responsive Test',
-        content: 'Testing responsive behavior'
+        content: 'Testing responsive behavior',
       });
-      
+
       expect(test.name).toBe('ResponsiveCard Responsive');
       expect(test.config?.styles?.enabled).toBe(true);
       expect(test.config?.styles?.checkResponsive).toBe(true);
@@ -608,8 +612,8 @@ describe('UI Testing Framework Integration', () => {
           },
           assertions: async (container: HTMLElement) => {
             expect(mockClick).toHaveBeenCalled();
-          }
-        }
+          },
+        },
       ];
 
       const test = createInteractionTest(
@@ -618,10 +622,10 @@ describe('UI Testing Framework Integration', () => {
         {
           title: 'Interactive Card',
           content: 'Card with interactions',
-          actions: [{ label: 'Click me', onClick: mockClick }]
-        }
+          actions: [{ label: 'Click me', onClick: mockClick }],
+        },
       );
-      
+
       expect(test.name).toBe('ResponsiveCard Interactions');
       expect(test.interactions).toHaveLength(1);
       expect(test.interactions![0].name).toBe('Click Test');
@@ -643,9 +647,9 @@ describe('UI Testing Framework Integration', () => {
             assertions: async (container) => {
               const input = container.querySelector('[data-testid="todo-input"]') as HTMLInputElement;
               expect(input.value).toBe('Test');
-            }
-          }
-        ]
+            },
+          },
+        ],
       };
 
       const results = await testingSuite.runCompleteTest(suite);
@@ -673,9 +677,9 @@ describe('UI Testing Framework Integration', () => {
             },
             assertions: async (container) => {
               // Should not reach here
-            }
-          }
-        ]
+            },
+          },
+        ],
       };
 
       const results = await testingSuite.runCompleteTest(suite);
@@ -690,7 +694,7 @@ describe('UI Testing Framework Integration', () => {
     it('should measure component render performance', async () => {
       const HeavyComponent: React.FC = () => {
         const [items, setItems] = React.useState<number[]>([]);
-        
+
         React.useEffect(() => {
           // Simulate heavy computation
           const heavyItems = Array.from({ length: 1000 }, (_, i) => i);
@@ -713,9 +717,9 @@ describe('UI Testing Framework Integration', () => {
           performance: {
             enabled: true,
             renderTimeThreshold: 100,
-            memoryThreshold: 1000000
-          }
-        }
+            memoryThreshold: 1000000,
+          },
+        },
       };
 
       const results = await testingSuite.runCompleteTest(suite);
@@ -733,7 +737,7 @@ describe('UI Testing Framework Integration', () => {
 
       const suite: ComponentTestSuite = {
         name: 'Error Component Test',
-        component: ErrorComponent
+        component: ErrorComponent,
       };
 
       await expect(testingSuite.runCompleteTest(suite)).rejects.toThrow();
@@ -751,9 +755,9 @@ describe('UI Testing Framework Integration', () => {
             },
             assertions: async (container) => {
               // Should not reach here
-            }
-          }
-        ]
+            },
+          },
+        ],
       };
 
       const results = await testingSuite.runCompleteTest(suite);
@@ -774,21 +778,21 @@ describe('UI Testing Framework Integration', () => {
             action: async (user, container) => {
               const input = container.querySelector('[data-testid="todo-input"]') as HTMLElement;
               const addButton = container.querySelector('[data-testid="add-button"]') as HTMLElement;
-              
+
               // Add multiple todos
               await user.type(input, 'First todo');
               await user.click(addButton);
-              
+
               await user.type(input, 'Second todo');
               await user.click(addButton);
-              
+
               await user.type(input, 'Third todo');
               await user.click(addButton);
-              
+
               // Complete first todo
               const firstCheckbox = container.querySelector('input[type="checkbox"]') as HTMLElement;
               await user.click(firstCheckbox);
-              
+
               // Delete second todo
               const deleteButtons = container.querySelectorAll('.delete-button');
               await user.click(deleteButtons[1] as HTMLElement);
@@ -798,9 +802,9 @@ describe('UI Testing Framework Integration', () => {
               expect(todoItems).toHaveLength(2);
               expect(todoItems[0]).toHaveClass('completed');
               expect(todoItems[1]).not.toHaveClass('completed');
-            }
-          }
-        ]
+            },
+          },
+        ],
       };
 
       const results = await testingSuite.runCompleteTest(suite);
@@ -818,7 +822,7 @@ describe('UI Testing Framework Integration', () => {
             name: 'Keyboard Todo Addition',
             action: async (user, container) => {
               const input = container.querySelector('[data-testid="todo-input"]') as HTMLElement;
-              
+
               await user.type(input, 'Keyboard todo');
               await user.keyboard('{Enter}');
             },
@@ -826,9 +830,9 @@ describe('UI Testing Framework Integration', () => {
               const todoList = container.querySelector('[data-testid="todo-list"]');
               expect(todoList?.children.length).toBe(1);
               expect(todoList?.textContent).toContain('Keyboard todo');
-            }
-          }
-        ]
+            },
+          },
+        ],
       };
 
       const results = await testingSuite.runCompleteTest(suite);

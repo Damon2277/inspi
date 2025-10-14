@@ -2,8 +2,9 @@
  * 日志工具函数
  */
 import { NextRequest } from 'next/server';
-import type { Logger, LogContext } from './logger';
+
 import { LOG_TAGS } from './config';
+import type { Logger, LogContext } from './logger';
 
 /**
  * 从请求中提取日志上下文
@@ -12,12 +13,12 @@ export const extractRequestContext = (request: NextRequest): LogContext => {
   const url = request.url;
   const method = request.method;
   const userAgent = request.headers.get('user-agent') || undefined;
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 
-             request.headers.get('x-real-ip') || 
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||
+             request.headers.get('x-real-ip') ||
              'unknown';
   const traceId = request.headers.get('x-trace-id') || undefined;
   const userId = request.headers.get('x-user-id') || undefined;
-  
+
   return {
     traceId,
     userId,
@@ -25,8 +26,8 @@ export const extractRequestContext = (request: NextRequest): LogContext => {
       url,
       method,
       userAgent,
-      ip
-    }
+      ip,
+    },
   };
 };
 
@@ -40,13 +41,13 @@ export class PerformanceTimer {
   private logger: Logger;
   private operation: string;
   private context?: LogContext;
-  
+
   private getDefaultLogger(): Logger {
     // 延迟导入避免循环依赖
     const { logger } = require('./logger');
     return logger;
   }
-  
+
   constructor(operation: string, loggerInstance?: Logger, context?: LogContext) {
     this.operation = operation;
     this.logger = loggerInstance || this.getDefaultLogger();
@@ -55,7 +56,7 @@ export class PerformanceTimer {
     this.startCpuUsage = process.cpuUsage();
     this.startMemoryUsage = process.memoryUsage();
   }
-  
+
   /**
    * 结束计时并记录性能日志
    */
@@ -63,34 +64,34 @@ export class PerformanceTimer {
     const duration = Date.now() - this.startTime;
     const cpuUsage = process.cpuUsage(this.startCpuUsage);
     const memoryUsage = process.memoryUsage();
-    
+
     const performanceContext: LogContext = {
       ...this.context,
       ...additionalContext,
       performance: {
         duration,
         memory: memoryUsage.heapUsed - this.startMemoryUsage.heapUsed,
-        cpu: cpuUsage.user
-      }
+        cpu: cpuUsage.user,
+      },
     };
-    
+
     this.logger.performance(`${this.operation} completed`, duration, performanceContext);
-    
+
     return duration;
   }
-  
+
   /**
    * 记录中间检查点
    */
   checkpoint(name: string, additionalContext?: LogContext): number {
     const duration = Date.now() - this.startTime;
-    
+
     this.logger.debug(`${this.operation} checkpoint: ${name}`, {
       ...this.context,
       ...additionalContext,
-      performance: { duration }
+      performance: { duration },
     });
-    
+
     return duration;
   }
 }
@@ -109,23 +110,23 @@ export const withPerformanceLogging = <T extends any[], R>(
   operation: string,
   fn: (...args: T) => Promise<R>,
   logger?: Logger,
-  context?: LogContext
+  context?: LogContext,
 ) => {
   return async (...args: T): Promise<R> => {
     const timer = createTimer(operation, logger, context);
-    
+
     try {
       const result = await fn(...args);
       timer.end({ metadata: { success: true } });
       return result;
     } catch (error) {
-      timer.end({ 
+      timer.end({
         metadata: { success: false },
         error: error instanceof Error ? {
           name: error.name,
           message: error.message,
-          stack: error.stack
-        } : undefined
+          stack: error.stack,
+        } : undefined,
       });
       throw error;
     }
@@ -139,23 +140,23 @@ export const withSyncPerformanceLogging = <T extends any[], R>(
   operation: string,
   fn: (...args: T) => R,
   logger?: Logger,
-  context?: LogContext
+  context?: LogContext,
 ) => {
   return (...args: T): R => {
     const timer = createTimer(operation, logger, context);
-    
+
     try {
       const result = fn(...args);
       timer.end({ metadata: { success: true } });
       return result;
     } catch (error) {
-      timer.end({ 
+      timer.end({
         metadata: { success: false },
         error: error instanceof Error ? {
           name: error.name,
           message: error.message,
-          stack: error.stack
-        } : undefined
+          stack: error.stack,
+        } : undefined,
       });
       throw error;
     }
@@ -169,7 +170,7 @@ export const logError = (
   error: Error,
   message: string,
   context?: LogContext,
-  loggerInstance?: Logger
+  loggerInstance?: Logger,
 ): void => {
   if (loggerInstance) {
     loggerInstance.error(message, error, context);
@@ -188,17 +189,17 @@ export const logApiRequest = (
   request: NextRequest,
   response: { status: number },
   duration: number,
-  loggerInstance?: Logger
+  loggerInstance?: Logger,
 ): void => {
   const requestContext = extractRequestContext(request);
-  
+
   if (loggerInstance) {
     loggerInstance.access(
       request.method,
       request.url,
       response.status,
       duration,
-      requestContext
+      requestContext,
     );
   } else {
     import('./logger').then(({ logger }) => {
@@ -207,7 +208,7 @@ export const logApiRequest = (
         request.url,
         response.status,
         duration,
-        requestContext
+        requestContext,
       );
     });
   }
@@ -222,7 +223,7 @@ export const logDatabaseOperation = (
   duration: number,
   success: boolean,
   context?: LogContext,
-  loggerInstance?: Logger
+  loggerInstance?: Logger,
 ): void => {
   const dbContext: LogContext = {
     ...context,
@@ -231,14 +232,14 @@ export const logDatabaseOperation = (
       operation,
       collection,
       success,
-      ...context?.metadata
+      ...context?.metadata,
     },
     performance: {
       duration,
-      ...context?.performance
-    }
+      ...context?.performance,
+    },
   };
-  
+
   if (loggerInstance) {
     if (success) {
       loggerInstance.database(`Database ${operation} on ${collection} completed`, dbContext);
@@ -265,7 +266,7 @@ export const logCacheOperation = (
   hit: boolean = false,
   duration?: number,
   context?: LogContext,
-  logger?: Logger
+  logger?: Logger,
 ): void => {
   const cacheContext: LogContext = {
     ...context,
@@ -274,14 +275,14 @@ export const logCacheOperation = (
       operation,
       key,
       hit,
-      ...context?.metadata
+      ...context?.metadata,
     },
     performance: duration ? {
       duration,
-      ...context?.performance
-    } : context?.performance
+      ...context?.performance,
+    } : context?.performance,
   };
-  
+
   (logger || logger).cache(`Cache ${operation} for key: ${key} (${hit ? 'HIT' : 'MISS'})`, cacheContext);
 };
 
@@ -293,7 +294,7 @@ export const logUserAction = (
   action: string,
   resource?: string,
   context?: LogContext,
-  loggerInstance?: Logger
+  loggerInstance?: Logger,
 ): void => {
   const userContext: LogContext = {
     ...context,
@@ -302,10 +303,10 @@ export const logUserAction = (
     metadata: {
       action,
       resource,
-      ...context?.metadata
-    }
+      ...context?.metadata,
+    },
   };
-  
+
   if (loggerInstance) {
     loggerInstance.user(`User action: ${action}${resource ? ` on ${resource}` : ''}`, userId, userContext);
   } else {
@@ -322,7 +323,7 @@ export const logSecurityEvent = (
   event: string,
   severity: 'low' | 'medium' | 'high' | 'critical',
   context?: LogContext,
-  logger?: Logger
+  logger?: Logger,
 ): void => {
   const securityContext: LogContext = {
     ...context,
@@ -330,10 +331,10 @@ export const logSecurityEvent = (
     metadata: {
       event,
       severity,
-      ...context?.metadata
-    }
+      ...context?.metadata,
+    },
   };
-  
+
   (logger || logger).security(`Security event: ${event} (${severity})`, securityContext);
 };
 
@@ -347,7 +348,7 @@ export const logAIOperation = (
   duration?: number,
   success: boolean = true,
   context?: LogContext,
-  loggerInstance?: Logger
+  loggerInstance?: Logger,
 ): void => {
   const aiContext: LogContext = {
     ...context,
@@ -357,14 +358,14 @@ export const logAIOperation = (
       model,
       tokensUsed,
       success,
-      ...context?.metadata
+      ...context?.metadata,
     },
     performance: duration ? {
       duration,
-      ...context?.performance
-    } : context?.performance
+      ...context?.performance,
+    } : context?.performance,
   };
-  
+
   if (loggerInstance) {
     loggerInstance.ai(`AI ${operation} using ${model}${tokensUsed ? ` (${tokensUsed} tokens)` : ''}`, aiContext);
   } else {
@@ -383,7 +384,7 @@ export const logEmailOperation = (
   subject: string,
   success: boolean = true,
   context?: LogContext,
-  logger?: Logger
+  logger?: Logger,
 ): void => {
   const emailContext: LogContext = {
     ...context,
@@ -393,10 +394,10 @@ export const logEmailOperation = (
       recipient: recipient.replace(/(.{3}).*(@.*)/, '$1***$2'), // 脱敏处理
       subject,
       success,
-      ...context?.metadata
-    }
+      ...context?.metadata,
+    },
   };
-  
+
   (logger || logger).email(`Email ${operation} to ${recipient} - ${subject}`, emailContext);
 };
 
@@ -410,10 +411,10 @@ export const logBatch = (
     context?: LogContext;
     error?: Error;
   }>,
-  logger?: Logger
+  logger?: Logger,
 ): void => {
   const loggerInstance = logger || logger;
-  
+
   logs.forEach(({ level, message, context, error }) => {
     switch (level) {
       case 'error':
@@ -441,12 +442,12 @@ export const logIf = (
   message: string,
   context?: LogContext,
   error?: Error,
-  logger?: Logger
+  logger?: Logger,
 ): void => {
   if (!condition) return;
-  
+
   const loggerInstance = logger || logger;
-  
+
   switch (level) {
     case 'error':
       loggerInstance.error(message, error, context);
@@ -469,21 +470,21 @@ export const logIf = (
 export class LogSampler {
   private counters = new Map<string, number>();
   private sampleRate: number;
-  
+
   constructor(sampleRate: number = 0.1) {
     this.sampleRate = sampleRate;
   }
-  
+
   /**
    * 判断是否应该记录日志
    */
   shouldLog(key: string): boolean {
     const count = this.counters.get(key) || 0;
     this.counters.set(key, count + 1);
-    
+
     return Math.random() < this.sampleRate || count % Math.ceil(1 / this.sampleRate) === 0;
   }
-  
+
   /**
    * 重置计数器
    */

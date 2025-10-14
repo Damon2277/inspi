@@ -3,9 +3,10 @@
  * 使用AI模型进行智能内容审核
  */
 
+import { geminiService } from '@/core/ai/geminiService';
+import { logger } from '@/shared/utils/logger';
+
 import { ValidationIssue } from './types';
-import { geminiService } from '@/lib/ai/geminiService';
-import { logger } from '@/lib/utils/logger';
 
 // AI内容分析维度
 export enum ContentAnalysisDimension {
@@ -56,7 +57,7 @@ export class AIContentFilter {
         issues.push({
           type: 'sensitive_word',
           message: `AI检测到不当内容: ${result.reasoning}`,
-          severity: result.suggestedAction === 'block' ? 'error' : 'warning'
+          severity: result.suggestedAction === 'block' ? 'error' : 'warning',
         });
       }
 
@@ -65,7 +66,7 @@ export class AIContentFilter {
         issues.push({
           type: 'sensitive_word',
           message: `AI检测到可疑内容类别: ${result.categories.join(', ')}`,
-          severity: 'warning'
+          severity: 'warning',
         });
       }
 
@@ -82,13 +83,13 @@ export class AIContentFilter {
    */
   private async analyzeContent(content: string): Promise<AIFilterResult> {
     const prompt = this.buildAnalysisPrompt(content);
-    
+
     const response = await geminiService.generateContent(prompt, {
       temperature: 0.1, // 低温度确保一致性
       maxTokens: 200,
       useCache: true,
       cacheKey: `ai_filter_${this.hashContent(content)}`,
-      cacheTTL: 3600 // 1小时缓存
+      cacheTTL: 3600, // 1小时缓存
     });
 
     return this.parseAIResponse(response.content);
@@ -141,32 +142,43 @@ ${content}
       }
 
       const parsed = JSON.parse(jsonMatch[0]);
-      
+      const categories = Array.isArray(parsed.categories) ? parsed.categories : [];
+      const dimensionScores = this.normalizeDimensionScores(parsed.dimensionScores);
+      const suggestedAction = ['allow', 'review', 'block'].includes(parsed.suggestedAction)
+        ? parsed.suggestedAction
+        : 'allow';
+      const riskLevel = this.evaluateRiskLevel(dimensionScores, suggestedAction, categories);
+
       return {
         isAppropriate: parsed.isAppropriate ?? true,
         confidence: Math.max(0, Math.min(1, parsed.confidence ?? 0.5)),
-        categories: Array.isArray(parsed.categories) ? parsed.categories : [],
+        categories,
         reasoning: parsed.reasoning || '无具体说明',
-        suggestedAction: ['allow', 'review', 'block'].includes(parsed.suggestedAction) 
-          ? parsed.suggestedAction 
-          : 'allow'
+        suggestedAction,
+        dimensionScores,
+        riskLevel,
       };
     } catch (error) {
       logger.warn('Failed to parse AI response:', error);
-      
+
       // 降级处理：基于关键词简单判断
       const lowerContent = response.toLowerCase();
       const hasNegativeKeywords = [
         'inappropriate', 'offensive', 'harmful', 'sensitive',
-        '不当', '敏感', '有害', '不合适'
+        '不当', '敏感', '有害', '不合适',
       ].some(keyword => lowerContent.includes(keyword));
+
+      const dimensionScores = this.normalizeDimensionScores();
+      const riskLevel: 'low' | 'medium' | 'high' = hasNegativeKeywords ? 'medium' : 'low';
 
       return {
         isAppropriate: !hasNegativeKeywords,
         confidence: 0.3, // 低置信度
         categories: hasNegativeKeywords ? ['unknown'] : [],
         reasoning: '解析AI响应失败，使用基础判断',
-        suggestedAction: hasNegativeKeywords ? 'review' : 'allow'
+        suggestedAction: hasNegativeKeywords ? 'review' : 'allow',
+        dimensionScores,
+        riskLevel,
       };
     }
   }
@@ -196,6 +208,52 @@ ${content}
    */
   setConfidenceThreshold(threshold: number): void {
     this.confidenceThreshold = Math.max(0, Math.min(1, threshold));
+  }
+
+  private normalizeDimensionScores(input?: Record<string, number>): Record<ContentAnalysisDimension, number> {
+    const baseScores: Record<ContentAnalysisDimension, number> = Object.values(ContentAnalysisDimension)
+      .reduce((acc, dimension) => {
+        acc[dimension] = 0;
+        return acc;
+      }, {} as Record<ContentAnalysisDimension, number>);
+
+    if (!input) {
+      return baseScores;
+    }
+
+    for (const [key, value] of Object.entries(input)) {
+      const normalizedKey = key as ContentAnalysisDimension;
+      if (normalizedKey in baseScores) {
+        baseScores[normalizedKey] = Math.max(0, Math.min(1, Number(value) || 0));
+      }
+    }
+
+    return baseScores;
+  }
+
+  private evaluateRiskLevel(
+    scores: Record<ContentAnalysisDimension, number>,
+    action: 'allow' | 'review' | 'block',
+    categories: string[],
+  ): 'low' | 'medium' | 'high' {
+    if (action === 'block') {
+      return 'high';
+    }
+
+    if (action === 'review') {
+      return 'medium';
+    }
+
+    const maxScore = Math.max(...Object.values(scores));
+    if (maxScore >= 0.8) {
+      return 'high';
+    }
+
+    if (maxScore >= 0.5 || categories.length > 0) {
+      return 'medium';
+    }
+
+    return 'low';
   }
 }
 

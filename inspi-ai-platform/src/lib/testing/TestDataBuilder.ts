@@ -1,6 +1,7 @@
 import { ObjectId } from 'mongoose';
+
+import { NodeType, EdgeType, GraphType, GraphLayout } from '@/shared/types/knowledgeGraph';
 import { User, Work, TeachingCard, KnowledgeGraph, GraphNode, GraphEdge } from '@/types';
-import { NodeType, EdgeType, GraphType, GraphLayout } from '@/types/knowledgeGraph';
 
 /**
  * 测试数据构建器模式实现

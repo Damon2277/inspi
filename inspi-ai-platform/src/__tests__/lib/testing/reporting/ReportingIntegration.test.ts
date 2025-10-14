@@ -1,13 +1,14 @@
 /**
  * Test Reporting Integration Tests
- * 
+ *
  * Integration tests for the test reporting system with real file operations
  * and end-to-end report generation workflows.
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
 import * as os from 'os';
+import * as path from 'path';
+
 import { TestReportGenerator, TestReportData } from '../../../../lib/testing/reporting/TestReportGenerator';
 
 describe('Test Reporting Integration', () => {
@@ -18,7 +19,7 @@ describe('Test Reporting Integration', () => {
   beforeEach(() => {
     // Create a real temporary directory for integration tests
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-reports-'));
-    
+
     generator = new TestReportGenerator({
       outputDir: tempDir,
       formats: ['html', 'json', 'markdown', 'xml', 'csv'],
@@ -31,9 +32,9 @@ describe('Test Reporting Integration', () => {
           secondary: '#6c757d',
           success: '#28a745',
           warning: '#ffc107',
-          error: '#dc3545'
-        }
-      }
+          error: '#dc3545',
+        },
+      },
     });
 
     sampleData = {
@@ -44,7 +45,7 @@ describe('Test Reporting Integration', () => {
         passedTests: 235,
         failedTests: 10,
         skippedTests: 5,
-        passRate: 94
+        passRate: 94,
       },
       coverage: {
         statements: 89.5,
@@ -58,7 +59,7 @@ describe('Test Reporting Integration', () => {
             branches: 90,
             functions: 100,
             lines: 94,
-            uncoveredLines: [15, 23, 45, 67]
+            uncoveredLines: [15, 23, 45, 67],
           },
           {
             path: 'src/utils/helpers.ts',
@@ -66,9 +67,9 @@ describe('Test Reporting Integration', () => {
             branches: 72,
             functions: 85,
             lines: 76,
-            uncoveredLines: [12, 34, 56, 78, 90, 112]
-          }
-        ]
+            uncoveredLines: [12, 34, 56, 78, 90, 112],
+          },
+        ],
       },
       performance: {
         totalExecutionTime: 12500,
@@ -76,12 +77,12 @@ describe('Test Reporting Integration', () => {
         slowestTests: [
           { name: 'complex integration test', duration: 850, file: 'integration.spec.ts' },
           { name: 'database migration test', duration: 720, file: 'migration.spec.ts' },
-          { name: 'file upload test', duration: 650, file: 'upload.spec.ts' }
+          { name: 'file upload test', duration: 650, file: 'upload.spec.ts' },
         ],
         memoryUsage: {
           peak: 256,
-          average: 128
-        }
+          average: 128,
+        },
       },
       testResults: [
         {
@@ -89,14 +90,14 @@ describe('Test Reporting Integration', () => {
           testSuite: 'User Service',
           testName: 'should create user successfully',
           status: 'passed',
-          duration: 45
+          duration: 45,
         },
         {
           testFile: 'auth.spec.ts',
           testSuite: 'Authentication',
           testName: 'should validate JWT token',
           status: 'passed',
-          duration: 32
+          duration: 32,
         },
         {
           testFile: 'api.spec.ts',
@@ -106,40 +107,40 @@ describe('Test Reporting Integration', () => {
           duration: 120,
           error: {
             message: 'Expected status 400 but received 500',
-            stack: 'AssertionError: Expected status 400 but received 500\n    at test.spec.ts:45:12'
-          }
+            stack: 'AssertionError: Expected status 400 but received 500\n    at test.spec.ts:45:12',
+          },
         },
         {
           testFile: 'performance.spec.ts',
           testSuite: 'Performance Tests',
           testName: 'should complete within time limit',
           status: 'skipped',
-          duration: 0
-        }
+          duration: 0,
+        },
       ],
       quality: {
         qualityScore: 87,
         securityIssues: 3,
         codeSmells: 12,
-        technicalDebt: '4h 15m'
+        technicalDebt: '4h 15m',
       },
       trends: {
         coverageTrend: [
           { date: new Date('2024-01-01'), coverage: 85.2 },
           { date: new Date('2024-01-02'), coverage: 87.1 },
-          { date: new Date('2024-01-03'), coverage: 89.5 }
+          { date: new Date('2024-01-03'), coverage: 89.5 },
         ],
         performanceTrend: [
           { date: new Date('2024-01-01'), duration: 13200 },
           { date: new Date('2024-01-02'), duration: 12800 },
-          { date: new Date('2024-01-03'), duration: 12500 }
+          { date: new Date('2024-01-03'), duration: 12500 },
         ],
         qualityTrend: [
           { date: new Date('2024-01-01'), score: 82 },
           { date: new Date('2024-01-02'), score: 85 },
-          { date: new Date('2024-01-03'), score: 87 }
-        ]
-      }
+          { date: new Date('2024-01-03'), score: 87 },
+        ],
+      },
     };
   });
 
@@ -172,17 +173,17 @@ describe('Test Reporting Integration', () => {
       expect(fs.existsSync(htmlFile)).toBe(true);
 
       const htmlContent = fs.readFileSync(htmlFile, 'utf8');
-      
+
       // Check HTML structure
       expect(htmlContent).toContain('<!DOCTYPE html>');
       expect(htmlContent).toContain('<html lang="en">');
       expect(htmlContent).toContain('Integration Test Report');
-      
+
       // Check sections
       expect(htmlContent).toContain('Test Summary');
       expect(htmlContent).toContain('Coverage Report');
       expect(htmlContent).toContain('Performance Metrics');
-      
+
       // Check data
       expect(htmlContent).toContain('250'); // Total tests
       expect(htmlContent).toContain('94%'); // Pass rate
@@ -201,7 +202,7 @@ describe('Test Reporting Integration', () => {
       // Check metadata
       expect(jsonData.metadata).toBeDefined();
       expect(jsonData.metadata.generator).toBe('TestReportGenerator');
-      
+
       // Check data structure
       expect(jsonData.summary).toBeDefined();
       expect(jsonData.coverage).toBeDefined();
@@ -209,7 +210,7 @@ describe('Test Reporting Integration', () => {
       expect(jsonData.testResults).toBeDefined();
       expect(jsonData.quality).toBeDefined();
       expect(jsonData.trends).toBeDefined();
-      
+
       // Check data values
       expect(jsonData.summary.totalTests).toBe(250);
       expect(jsonData.coverage.statements).toBe(89.5);
@@ -223,13 +224,13 @@ describe('Test Reporting Integration', () => {
       expect(fs.existsSync(xmlFile)).toBe(true);
 
       const xmlContent = fs.readFileSync(xmlFile, 'utf8');
-      
+
       // Check XML structure
       expect(xmlContent).toContain('<?xml version="1.0" encoding="UTF-8"?>');
       expect(xmlContent).toContain('<testsuites');
       expect(xmlContent).toContain('<testsuite');
       expect(xmlContent).toContain('<testcase');
-      
+
       // Check test data
       expect(xmlContent).toContain('should create user successfully');
       expect(xmlContent).toContain('should validate JWT token');
@@ -245,17 +246,17 @@ describe('Test Reporting Integration', () => {
       expect(fs.existsSync(mdFile)).toBe(true);
 
       const mdContent = fs.readFileSync(mdFile, 'utf8');
-      
+
       // Check Markdown structure
       expect(mdContent).toContain('# Integration Test Report');
       expect(mdContent).toContain('## Test Summary');
       expect(mdContent).toContain('## Coverage Report');
       expect(mdContent).toContain('## Performance Metrics');
-      
+
       // Check tables
       expect(mdContent).toContain('| Metric | Coverage |');
       expect(mdContent).toContain('|--------|----------|');
-      
+
       // Check data
       expect(mdContent).toContain('**Total Tests:** 250');
       expect(mdContent).toContain('**Pass Rate:** 94%');
@@ -269,10 +270,10 @@ describe('Test Reporting Integration', () => {
 
       const csvContent = fs.readFileSync(csvFile, 'utf8');
       const lines = csvContent.split('\n');
-      
+
       // Check header
       expect(lines[0]).toBe('Test File,Test Suite,Test Name,Status,Duration (ms),Error Message');
-      
+
       // Check data rows
       expect(lines).toHaveLength(5); // Header + 4 test results
       expect(lines[1]).toContain('user.spec.ts');
@@ -333,7 +334,7 @@ describe('Test Reporting Integration', () => {
             </body>
           </html>
         `,
-        variables: ['title', 'summary', 'coverage']
+        variables: ['title', 'summary', 'coverage'],
       };
 
       // Create generator with custom template
@@ -348,9 +349,9 @@ describe('Test Reporting Integration', () => {
             secondary: '#6c757d',
             success: '#28a745',
             warning: '#ffc107',
-            error: '#dc3545'
-          }
-        }
+            error: '#dc3545',
+          },
+        },
       });
 
       customGenerator.addTemplate(customTemplate);
@@ -381,14 +382,14 @@ describe('Test Reporting Integration', () => {
       // Create a read-only directory
       const readOnlyDir = path.join(tempDir, 'readonly');
       fs.mkdirSync(readOnlyDir);
-      
+
       try {
         fs.chmodSync(readOnlyDir, 0o444);
 
         const restrictedGenerator = new TestReportGenerator({
           outputDir: readOnlyDir,
           formats: ['json'],
-          includeCharts: false
+          includeCharts: false,
         });
 
         const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
@@ -419,8 +420,8 @@ describe('Test Reporting Integration', () => {
           testSuite: `Suite ${i}`,
           testName: `Test ${i} with very long name that might cause issues`,
           status: 'passed' as const,
-          duration: Math.random() * 1000
-        }))
+          duration: Math.random() * 1000,
+        })),
       };
 
       const result = await generator.generateReport(largeData);
@@ -431,9 +432,9 @@ describe('Test Reporting Integration', () => {
   describe('Performance Integration', () => {
     it('should generate reports within reasonable time limits', async () => {
       const startTime = Date.now();
-      
+
       await generator.generateReport(sampleData);
-      
+
       const endTime = Date.now();
       const duration = endTime - startTime;
 
@@ -445,15 +446,15 @@ describe('Test Reporting Integration', () => {
       const promises = Array.from({ length: 5 }, (_, i) => {
         const concurrentGenerator = new TestReportGenerator({
           outputDir: path.join(tempDir, `concurrent-${i}`),
-          formats: ['json', 'html']
+          formats: ['json', 'html'],
         });
-        
+
         return concurrentGenerator.generateReport({
           ...sampleData,
           summary: {
             ...sampleData.summary,
-            timestamp: new Date(Date.now() + i * 1000)
-          }
+            timestamp: new Date(Date.now() + i * 1000),
+          },
         });
       });
 
@@ -461,7 +462,7 @@ describe('Test Reporting Integration', () => {
 
       results.forEach((result, i) => {
         expect(result.files.length).toBeGreaterThan(0);
-        
+
         // Verify files exist in separate directories
         const dir = path.join(tempDir, `concurrent-${i}`);
         expect(fs.existsSync(dir)).toBe(true);

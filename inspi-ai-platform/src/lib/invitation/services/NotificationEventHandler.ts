@@ -3,9 +3,10 @@
  * 监听邀请系统事件并触发相应的通知
  */
 
-import { NotificationServiceImpl, NotificationType, NotificationChannel, NotificationStatus } from './NotificationService'
-import { DatabaseService } from '../database'
-import { InviteEventType, RewardType } from '../types'
+import { DatabaseService } from '../database';
+import { InviteEventType, RewardType } from '../types';
+
+import { NotificationServiceImpl, NotificationType, NotificationChannel, NotificationStatus } from './NotificationService';
 
 export interface InviteEventData {
   inviterId: string
@@ -16,10 +17,10 @@ export interface InviteEventData {
 }
 
 export class NotificationEventHandler {
-  private notificationService: NotificationServiceImpl
+  private notificationService: NotificationServiceImpl;
 
   constructor(private db: DatabaseService) {
-    this.notificationService = new NotificationServiceImpl(db)
+    this.notificationService = new NotificationServiceImpl(db);
   }
 
   /**
@@ -29,22 +30,22 @@ export class NotificationEventHandler {
     try {
       switch (eventType) {
         case InviteEventType.USER_REGISTERED:
-          await this.handleUserRegistered(data)
-          break
+          await this.handleUserRegistered(data);
+          break;
 
         case InviteEventType.USER_ACTIVATED:
-          await this.handleUserActivated(data)
-          break
+          await this.handleUserActivated(data);
+          break;
 
         case InviteEventType.REWARD_GRANTED:
-          await this.handleRewardGranted(data)
-          break
+          await this.handleRewardGranted(data);
+          break;
 
         default:
-          console.log(`No notification handler for event type: ${eventType}`)
+          console.log(`No notification handler for event type: ${eventType}`);
       }
     } catch (error) {
-      console.error(`Failed to handle notification event ${eventType}:`, error)
+      console.error(`Failed to handle notification event ${eventType}:`, error);
     }
   }
 
@@ -52,12 +53,12 @@ export class NotificationEventHandler {
    * 处理用户注册事件
    */
   private async handleUserRegistered(data: InviteEventData): Promise<void> {
-    if (!data.inviteeId || !data.inviterId) return
+    if (!data.inviteeId || !data.inviterId) return;
 
     try {
       // 获取被邀请人信息
-      const inviteeInfo = await this.getUserInfo(data.inviteeId)
-      if (!inviteeInfo) return
+      const inviteeInfo = await this.getUserInfo(data.inviteeId);
+      if (!inviteeInfo) return;
 
       // 发送邀请成功通知
       await this.notificationService.handleInviteEvent(InviteEventType.USER_REGISTERED, {
@@ -65,14 +66,14 @@ export class NotificationEventHandler {
         inviteeId: data.inviteeId,
         inviteeName: inviteeInfo.name || inviteeInfo.email,
         inviteeEmail: inviteeInfo.email,
-        rewardAmount: 10 // 默认奖励数量
-      })
+        rewardAmount: 10, // 默认奖励数量
+      });
 
       // 检查是否达到邀请进度里程碑
-      await this.checkInviteProgress(data.inviterId)
+      await this.checkInviteProgress(data.inviterId);
 
     } catch (error) {
-      console.error('Failed to handle user registered event:', error)
+      console.error('Failed to handle user registered event:', error);
     }
   }
 
@@ -80,12 +81,12 @@ export class NotificationEventHandler {
    * 处理用户激活事件
    */
   private async handleUserActivated(data: InviteEventData): Promise<void> {
-    if (!data.inviteeId || !data.inviterId) return
+    if (!data.inviteeId || !data.inviterId) return;
 
     try {
       // 获取被邀请人信息
-      const inviteeInfo = await this.getUserInfo(data.inviteeId)
-      if (!inviteeInfo) return
+      const inviteeInfo = await this.getUserInfo(data.inviteeId);
+      if (!inviteeInfo) return;
 
       // 发送激活奖励通知
       await this.notificationService.handleInviteEvent(InviteEventType.REWARD_GRANTED, {
@@ -94,14 +95,14 @@ export class NotificationEventHandler {
         rewardAmount: 5,
         description: `${inviteeInfo.name || inviteeInfo.email} 激活账户奖励`,
         sourceType: 'invite_activation',
-        sourceId: data.inviteeId
-      })
+        sourceId: data.inviteeId,
+      });
 
       // 检查是否达到里程碑
-      await this.checkMilestones(data.inviterId)
+      await this.checkMilestones(data.inviterId);
 
     } catch (error) {
-      console.error('Failed to handle user activated event:', error)
+      console.error('Failed to handle user activated event:', error);
     }
   }
 
@@ -109,12 +110,12 @@ export class NotificationEventHandler {
    * 处理奖励发放事件
    */
   private async handleRewardGranted(data: InviteEventData): Promise<void> {
-    if (!data.rewardId) return
+    if (!data.rewardId) return;
 
     try {
       // 获取奖励详情
-      const reward = await this.getRewardInfo(data.rewardId)
-      if (!reward) return
+      const reward = await this.getRewardInfo(data.rewardId);
+      if (!reward) return;
 
       // 发送奖励到账通知
       await this.notificationService.handleInviteEvent(InviteEventType.REWARD_GRANTED, {
@@ -123,11 +124,11 @@ export class NotificationEventHandler {
         rewardAmount: reward.amount || reward.description,
         description: reward.description,
         sourceType: reward.sourceType,
-        sourceId: reward.sourceId
-      })
+        sourceId: reward.sourceId,
+      });
 
     } catch (error) {
-      console.error('Failed to handle reward granted event:', error)
+      console.error('Failed to handle reward granted event:', error);
     }
   }
 
@@ -136,26 +137,26 @@ export class NotificationEventHandler {
    */
   private async checkInviteProgress(inviterId: string): Promise<void> {
     try {
-      const stats = await this.getInviteStats(inviterId)
-      
+      const stats = await this.getInviteStats(inviterId);
+
       // 定义里程碑
-      const milestones = [5, 10, 20, 50, 100]
-      const nextMilestone = milestones.find(m => m > stats.successfulRegistrations)
-      
+      const milestones = [5, 10, 20, 50, 100];
+      const nextMilestone = (milestones.find as any)(m => m > stats.successfulRegistrations);
+
       if (nextMilestone) {
-        const remainingCount = nextMilestone - stats.successfulRegistrations
-        
+        const remainingCount = nextMilestone - stats.successfulRegistrations;
+
         // 发送进度通知
         await this.notificationService.handleInviteEvent(InviteEventType.USER_ACTIVATED, {
           userId: inviterId,
           inviteCount: stats.successfulRegistrations,
           nextMilestone,
           remainingCount,
-          milestoneName: `${nextMilestone}人邀请达人`
-        })
+          milestoneName: `${nextMilestone}人邀请达人`,
+        });
       }
     } catch (error) {
-      console.error('Failed to check invite progress:', error)
+      console.error('Failed to check invite progress:', error);
     }
   }
 
@@ -164,20 +165,20 @@ export class NotificationEventHandler {
    */
   private async checkMilestones(inviterId: string): Promise<void> {
     try {
-      const stats = await this.getInviteStats(inviterId)
-      
+      const stats = await this.getInviteStats(inviterId);
+
       // 检查邀请数量里程碑
       const milestones = [
         { count: 5, name: '邀请新手', reward: '专属徽章' },
         { count: 10, name: '邀请达人', reward: '20次AI生成次数' },
         { count: 20, name: '社区建设者', reward: '专属称号' },
         { count: 50, name: '推广大使', reward: '高级模板解锁' },
-        { count: 100, name: '传播之星', reward: '终身会员' }
-      ]
+        { count: 100, name: '传播之星', reward: '终身会员' },
+      ];
 
-      const achievedMilestone = milestones.find(m => 
-        m.count === stats.successfulRegistrations
-      )
+      const achievedMilestone = (milestones.find as any)(m =>
+        m.count === stats.successfulRegistrations,
+      );
 
       if (achievedMilestone) {
         // 发送里程碑达成通知
@@ -191,12 +192,12 @@ export class NotificationEventHandler {
           metadata: {
             milestoneName: achievedMilestone.name,
             rewardDescription: achievedMilestone.reward,
-            inviteCount: stats.successfulRegistrations
-          }
-        })
+            inviteCount: stats.successfulRegistrations,
+          },
+        });
       }
     } catch (error) {
-      console.error('Failed to check milestones:', error)
+      console.error('Failed to check milestones:', error);
     }
   }
 
@@ -205,9 +206,9 @@ export class NotificationEventHandler {
    */
   async schedulePeriodicNotifications(): Promise<void> {
     try {
-      await this.notificationService.schedulePeriodicNotifications()
+      await this.notificationService.schedulePeriodicNotifications();
     } catch (error) {
-      console.error('Failed to schedule periodic notifications:', error)
+      console.error('Failed to schedule periodic notifications:', error);
     }
   }
 
@@ -216,10 +217,10 @@ export class NotificationEventHandler {
    */
   async cleanupExpiredNotifications(daysToKeep: number = 30): Promise<number> {
     try {
-      return await this.notificationService.cleanupExpiredNotifications(daysToKeep)
+      return await this.notificationService.cleanupExpiredNotifications(daysToKeep);
     } catch (error) {
-      console.error('Failed to cleanup expired notifications:', error)
-      return 0
+      console.error('Failed to cleanup expired notifications:', error);
+      return 0;
     }
   }
 
@@ -234,19 +235,19 @@ export class NotificationEventHandler {
     email: string
   } | null> {
     try {
-      const query = 'SELECT id, name, email FROM users WHERE id = ?'
-      const result = await this.db.queryOne(query, [userId])
-      
-      if (!result) return null
-      
+      const query = 'SELECT id, name, email FROM users WHERE id = ?';
+      const result = await this.db.queryOne<{ id: string; name?: string; email: string }>(query, [userId]);
+
+      if (!result) return null;
+
       return {
         id: result.id,
         name: result.name,
-        email: result.email
-      }
+        email: result.email,
+      };
     } catch (error) {
-      console.error('Failed to get user info:', error)
-      return null
+      console.error('Failed to get user info:', error);
+      return null;
     }
   }
 
@@ -266,22 +267,29 @@ export class NotificationEventHandler {
         SELECT user_id, reward_type, amount, description, source_type, source_id
         FROM rewards 
         WHERE id = ?
-      `
-      const result = await this.db.queryOne(query, [rewardId])
-      
-      if (!result) return null
-      
+      `;
+      const result = await this.db.queryOne<{
+        user_id: string;
+        reward_type: string;
+        amount: number | null;
+        description: string;
+        source_type: string;
+        source_id: string;
+      }>(query, [rewardId]);
+
+      if (!result) return null;
+
       return {
         userId: result.user_id,
         rewardType: result.reward_type,
         amount: result.amount,
         description: result.description,
         sourceType: result.source_type,
-        sourceId: result.source_id
-      }
+        sourceId: result.source_id,
+      };
     } catch (error) {
-      console.error('Failed to get reward info:', error)
-      return null
+      console.error('Failed to get reward info:', error);
+      return null;
     }
   }
 
@@ -301,29 +309,33 @@ export class NotificationEventHandler {
           active_invitees
         FROM invite_stats 
         WHERE user_id = ?
-      `
-      const result = await this.db.queryOne(query, [userId])
-      
+      `;
+      const result = await this.db.queryOne<{
+        total_invites: number | null;
+        successful_registrations: number | null;
+        active_invitees: number | null;
+      }>(query, [userId]);
+
       if (!result) {
         return {
           totalInvites: 0,
           successfulRegistrations: 0,
-          activeInvitees: 0
-        }
+          activeInvitees: 0,
+        };
       }
-      
+
       return {
         totalInvites: result.total_invites || 0,
         successfulRegistrations: result.successful_registrations || 0,
-        activeInvitees: result.active_invitees || 0
-      }
+        activeInvitees: result.active_invitees || 0,
+      };
     } catch (error) {
-      console.error('Failed to get invite stats:', error)
+      console.error('Failed to get invite stats:', error);
       return {
         totalInvites: 0,
         successfulRegistrations: 0,
-        activeInvitees: 0
-      }
+        activeInvitees: 0,
+      };
     }
   }
 
@@ -336,9 +348,9 @@ export class NotificationEventHandler {
       [RewardType.BADGE]: '徽章',
       [RewardType.TITLE]: '称号',
       [RewardType.PREMIUM_ACCESS]: '会员权限',
-      [RewardType.TEMPLATE_UNLOCK]: '模板解锁'
-    }
-    
-    return typeMap[rewardType] || rewardType
+      [RewardType.TEMPLATE_UNLOCK]: '模板解锁',
+    };
+
+    return typeMap[rewardType] || rewardType;
   }
 }

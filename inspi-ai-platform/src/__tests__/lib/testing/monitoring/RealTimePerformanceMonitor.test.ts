@@ -8,10 +8,10 @@ describe('RealTimePerformanceMonitor', () => {
       alertThresholds: {
         executionTime: 1000,
         memoryUsage: 50 * 1024 * 1024,
-        cpuUsage: 80
+        cpuUsage: 80,
       },
       samplingInterval: 50,
-      maxMetricsHistory: 100
+      maxMetricsHistory: 100,
     });
   });
 
@@ -22,28 +22,28 @@ describe('RealTimePerformanceMonitor', () => {
   describe('监控生命周期', () => {
     it('应该能够启动和停止监控', () => {
       expect(monitor.isMonitoring()).toBe(false);
-      
+
       monitor.startMonitoring();
       expect(monitor.isMonitoring()).toBe(true);
-      
+
       monitor.stopMonitoring();
       expect(monitor.isMonitoring()).toBe(false);
     });
 
     it('应该能够开始和结束测试监控', () => {
       monitor.startMonitoring();
-      
+
       const testId = 'test-001';
       const testName = 'Sample Test';
-      
+
       monitor.startTest(testId, testName);
       expect(monitor.getActiveTests()).toContain(testId);
-      
+
       // 模拟测试执行时间
       const startTime = Date.now();
       setTimeout(() => {
         const metrics = monitor.endTest(testId);
-        
+
         expect(metrics).toBeDefined();
         expect(metrics!.testId).toBe(testId);
         expect(metrics!.testName).toBe(testName);
@@ -56,15 +56,15 @@ describe('RealTimePerformanceMonitor', () => {
   describe('性能指标收集', () => {
     it('应该收集基本的性能指标', async () => {
       monitor.startMonitoring();
-      
+
       const testId = 'perf-test-001';
       monitor.startTest(testId, 'Performance Test');
-      
+
       // 等待一些采样
       await new Promise(resolve => setTimeout(resolve, 150));
-      
+
       const metrics = monitor.endTest(testId);
-      
+
       expect(metrics).toBeDefined();
       expect(metrics!.memoryUsage).toBeDefined();
       expect(metrics!.memoryUsage.heapUsed).toBeGreaterThan(0);
@@ -75,16 +75,16 @@ describe('RealTimePerformanceMonitor', () => {
 
     it('应该记录性能快照', async () => {
       monitor.startMonitoring();
-      
+
       const testId = 'snapshot-test';
       monitor.startTest(testId, 'Snapshot Test');
-      
+
       await new Promise(resolve => setTimeout(resolve, 200));
-      
+
       const metrics = monitor.endTest(testId);
-      
+
       expect(metrics!.snapshots.length).toBeGreaterThan(2);
-      
+
       const firstSnapshot = metrics!.snapshots[0];
       expect(firstSnapshot.timestamp).toBeDefined();
       expect(firstSnapshot.memoryUsage).toBeDefined();
@@ -98,8 +98,8 @@ describe('RealTimePerformanceMonitor', () => {
         alertThresholds: {
           executionTime: 50, // 很低的阈值
           memoryUsage: 100 * 1024 * 1024,
-          cpuUsage: 90
-        }
+          cpuUsage: 90,
+        },
       });
 
       alertMonitor.on('alert:execution-time', (alert) => {
@@ -112,7 +112,7 @@ describe('RealTimePerformanceMonitor', () => {
 
       alertMonitor.startMonitoring();
       alertMonitor.startTest('slow-test', 'Slow Test');
-      
+
       // 模拟慢测试
       setTimeout(() => {
         alertMonitor.endTest('slow-test');
@@ -124,9 +124,9 @@ describe('RealTimePerformanceMonitor', () => {
         alertThresholds: {
           executionTime: 5000,
           memoryUsage: 1024, // 很低的阈值
-          cpuUsage: 90
+          cpuUsage: 90,
         },
-        samplingInterval: 10
+        samplingInterval: 10,
       });
 
       alertMonitor.on('alert:memory-usage', (alert) => {
@@ -138,7 +138,7 @@ describe('RealTimePerformanceMonitor', () => {
 
       alertMonitor.startMonitoring();
       alertMonitor.startTest('memory-test', 'Memory Test');
-      
+
       // 等待内存采样
       setTimeout(() => {
         alertMonitor.endTest('memory-test');
@@ -149,7 +149,7 @@ describe('RealTimePerformanceMonitor', () => {
   describe('统计信息', () => {
     it('应该提供准确的统计信息', async () => {
       monitor.startMonitoring();
-      
+
       // 运行多个测试
       for (let i = 0; i < 3; i++) {
         const testId = `stats-test-${i}`;
@@ -157,9 +157,9 @@ describe('RealTimePerformanceMonitor', () => {
         await new Promise(resolve => setTimeout(resolve, 50));
         monitor.endTest(testId);
       }
-      
+
       const stats = monitor.getStatistics();
-      
+
       expect(stats.totalTests).toBe(3);
       expect(stats.averageExecutionTime).toBeGreaterThan(0);
       expect(stats.totalAlerts).toBeGreaterThanOrEqual(0);
@@ -168,17 +168,17 @@ describe('RealTimePerformanceMonitor', () => {
 
     it('应该跟踪活动测试', () => {
       monitor.startMonitoring();
-      
+
       monitor.startTest('active-1', 'Active Test 1');
       monitor.startTest('active-2', 'Active Test 2');
-      
+
       const activeTests = monitor.getActiveTests();
       expect(activeTests).toContain('active-1');
       expect(activeTests).toContain('active-2');
       expect(activeTests.length).toBe(2);
-      
+
       monitor.endTest('active-1');
-      
+
       const updatedActiveTests = monitor.getActiveTests();
       expect(updatedActiveTests).not.toContain('active-1');
       expect(updatedActiveTests).toContain('active-2');
@@ -189,24 +189,24 @@ describe('RealTimePerformanceMonitor', () => {
   describe('数据管理', () => {
     it('应该能够清除指标数据', async () => {
       monitor.startMonitoring();
-      
+
       monitor.startTest('clear-test', 'Clear Test');
       await new Promise(resolve => setTimeout(resolve, 50));
       monitor.endTest('clear-test');
-      
+
       expect(monitor.getAllMetrics().length).toBe(1);
-      
+
       monitor.clearMetrics();
       expect(monitor.getAllMetrics().length).toBe(0);
     });
 
     it('应该限制历史记录数量', async () => {
       const limitedMonitor = new RealTimePerformanceMonitor({
-        maxMetricsHistory: 2
+        maxMetricsHistory: 2,
       });
-      
+
       limitedMonitor.startMonitoring();
-      
+
       // 运行3个测试，但只保留2个
       for (let i = 0; i < 3; i++) {
         const testId = `limit-test-${i}`;
@@ -214,10 +214,10 @@ describe('RealTimePerformanceMonitor', () => {
         await new Promise(resolve => setTimeout(resolve, 10));
         limitedMonitor.endTest(testId);
       }
-      
+
       const allMetrics = limitedMonitor.getAllMetrics();
       expect(allMetrics.length).toBe(2);
-      
+
       limitedMonitor.destroy();
     });
   });
@@ -225,17 +225,17 @@ describe('RealTimePerformanceMonitor', () => {
   describe('错误处理', () => {
     it('应该处理不存在的测试ID', () => {
       monitor.startMonitoring();
-      
+
       const metrics = monitor.endTest('non-existent-test');
       expect(metrics).toBeNull();
     });
 
     it('应该处理重复的测试ID', () => {
       monitor.startMonitoring();
-      
+
       monitor.startTest('duplicate-test', 'Test 1');
       monitor.startTest('duplicate-test', 'Test 2'); // 应该覆盖第一个
-      
+
       const metrics = monitor.endTest('duplicate-test');
       expect(metrics).toBeDefined();
       expect(metrics!.testName).toBe('Test 2');
@@ -270,7 +270,7 @@ describe('RealTimePerformanceMonitor', () => {
 
       monitor.startMonitoring();
       monitor.startTest('complete-test', 'Complete Test');
-      
+
       setTimeout(() => {
         monitor.endTest('complete-test');
       }, 50);

@@ -1,13 +1,14 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
+
 import { ErrorBoundary } from '@/components/errors/ErrorBoundary';
 
 // 模拟日志记录器
 jest.mock('@/lib/logging/logger', () => ({
   logger: {
     error: jest.fn(),
-    info: jest.fn()
-  }
+    info: jest.fn(),
+  },
 }));
 
 // 测试组件：会抛出错误
@@ -24,7 +25,7 @@ describe('ErrorBoundary - 简化测试', () => {
   beforeAll(() => {
     console.error = jest.fn();
   });
-  
+
   afterAll(() => {
     console.error = originalError;
   });
@@ -37,7 +38,7 @@ describe('ErrorBoundary - 简化测试', () => {
     render(
       <ErrorBoundary>
         <ThrowError />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     // 检查是否显示了错误UI（使用实际渲染的文本）
@@ -49,7 +50,7 @@ describe('ErrorBoundary - 简化测试', () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={false} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     expect(screen.getByTestId('success')).toBeInTheDocument();
@@ -59,7 +60,7 @@ describe('ErrorBoundary - 简化测试', () => {
     render(
       <ErrorBoundary level="page">
         <ThrowError />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     expect(screen.getByText('页面加载出错')).toBeInTheDocument();
@@ -70,17 +71,17 @@ describe('ErrorBoundary - 简化测试', () => {
     render(
       <ErrorBoundary>
         <ThrowError />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     expect(screen.getByText('组件渲染出错')).toBeInTheDocument();
 
     const retryButton = screen.getByText('重试');
     expect(retryButton).toBeInTheDocument();
-    
+
     // 点击重试按钮
     fireEvent.click(retryButton);
-    
+
     // 错误UI应该仍然存在（因为组件仍然会抛出错误）
     expect(screen.getByText('组件渲染出错')).toBeInTheDocument();
   });
@@ -91,7 +92,7 @@ describe('ErrorBoundary - 简化测试', () => {
     render(
       <ErrorBoundary fallback={CustomFallback}>
         <ThrowError />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     expect(screen.getByTestId('custom-error')).toBeInTheDocument();
@@ -104,14 +105,14 @@ describe('ErrorBoundary - 简化测试', () => {
     render(
       <ErrorBoundary onError={onError}>
         <ThrowError />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     expect(onError).toHaveBeenCalledWith(
       expect.any(Error),
       expect.objectContaining({
-        componentStack: expect.any(String)
-      })
+        componentStack: expect.any(String),
+      }),
     );
   });
 });

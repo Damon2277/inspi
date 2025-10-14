@@ -11,7 +11,7 @@ describe('TestStabilityMonitor', () => {
     monitor = new TestStabilityMonitor({
       minRunsForAnalysis: 5,
       flakinessThreshold: 0.2,
-      analysisWindowDays: 7
+      analysisWindowDays: 7,
     }, false); // Disable persistence for tests
   });
 
@@ -26,12 +26,12 @@ describe('TestStabilityMonitor', () => {
         environment: {
           nodeVersion: 'v18.0.0',
           platform: 'linux',
-          ci: false
-        }
+          ci: false,
+        },
       };
 
       monitor.recordTestExecution(record);
-      
+
       const metrics = monitor.getTestStabilityMetrics('sample test', 'test.spec.ts');
       expect(metrics).toBeNull(); // Not enough runs yet
     });
@@ -46,8 +46,8 @@ describe('TestStabilityMonitor', () => {
         environment: {
           nodeVersion: 'v18.0.0',
           platform: 'linux',
-          ci: false
-        }
+          ci: false,
+        },
       };
 
       // Record 6 executions (above minimum threshold)
@@ -55,7 +55,7 @@ describe('TestStabilityMonitor', () => {
         monitor.recordTestExecution({
           ...baseRecord,
           status: i === 2 ? 'failed' : 'passed', // One failure
-          timestamp: new Date(Date.now() + i * 1000)
+          timestamp: new Date(Date.now() + i * 1000),
         });
       }
 
@@ -79,8 +79,8 @@ describe('TestStabilityMonitor', () => {
         environment: {
           nodeVersion: 'v18.0.0',
           platform: 'linux',
-          ci: false
-        }
+          ci: false,
+        },
       };
 
       // Create alternating pass/fail pattern
@@ -89,14 +89,14 @@ describe('TestStabilityMonitor', () => {
           ...baseRecord,
           status: i % 2 === 0 ? 'passed' : 'failed',
           duration: 100 + (i * 10), // Varying duration
-          timestamp: new Date(Date.now() + i * 1000)
+          timestamp: new Date(Date.now() + i * 1000),
         });
       }
     });
 
     it('should calculate flakiness score correctly', () => {
       const metrics = monitor.getTestStabilityMetrics('flaky test', 'flaky.spec.ts');
-      
+
       expect(metrics).not.toBeNull();
       expect(metrics!.flakinessScore).toBeGreaterThan(0.4); // High flakiness due to alternating pattern
       expect(metrics!.isFlaky).toBe(true);
@@ -104,7 +104,7 @@ describe('TestStabilityMonitor', () => {
 
     it('should calculate duration metrics', () => {
       const metrics = monitor.getTestStabilityMetrics('flaky test', 'flaky.spec.ts');
-      
+
       expect(metrics).not.toBeNull();
       expect(metrics!.averageDuration).toBeGreaterThan(0);
       expect(metrics!.durationVariance).toBeGreaterThan(0);
@@ -112,7 +112,7 @@ describe('TestStabilityMonitor', () => {
 
     it('should detect stability trend', () => {
       const metrics = monitor.getTestStabilityMetrics('flaky test', 'flaky.spec.ts');
-      
+
       expect(metrics).not.toBeNull();
       expect(['improving', 'degrading', 'stable']).toContain(metrics!.stabilityTrend);
     });
@@ -130,14 +130,14 @@ describe('TestStabilityMonitor', () => {
         environment: {
           nodeVersion: 'v18.0.0',
           platform: 'linux',
-          ci: false
-        }
+          ci: false,
+        },
       };
 
       for (let i = 0; i < 10; i++) {
         monitor.recordTestExecution({
           ...stableRecord,
-          timestamp: new Date(Date.now() + i * 1000)
+          timestamp: new Date(Date.now() + i * 1000),
         });
       }
 
@@ -151,22 +151,22 @@ describe('TestStabilityMonitor', () => {
         environment: {
           nodeVersion: 'v18.0.0',
           platform: 'linux',
-          ci: false
-        }
+          ci: false,
+        },
       };
 
       for (let i = 0; i < 10; i++) {
         monitor.recordTestExecution({
           ...flakyRecord,
           status: i % 3 === 0 ? 'failed' : 'passed', // 33% failure rate
-          timestamp: new Date(Date.now() + i * 1000)
+          timestamp: new Date(Date.now() + i * 1000),
         });
       }
     });
 
     it('should identify flaky tests', () => {
       const flakyTests = monitor.getFlakyTests();
-      
+
       expect(flakyTests).toHaveLength(1);
       expect(flakyTests[0].testName).toBe('flaky test');
       expect(flakyTests[0].isFlaky).toBe(true);
@@ -183,20 +183,20 @@ describe('TestStabilityMonitor', () => {
         environment: {
           nodeVersion: 'v18.0.0',
           platform: 'linux',
-          ci: false
-        }
+          ci: false,
+        },
       };
 
       for (let i = 0; i < 10; i++) {
         monitor.recordTestExecution({
           ...anotherFlakyRecord,
           status: i % 2 === 0 ? 'failed' : 'passed', // 50% failure rate
-          timestamp: new Date(Date.now() + i * 1000)
+          timestamp: new Date(Date.now() + i * 1000),
         });
       }
 
       const flakyTests = monitor.getFlakyTests();
-      
+
       expect(flakyTests).toHaveLength(2);
       expect(flakyTests[0].flakinessScore).toBeGreaterThanOrEqual(flakyTests[1].flakinessScore);
     });
@@ -209,7 +209,7 @@ describe('TestStabilityMonitor', () => {
         { name: 'stable1', file: 'stable1.spec.ts', failureRate: 0 },
         { name: 'stable2', file: 'stable2.spec.ts', failureRate: 0 },
         { name: 'flaky1', file: 'flaky1.spec.ts', failureRate: 0.3 },
-        { name: 'flaky2', file: 'flaky2.spec.ts', failureRate: 0.5 }
+        { name: 'flaky2', file: 'flaky2.spec.ts', failureRate: 0.5 },
       ];
 
       tests.forEach(test => {
@@ -223,8 +223,8 @@ describe('TestStabilityMonitor', () => {
             environment: {
               nodeVersion: 'v18.0.0',
               platform: 'linux',
-              ci: false
-            }
+              ci: false,
+            },
           });
         }
       });
@@ -232,7 +232,7 @@ describe('TestStabilityMonitor', () => {
 
     it('should provide accurate summary statistics', () => {
       const summary = monitor.getStabilitySummary();
-      
+
       expect(summary.totalTests).toBe(4);
       expect(summary.stableTests).toBeGreaterThan(0);
       expect(summary.flakyTests).toBeGreaterThan(0);
@@ -242,7 +242,7 @@ describe('TestStabilityMonitor', () => {
 
     it('should include most flaky tests', () => {
       const summary = monitor.getStabilitySummary();
-      
+
       expect(summary.mostFlakyTests).toBeDefined();
       expect(Array.isArray(summary.mostFlakyTests)).toBe(true);
     });
@@ -259,14 +259,14 @@ describe('TestStabilityMonitor', () => {
         environment: {
           nodeVersion: 'v18.0.0',
           platform: 'linux',
-          ci: false
-        }
+          ci: false,
+        },
       };
 
       for (let i = 0; i < 10; i++) {
         monitor.recordTestExecution({
           ...record,
-          timestamp: new Date(Date.now() + i * 1000)
+          timestamp: new Date(Date.now() + i * 1000),
         });
       }
     });
@@ -276,7 +276,7 @@ describe('TestStabilityMonitor', () => {
       expect(metrics).not.toBeNull();
 
       monitor.clearTestHistory('test to clear', 'clear.spec.ts');
-      
+
       metrics = monitor.getTestStabilityMetrics('test to clear', 'clear.spec.ts');
       expect(metrics).toBeNull();
     });
@@ -286,7 +286,7 @@ describe('TestStabilityMonitor', () => {
       expect(summary.totalTests).toBeGreaterThan(0);
 
       monitor.clearAllHistory();
-      
+
       summary = monitor.getStabilitySummary();
       expect(summary.totalTests).toBe(0);
     });
@@ -308,15 +308,15 @@ describe('TestStabilityMonitor', () => {
         environment: {
           nodeVersion: 'v18.0.0',
           platform: 'linux',
-          ci: false
-        }
+          ci: false,
+        },
       };
 
       // Record only 2 executions (below minimum threshold of 5)
       for (let i = 0; i < 2; i++) {
         monitor.recordTestExecution({
           ...record,
-          timestamp: new Date(Date.now() + i * 1000)
+          timestamp: new Date(Date.now() + i * 1000),
         });
       }
 
@@ -334,14 +334,14 @@ describe('TestStabilityMonitor', () => {
         environment: {
           nodeVersion: 'v18.0.0',
           platform: 'linux',
-          ci: false
-        }
+          ci: false,
+        },
       };
 
       for (let i = 0; i < 10; i++) {
         monitor.recordTestExecution({
           ...record,
-          timestamp: new Date(Date.now() + i * 1000)
+          timestamp: new Date(Date.now() + i * 1000),
         });
       }
 

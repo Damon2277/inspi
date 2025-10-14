@@ -1,6 +1,6 @@
 /**
  * Test Performance Monitoring Tools
- * 
+ *
  * This module provides tools for monitoring and measuring performance
  * during test execution, including execution time, memory usage, and
  * performance regression detection.
@@ -67,7 +67,7 @@ export class PerformanceMonitor {
   startMeasurement(testName: string): void {
     const startTime = performance.now();
     const startMemory = process.memoryUsage();
-    
+
     this.activeTimers.set(testName, { startTime, startMemory });
   }
 
@@ -79,7 +79,7 @@ export class PerformanceMonitor {
     if (!timer) {
       throw new TestError(
         TestErrorType.ASSERTION_FAILED,
-        `No active measurement found for test: ${testName}`
+        `No active measurement found for test: ${testName}`,
       );
     }
 
@@ -112,10 +112,10 @@ export class PerformanceMonitor {
    */
   async measureFunction<T>(
     testName: string,
-    fn: () => Promise<T> | T
+    fn: () => Promise<T> | T,
   ): Promise<{ result: T; metrics: PerformanceMetrics }> {
     this.startMeasurement(testName);
-    
+
     try {
       const result = await fn();
       const metrics = this.stopMeasurement(testName);
@@ -171,19 +171,19 @@ export class PerformanceMonitor {
     limits: {
       maxExecutionTime?: number;
       maxMemoryUsage?: number;
-    }
+    },
   ): void {
     if (limits.maxExecutionTime && metrics.executionTime > limits.maxExecutionTime) {
       throw new TestError(
         TestErrorType.ASSERTION_FAILED,
-        `Test "${testName}" execution time ${metrics.executionTime}ms exceeds limit of ${limits.maxExecutionTime}ms`
+        `Test "${testName}" execution time ${metrics.executionTime}ms exceeds limit of ${limits.maxExecutionTime}ms`,
       );
     }
 
     if (limits.maxMemoryUsage && metrics.memoryUsage.heapUsed > limits.maxMemoryUsage) {
       throw new TestError(
         TestErrorType.ASSERTION_FAILED,
-        `Test "${testName}" memory usage ${metrics.memoryUsage.heapUsed} bytes exceeds limit of ${limits.maxMemoryUsage} bytes`
+        `Test "${testName}" memory usage ${metrics.memoryUsage.heapUsed} bytes exceeds limit of ${limits.maxMemoryUsage} bytes`,
       );
     }
   }
@@ -297,7 +297,7 @@ export class PerformanceMonitor {
   // Private helper methods
   private detectRegression(
     metrics: PerformanceMetrics,
-    benchmark: PerformanceBenchmark
+    benchmark: PerformanceBenchmark,
   ): PerformanceReport['regression'] | null {
     const { threshold } = benchmark;
     const baseline = benchmark.baseline;
@@ -377,7 +377,7 @@ export function createPerformanceBenchmark(
   thresholds: {
     executionTime?: number;
     memoryUsage?: number;
-  }
+  },
 ): PerformanceBenchmark {
   return {
     name,

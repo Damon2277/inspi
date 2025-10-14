@@ -10,14 +10,14 @@ import { ValidationResult, ContentFilterOptions } from './types';
  */
 export async function validateContent(
   content: string,
-  options?: ContentFilterOptions
+  options?: ContentFilterOptions,
 ): Promise<ValidationResult> {
   if (options) {
     const { ContentValidator } = require('./contentValidator');
     const validator = new ContentValidator(options);
     return validator.validate(content);
   }
-  
+
   return defaultContentValidator.validate(content);
 }
 
@@ -26,14 +26,14 @@ export async function validateContent(
  */
 export function validateContentSync(
   content: string,
-  options?: ContentFilterOptions
+  options?: ContentFilterOptions,
 ): ValidationResult {
   if (options) {
     const { ContentValidator } = require('./contentValidator');
     const validator = new ContentValidator(options);
     return validator.validateSync(content);
   }
-  
+
   return defaultContentValidator.validateSync(content);
 }
 
@@ -42,7 +42,7 @@ export function validateContentSync(
  */
 export async function cleanUserContent(
   content: string,
-  strict: boolean = false
+  strict: boolean = false,
 ): Promise<string> {
   const options = strict ? VALIDATOR_PRESETS.STRICT : VALIDATOR_PRESETS.STANDARD;
   const { ContentValidator } = require('./contentValidator');
@@ -55,7 +55,7 @@ export async function cleanUserContent(
  */
 export function cleanUserContentSync(
   content: string,
-  strict: boolean = false
+  strict: boolean = false,
 ): string {
   const options = strict ? VALIDATOR_PRESETS.STRICT : VALIDATOR_PRESETS.STANDARD;
   const { ContentValidator } = require('./contentValidator');
@@ -69,22 +69,22 @@ export function cleanUserContentSync(
  */
 export async function validateMultipleContents(
   contents: Record<string, string>,
-  options?: ContentFilterOptions
+  options?: ContentFilterOptions,
 ): Promise<Record<string, ValidationResult>> {
   const results: Record<string, ValidationResult> = {};
-  
+
   // 并行验证所有内容
   const promises = Object.entries(contents).map(async ([key, content]) => {
     const result = await validateContent(content, options);
     return { key, result };
   });
-  
+
   const resolvedResults = await Promise.all(promises);
-  
+
   for (const { key, result } of resolvedResults) {
     results[key] = result;
   }
-  
+
   return results;
 }
 
@@ -93,14 +93,14 @@ export async function validateMultipleContents(
  */
 export function validateMultipleContentsSync(
   contents: Record<string, string>,
-  options?: ContentFilterOptions
+  options?: ContentFilterOptions,
 ): Record<string, ValidationResult> {
   const results: Record<string, ValidationResult> = {};
-  
+
   for (const [key, content] of Object.entries(contents)) {
     results[key] = validateContentSync(content, options);
   }
-  
+
   return results;
 }
 
@@ -109,7 +109,7 @@ export function validateMultipleContentsSync(
  */
 export async function isContentSafe(
   content: string,
-  options?: ContentFilterOptions
+  options?: ContentFilterOptions,
 ): Promise<boolean> {
   const result = await validateContent(content, options);
   return result.isValid;
@@ -120,7 +120,7 @@ export async function isContentSafe(
  */
 export function isContentSafeSync(
   content: string,
-  options?: ContentFilterOptions
+  options?: ContentFilterOptions,
 ): boolean {
   return validateContentSync(content, options).isValid;
 }
@@ -130,7 +130,7 @@ export function isContentSafeSync(
  */
 export async function getContentRiskLevel(
   content: string,
-  options?: ContentFilterOptions
+  options?: ContentFilterOptions,
 ): Promise<'low' | 'medium' | 'high'> {
   const result = await validateContent(content, options);
   return result.riskLevel;
@@ -141,7 +141,7 @@ export async function getContentRiskLevel(
  */
 export function getContentRiskLevelSync(
   content: string,
-  options?: ContentFilterOptions
+  options?: ContentFilterOptions,
 ): 'low' | 'medium' | 'high' {
   return validateContentSync(content, options).riskLevel;
 }
@@ -170,7 +170,7 @@ export function formatValidationWarnings(result: ValidationResult): string[] {
 export function createValidationSummary(result: ValidationResult) {
   const errors = formatValidationErrors(result);
   const warnings = formatValidationWarnings(result);
-  
+
   return {
     isValid: result.isValid,
     riskLevel: result.riskLevel,
@@ -180,6 +180,6 @@ export function createValidationSummary(result: ValidationResult) {
     warningCount: warnings.length,
     errors,
     warnings,
-    cleanContent: result.cleanContent
+    cleanContent: result.cleanContent,
   };
 }

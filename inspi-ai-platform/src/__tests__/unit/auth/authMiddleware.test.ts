@@ -3,21 +3,22 @@
  * 测试认证中间件的各种场景、权限验证和边界条件
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { authenticateToken, requireAuth, optionalAuth } from '@/lib/middleware/auth';
 import jwt from 'jsonwebtoken';
+import { NextRequest, NextResponse } from 'next/server';
+
+import { authenticateToken, requireAuth, optionalAuth } from '@/lib/middleware/auth';
 
 // Mock dependencies
 jest.mock('jsonwebtoken');
 jest.mock('@/lib/mongodb', () => ({
   __esModule: true,
-  default: jest.fn().mockResolvedValue(true)
+  default: jest.fn().mockResolvedValue(true),
 }));
 jest.mock('@/lib/models/User', () => ({
   __esModule: true,
   default: {
-    findById: jest.fn()
-  }
+    findById: jest.fn(),
+  },
 }));
 
 // Mock User model
@@ -39,7 +40,7 @@ describe('认证中间件集成测试', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Setup environment
     process.env.NEXTAUTH_SECRET = 'test-secret';
 
@@ -57,7 +58,7 @@ describe('认证中间件集成测试', () => {
 
     // Setup handler mock
     mockHandler = jest.fn().mockResolvedValue(
-      NextResponse.json({ message: 'Success' })
+      NextResponse.json({ message: 'Success' }),
     );
   });
 
@@ -70,9 +71,9 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const token = 'valid.jwt.token';
       const decodedPayload = { userId: 'user123' };
-      
+
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${token}`
+        'authorization': `Bearer ${token}`,
       });
 
       (jwt.verify as jest.Mock).mockReturnValue(decodedPayload);
@@ -106,12 +107,12 @@ describe('认证中间件集成测试', () => {
         'Bearer',
         'Token valid.jwt.token',
         'bearer token',
-        'valid.jwt.token'
+        'valid.jwt.token',
       ];
 
       for (const header of invalidHeaders) {
         mockRequest.headers = new Headers({
-          'authorization': header
+          'authorization': header,
         });
 
         // Act
@@ -126,7 +127,7 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const token = 'invalid.jwt.token';
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${token}`
+        'authorization': `Bearer ${token}`,
       });
 
       (jwt.verify as jest.Mock).mockImplementation(() => {
@@ -144,9 +145,9 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const token = 'valid.jwt.token';
       const decodedPayload = { userId: 'nonexistent' };
-      
+
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${token}`
+        'authorization': `Bearer ${token}`,
       });
 
       (jwt.verify as jest.Mock).mockReturnValue(decodedPayload);
@@ -163,9 +164,9 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const token = 'valid.jwt.token';
       const decodedPayload = { userId: 'user123' };
-      
+
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${token}`
+        'authorization': `Bearer ${token}`,
       });
 
       (jwt.verify as jest.Mock).mockReturnValue(decodedPayload);
@@ -184,9 +185,9 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const token = 'valid.jwt.token';
       const decodedPayload = { userId: 'user123' };
-      
+
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${token}`
+        'authorization': `Bearer ${token}`,
       });
 
       (jwt.verify as jest.Mock).mockReturnValue(decodedPayload);
@@ -201,7 +202,7 @@ describe('认证中间件集成测试', () => {
       expect(mockHandler).toHaveBeenCalledWith(mockRequest);
       expect((mockRequest as any).user).toEqual(mockUser);
       expect(response).toEqual(expect.objectContaining({
-        status: 200
+        status: 200,
       }));
     });
 
@@ -217,11 +218,11 @@ describe('认证中间件集成测试', () => {
       // Assert
       expect(mockHandler).not.toHaveBeenCalled();
       expect(response.status).toBe(401);
-      
+
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         code: 'UNAUTHORIZED',
-        message: '请先登录'
+        message: '请先登录',
       });
     });
 
@@ -229,7 +230,7 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const token = 'invalid.jwt.token';
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${token}`
+        'authorization': `Bearer ${token}`,
       });
 
       (jwt.verify as jest.Mock).mockImplementation(() => {
@@ -250,9 +251,9 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const token = 'valid.jwt.token';
       const decodedPayload = { userId: 'deleted-user' };
-      
+
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${token}`
+        'authorization': `Bearer ${token}`,
       });
 
       (jwt.verify as jest.Mock).mockReturnValue(decodedPayload);
@@ -274,9 +275,9 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const token = 'valid.jwt.token';
       const decodedPayload = { userId: 'user123' };
-      
+
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${token}`
+        'authorization': `Bearer ${token}`,
       });
 
       (jwt.verify as jest.Mock).mockReturnValue(decodedPayload);
@@ -310,7 +311,7 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const token = 'invalid.jwt.token';
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${token}`
+        'authorization': `Bearer ${token}`,
       });
 
       (jwt.verify as jest.Mock).mockImplementation(() => {
@@ -333,7 +334,7 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const longToken = 'a'.repeat(10000);
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${longToken}`
+        'authorization': `Bearer ${longToken}`,
       });
 
       (jwt.verify as jest.Mock).mockImplementation(() => {
@@ -351,7 +352,7 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const specialToken = 'token.with.special@#$%^&*()characters';
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${specialToken}`
+        'authorization': `Bearer ${specialToken}`,
       });
 
       (jwt.verify as jest.Mock).mockImplementation(() => {
@@ -368,7 +369,7 @@ describe('认证中间件集成测试', () => {
     it('应该处理空字符串令牌', async () => {
       // Arrange
       mockRequest.headers = new Headers({
-        'authorization': 'Bearer '
+        'authorization': 'Bearer ',
       });
 
       // Act
@@ -400,9 +401,9 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const token = 'valid.jwt.token';
       const decodedPayload = { userId: 'user123' };
-      
+
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${token}`
+        'authorization': `Bearer ${token}`,
       });
 
       (jwt.verify as jest.Mock).mockReturnValue(decodedPayload);
@@ -422,21 +423,21 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const token = 'valid.jwt.token';
       const decodedPayload = { userId: 'user123' };
-      
+
       (jwt.verify as jest.Mock).mockReturnValue(decodedPayload);
       mockUserModel.findById.mockResolvedValue(mockUser);
 
       const requests = Array(100).fill(null).map(() => ({
         headers: new Headers({
-          'authorization': `Bearer ${token}`
-        })
+          'authorization': `Bearer ${token}`,
+        }),
       }));
 
       const startTime = Date.now();
 
       // Act
       const results = await Promise.all(
-        requests.map(req => authenticateToken(req as NextRequest))
+        requests.map(req => authenticateToken(req as NextRequest)),
       );
 
       // Assert
@@ -453,14 +454,14 @@ describe('认证中间件集成测试', () => {
     it('应该防止令牌重放攻击', async () => {
       // Arrange
       const token = 'replayed.jwt.token';
-      const decodedPayload = { 
+      const decodedPayload = {
         userId: 'user123',
         iat: Math.floor(Date.now() / 1000) - 3600, // 1小时前签发
-        exp: Math.floor(Date.now() / 1000) + 3600  // 1小时后过期
+        exp: Math.floor(Date.now() / 1000) + 3600,  // 1小时后过期
       };
-      
+
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${token}`
+        'authorization': `Bearer ${token}`,
       });
 
       (jwt.verify as jest.Mock).mockReturnValue(decodedPayload);
@@ -479,17 +480,17 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const validToken = 'valid.jwt.token';
       const invalidToken = 'invalid.jwt.token';
-      
+
       const validRequest = {
         headers: new Headers({
-          'authorization': `Bearer ${validToken}`
-        })
+          'authorization': `Bearer ${validToken}`,
+        }),
       };
-      
+
       const invalidRequest = {
         headers: new Headers({
-          'authorization': `Bearer ${invalidToken}`
-        })
+          'authorization': `Bearer ${invalidToken}`,
+        }),
       };
 
       (jwt.verify as jest.Mock)
@@ -497,7 +498,7 @@ describe('认证中间件集成测试', () => {
         .mockImplementationOnce(() => {
           throw new Error('Invalid token');
         });
-      
+
       mockUserModel.findById.mockResolvedValue(mockUser);
 
       // Act - 测量响应时间
@@ -513,7 +514,7 @@ describe('认证中间件集成测试', () => {
       const validTime = Number(validEnd - validStart) / 1000000;
       const invalidTime = Number(invalidEnd - invalidStart) / 1000000;
       const timeDifference = Math.abs(validTime - invalidTime);
-      
+
       expect(timeDifference).toBeLessThan(Math.max(validTime, invalidTime) * 0.5);
     });
 
@@ -522,23 +523,23 @@ describe('认证中间件集成测试', () => {
       const token = 'valid.jwt.token';
       const existingUserPayload = { userId: 'existing-user' };
       const nonExistentUserPayload = { userId: 'non-existent-user' };
-      
+
       const existingUserRequest = {
         headers: new Headers({
-          'authorization': `Bearer ${token}`
-        })
+          'authorization': `Bearer ${token}`,
+        }),
       };
-      
+
       const nonExistentUserRequest = {
         headers: new Headers({
-          'authorization': `Bearer ${token}`
-        })
+          'authorization': `Bearer ${token}`,
+        }),
       };
 
       (jwt.verify as jest.Mock)
         .mockReturnValueOnce(existingUserPayload)
         .mockReturnValueOnce(nonExistentUserPayload);
-      
+
       mockUserModel.findById
         .mockResolvedValueOnce(mockUser)
         .mockResolvedValueOnce(null);
@@ -558,9 +559,9 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const token = 'valid.jwt.token';
       const decodedPayload = { userId: 'user123' };
-      
+
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${token}`
+        'authorization': `Bearer ${token}`,
       });
 
       (jwt.verify as jest.Mock).mockReturnValue(decodedPayload);
@@ -577,7 +578,7 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const token = 'problematic.jwt.token';
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${token}`
+        'authorization': `Bearer ${token}`,
       });
 
       (jwt.verify as jest.Mock).mockImplementation(() => {
@@ -595,14 +596,14 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const token = 'valid.jwt.token';
       const decodedPayload = { userId: 'user123' };
-      
+
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${token}`
+        'authorization': `Bearer ${token}`,
       });
 
       (jwt.verify as jest.Mock).mockReturnValue(decodedPayload);
       mockUserModel.findById.mockResolvedValue(mockUser);
-      
+
       mockHandler.mockRejectedValue(new Error('Handler error'));
 
       const protectedHandler = requireAuth(mockHandler);
@@ -617,17 +618,17 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const token = 'integration.test.token';
       const decodedPayload = { userId: 'integration-user' };
-      
+
       // 模拟完整的请求对象
       const fullRequest = {
         headers: new Headers({
           'authorization': `Bearer ${token}`,
           'content-type': 'application/json',
-          'user-agent': 'Test Client'
+          'user-agent': 'Test Client',
         }),
         method: 'POST',
         url: 'http://localhost:3000/api/protected',
-        json: jest.fn().mockResolvedValue({ data: 'test' })
+        json: jest.fn().mockResolvedValue({ data: 'test' }),
       };
 
       (jwt.verify as jest.Mock).mockReturnValue(decodedPayload);
@@ -648,9 +649,9 @@ describe('认证中间件集成测试', () => {
       // Arrange
       const token = 'chain.test.token';
       const decodedPayload = { userId: 'chain-user' };
-      
+
       mockRequest.headers = new Headers({
-        'authorization': `Bearer ${token}`
+        'authorization': `Bearer ${token}`,
       });
 
       (jwt.verify as jest.Mock).mockReturnValue(decodedPayload);

@@ -3,13 +3,13 @@
  * Tests the complete CI/CD system integration
  */
 
-import { 
+import {
   PipelineOptimizer,
   TestResultIntegrator,
   QualityGateManager,
   DeploymentValidator,
   CICDReporter,
-  PipelineAnalyzer
+  PipelineAnalyzer,
 } from '../../../../lib/testing/cicd';
 import { CICDMetrics, PipelineConfig, TestResult, QualityGate } from '../../../../lib/testing/cicd/types';
 
@@ -43,7 +43,7 @@ describe('CI/CD Integration', () => {
             commands: ['npm ci', 'npm run build'],
             dependencies: [],
             timeout: 300000,
-            retries: 2
+            retries: 2,
           },
           {
             name: 'test',
@@ -51,7 +51,7 @@ describe('CI/CD Integration', () => {
             commands: ['npm test', 'npm run test:coverage'],
             dependencies: ['build'],
             timeout: 600000,
-            retries: 1
+            retries: 1,
           },
           {
             name: 'deploy',
@@ -59,39 +59,39 @@ describe('CI/CD Integration', () => {
             commands: ['npm run deploy:staging'],
             dependencies: ['test'],
             timeout: 300000,
-            retries: 3
-          }
+            retries: 3,
+          },
         ],
         parallelization: {
           enabled: true,
           maxConcurrency: 2,
-          strategy: 'stage'
+          strategy: 'stage',
         },
         caching: {
           enabled: true,
           strategy: 'dependencies',
           paths: ['node_modules', 'dist'],
           key: 'cache-v1-{{ checksum "package-lock.json" }}',
-          restoreKeys: ['cache-v1-']
+          restoreKeys: ['cache-v1-'],
         },
         environment: {
           variables: {
             NODE_ENV: 'test',
-            CI: 'true'
+            CI: 'true',
           },
-          secrets: ['API_KEY', 'DATABASE_URL']
+          secrets: ['API_KEY', 'DATABASE_URL'],
         },
         notifications: {
           enabled: true,
           channels: [
             {
               type: 'slack',
-              config: { webhook: 'https://hooks.slack.com/test' }
-            }
+              config: { webhook: 'https://hooks.slack.com/test' },
+            },
           ],
           conditions: [
-            { event: 'failure', stages: ['test', 'deploy'] }
-          ]
+            { event: 'failure', stages: ['test', 'deploy'] },
+          ],
         },
         qualityGates: [
           {
@@ -99,16 +99,16 @@ describe('CI/CD Integration', () => {
             type: 'coverage',
             threshold: 80,
             operator: 'gte',
-            blocking: true
+            blocking: true,
           },
           {
             name: 'Performance Gate',
             type: 'performance',
             threshold: 2000,
             operator: 'lt',
-            blocking: false
-          }
-        ]
+            blocking: false,
+          },
+        ],
       };
 
       // 2. Optimize pipeline
@@ -125,7 +125,7 @@ describe('CI/CD Integration', () => {
           startTime: new Date('2024-01-01T10:00:00Z'),
           endTime: new Date('2024-01-01T10:00:45Z'),
           suite: 'unit',
-          file: 'src/components/Button.test.tsx'
+          file: 'src/components/Button.test.tsx',
         },
         {
           id: 'test-2',
@@ -135,8 +135,8 @@ describe('CI/CD Integration', () => {
           startTime: new Date('2024-01-01T10:01:00Z'),
           endTime: new Date('2024-01-01T10:03:00Z'),
           suite: 'integration',
-          file: 'src/api/auth.test.ts'
-        }
+          file: 'src/api/auth.test.ts',
+        },
       ];
 
       // 4. Integrate test results
@@ -154,7 +154,7 @@ describe('CI/CD Integration', () => {
           value: 85,
           threshold: 80,
           message: 'Coverage meets requirement',
-          blocking: true
+          blocking: true,
         },
         {
           id: 'performance-gate',
@@ -164,8 +164,8 @@ describe('CI/CD Integration', () => {
           value: 1500,
           threshold: 2000,
           message: 'Performance within limits',
-          blocking: false
-        }
+          blocking: false,
+        },
       ];
 
       const gateResults = await qualityGateManager.evaluateGates(qualityGates);
@@ -184,22 +184,22 @@ describe('CI/CD Integration', () => {
             status: 'success',
             duration: 300000,
             startTime: new Date('2024-01-01T10:00:00Z'),
-            endTime: new Date('2024-01-01T10:05:00Z')
+            endTime: new Date('2024-01-01T10:05:00Z'),
           },
           {
             name: 'test',
             status: 'success',
             duration: 400000,
             startTime: new Date('2024-01-01T10:05:00Z'),
-            endTime: new Date('2024-01-01T10:11:40Z')
+            endTime: new Date('2024-01-01T10:11:40Z'),
           },
           {
             name: 'deploy',
             status: 'success',
             duration: 200000,
             startTime: new Date('2024-01-01T10:11:40Z'),
-            endTime: new Date('2024-01-01T10:15:00Z')
-          }
+            endTime: new Date('2024-01-01T10:15:00Z'),
+          },
         ],
         testResults: {
           total: 2,
@@ -211,15 +211,15 @@ describe('CI/CD Integration', () => {
             statements: 85,
             branches: 82,
             functions: 88,
-            lines: 85
-          }
+            lines: 85,
+          },
         },
         qualityGates: {
           total: 2,
           passed: 2,
           failed: 0,
           warnings: 0,
-          blocking: 1
+          blocking: 1,
         },
         artifacts: {
           total: 3,
@@ -227,8 +227,8 @@ describe('CI/CD Integration', () => {
           types: {
             'build': 1,
             'test-results': 1,
-            'coverage': 1
-          }
+            'coverage': 1,
+          },
         },
         performance: {
           buildTime: 300000,
@@ -239,9 +239,9 @@ describe('CI/CD Integration', () => {
             cpu: 65,
             memory: 70,
             disk: 45,
-            network: 25
-          }
-        }
+            network: 25,
+          },
+        },
       };
 
       // 7. Analyze pipeline performance
@@ -258,7 +258,7 @@ describe('CI/CD Integration', () => {
       const report = await cicdReporter.generateReport(
         pipelineMetrics,
         optimization,
-        qualityGates
+        qualityGates,
       );
 
       expect(report.summary.pipelineId).toBe('integration-test-pipeline');
@@ -282,7 +282,7 @@ describe('CI/CD Integration', () => {
             status: 'success',
             duration: 300000,
             startTime: new Date(),
-            endTime: new Date()
+            endTime: new Date(),
           },
           {
             name: 'test',
@@ -290,8 +290,8 @@ describe('CI/CD Integration', () => {
             duration: 300000,
             startTime: new Date(),
             endTime: new Date(),
-            logs: 'Test suite failed with 5 failing tests'
-          }
+            logs: 'Test suite failed with 5 failing tests',
+          },
         ],
         testResults: {
           total: 100,
@@ -303,23 +303,23 @@ describe('CI/CD Integration', () => {
             statements: 75,
             branches: 70,
             functions: 80,
-            lines: 75
-          }
+            lines: 75,
+          },
         },
         qualityGates: {
           total: 2,
           passed: 1,
           failed: 1,
           warnings: 0,
-          blocking: 1
+          blocking: 1,
         },
         artifacts: {
           total: 2,
           size: 15000000,
           types: {
             'build': 1,
-            'test-results': 1
-          }
+            'test-results': 1,
+          },
         },
         performance: {
           buildTime: 300000,
@@ -330,22 +330,22 @@ describe('CI/CD Integration', () => {
             cpu: 80,
             memory: 85,
             disk: 60,
-            network: 40
-          }
-        }
+            network: 40,
+          },
+        },
       };
 
       // Analyze failing pipeline
       const analysis = await pipelineAnalyzer.analyzePipeline(failingMetrics);
       expect(analysis.recommendations).toContain(
-        expect.stringMatching(/Fix.*failing tests/)
+        expect.stringMatching(/Fix.*failing tests/),
       );
 
       // Generate failure report
       const report = await cicdReporter.generateReport(failingMetrics);
       expect(report.summary.status).toBe('failure');
       expect(report.recommendations).toContain(
-        expect.stringMatching(/Fix.*failing tests/)
+        expect.stringMatching(/Fix.*failing tests/),
       );
     });
   });
@@ -363,7 +363,7 @@ describe('CI/CD Integration', () => {
             commands: ['npm ci', 'npm run build'],
             dependencies: [],
             timeout: 1800000, // 30 minutes
-            retries: 1
+            retries: 1,
           },
           {
             name: 'sequential-tests',
@@ -371,46 +371,46 @@ describe('CI/CD Integration', () => {
             commands: ['npm run test:unit', 'npm run test:integration', 'npm run test:e2e'],
             dependencies: ['slow-build'],
             timeout: 2400000, // 40 minutes
-            retries: 1
-          }
+            retries: 1,
+          },
         ],
         parallelization: {
           enabled: false,
           maxConcurrency: 1,
-          strategy: 'stage'
+          strategy: 'stage',
         },
         caching: {
           enabled: false,
           strategy: 'dependencies',
           paths: [],
           key: '',
-          restoreKeys: []
+          restoreKeys: [],
         },
         environment: {
           variables: {},
-          secrets: []
+          secrets: [],
         },
         notifications: {
           enabled: false,
           channels: [],
-          conditions: []
+          conditions: [],
         },
-        qualityGates: []
+        qualityGates: [],
       };
 
       // Optimize the slow pipeline
       const optimization = await pipelineOptimizer.optimizePipeline(slowPipelineConfig);
 
       // Should recommend caching
-      const cachingRecommendation = optimization.recommendations.find(r => 
-        r.type === 'caching'
+      const cachingRecommendation = optimization.recommendations.find(r =>
+        r.type === 'caching',
       );
       expect(cachingRecommendation).toBeDefined();
       expect(cachingRecommendation?.priority).toBe('high');
 
       // Should recommend parallelization
-      const parallelRecommendation = optimization.recommendations.find(r => 
-        r.type === 'parallelization'
+      const parallelRecommendation = optimization.recommendations.find(r =>
+        r.type === 'parallelization',
       );
       expect(parallelRecommendation).toBeDefined();
 
@@ -431,7 +431,7 @@ describe('CI/CD Integration', () => {
           value: 70,
           threshold: 80,
           message: 'Coverage below minimum threshold',
-          blocking: true
+          blocking: true,
         },
         {
           id: 'security-gate',
@@ -441,8 +441,8 @@ describe('CI/CD Integration', () => {
           value: 0,
           threshold: 0,
           message: 'No security vulnerabilities found',
-          blocking: true
-        }
+          blocking: true,
+        },
       ];
 
       const gateResults = await qualityGateManager.evaluateGates(qualityGates);
@@ -465,8 +465,8 @@ describe('CI/CD Integration', () => {
           startTime: new Date(),
           endTime: new Date(),
           suite: 'jest',
-          file: 'components.test.tsx'
-        }
+          file: 'components.test.tsx',
+        },
       ];
 
       const cypressResults: TestResult[] = [
@@ -478,8 +478,8 @@ describe('CI/CD Integration', () => {
           startTime: new Date(),
           endTime: new Date(),
           suite: 'cypress',
-          file: 'e2e/login.cy.ts'
-        }
+          file: 'e2e/login.cy.ts',
+        },
       ];
 
       const jestIntegration = await testResultIntegrator.integrateResults(jestResults, 'jest');
@@ -495,19 +495,19 @@ describe('CI/CD Integration', () => {
   describe('Deployment Validation Integration', () => {
     it('should validate deployment as part of CI/CD pipeline', async () => {
       const deploymentConfig = DeploymentValidator.createValidationConfig('production');
-      
+
       // Validate configuration
       const configErrors = DeploymentValidator.validateConfig(deploymentConfig);
       expect(configErrors).toHaveLength(0);
 
       // Perform deployment validation
       const validationResult = await deploymentValidator.validateDeployment(deploymentConfig);
-      
+
       expect(validationResult.environment).toBe('production');
       expect(validationResult.strategy).toBe('rolling');
       expect(validationResult.healthChecks).toHaveLength(greaterThan(0));
       expect(validationResult.smokeTests).toHaveLength(greaterThan(0));
-      
+
       // Check deployment history
       const history = validator.getDeploymentHistory();
       expect(history).toHaveLength(1);
@@ -519,7 +519,7 @@ describe('CI/CD Integration', () => {
     it('should handle component failures gracefully', async () => {
       // Test with invalid configuration
       const invalidConfig = {} as PipelineConfig;
-      
+
       await expect(async () => {
         await pipelineOptimizer.optimizePipeline(invalidConfig);
       }).not.toThrow();
@@ -546,7 +546,7 @@ describe('CI/CD Integration', () => {
         startTime: new Date(),
         endTime: new Date(),
         suite: 'performance',
-        file: `test-${i}.test.ts`
+        file: `test-${i}.test.ts`,
       }));
 
       const startTime = Date.now();

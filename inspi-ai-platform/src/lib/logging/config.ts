@@ -53,7 +53,7 @@ export enum LogLevel {
  */
 const getEnvironmentConfig = (): Partial<LogConfig> => {
   const env = process.env.NODE_ENV || 'development';
-  
+
   switch (env) {
     case 'production':
       return {
@@ -62,7 +62,7 @@ const getEnvironmentConfig = (): Partial<LogConfig> => {
           console: {
             enabled: false,
             level: LogLevel.ERROR,
-            colorize: false
+            colorize: false,
           },
           file: {
             enabled: true,
@@ -70,7 +70,7 @@ const getEnvironmentConfig = (): Partial<LogConfig> => {
             filename: 'logs/app-%DATE%.log',
             maxSize: '20m',
             maxFiles: '14d',
-            datePattern: 'YYYY-MM-DD'
+            datePattern: 'YYYY-MM-DD',
           },
           error: {
             enabled: true,
@@ -78,11 +78,11 @@ const getEnvironmentConfig = (): Partial<LogConfig> => {
             filename: 'logs/error-%DATE%.log',
             maxSize: '20m',
             maxFiles: '30d',
-            datePattern: 'YYYY-MM-DD'
-          }
-        }
+            datePattern: 'YYYY-MM-DD',
+          },
+        },
       };
-    
+
     case 'test':
       return {
         level: LogLevel.ERROR,
@@ -90,7 +90,7 @@ const getEnvironmentConfig = (): Partial<LogConfig> => {
           console: {
             enabled: false,
             level: LogLevel.ERROR,
-            colorize: false
+            colorize: false,
           },
           file: {
             enabled: false,
@@ -98,7 +98,7 @@ const getEnvironmentConfig = (): Partial<LogConfig> => {
             filename: 'logs/test-%DATE%.log',
             maxSize: '10m',
             maxFiles: '3d',
-            datePattern: 'YYYY-MM-DD'
+            datePattern: 'YYYY-MM-DD',
           },
           error: {
             enabled: false,
@@ -106,11 +106,11 @@ const getEnvironmentConfig = (): Partial<LogConfig> => {
             filename: 'logs/test-error-%DATE%.log',
             maxSize: '10m',
             maxFiles: '3d',
-            datePattern: 'YYYY-MM-DD'
-          }
-        }
+            datePattern: 'YYYY-MM-DD',
+          },
+        },
       };
-    
+
     case 'development':
     default:
       return {
@@ -119,7 +119,7 @@ const getEnvironmentConfig = (): Partial<LogConfig> => {
           console: {
             enabled: true,
             level: LogLevel.DEBUG,
-            colorize: true
+            colorize: true,
           },
           file: {
             enabled: true,
@@ -127,7 +127,7 @@ const getEnvironmentConfig = (): Partial<LogConfig> => {
             filename: 'logs/dev-%DATE%.log',
             maxSize: '10m',
             maxFiles: '7d',
-            datePattern: 'YYYY-MM-DD'
+            datePattern: 'YYYY-MM-DD',
           },
           error: {
             enabled: true,
@@ -135,9 +135,9 @@ const getEnvironmentConfig = (): Partial<LogConfig> => {
             filename: 'logs/dev-error-%DATE%.log',
             maxSize: '10m',
             maxFiles: '7d',
-            datePattern: 'YYYY-MM-DD'
-          }
-        }
+            datePattern: 'YYYY-MM-DD',
+          },
+        },
       };
   }
 };
@@ -152,7 +152,7 @@ const defaultConfig: LogConfig = {
     console: {
       enabled: true,
       level: LogLevel.INFO,
-      colorize: true
+      colorize: true,
     },
     file: {
       enabled: true,
@@ -160,7 +160,7 @@ const defaultConfig: LogConfig = {
       filename: 'logs/app-%DATE%.log',
       maxSize: '20m',
       maxFiles: '14d',
-      datePattern: 'YYYY-MM-DD'
+      datePattern: 'YYYY-MM-DD',
     },
     error: {
       enabled: true,
@@ -168,14 +168,14 @@ const defaultConfig: LogConfig = {
       filename: 'logs/error-%DATE%.log',
       maxSize: '20m',
       maxFiles: '30d',
-      datePattern: 'YYYY-MM-DD'
-    }
+      datePattern: 'YYYY-MM-DD',
+    },
   },
   metadata: {
     service: 'inspi-ai-platform',
     version: process.env.npm_package_version || '0.1.0',
-    environment: process.env.NODE_ENV || 'development'
-  }
+    environment: process.env.NODE_ENV || 'development',
+  },
 };
 
 /**
@@ -186,8 +186,8 @@ export const logConfig: LogConfig = {
   ...getEnvironmentConfig(),
   metadata: {
     ...defaultConfig.metadata,
-    ...getEnvironmentConfig().metadata
-  }
+    ...getEnvironmentConfig().metadata,
+  },
 };
 
 /**
@@ -198,7 +198,7 @@ export const LOG_PATHS = {
   ERROR: 'logs/error',
   ACCESS: 'logs/access',
   PERFORMANCE: 'logs/performance',
-  SECURITY: 'logs/security'
+  SECURITY: 'logs/security',
 } as const;
 
 /**
@@ -214,7 +214,7 @@ export const LOG_TAGS = {
   PERFORMANCE: 'performance',
   SECURITY: 'security',
   USER: 'user',
-  SYSTEM: 'system'
+  SYSTEM: 'system',
 } as const;
 
 /**
@@ -232,7 +232,7 @@ export const SENSITIVE_FIELDS = [
   'phone',
   'address',
   'creditCard',
-  'ssn'
+  'ssn',
 ] as const;
 
 /**
@@ -249,17 +249,17 @@ export const validateLogConfig = (config: LogConfig): boolean => {
     if (!config.level || !config.format) {
       return false;
     }
-    
+
     // 验证日志级别
     if (!Object.values(LogLevel).includes(config.level as LogLevel)) {
       return false;
     }
-    
+
     // 验证传输器配置
     if (!config.transports) {
       return false;
     }
-    
+
     return true;
   } catch (error) {
     return false;

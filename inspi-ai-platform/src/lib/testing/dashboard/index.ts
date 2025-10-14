@@ -1,6 +1,6 @@
 /**
  * Real-Time Dashboard System
- * 
+ *
  * Main entry point for the real-time test monitoring dashboard system.
  * Integrates all dashboard components including real-time monitoring,
  * dynamic charts, notifications, and team collaboration.
@@ -17,21 +17,21 @@ export type {
   CoverageSnapshot,
   DashboardMetrics,
   NotificationConfig,
-  TeamCollaborationData
+  TeamCollaborationData,
 } from './RealTimeDashboard';
 
 export type {
   ChartDataPoint,
   ChartSeries,
   ChartConfig,
-  ChartData
+  ChartData,
 } from './DynamicChartGenerator';
 
 export type {
   Notification,
   NotificationAction,
   NotificationChannel,
-  NotificationRule
+  NotificationRule,
 } from './NotificationSystem';
 
 export type {
@@ -39,18 +39,18 @@ export type {
   SharedTestState,
   CollaborativeActivity,
   TeamMetrics,
-  TeamNotification
+  TeamNotification,
 } from './TeamCollaborationHub';
 
 /**
  * Integrated Dashboard System
- * 
+ *
  * Combines all dashboard components into a single, cohesive system
  * for comprehensive real-time test monitoring and team collaboration.
  */
-import { RealTimeDashboard } from './RealTimeDashboard';
 import { DynamicChartGenerator } from './DynamicChartGenerator';
 import { NotificationSystem } from './NotificationSystem';
+import { RealTimeDashboard } from './RealTimeDashboard';
 import { TeamCollaborationHub } from './TeamCollaborationHub';
 
 export interface DashboardSystemConfig {
@@ -73,7 +73,7 @@ export class DashboardSystem {
     // Initialize components
     this.dashboard = new RealTimeDashboard(
       config.notificationConfig,
-      config.updateInterval
+      config.updateInterval,
     );
 
     this.chartGenerator = new DynamicChartGenerator();
@@ -110,7 +110,7 @@ export class DashboardSystem {
         title: 'Team Member Added',
         message: `${member.name} joined the team`,
         priority: 'medium',
-        data: { member }
+        data: { member },
       });
     });
 
@@ -123,7 +123,7 @@ export class DashboardSystem {
           title: 'Test Run Started',
           message: `${member.name} started running test ${testId}`,
           priority: 'low',
-          data: { userId, testId }
+          data: { userId, testId },
         });
       }
     });
@@ -152,7 +152,7 @@ export class DashboardSystem {
             type: 'primary',
             handler: (notification) => {
               console.log('Viewing test failure details:', notification.data);
-            }
+            },
           },
           {
             id: 'rerun-test',
@@ -160,9 +160,9 @@ export class DashboardSystem {
             type: 'secondary',
             handler: (notification) => {
               console.log('Rerunning failed test:', notification.data);
-            }
-          }
-        ]
+            },
+          },
+        ],
       });
     }
   }
@@ -177,8 +177,8 @@ export class DashboardSystem {
       'statements',
       {
         timestamp: coverage.timestamp,
-        value: coverage.statements
-      }
+        value: coverage.statements,
+      },
     );
 
     this.chartGenerator.addDataPoint(
@@ -186,8 +186,8 @@ export class DashboardSystem {
       'branches',
       {
         timestamp: coverage.timestamp,
-        value: coverage.branches
-      }
+        value: coverage.branches,
+      },
     );
   }
 
@@ -200,7 +200,7 @@ export class DashboardSystem {
       passed: metrics.passedTests,
       failed: metrics.failedTests,
       running: metrics.runningTests,
-      pending: metrics.pendingTests
+      pending: metrics.pendingTests,
     });
   }
 
@@ -209,7 +209,7 @@ export class DashboardSystem {
    */
   private updateTestStatusCharts(testStatus: any): void {
     const now = new Date();
-    
+
     // Add data point to status timeline
     this.chartGenerator.addDataPoint(
       'test-status-timeline',
@@ -217,8 +217,8 @@ export class DashboardSystem {
       {
         timestamp: now,
         value: 1,
-        metadata: testStatus
-      }
+        metadata: testStatus,
+      },
     );
   }
 
@@ -266,8 +266,8 @@ export class DashboardSystem {
         runTests: true,
         modifyTests: true,
         viewReports: true,
-        manageTeam: false
-      }
+        manageTeam: false,
+      },
     });
 
     this.collaborationHub.addMember({
@@ -281,27 +281,27 @@ export class DashboardSystem {
         runTests: true,
         modifyTests: false,
         viewReports: true,
-        manageTeam: false
-      }
+        manageTeam: false,
+      },
     });
 
     // Create sample charts
     this.chartGenerator.createChart('test-status-timeline', {
       title: 'Test Execution Status Over Time',
       type: 'area',
-      realTime: true
+      realTime: true,
     });
 
     this.chartGenerator.createChart('coverage-trend', {
       title: 'Code Coverage Trends',
       type: 'line',
-      realTime: true
+      realTime: true,
     });
 
     this.chartGenerator.createChart('test-progress', {
       title: 'Test Execution Progress',
       type: 'doughnut',
-      realTime: true
+      realTime: true,
     });
 
     // Add sample test statuses
@@ -312,7 +312,7 @@ export class DashboardSystem {
         status: 'passed' as const,
         suite: 'Auth Tests',
         file: 'auth.test.ts',
-        duration: 150
+        duration: 150,
       },
       {
         id: 'test2',
@@ -323,23 +323,23 @@ export class DashboardSystem {
         duration: 300,
         error: {
           message: 'Connection timeout',
-          stack: 'Error: Connection timeout\n    at db.test.ts:45:12'
-        }
+          stack: 'Error: Connection timeout\n    at db.test.ts:45:12',
+        },
       },
       {
         id: 'test3',
         name: 'API Endpoint Test',
         status: 'running' as const,
         suite: 'API Tests',
-        file: 'api.test.ts'
-      }
+        file: 'api.test.ts',
+      },
     ];
 
     sampleTests.forEach(test => {
       this.dashboard.updateTestStatus({
         ...test,
         startTime: new Date(Date.now() - Math.random() * 60000),
-        endTime: test.status !== 'running' ? new Date() : undefined
+        endTime: test.status !== 'running' ? new Date() : undefined,
       });
     });
 
@@ -355,15 +355,15 @@ export class DashboardSystem {
           statements: 95,
           branches: 88,
           functions: 100,
-          lines: 94
+          lines: 94,
         },
         'src/db.ts': {
           statements: 76,
           branches: 68,
           functions: 84,
-          lines: 73
-        }
-      }
+          lines: 73,
+        },
+      },
     });
 
     // Test notification system
@@ -385,7 +385,7 @@ export class DashboardSystem {
       charts: this.chartGenerator.getAllCharts(),
       notifications: this.notificationSystem.getActiveNotifications(),
       teamData: this.collaborationHub.getTeamMetrics(),
-      status: this.dashboard.getStatus()
+      status: this.dashboard.getStatus(),
     };
   }
 
@@ -404,9 +404,9 @@ export class DashboardSystem {
       notifications: {
         active: this.notificationSystem.getActiveNotifications(),
         history: this.notificationSystem.getHistory(),
-        statistics: this.notificationSystem.getStatistics()
+        statistics: this.notificationSystem.getStatistics(),
       },
-      collaboration: this.collaborationHub.exportData()
+      collaboration: this.collaborationHub.exportData(),
     };
   }
 
@@ -442,14 +442,14 @@ export class DashboardSystem {
         dashboard: true,
         charts: true,
         notifications: true,
-        collaboration: true
+        collaboration: true,
       },
       metrics: {
         totalTests: this.dashboard.getMetrics().totalTests,
         activeUsers: this.collaborationHub.getActiveMembers().length,
         activeNotifications: this.notificationSystem.getActiveNotifications().length,
-        totalCharts: this.chartGenerator.getAllCharts().size
-      }
+        totalCharts: this.chartGenerator.getAllCharts().size,
+      },
     };
   }
 }

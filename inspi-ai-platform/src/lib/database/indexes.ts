@@ -66,7 +66,7 @@ export const USER_INDEXES: IndexDefinition[] = [
     type: IndexType.SINGLE,
     description: '用户邮箱唯一索引，用于登录和查重',
     estimatedSize: '~50KB',
-    usage: 'high'
+    usage: 'high',
   },
   {
     name: 'users_subscription_status',
@@ -76,33 +76,33 @@ export const USER_INDEXES: IndexDefinition[] = [
     type: IndexType.COMPOUND,
     description: '用户订阅状态复合索引，用于订阅查询和统计',
     estimatedSize: '~30KB',
-    usage: 'high'
+    usage: 'high',
   },
   {
     name: 'users_active_status',
     collection: 'users',
     fields: { 'stats.lastActiveAt': -1, status: 1 },
-    options: { 
+    options: {
       background: true,
-      partialFilterExpression: { status: 'active' }
+      partialFilterExpression: { status: 'active' },
     },
     type: IndexType.PARTIAL,
     description: '活跃用户索引，用于活跃度统计和排序',
     estimatedSize: '~40KB',
-    usage: 'medium'
+    usage: 'medium',
   },
   {
     name: 'users_contribution_score',
     collection: 'users',
     fields: { 'stats.contributionScore': -1 },
-    options: { 
+    options: {
       background: true,
-      partialFilterExpression: { 'stats.contributionScore': { $gt: 0 } }
+      partialFilterExpression: { 'stats.contributionScore': { $gt: 0 } },
     },
     type: IndexType.PARTIAL,
     description: '用户贡献度索引，用于排行榜查询',
     estimatedSize: '~35KB',
-    usage: 'medium'
+    usage: 'medium',
   },
   {
     name: 'users_created_at',
@@ -112,8 +112,8 @@ export const USER_INDEXES: IndexDefinition[] = [
     type: IndexType.SINGLE,
     description: '用户创建时间索引，用于注册统计',
     estimatedSize: '~25KB',
-    usage: 'low'
-  }
+    usage: 'low',
+  },
 ];
 
 /**
@@ -128,39 +128,39 @@ export const WORK_INDEXES: IndexDefinition[] = [
     type: IndexType.COMPOUND,
     description: '作者作品状态复合索引，用于用户作品列表查询',
     estimatedSize: '~80KB',
-    usage: 'high'
+    usage: 'high',
   },
   {
     name: 'works_published_public',
     collection: 'works',
     fields: { status: 1, visibility: 1, publishedAt: -1 },
-    options: { 
+    options: {
       background: true,
-      partialFilterExpression: { 
-        status: 'published', 
-        visibility: 'public' 
-      }
+      partialFilterExpression: {
+        status: 'published',
+        visibility: 'public',
+      },
     },
     type: IndexType.PARTIAL,
     description: '已发布公开作品索引，用于作品列表和搜索',
     estimatedSize: '~120KB',
-    usage: 'high'
+    usage: 'high',
   },
   {
     name: 'works_subject_grade',
     collection: 'works',
     fields: { subject: 1, grade: 1, 'stats.rating': -1 },
-    options: { 
+    options: {
       background: true,
-      partialFilterExpression: { 
-        status: 'published', 
-        visibility: 'public' 
-      }
+      partialFilterExpression: {
+        status: 'published',
+        visibility: 'public',
+      },
     },
     type: IndexType.COMPOUND,
     description: '学科年级复合索引，用于分类浏览',
     estimatedSize: '~90KB',
-    usage: 'high'
+    usage: 'high',
   },
   {
     name: 'works_tags',
@@ -170,58 +170,58 @@ export const WORK_INDEXES: IndexDefinition[] = [
     type: IndexType.COMPOUND,
     description: '标签索引，用于标签筛选和推荐',
     estimatedSize: '~70KB',
-    usage: 'medium'
+    usage: 'medium',
   },
   {
     name: 'works_stats_views',
     collection: 'works',
     fields: { 'stats.views': -1, publishedAt: -1 },
-    options: { 
+    options: {
       background: true,
-      partialFilterExpression: { 
+      partialFilterExpression: {
         status: 'published',
-        'stats.views': { $gt: 0 }
-      }
+        'stats.views': { $gt: 0 },
+      },
     },
     type: IndexType.PARTIAL,
     description: '作品浏览量索引，用于热门作品排序',
     estimatedSize: '~60KB',
-    usage: 'high'
+    usage: 'high',
   },
   {
     name: 'works_stats_reuses',
     collection: 'works',
     fields: { 'stats.reuses': -1, publishedAt: -1 },
-    options: { 
+    options: {
       background: true,
-      partialFilterExpression: { 
+      partialFilterExpression: {
         status: 'published',
-        'stats.reuses': { $gt: 0 }
-      }
+        'stats.reuses': { $gt: 0 },
+      },
     },
     type: IndexType.PARTIAL,
     description: '作品复用量索引，用于复用排行榜',
     estimatedSize: '~45KB',
-    usage: 'medium'
+    usage: 'medium',
   },
   {
     name: 'works_text_search',
     collection: 'works',
-    fields: { 
-      title: 'text', 
-      description: 'text', 
-      tags: 'text' 
+    fields: {
+      title: 'text',
+      description: 'text',
+      tags: 'text',
     },
-    options: { 
+    options: {
       background: true,
       weights: { title: 10, description: 5, tags: 1 },
-      default_language: 'chinese'
+      default_language: 'chinese',
     },
     type: IndexType.TEXT,
     description: '全文搜索索引，用于作品搜索功能',
     estimatedSize: '~200KB',
-    usage: 'high'
-  }
+    usage: 'high',
+  },
 ];
 
 /**
@@ -236,20 +236,20 @@ export const KNOWLEDGE_GRAPH_INDEXES: IndexDefinition[] = [
     type: IndexType.COMPOUND,
     description: '学科预设图谱索引，用于预设图谱查询',
     estimatedSize: '~15KB',
-    usage: 'high'
+    usage: 'high',
   },
   {
     name: 'graphs_author_visibility',
     collection: 'knowledgeGraphs',
     fields: { 'metadata.authorId': 1, 'metadata.visibility': 1 },
-    options: { 
+    options: {
       background: true,
-      partialFilterExpression: { 'metadata.authorId': { $exists: true } }
+      partialFilterExpression: { 'metadata.authorId': { $exists: true } },
     },
     type: IndexType.PARTIAL,
     description: '用户图谱可见性索引，用于用户图谱查询',
     estimatedSize: '~20KB',
-    usage: 'medium'
+    usage: 'medium',
   },
   {
     name: 'graph_nodes_type_level',
@@ -259,21 +259,21 @@ export const KNOWLEDGE_GRAPH_INDEXES: IndexDefinition[] = [
     type: IndexType.COMPOUND,
     description: '图谱节点类型层级索引，用于节点查询',
     estimatedSize: '~40KB',
-    usage: 'high'
+    usage: 'high',
   },
   {
     name: 'graph_nodes_works',
     collection: 'graphNodes',
     fields: { graphId: 1, works: 1 },
-    options: { 
+    options: {
       background: true,
-      partialFilterExpression: { works: { $ne: [] } }
+      partialFilterExpression: { works: { $ne: [] } },
     },
     type: IndexType.PARTIAL,
     description: '节点作品索引，用于作品挂载查询',
     estimatedSize: '~30KB',
-    usage: 'medium'
-  }
+    usage: 'medium',
+  },
 ];
 
 /**
@@ -288,7 +288,7 @@ export const CONTRIBUTION_LOG_INDEXES: IndexDefinition[] = [
     type: IndexType.COMPOUND,
     description: '用户贡献日志索引，用于用户贡献历史查询',
     estimatedSize: '~100KB',
-    usage: 'high'
+    usage: 'high',
   },
   {
     name: 'contribution_logs_type_date',
@@ -298,21 +298,21 @@ export const CONTRIBUTION_LOG_INDEXES: IndexDefinition[] = [
     type: IndexType.COMPOUND,
     description: '贡献类型日期索引，用于贡献统计',
     estimatedSize: '~80KB',
-    usage: 'medium'
+    usage: 'medium',
   },
   {
     name: 'contribution_logs_ttl',
     collection: 'contributionLogs',
     fields: { createdAt: 1 },
-    options: { 
+    options: {
       background: true,
-      expireAfterSeconds: 31536000 // 1年后自动删除
+      expireAfterSeconds: 31536000, // 1年后自动删除
     },
     type: IndexType.TTL,
     description: '贡献日志TTL索引，自动清理过期数据',
     estimatedSize: '~50KB',
-    usage: 'low'
-  }
+    usage: 'low',
+  },
 ];
 
 /**
@@ -327,21 +327,21 @@ export const SESSION_INDEXES: IndexDefinition[] = [
     type: IndexType.COMPOUND,
     description: '用户会话索引，用于会话管理',
     estimatedSize: '~60KB',
-    usage: 'high'
+    usage: 'high',
   },
   {
     name: 'sessions_ttl',
     collection: 'sessions',
     fields: { expiresAt: 1 },
-    options: { 
+    options: {
       background: true,
-      expireAfterSeconds: 0 // 根据expiresAt字段自动删除
+      expireAfterSeconds: 0, // 根据expiresAt字段自动删除
     },
     type: IndexType.TTL,
     description: '会话TTL索引，自动清理过期会话',
     estimatedSize: '~30KB',
-    usage: 'high'
-  }
+    usage: 'high',
+  },
 ];
 
 /**
@@ -352,7 +352,7 @@ export const ALL_INDEXES: IndexDefinition[] = [
   ...WORK_INDEXES,
   ...KNOWLEDGE_GRAPH_INDEXES,
   ...CONTRIBUTION_LOG_INDEXES,
-  ...SESSION_INDEXES
+  ...SESSION_INDEXES,
 ];
 
 /**
@@ -370,11 +370,11 @@ export class IndexManager {
    */
   async createAllIndexes(): Promise<void> {
     logger.info('Starting index creation process');
-    
+
     const results = {
       created: 0,
       skipped: 0,
-      failed: 0
+      failed: 0,
     };
 
     for (const indexDef of ALL_INDEXES) {
@@ -383,12 +383,12 @@ export class IndexManager {
         results.created++;
         logger.info(`Index created: ${indexDef.name}`, {
           collection: indexDef.collection,
-          type: indexDef.type
+          type: indexDef.type,
         });
       } catch (error) {
         results.failed++;
         logger.error(`Failed to create index: ${indexDef.name}`, error instanceof Error ? error : new Error(String(error)), {
-          collection: indexDef.collection
+          collection: indexDef.collection,
         });
       }
     }
@@ -401,11 +401,11 @@ export class IndexManager {
    */
   async createIndex(indexDef: IndexDefinition): Promise<void> {
     const collection = this.db.collection(indexDef.collection);
-    
+
     // 检查索引是否已存在
     const existingIndexes = await collection.indexes();
     const indexExists = existingIndexes.some((idx: any) => idx.name === indexDef.name);
-    
+
     if (indexExists) {
       logger.debug(`Index already exists: ${indexDef.name}`);
       return;
@@ -414,7 +414,7 @@ export class IndexManager {
     // 创建索引
     await collection.createIndex(indexDef.fields, {
       name: indexDef.name,
-      ...indexDef.options
+      ...indexDef.options,
     });
   }
 
@@ -438,8 +438,8 @@ export class IndexManager {
   async getIndexStats(collection: string): Promise<IndexStats[]> {
     try {
       const coll = this.db.collection(collection);
-      const stats = await coll.aggregate([
-        { $indexStats: {} }
+      const stats = await (coll.aggregate as any)([
+        { $indexStats: {} },
       ]).toArray();
 
       return stats.map((stat: any) => ({
@@ -449,7 +449,7 @@ export class IndexManager {
         usageCount: stat.accesses?.ops || 0,
         lastUsed: stat.accesses?.since || new Date(),
         efficiency: this.calculateIndexEfficiency(stat),
-        recommendation: this.getIndexRecommendation(stat)
+        recommendation: this.getIndexRecommendation(stat),
       }));
     } catch (error) {
       logger.error(`Failed to get index stats for collection: ${collection}`, error instanceof Error ? error : new Error(String(error)));
@@ -476,13 +476,13 @@ export class IndexManager {
     }
 
     // 分析未使用的索引
-    const unusedIndexes = allStats.filter(stat => 
-      stat.usageCount === 0 && !stat.name.startsWith('_id')
+    const unusedIndexes = allStats.filter(stat =>
+      stat.usageCount === 0 && !stat.name.startsWith('_id'),
     );
 
     // 分析低效索引
-    const inefficientIndexes = allStats.filter(stat => 
-      stat.efficiency < 50 && stat.usageCount > 0
+    const inefficientIndexes = allStats.filter(stat =>
+      stat.efficiency < 50 && stat.usageCount > 0,
     );
 
     // 生成建议
@@ -492,7 +492,7 @@ export class IndexManager {
       totalIndexes: allStats.length,
       unusedIndexes,
       inefficientIndexes,
-      recommendations
+      recommendations,
     };
   }
 
@@ -503,9 +503,9 @@ export class IndexManager {
     // 简化的效率计算，实际应该基于更多指标
     const usageCount = stat.accesses?.ops || 0;
     const size = stat.indexSizes?.[stat.name] || 1;
-    
+
     if (usageCount === 0) return 0;
-    
+
     // 使用次数与大小的比率作为效率指标
     return Math.min(100, (usageCount / (size / 1024)) * 10);
   }
@@ -528,7 +528,7 @@ export class IndexManager {
   private generateIndexRecommendations(
     allStats: IndexStats[],
     unusedIndexes: IndexStats[],
-    inefficientIndexes: IndexStats[]
+    inefficientIndexes: IndexStats[],
   ): string[] {
     const recommendations: string[] = [];
 
@@ -557,8 +557,8 @@ export class IndexManager {
    */
   async rebuildIndex(collection: string, indexName: string): Promise<void> {
     try {
-      const indexDef = ALL_INDEXES.find(idx => 
-        idx.collection === collection && idx.name === indexName
+      const indexDef = (ALL_INDEXES.find as any)(idx =>
+        idx.collection === collection && idx.name === indexName,
       );
 
       if (!indexDef) {
@@ -567,10 +567,10 @@ export class IndexManager {
 
       // 删除现有索引
       await this.dropIndex(collection, indexName);
-      
+
       // 重新创建索引
       await this.createIndex(indexDef);
-      
+
       logger.info(`Index rebuilt: ${indexName}`, { collection });
     } catch (error) {
       logger.error(`Failed to rebuild index: ${indexName}`, error instanceof Error ? error : new Error(String(error)), { collection });
@@ -582,8 +582,8 @@ export class IndexManager {
    * 获取索引定义
    */
   getIndexDefinition(collection: string, indexName: string): IndexDefinition | undefined {
-    return ALL_INDEXES.find(idx => 
-      idx.collection === collection && idx.name === indexName
+    return (ALL_INDEXES.find as any)(idx =>
+      idx.collection === collection && idx.name === indexName,
     );
   }
 
@@ -622,7 +622,7 @@ export class IndexManager {
 
         // 检查多余的索引（排除默认的_id索引）
         for (const existingName of existingNames) {
-          if (existingName !== '_id_' && 
+          if (existingName !== '_id_' &&
               !expectedIndexes.some(idx => idx.name === existingName)) {
             extra.push(`${collection}.${existingName}`);
           }
@@ -635,7 +635,7 @@ export class IndexManager {
     return {
       valid: missing.length === 0 && extra.length === 0,
       missing,
-      extra
+      extra,
     };
   }
 }

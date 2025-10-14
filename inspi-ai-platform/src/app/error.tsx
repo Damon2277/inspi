@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
 import Link from 'next/link';
-// import { CustomError } from '@/lib/errors/CustomError';
-// import { ErrorCode } from '@/lib/errors/types';
+import { useEffect } from 'react';
+// import { CustomError } from '@/shared/errors/CustomError';
+// import { ErrorCode } from '@/shared/errors/types';
 // import { logger } from '@/lib/logging/logger';
 
 /**
@@ -21,7 +21,7 @@ function getErrorInfo(error: Error) {
   // 简化的错误处理，不依赖CustomError
   const errorMessage = error.message || '发生了未知错误';
   const isNetworkError = errorMessage.includes('fetch') || errorMessage.includes('network');
-  
+
   return {
     title: isNetworkError ? '网络连接错误' : '系统错误',
     message: isNetworkError ? '网络连接失败，请检查网络后重试' : '系统遇到了一个错误，请稍后重试',
@@ -29,7 +29,7 @@ function getErrorInfo(error: Error) {
     isClientError: false,
     isServerError: !isNetworkError,
     code: 'UNKNOWN_ERROR',
-    httpStatus: 500
+    httpStatus: 500,
   };
 }
 
@@ -87,7 +87,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
       httpStatus: errorInfo.httpStatus,
       canRetry: errorInfo.canRetry,
       digest: (error as any).digest,
-      url: typeof window !== 'undefined' ? window.location.href : 'unknown'
+      url: typeof window !== 'undefined' ? window.location.href : 'unknown',
     });
   }, [error, errorInfo]);
 
@@ -154,14 +154,14 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
                 重试
               </button>
             )}
-            
+
             <button
               onClick={() => window.location.reload()}
               className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
             >
               刷新页面
             </button>
-            
+
             <Link
               href="/"
               className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"

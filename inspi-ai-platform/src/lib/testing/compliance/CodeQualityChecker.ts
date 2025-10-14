@@ -1,11 +1,12 @@
 /**
  * 代码质量标准检查器
- * 
+ *
  * 实现代码质量标准的自动检查功能
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
+
 import { ComplianceRule, ComplianceContext, ComplianceResult } from './ComplianceFramework';
 
 export interface CodeQualityMetrics {
@@ -47,7 +48,7 @@ export class CodeQualityChecker {
         category: 'code-quality',
         severity: 'warning',
         enabled: true,
-        check: this.checkComplexity.bind(this)
+        check: this.checkComplexity.bind(this),
       },
       {
         id: 'maintainability-index',
@@ -56,7 +57,7 @@ export class CodeQualityChecker {
         category: 'code-quality',
         severity: 'warning',
         enabled: true,
-        check: this.checkMaintainability.bind(this)
+        check: this.checkMaintainability.bind(this),
       },
       {
         id: 'file-length',
@@ -65,7 +66,7 @@ export class CodeQualityChecker {
         category: 'code-quality',
         severity: 'info',
         enabled: true,
-        check: this.checkFileLength.bind(this)
+        check: this.checkFileLength.bind(this),
       },
       {
         id: 'code-duplication',
@@ -74,7 +75,7 @@ export class CodeQualityChecker {
         category: 'code-quality',
         severity: 'warning',
         enabled: true,
-        check: this.checkDuplication.bind(this)
+        check: this.checkDuplication.bind(this),
       },
       {
         id: 'eslint-compliance',
@@ -83,7 +84,7 @@ export class CodeQualityChecker {
         category: 'code-quality',
         severity: 'error',
         enabled: true,
-        check: this.checkEslintCompliance.bind(this)
+        check: this.checkEslintCompliance.bind(this),
       },
       {
         id: 'typescript-errors',
@@ -92,8 +93,8 @@ export class CodeQualityChecker {
         category: 'code-quality',
         severity: 'error',
         enabled: true,
-        check: this.checkTypeScriptErrors.bind(this)
-      }
+        check: this.checkTypeScriptErrors.bind(this),
+      },
     ];
   }
 
@@ -110,17 +111,17 @@ export class CodeQualityChecker {
         ruleId: 'code-complexity',
         passed,
         score,
-        message: passed 
+        message: passed
           ? `代码复杂度 ${metrics.complexity} 符合标准 (≤${this.standards.maxComplexity})`
           : `代码复杂度 ${metrics.complexity} 超出标准 (≤${this.standards.maxComplexity})`,
         details: `平均圈复杂度: ${metrics.complexity}`,
         suggestions: passed ? [] : [
           '重构复杂的函数和方法',
           '将大型函数拆分为更小的函数',
-          '减少嵌套层级和条件分支'
+          '减少嵌套层级和条件分支',
         ],
         evidence: { complexity: metrics.complexity, threshold: this.standards.maxComplexity },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     } catch (error) {
       return this.createErrorResult('code-complexity', error);
@@ -140,17 +141,17 @@ export class CodeQualityChecker {
         ruleId: 'maintainability-index',
         passed,
         score,
-        message: passed 
+        message: passed
           ? `可维护性指数 ${metrics.maintainabilityIndex} 符合标准 (≥${this.standards.minMaintainabilityIndex})`
           : `可维护性指数 ${metrics.maintainabilityIndex} 低于标准 (≥${this.standards.minMaintainabilityIndex})`,
         details: `可维护性指数: ${metrics.maintainabilityIndex}`,
         suggestions: passed ? [] : [
           '减少代码复杂度',
           '改善代码注释和文档',
-          '重构难以理解的代码段'
+          '重构难以理解的代码段',
         ],
         evidence: { maintainabilityIndex: metrics.maintainabilityIndex, threshold: this.standards.minMaintainabilityIndex },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     } catch (error) {
       return this.createErrorResult('maintainability-index', error);
@@ -170,17 +171,17 @@ export class CodeQualityChecker {
         ruleId: 'file-length',
         passed,
         score,
-        message: passed 
+        message: passed
           ? `所有文件长度符合标准 (≤${this.standards.maxFileLength}行)`
           : `发现 ${longFiles.length} 个过长文件 (>${this.standards.maxFileLength}行)`,
         details: longFiles.length > 0 ? `过长文件: ${longFiles.map(f => f.path).join(', ')}` : undefined,
         suggestions: passed ? [] : [
           '将大型文件拆分为更小的模块',
           '提取公共功能到独立文件',
-          '重构冗长的类和函数'
+          '重构冗长的类和函数',
         ],
         evidence: { longFiles, threshold: this.standards.maxFileLength },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     } catch (error) {
       return this.createErrorResult('file-length', error);
@@ -201,22 +202,22 @@ export class CodeQualityChecker {
         ruleId: 'code-duplication',
         passed,
         score,
-        message: passed 
+        message: passed
           ? `代码重复率 ${duplicationPercentage.toFixed(1)}% 符合标准 (≤${this.standards.maxDuplicatePercentage}%)`
           : `代码重复率 ${duplicationPercentage.toFixed(1)}% 超出标准 (≤${this.standards.maxDuplicatePercentage}%)`,
         details: `重复行数: ${metrics.duplicateLines} / 总行数: ${metrics.linesOfCode}`,
         suggestions: passed ? [] : [
           '提取重复代码到公共函数',
           '使用设计模式减少代码重复',
-          '创建可复用的组件和工具函数'
+          '创建可复用的组件和工具函数',
         ],
-        evidence: { 
-          duplicateLines: metrics.duplicateLines, 
+        evidence: {
+          duplicateLines: metrics.duplicateLines,
           totalLines: metrics.linesOfCode,
           percentage: duplicationPercentage,
-          threshold: this.standards.maxDuplicatePercentage 
+          threshold: this.standards.maxDuplicatePercentage,
         },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     } catch (error) {
       return this.createErrorResult('code-duplication', error);
@@ -236,17 +237,17 @@ export class CodeQualityChecker {
         ruleId: 'eslint-compliance',
         passed,
         score,
-        message: passed 
+        message: passed
           ? `ESLint检查通过，发现 ${violations} 个违规 (≤${this.standards.maxEslintViolations})`
           : `ESLint检查失败，发现 ${violations} 个违规 (≤${this.standards.maxEslintViolations})`,
         details: `ESLint违规数量: ${violations}`,
         suggestions: passed ? [] : [
           '修复ESLint报告的代码风格问题',
           '配置自动格式化工具',
-          '在提交前运行ESLint检查'
+          '在提交前运行ESLint检查',
         ],
         evidence: { violations, threshold: this.standards.maxEslintViolations },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     } catch (error) {
       return this.createErrorResult('eslint-compliance', error);
@@ -266,17 +267,17 @@ export class CodeQualityChecker {
         ruleId: 'typescript-errors',
         passed,
         score,
-        message: passed 
+        message: passed
           ? `TypeScript编译检查通过，发现 ${errors} 个错误`
           : `TypeScript编译检查失败，发现 ${errors} 个错误`,
         details: `TypeScript错误数量: ${errors}`,
         suggestions: passed ? [] : [
           '修复TypeScript类型错误',
           '完善类型定义',
-          '启用严格的TypeScript配置'
+          '启用严格的TypeScript配置',
         ],
         evidence: { errors, allowErrors: this.standards.allowTypeScriptErrors },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     } catch (error) {
       return this.createErrorResult('typescript-errors', error);
@@ -296,7 +297,7 @@ export class CodeQualityChecker {
       duplicateLines: 450,
       testCoverage: 92,
       eslintViolations: 12,
-      typeScriptErrors: 0
+      typeScriptErrors: 0,
     };
   }
 
@@ -305,24 +306,24 @@ export class CodeQualityChecker {
    */
   private async findLongFiles(projectPath: string): Promise<Array<{path: string, lines: number}>> {
     const longFiles: Array<{path: string, lines: number}> = [];
-    
+
     const scanDirectory = (dir: string) => {
       const files = fs.readdirSync(dir);
-      
+
       for (const file of files) {
         const filePath = path.join(dir, file);
         const stat = fs.statSync(filePath);
-        
+
         if (stat.isDirectory() && !file.startsWith('.') && file !== 'node_modules') {
           scanDirectory(filePath);
         } else if (stat.isFile() && (file.endsWith('.ts') || file.endsWith('.tsx') || file.endsWith('.js') || file.endsWith('.jsx'))) {
           const content = fs.readFileSync(filePath, 'utf8');
           const lines = content.split('\n').length;
-          
+
           if (lines > this.standards.maxFileLength) {
             longFiles.push({
               path: path.relative(projectPath, filePath),
-              lines
+              lines,
             });
           }
         }
@@ -365,7 +366,7 @@ export class CodeQualityChecker {
       passed: false,
       score: 0,
       message: `检查执行失败: ${error.message}`,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 }
@@ -377,5 +378,5 @@ export const DEFAULT_CODE_QUALITY_STANDARDS: CodeQualityStandards = {
   maxDuplicatePercentage: 5,
   minTestCoverage: 80,
   maxEslintViolations: 10,
-  allowTypeScriptErrors: false
+  allowTypeScriptErrors: false,
 };

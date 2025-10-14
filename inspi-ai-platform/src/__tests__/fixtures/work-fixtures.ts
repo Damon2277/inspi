@@ -46,7 +46,7 @@ export interface MockWorkStats {
 // 卡片工厂
 export const createCardFixture = (
   type: MockCard['type'],
-  overrides: Partial<MockCard> = {}
+  overrides: Partial<MockCard> = {},
 ): MockCard => ({
   id: `card-${type}-${Math.random().toString(36).substring(2, 15)}`,
   type,
@@ -55,7 +55,7 @@ export const createCardFixture = (
   order: 0,
   metadata: {},
   ...overrides,
-})
+});
 
 // 概念卡片
 export const createConceptCardFixture = (overrides: Partial<MockCard> = {}): MockCard =>
@@ -63,7 +63,7 @@ export const createConceptCardFixture = (overrides: Partial<MockCard> = {}): Moc
     title: 'Concept: Addition',
     content: 'Addition is the process of combining two or more numbers to get their sum.',
     ...overrides,
-  })
+  });
 
 // 例题卡片
 export const createExampleCardFixture = (overrides: Partial<MockCard> = {}): MockCard =>
@@ -71,7 +71,7 @@ export const createExampleCardFixture = (overrides: Partial<MockCard> = {}): Moc
     title: 'Example: 2 + 3 = 5',
     content: 'Let\'s solve: 2 + 3. We start with 2 and add 3 more to get 5.',
     ...overrides,
-  })
+  });
 
 // 练习卡片
 export const createExerciseCardFixture = (overrides: Partial<MockCard> = {}): MockCard =>
@@ -80,7 +80,7 @@ export const createExerciseCardFixture = (overrides: Partial<MockCard> = {}): Mo
     content: 'Try to solve: 4 + 6 = ?',
     metadata: { answer: '10', difficulty: 'easy' },
     ...overrides,
-  })
+  });
 
 // 总结卡片
 export const createSummaryCardFixture = (overrides: Partial<MockCard> = {}): MockCard =>
@@ -88,7 +88,7 @@ export const createSummaryCardFixture = (overrides: Partial<MockCard> = {}): Moc
     title: 'Summary: Addition Basics',
     content: 'We learned that addition combines numbers to find their total sum.',
     ...overrides,
-  })
+  });
 
 // 完整卡片组合
 export const createCardSetFixture = (): MockCard[] => [
@@ -96,7 +96,7 @@ export const createCardSetFixture = (): MockCard[] => [
   createExampleCardFixture({ order: 1 }),
   createExerciseCardFixture({ order: 2 }),
   createSummaryCardFixture({ order: 3 }),
-]
+];
 
 // 作品工厂
 export const createWorkFixture = (overrides: Partial<MockWork> = {}): MockWork => ({
@@ -118,7 +118,7 @@ export const createWorkFixture = (overrides: Partial<MockWork> = {}): MockWork =
   updatedAt: new Date().toISOString(),
   publishedAt: new Date().toISOString(),
   ...overrides,
-})
+});
 
 // 草稿作品
 export const createDraftWorkFixture = (authorId: string, overrides: Partial<MockWork> = {}): MockWork =>
@@ -131,7 +131,7 @@ export const createDraftWorkFixture = (authorId: string, overrides: Partial<Mock
     likes: 0,
     reposts: 0,
     ...overrides,
-  })
+  });
 
 // 已发布作品
 export const createPublishedWorkFixture = (authorId: string, overrides: Partial<MockWork> = {}): MockWork =>
@@ -141,7 +141,7 @@ export const createPublishedWorkFixture = (authorId: string, overrides: Partial<
     isDraft: false,
     publishedAt: new Date().toISOString(),
     ...overrides,
-  })
+  });
 
 // 热门作品
 export const createPopularWorkFixture = (authorId: string, overrides: Partial<MockWork> = {}): MockWork =>
@@ -150,7 +150,7 @@ export const createPopularWorkFixture = (authorId: string, overrides: Partial<Mo
     likes: Math.floor(Math.random() * 500) + 100,
     reposts: Math.floor(Math.random() * 200) + 50,
     ...overrides,
-  })
+  });
 
 // 不同学科的作品
 export const createMathWorkFixture = (authorId: string, overrides: Partial<MockWork> = {}): MockWork =>
@@ -160,7 +160,7 @@ export const createMathWorkFixture = (authorId: string, overrides: Partial<MockW
     knowledgePoint: 'Addition',
     tags: ['mathematics', 'addition', 'elementary'],
     ...overrides,
-  })
+  });
 
 export const createScienceWorkFixture = (authorId: string, overrides: Partial<MockWork> = {}): MockWork =>
   createWorkFixture({
@@ -169,7 +169,7 @@ export const createScienceWorkFixture = (authorId: string, overrides: Partial<Mo
     knowledgePoint: 'Photosynthesis',
     tags: ['science', 'biology', 'plants'],
     ...overrides,
-  })
+  });
 
 export const createLanguageWorkFixture = (authorId: string, overrides: Partial<MockWork> = {}): MockWork =>
   createWorkFixture({
@@ -178,22 +178,22 @@ export const createLanguageWorkFixture = (authorId: string, overrides: Partial<M
     knowledgePoint: 'Reading Comprehension',
     tags: ['language', 'reading', 'comprehension'],
     ...overrides,
-  })
+  });
 
 // 批量创建作品
 export const createWorksFixture = (
   count: number,
   authorId: string,
-  baseOverrides: Partial<MockWork> = {}
+  baseOverrides: Partial<MockWork> = {},
 ): MockWork[] => {
   return Array.from({ length: count }, (_, index) =>
     createWorkFixture({
       authorId,
       title: `Test Work ${index + 1}`,
       ...baseOverrides,
-    })
-  )
-}
+    }),
+  );
+};
 
 // 作品统计数据
 export const createWorkStatsFixture = (workId: string, overrides: Partial<MockWorkStats> = {}): MockWorkStats => ({
@@ -205,8 +205,7 @@ export const createWorkStatsFixture = (workId: string, overrides: Partial<MockWo
   weeklyViews: Array.from({ length: 4 }, () => Math.floor(Math.random() * 200)),
   monthlyViews: Array.from({ length: 12 }, () => Math.floor(Math.random() * 500)),
   ...overrides,
-})
-
+});
 
 
 // 作品收藏
@@ -215,7 +214,7 @@ export const createWorkBookmarkFixture = (workId: string, userId: string) => ({
   workId,
   userId,
   createdAt: new Date().toISOString(),
-})
+});
 
 // 作品复用记录
 export const createWorkReuseFixture = (originalWorkId: string, newWorkId: string, userId: string) => ({
@@ -225,4 +224,4 @@ export const createWorkReuseFixture = (originalWorkId: string, newWorkId: string
   userId,
   attribution: `Based on work by User ${Math.random().toString(36).substring(2, 6)}`,
   createdAt: new Date().toISOString(),
-})
+});

@@ -1,296 +1,236 @@
-/**
- * 增强的Redis客户端
- * 提供Redis缓存和内存缓存fallback机制
- */
+import { createClient, RedisClientType } from 'redis';
 
-import Redis from 'ioredis';
-import { logger } from '@/lib/utils/logger';
-import { env } from '@/config/environment';
+import { env } from '@/shared/config/environment';
+import { logger } from '@/shared/utils/logger';
+
+type RedisClient = RedisClientType<any, any, any>
 
 interface CacheItem {
-  value: string;
-  expiry?: number;
+  value: string
+  expiry?: number
 }
 
-class EnhancedRedisManager {
-  private client: Redis | null = null;
-  private isConnected = false;
-  private memoryCache = new Map<string, CacheItem>();
-  private maxMemoryCacheSize = 1000;
-  private connectionAttempts = 0;
-  private maxConnectionAttempts = 3;
+export interface SimpleRedisOptions {
+  /** 自定义 Redis 连接 URL */
+  url?: string | null
+  /** 直接注入的 Redis client（测试友好） */
+  client?: RedisClient | null
+  /** 自定义 client 工厂，便于测试覆盖 */
+  clientFactory?: () => RedisClient
+  /** 是否启用内存兜底缓存 */
+  enableMemoryFallback?: boolean
+  /** 最大内存缓存数量 */
+  maxMemoryItems?: number
+}
 
-  constructor() {
-    this.setupClient();
+const DEFAULT_MAX_MEMORY_ITEMS = 1000;
+
+/**
+ * 统一的 Redis 管理器
+ * - 支持内存兜底
+ * - 支持注入 mock client，方便测试
+ */
+export class SimpleRedis {
+  private client: RedisClient | null = null;
+  private connected = false;
+  private readonly memoryCache = new Map<string, CacheItem>();
+  private readonly enableMemoryFallback: boolean;
+  private readonly maxMemoryItems: number;
+  private cleanupTimer: NodeJS.Timeout | null = null;
+
+  constructor(private readonly options: SimpleRedisOptions = {}) {
+    this.enableMemoryFallback = options.enableMemoryFallback ?? true;
+    this.maxMemoryItems = options.maxMemoryItems ?? DEFAULT_MAX_MEMORY_ITEMS;
+
+    if (options.client) {
+      this.client = options.client;
+      this.connected = true;
+      this.registerClientEvents(this.client);
+    } else {
+      const clientUrl = options.url ?? env.REDIS.URL ?? process.env.REDIS_URL ?? null;
+
+      if (!clientUrl) {
+        logger.info('Redis URL 未配置，使用内存缓存兜底');
+        this.client = null;
+      } else {
+        try {
+          const factory = options.clientFactory ?? (() => createClient({ url: clientUrl }));
+          this.client = factory();
+
+          this.registerClientEvents(this.client);
+
+          if (typeof this.client.connect === 'function') {
+            this.client
+              .connect()
+              .then(() => {
+                this.connected = true;
+                logger.info('Redis 连接成功');
+              })
+              .catch((error: unknown) => {
+                const message = error instanceof Error ? error.message : String(error);
+                logger.warn('Redis 连接失败，使用内存缓存兜底', { error: message });
+                this.connected = false;
+                this.client = null;
+              });
+          } else {
+            // 某些 mock client 不存在 connect 方法，默认视为已连接
+            this.connected = true;
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          logger.error('创建 Redis client 失败，使用内存缓存兜底', { error: message });
+          this.client = null;
+        }
+      }
+    }
+
     this.startMemoryCacheCleanup();
   }
 
-  private async setupClient(): Promise<void> {
-    try {
-      const redisUrl = env.REDIS?.URL || process.env.REDIS_URL;
-      
-      // 在开发环境中，如果没有Redis URL，使用内存缓存
-      if (!redisUrl) {
-        logger.info('Redis URL not configured, using memory cache fallback');
-        return;
-      }
-
-      this.connectionAttempts++;
-      
-      this.client = new Redis(redisUrl, {
-        retryDelayOnFailover: env.REDIS?.RETRY_DELAY || 1000,
-        enableReadyCheck: true,
-        maxRetriesPerRequest: env.REDIS?.MAX_RETRIES || 3,
-        lazyConnect: true,
-        connectTimeout: 5000,
-        commandTimeout: 3000,
-        password: env.REDIS?.PASSWORD || undefined,
-      });
-
-      this.client.on('connect', () => {
-        logger.info('Redis connected successfully');
-        this.isConnected = true;
-        this.connectionAttempts = 0;
-      });
-
-      this.client.on('ready', () => {
-        logger.info('Redis ready for operations');
-        this.isConnected = true;
-      });
-
-      this.client.on('error', (error) => {
-        logger.warn('Redis connection error', { 
-          error: error.message,
-          attempt: this.connectionAttempts 
-        });
-        this.isConnected = false;
-        
-        // 如果连接失败次数过多，停止重试
-        if (this.connectionAttempts >= this.maxConnectionAttempts) {
-          logger.warn('Max Redis connection attempts reached, falling back to memory cache');
-          this.client?.disconnect();
-          this.client = null;
-        }
-      });
-
-      this.client.on('close', () => {
-        logger.info('Redis connection closed');
-        this.isConnected = false;
-      });
-
-      // 尝试连接
-      await this.client.connect();
-
-    } catch (error) {
-      logger.error('Failed to setup Redis client', { 
-        error: error instanceof Error ? error.message : 'Unknown error',
-        attempt: this.connectionAttempts 
-      });
-      
-      if (this.connectionAttempts >= this.maxConnectionAttempts) {
-        logger.info('Falling back to memory cache');
-        this.client = null;
-      }
-    }
-  }
-
-  /**
-   * 启动内存缓存清理定时器
-   */
-  private startMemoryCacheCleanup(): void {
-    setInterval(() => {
-      this.cleanupMemoryCache();
-    }, 60000); // 每分钟清理一次
-  }
-
-  /**
-   * 清理过期的内存缓存项
-   */
-  private cleanupMemoryCache(): void {
-    const now = Date.now();
-    let cleanedCount = 0;
-    
-    for (const [key, item] of this.memoryCache.entries()) {
-      if (item.expiry && item.expiry < now) {
-        this.memoryCache.delete(key);
-        cleanedCount++;
-      }
-    }
-    
-    // 如果缓存项过多，删除最旧的项
-    if (this.memoryCache.size > this.maxMemoryCacheSize) {
-      const keysToDelete = Array.from(this.memoryCache.keys())
-        .slice(0, this.memoryCache.size - this.maxMemoryCacheSize);
-      
-      keysToDelete.forEach(key => {
-        this.memoryCache.delete(key);
-        cleanedCount++;
-      });
-    }
-    
-    if (cleanedCount > 0) {
-      logger.debug('Memory cache cleanup completed', { 
-        cleanedItems: cleanedCount,
-        remainingItems: this.memoryCache.size 
-      });
-    }
-  }
-
-  getClient(): Redis | null {
+  getClient(): RedisClient | null {
     return this.client;
   }
 
   isReady(): boolean {
-    return this.isConnected && this.client?.status === 'ready';
-  }
-
-  isUsingMemoryFallback(): boolean {
-    return !this.isReady();
+    return this.connected && !!this.client;
   }
 
   async get(key: string): Promise<string | null> {
-    // 优先尝试Redis
     if (this.isReady()) {
       try {
-        const result = await this.client!.get(key);
-        return result;
+        const value = await this.client!.get(key);
+        if (typeof value === 'string') {
+          return value;
+        }
+
+        if (value !== null && value !== undefined) {
+          return String(value);
+        }
       } catch (error) {
-        logger.warn('Redis GET error, falling back to memory cache', { 
-          key, 
-          error: error instanceof Error ? error.message : 'Unknown error' 
-        });
+        this.logWarn('Redis GET 失败，尝试内存缓存', key, error);
       }
     }
 
-    // Fallback到内存缓存
-    const item = this.memoryCache.get(key);
-    if (!item) {
-      return null;
-    }
+    if (!this.enableMemoryFallback) return null;
 
-    // 检查是否过期
-    if (item.expiry && item.expiry < Date.now()) {
+    const fallback = this.memoryCache.get(key);
+    if (!fallback) return null;
+
+    if (fallback.expiry && fallback.expiry < Date.now()) {
       this.memoryCache.delete(key);
       return null;
     }
 
-    return item.value;
+    return fallback.value;
   }
 
   async set(key: string, value: string, ttl?: number): Promise<void> {
-    // 优先尝试Redis
     if (this.isReady()) {
       try {
         if (ttl && ttl > 0) {
-          await this.client!.setex(key, ttl, value);
-        } else {
-          await this.client!.set(key, value);
+          await this.setex(key, ttl, value);
+          return;
         }
+        await this.client!.set(key, value);
         return;
       } catch (error) {
-        logger.warn('Redis SET error, falling back to memory cache', { 
-          key, 
-          error: error instanceof Error ? error.message : 'Unknown error' 
-        });
+        this.logWarn('Redis SET 失败，写入内存缓存', key, error);
       }
     }
 
-    // Fallback到内存缓存
-    const item: CacheItem = {
+    if (!this.enableMemoryFallback) return;
+
+    const cacheItem: CacheItem = {
       value,
-      expiry: ttl ? Date.now() + (ttl * 1000) : undefined
+      expiry: ttl ? Date.now() + ttl * 1000 : undefined,
     };
-    
-    this.memoryCache.set(key, item);
-    
-    // 如果缓存过大，立即清理
-    if (this.memoryCache.size > this.maxMemoryCacheSize) {
+
+    this.memoryCache.set(key, cacheItem);
+
+    if (this.memoryCache.size > this.maxMemoryItems) {
       this.cleanupMemoryCache();
     }
   }
 
+  async setex(key: string, ttl: number, value: string): Promise<void> {
+    if (this.isReady()) {
+      try {
+        await this.client!.set(key, value, { EX: ttl });
+        return;
+      } catch (error) {
+        this.logWarn('Redis SETEX 失败，写入内存缓存', key, error);
+      }
+    }
+
+    if (!this.enableMemoryFallback) return;
+    await this.set(key, value, ttl);
+  }
+
   async del(key: string): Promise<void> {
-    // 优先尝试Redis
     if (this.isReady()) {
       try {
         await this.client!.del(key);
       } catch (error) {
-        logger.warn('Redis DEL error', { 
-          key, 
-          error: error instanceof Error ? error.message : 'Unknown error' 
-        });
+        this.logWarn('Redis DEL 失败', key, error);
       }
     }
 
-    // 同时从内存缓存删除
-    this.memoryCache.delete(key);
+    if (this.enableMemoryFallback) {
+      this.memoryCache.delete(key);
+    }
   }
 
   async increment(key: string, options?: { ttl?: number }): Promise<number> {
-    // 优先尝试Redis
     if (this.isReady()) {
       try {
-        const result = await this.client!.incr(key);
+        const value = await this.client!.incr(key);
         if (options?.ttl) {
           await this.client!.expire(key, options.ttl);
         }
-        return result;
+        return value;
       } catch (error) {
-        logger.warn('Redis INCR error, falling back to memory cache', { 
-          key, 
-          error: error instanceof Error ? error.message : 'Unknown error' 
-        });
+        this.logWarn('Redis INCR 失败，使用内存缓存', key, error);
       }
     }
 
-    // Fallback到内存缓存
-    const current = await this.get(key);
-    const newValue = (parseInt(current || '0', 10) + 1).toString();
-    await this.set(key, newValue, options?.ttl);
-    return parseInt(newValue, 10);
+    if (!this.enableMemoryFallback) return 0;
+
+    const current = Number(await this.get(key)) || 0;
+    const next = current + 1;
+    await this.set(key, String(next), options?.ttl);
+    return next;
   }
 
-  async healthCheck(): Promise<boolean> {
-    try {
-      if (this.isReady()) {
-        await this.client!.ping();
-        return true;
+  async decrement(key: string, options?: { ttl?: number }): Promise<number> {
+    if (this.isReady()) {
+      try {
+        const value = await this.client!.decr(key);
+        if (options?.ttl) {
+          await this.client!.expire(key, options.ttl);
+        }
+        return value;
+      } catch (error) {
+        this.logWarn('Redis DECR 失败，使用内存缓存', key, error);
       }
-      
-      // 内存缓存总是可用的
-      return true;
-    } catch (error) {
-      logger.error('Redis health check failed', { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      });
-      return false;
     }
+
+    if (!this.enableMemoryFallback) return 0;
+
+    const current = Number(await this.get(key)) || 0;
+    const next = current - 1;
+    await this.set(key, String(next), options?.ttl);
+    return next;
   }
 
-  getStatus(): {
-    redis: {
-      connected: boolean;
-      status: string;
-      connectionAttempts: number;
-    };
-    memoryCache: {
-      size: number;
-      maxSize: number;
-      isActive: boolean;
-    };
-  } {
-    return {
-      redis: {
-        connected: this.isConnected,
-        status: this.client?.status || 'disconnected',
-        connectionAttempts: this.connectionAttempts,
-      },
-      memoryCache: {
-        size: this.memoryCache.size,
-        maxSize: this.maxMemoryCacheSize,
-        isActive: !this.isReady(),
-      },
-    };
+  async publish(channel: string, message: string): Promise<void> {
+    if (this.isReady()) {
+      try {
+        await this.client!.publish(channel, message);
+
+      } catch (error) {
+        this.logWarn('Redis PUBLISH 失败', channel, error);
+      }
+    }
   }
 
   async disconnect(): Promise<void> {
@@ -298,20 +238,110 @@ class EnhancedRedisManager {
       try {
         await this.client.quit();
       } catch (error) {
-        logger.warn('Error during Redis disconnect', { 
-          error: error instanceof Error ? error.message : 'Unknown error' 
-        });
+        const message = error instanceof Error ? error.message : String(error);
+        logger.warn('Redis quit 失败', { error: message });
       }
-      this.client = null;
-      this.isConnected = false;
     }
-    
-    // 清空内存缓存
+
+    this.client = null;
+    this.connected = false;
+    this.stopMemoryCleanup();
     this.memoryCache.clear();
-    logger.info('Redis manager disconnected and memory cache cleared');
+  }
+
+  async healthCheck(): Promise<boolean> {
+    if (this.isReady()) {
+      try {
+        await this.client!.ping();
+        return true;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        logger.error('Redis health check 失败', { error: message });
+        return false;
+      }
+    }
+
+    // 没有 Redis 连接时，内存缓存视为可用
+    return this.enableMemoryFallback;
+  }
+
+  getStatus() {
+    return {
+      redis: {
+        connected: this.isReady(),
+        status: this.client ? (this.connected ? 'ready' : 'connecting') : 'disconnected',
+      },
+      memoryCache: {
+        size: this.memoryCache.size,
+        maxSize: this.maxMemoryItems,
+        enabled: this.enableMemoryFallback,
+      },
+    };
+  }
+
+  private registerClientEvents(client: RedisClient) {
+    if (typeof client.on !== 'function') return;
+
+    client.on('ready', () => {
+      this.connected = true;
+    });
+
+    client.on('connect', () => {
+      this.connected = true;
+    });
+
+    client.on('end', () => {
+      this.connected = false;
+    });
+
+    client.on('error', (error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.warn('Redis 运行时错误', { error: message });
+    });
+  }
+
+  private startMemoryCacheCleanup() {
+    if (!this.enableMemoryFallback) return;
+
+    this.cleanupTimer = setInterval(() => {
+      this.cleanupMemoryCache();
+    }, 60_000);
+
+    if (typeof this.cleanupTimer.unref === 'function') {
+      this.cleanupTimer.unref();
+    }
+  }
+
+  private stopMemoryCleanup() {
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer);
+      this.cleanupTimer = null;
+    }
+  }
+
+  private cleanupMemoryCache() {
+    const now = Date.now();
+
+    for (const [key, item] of this.memoryCache.entries()) {
+      if (item.expiry && item.expiry < now) {
+        this.memoryCache.delete(key);
+      }
+    }
+
+    if (this.memoryCache.size <= this.maxMemoryItems) return;
+
+    const overflow = this.memoryCache.size - this.maxMemoryItems;
+    const keysToDelete = Array.from(this.memoryCache.keys()).slice(0, overflow);
+    keysToDelete.forEach(key => this.memoryCache.delete(key));
+  }
+
+  private logWarn(message: string, key: string, error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.warn(message, { key, error: errorMessage });
   }
 }
 
-export const redisManager = new EnhancedRedisManager();
-export const redis = redisManager; // 向后兼容
+export const redisManager = new SimpleRedis();
+export const redis = redisManager;
+
 export default redisManager;

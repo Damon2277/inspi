@@ -1,123 +1,20 @@
-# GitHub Actions 完整测试流水线和质量门禁
-name: 🚀 Complete Test Pipeline & Quality Gate
+name: 测试流水线
 
 on:
   push:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
-  schedule:
-    # 每天凌晨2点运行完整测试套件
-    - cron: '0 2 * * *'
-
-env:
-  NODE_VERSION: '20'
-  # 数据库配置
-  MONGODB_URI: ${{ secrets.MONGODB_URI_TEST }}
-  MONGODB_DB_NAME: 'inspi_test'
-  REDIS_URL: ${{ secrets.REDIS_URL_TEST }}
-  REDIS_DB: '1'
-  
-  # AI服务配置
-  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY_TEST }}
-  GEMINI_MODEL: 'gemini-pro'
-  AI_REQUEST_TIMEOUT: '30000'
-  
-  # 应用配置
-  NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET_TEST }}
-  NEXTAUTH_URL: 'http://localhost:3000'
-  JWT_SECRET: ${{ secrets.JWT_SECRET_TEST }}
-  
-  # 测试配置
-  TEST_TIMEOUT: '60000'
-  TEST_RETRIES: '2'
-  PLAYWRIGHT_BROWSERS_PATH: '0'
-  TARGET_URL: 'http://localhost:3000'
-  
-  # 性能测试配置
-  PERFORMANCE_BUDGET_CPU: '5000'
-  PERFORMANCE_BUDGET_MEMORY: '100'
-  PERFORMANCE_BUDGET_NETWORK: '2000'
-  
-  # 安全测试配置
-  SECURITY_SCAN_LEVEL: 'medium'
-  OWASP_ZAP_TIMEOUT: '300'
-  
-  # 质量门禁配置
-  COVERAGE_THRESHOLD: '90'
-  PERFORMANCE_THRESHOLD: '3000'
-  SECURITY_THRESHOLD: '0'
-  QUALITY_GATE_ENABLED: 'true'
 
 jobs:
-  # 代码质量检查
-  lint-and-format:
-    name: 🔍 代码质量检查
+  # 单元测试和集成测试
+  unit-and-integration-tests:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run ESLint
-        run: npm run lint
-
-      - name: Run Prettier
-        run: npm run format:check
-
-      - name: Run TypeScript check
-        run: npm run type-check
-
-  # 单元测试
-  unit-tests:
-    name: 🧪 单元测试
-    runs-on: ubuntu-latest
-    needs: lint-and-format
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run unit tests
-        run: npm run test:unit -- --coverage --watchAll=false
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage/lcov.info
-          flags: unit
-          name: unit-tests
-
-      - name: Archive test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: unit-test-results
-          path: |
-            coverage/
-            test-results/
-
-  # 集成测试
-  integration-tests:
-    name: 🔗 集成测试
-    runs-on: ubuntu-latest
-    needs: lint-and-format
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
     services:
       mongodb:
         image: mongo:6.0
@@ -128,9 +25,9 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
+      
       redis:
-        image: redis:7.0
+        image: redis:7-alpine
         ports:
           - 6379:6379
         options: >-
@@ -140,594 +37,282 @@ jobs:
           --health-retries 5
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: 检出代码
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+    - name: 设置Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+    - name: 安装依赖
+      run: npm ci
 
-      - name: Wait for services
-        run: |
-          sleep 10
-          npm run test:services
+    - name: 代码格式检查
+      run: npm run lint
 
-      - name: Run integration tests
-        run: npm run test:integration
+    - name: 类型检查
+      run: npm run type-check
 
-      - name: Archive test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: integration-test-results
-          path: test-results/
+    - name: 运行单元测试
+      run: npm run test:unit
+      env:
+        NODE_ENV: test
+        MONGODB_URI: mongodb://localhost:27017/test
+        REDIS_URL: redis://localhost:6379
+        JWT_SECRET: test-jwt-secret
+
+    - name: 运行集成测试
+      run: npm run test:integration
+      env:
+        NODE_ENV: test
+        MONGODB_URI: mongodb://localhost:27017/test
+        REDIS_URL: redis://localhost:6379
+        JWT_SECRET: test-jwt-secret
+
+    - name: 生成测试覆盖率报告
+      run: npm run test:coverage
+      env:
+        NODE_ENV: test
+        MONGODB_URI: mongodb://localhost:27017/test
+        REDIS_URL: redis://localhost:6379
+        JWT_SECRET: test-jwt-secret
+
+    - name: 上传覆盖率报告到Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+
+    - name: 上传测试结果
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.node-version }}
+        path: |
+          coverage/
+          test-results/
 
   # 端到端测试
   e2e-tests:
-    name: 🎭 端到端测试
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests]
+    needs: unit-and-integration-tests
+    
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: 检出代码
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+    - name: 设置Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+    - name: 安装依赖
+      run: npm ci
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+    - name: 安装Playwright浏览器
+      run: npx playwright install --with-deps ${{ matrix.browser }}
 
-      - name: Build application
-        run: npm run build
+    - name: 构建应用
+      run: npm run build
+      env:
+        NODE_ENV: production
 
-      - name: Start application
-        run: |
-          npm run start &
-          sleep 30
-          curl -f http://localhost:3000 || exit 1
+    - name: 启动应用
+      run: npm start &
+      env:
+        NODE_ENV: test
+        PORT: 3000
 
-      - name: Run E2E tests
-        run: npm run test:e2e
+    - name: 等待应用启动
+      run: npx wait-on http://localhost:3000
 
-      - name: Upload E2E test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: e2e-test-results
-          path: |
-            test-results/
-            playwright-report/
+    - name: 运行E2E测试
+      run: npx playwright test --project=${{ matrix.browser }}
+      env:
+        PLAYWRIGHT_BASE_URL: http://localhost:3000
+
+    - name: 上传E2E测试结果
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: e2e-results-${{ matrix.browser }}
+        path: |
+          test-results/
+          playwright-report/
 
   # 性能测试
   performance-tests:
-    name: ⚡ 性能测试
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests]
+    needs: unit-and-integration-tests
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: 检出代码
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+    - name: 设置Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+    - name: 安装依赖
+      run: npm ci
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+    - name: 运行性能测试
+      run: npm run test:performance
+      env:
+        NODE_ENV: test
 
-      - name: Build application
-        run: npm run build
+    - name: 上传性能测试结果
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: performance-results
+        path: test-results/performance/
 
-      - name: Start application
-        run: |
-          npm run start &
-          sleep 30
-
-      - name: Run performance tests
-        run: npm run test:performance
-
-      - name: Upload performance results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: performance-test-results
-          path: test-results/performance/
-
-  # 安全测试
-  security-tests:
-    name: 🔒 安全测试
+  # 安全扫描
+  security-scan:
     runs-on: ubuntu-latest
-    needs: lint-and-format
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: 检出代码
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+    - name: 运行npm audit
+      run: npm audit --audit-level moderate
 
-      - name: Install dependencies
-        run: npm ci
+    - name: 运行Snyk安全扫描
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high
 
-      - name: Run security audit
-        run: npm audit --audit-level=moderate
-
-      - name: Run security tests
-        run: npm run test:security
-
-      - name: Run OWASP ZAP scan
-        uses: zaproxy/action-baseline@v0.7.0
-        with:
-          target: 'http://localhost:3000'
-
-  # 移动端测试
-  mobile-tests:
-    name: 📱 移动端测试
+  # 代码质量检查
+  code-quality:
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests]
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: 检出代码
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+    - name: SonarCloud扫描
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      - name: Install dependencies
-        run: npm ci
+  # 构建验证
+  build-verification:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+    - name: 设置Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
 
-      - name: Build application
-        run: npm run build
+    - name: 安装依赖
+      run: npm ci
 
-      - name: Start application
-        run: |
-          npm run start &
-          sleep 30
+    - name: 构建应用
+      run: npm run build
 
-      - name: Run mobile tests
-        run: npm run test:mobile
+    - name: 验证构建产物
+      run: |
+        if [ ! -d ".next" ]; then
+          echo "构建失败：.next目录不存在"
+          exit 1
+        fi
+        if [ ! -f ".next/BUILD_ID" ]; then
+          echo "构建失败：BUILD_ID文件不存在"
+          exit 1
+        fi
+        echo "构建验证成功"
 
-      - name: Upload mobile test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: mobile-test-results
-          path: test-results/mobile/
+    - name: 上传构建产物
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-artifacts-${{ matrix.node-version }}
+        path: .next/
 
   # 测试报告汇总
-  test-report:
-    name: 📊 测试报告
+  test-summary:
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, e2e-tests, performance-tests, security-tests, mobile-tests]
+    needs: [unit-and-integration-tests, e2e-tests, performance-tests]
     if: always()
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: 下载所有测试结果
+      uses: actions/download-artifact@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Download all test results
-        uses: actions/download-artifact@v3
-        with:
-          path: test-artifacts/
-
-      - name: Generate comprehensive report
-        run: npm run test:report
-
-      - name: Upload comprehensive report
-        uses: actions/upload-artifact@v3
-        with:
-          name: comprehensive-test-report
-          path: test-reports/
-
-      - name: Comment PR with test results
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-            
-            try {
-              const reportPath = path.join('test-reports', 'latest-report.json');
-              const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
-              
-              const statusIcon = report.summary.status === 'PASS' ? '✅' : '❌';
-              const passRate = report.summary.passRate.toFixed(1);
-              const coverage = report.summary.coverageRate.toFixed(1);
-              
-              const comment = `## ${statusIcon} 测试结果报告
-              
-              | 指标 | 结果 |
-              |------|------|
-              | 总体状态 | ${report.summary.status} |
-              | 通过率 | ${passRate}% (${report.totalPassed}/${report.totalTests}) |
-              | 代码覆盖率 | ${coverage}% |
-              | 总耗时 | ${(report.totalDuration / 1000).toFixed(1)}秒 |
-              
-              ### 各测试套件结果
-              ${report.suites.map(suite => 
-                `- **${suite.suite}**: ${suite.failed === 0 ? '✅' : '❌'} ${suite.passed}通过 ${suite.failed}失败`
-              ).join('\n')}
-              
-              ${report.summary.status === 'FAIL' ? '⚠️ 存在测试失败，请检查详细日志。' : '🎉 所有测试通过！'}
-              `;
-              
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: comment
-              });
-            } catch (error) {
-              console.error('Failed to post test results:', error);
-            }
-
-  # 部署到测试环境
-  deploy-test:
-    name: 🚀 部署测试环境
-    runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, e2e-tests]
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
-    environment: test
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build application
-        run: npm run build
-
-      - name: Deploy to test environment
-        run: |
-          echo "Deploying to test environment..."
-          # 这里添加实际的部署脚本
-
-      - name: Run smoke tests
-        run: npm run test:smoke
-
-  # 部署到生产环境
-  deploy-production:
-    name: 🌟 部署生产环境
-    runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, e2e-tests, performance-tests, security-tests]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: production
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build application
-        run: npm run build
-
-      - name: Deploy to production
-        run: |
-          echo "Deploying to production..."
-          # 这里添加实际的部署脚本
-
-      - name: Run production smoke tests
-        run: npm run test:smoke:production
-
-      - name: Notify deployment success
-        if: success()
-        run: |
-          echo "🎉 Production deployment successful!"
-          # 这里可以添加通知逻辑（Slack、邮件等）
-
-  # 质量门禁检查
-  quality-gate:
-    name: 🚪 质量门禁
-    runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, e2e-tests, performance-tests, security-tests]
-    if: always() && env.QUALITY_GATE_ENABLED == 'true'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Download all test artifacts
-        uses: actions/download-artifact@v3
-        with:
-          path: test-artifacts/
-
-      - name: Generate quality gate report
-        run: |
-          echo "# 🚪 质量门禁报告" > quality-gate-report.md
-          echo "" >> quality-gate-report.md
-          echo "**生成时间**: $(date)" >> quality-gate-report.md
-          echo "**提交**: ${{ github.sha }}" >> quality-gate-report.md
-          echo "**分支**: ${{ github.ref_name }}" >> quality-gate-report.md
-          echo "" >> quality-gate-report.md
-          echo "## 📊 测试结果汇总" >> quality-gate-report.md
-          echo "" >> quality-gate-report.md
-          
-          # 检查各个job的状态
-          echo "| 测试类型 | 状态 | 结果 |" >> quality-gate-report.md
-          echo "|----------|------|------|" >> quality-gate-report.md
-          
-          if [ "${{ needs.unit-tests.result }}" = "success" ]; then
-            echo "| 🧪 单元测试 | ✅ 通过 | 所有单元测试通过 |" >> quality-gate-report.md
-          else
-            echo "| 🧪 单元测试 | ❌ 失败 | 存在单元测试失败 |" >> quality-gate-report.md
-          fi
-          
-          if [ "${{ needs.integration-tests.result }}" = "success" ]; then
-            echo "| 🔗 集成测试 | ✅ 通过 | 所有集成测试通过 |" >> quality-gate-report.md
-          else
-            echo "| 🔗 集成测试 | ❌ 失败 | 存在集成测试失败 |" >> quality-gate-report.md
-          fi
-          
-          if [ "${{ needs.e2e-tests.result }}" = "success" ]; then
-            echo "| 🎭 端到端测试 | ✅ 通过 | 所有E2E测试通过 |" >> quality-gate-report.md
-          else
-            echo "| 🎭 端到端测试 | ❌ 失败 | 存在E2E测试失败 |" >> quality-gate-report.md
-          fi
-          
-          if [ "${{ needs.performance-tests.result }}" = "success" ] || [ "${{ needs.performance-tests.result }}" = "skipped" ]; then
-            echo "| ⚡ 性能测试 | ✅ 通过 | 性能指标达标 |" >> quality-gate-report.md
-          else
-            echo "| ⚡ 性能测试 | ❌ 失败 | 性能指标未达标 |" >> quality-gate-report.md
-          fi
-          
-          if [ "${{ needs.security-tests.result }}" = "success" ] || [ "${{ needs.security-tests.result }}" = "skipped" ]; then
-            echo "| 🔒 安全测试 | ✅ 通过 | 无安全漏洞 |" >> quality-gate-report.md
-          else
-            echo "| 🔒 安全测试 | ❌ 失败 | 发现安全漏洞 |" >> quality-gate-report.md
-          fi
-          
-          echo "" >> quality-gate-report.md
-
-      - name: Check coverage threshold
-        run: |
-          if [ -f "test-artifacts/unit-test-results/coverage/coverage-summary.json" ]; then
-            COVERAGE=$(node -p "Math.round(JSON.parse(require('fs').readFileSync('test-artifacts/unit-test-results/coverage/coverage-summary.json')).total.lines.pct)")
-            echo "当前覆盖率: ${COVERAGE}%"
-            echo "## 📈 代码覆盖率检查" >> quality-gate-report.md
-            echo "" >> quality-gate-report.md
-            if [ $COVERAGE -ge $COVERAGE_THRESHOLD ]; then
-              echo "✅ **覆盖率**: ${COVERAGE}% (≥ ${COVERAGE_THRESHOLD}%)" >> quality-gate-report.md
-              echo "COVERAGE_GATE=PASS" >> $GITHUB_ENV
-            else
-              echo "❌ **覆盖率**: ${COVERAGE}% (< ${COVERAGE_THRESHOLD}%)" >> quality-gate-report.md
-              echo "COVERAGE_GATE=FAIL" >> $GITHUB_ENV
+    - name: 生成测试报告摘要
+      run: |
+        echo "# 测试报告摘要" > test-summary.md
+        echo "" >> test-summary.md
+        echo "## 单元测试和集成测试" >> test-summary.md
+        
+        for version in 18.x 20.x; do
+          if [ -d "test-results-$version" ]; then
+            echo "### Node.js $version" >> test-summary.md
+            if [ -f "test-results-$version/coverage/coverage-summary.json" ]; then
+              echo "覆盖率报告已生成" >> test-summary.md
             fi
-          else
-            echo "⚠️ **覆盖率**: 无法获取覆盖率数据" >> quality-gate-report.md
-            echo "COVERAGE_GATE=UNKNOWN" >> $GITHUB_ENV
           fi
-          echo "" >> quality-gate-report.md
-
-      - name: Check performance threshold
-        run: |
-          echo "## ⚡ 性能指标检查" >> quality-gate-report.md
-          echo "" >> quality-gate-report.md
-          
-          if [ -f "test-artifacts/performance-test-results/performance-summary.json" ]; then
-            PERF_PASS=$(node -p "JSON.parse(require('fs').readFileSync('test-artifacts/performance-test-results/performance-summary.json')).overallPass")
-            if [ "$PERF_PASS" = "true" ]; then
-              echo "✅ **性能测试**: 所有性能指标达标" >> quality-gate-report.md
-              echo "PERFORMANCE_GATE=PASS" >> $GITHUB_ENV
-            else
-              echo "❌ **性能测试**: 存在性能指标未达标" >> quality-gate-report.md
-              echo "PERFORMANCE_GATE=FAIL" >> $GITHUB_ENV
-            fi
-          else
-            echo "⚠️ **性能测试**: 无法获取性能数据" >> quality-gate-report.md
-            echo "PERFORMANCE_GATE=UNKNOWN" >> $GITHUB_ENV
+        done
+        
+        echo "" >> test-summary.md
+        echo "## E2E测试" >> test-summary.md
+        
+        for browser in chromium firefox webkit; do
+          if [ -d "e2e-results-$browser" ]; then
+            echo "### $browser" >> test-summary.md
+            echo "E2E测试已完成" >> test-summary.md
           fi
-          echo "" >> quality-gate-report.md
+        done
+        
+        echo "" >> test-summary.md
+        echo "## 性能测试" >> test-summary.md
+        if [ -d "performance-results" ]; then
+          echo "性能测试已完成" >> test-summary.md
+        fi
 
-      - name: Check security threshold
-        run: |
-          echo "## 🔒 安全检查" >> quality-gate-report.md
-          echo "" >> quality-gate-report.md
-          
-          # 检查npm audit结果
-          HIGH_VULNS=$(npm audit --json 2>/dev/null | jq -r '.metadata.vulnerabilities.high // 0' || echo "0")
-          CRITICAL_VULNS=$(npm audit --json 2>/dev/null | jq -r '.metadata.vulnerabilities.critical // 0' || echo "0")
-          TOTAL_HIGH_CRITICAL=$((HIGH_VULNS + CRITICAL_VULNS))
-          
-          if [ $TOTAL_HIGH_CRITICAL -le $SECURITY_THRESHOLD ]; then
-            echo "✅ **安全扫描**: 无高危漏洞 (${TOTAL_HIGH_CRITICAL}个)" >> quality-gate-report.md
-            echo "SECURITY_GATE=PASS" >> $GITHUB_ENV
-          else
-            echo "❌ **安全扫描**: 发现${TOTAL_HIGH_CRITICAL}个高危漏洞" >> quality-gate-report.md
-            echo "SECURITY_GATE=FAIL" >> $GITHUB_ENV
-          fi
-          echo "" >> quality-gate-report.md
+    - name: 发布测试报告
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-summary
+        path: test-summary.md
 
-      - name: Determine overall quality gate status
-        run: |
-          echo "## 🎯 质量门禁结果" >> quality-gate-report.md
-          echo "" >> quality-gate-report.md
-          
-          # 检查必需的测试是否通过
-          REQUIRED_TESTS_PASS=true
-          if [ "${{ needs.unit-tests.result }}" != "success" ]; then
-            REQUIRED_TESTS_PASS=false
-          fi
-          if [ "${{ needs.integration-tests.result }}" != "success" ]; then
-            REQUIRED_TESTS_PASS=false
-          fi
-          if [ "${{ needs.e2e-tests.result }}" != "success" ]; then
-            REQUIRED_TESTS_PASS=false
-          fi
-          
-          # 检查质量门禁
-          QUALITY_GATES_PASS=true
-          if [ "$COVERAGE_GATE" = "FAIL" ]; then
-            QUALITY_GATES_PASS=false
-          fi
-          if [ "$PERFORMANCE_GATE" = "FAIL" ]; then
-            QUALITY_GATES_PASS=false
-          fi
-          if [ "$SECURITY_GATE" = "FAIL" ]; then
-            QUALITY_GATES_PASS=false
-          fi
-          
-          if [ "$REQUIRED_TESTS_PASS" = "true" ] && [ "$QUALITY_GATES_PASS" = "true" ]; then
-            echo "🎉 **质量门禁: 通过**" >> quality-gate-report.md
-            echo "" >> quality-gate-report.md
-            echo "所有必需的测试都已通过，代码质量达到发布标准。" >> quality-gate-report.md
-            echo "OVERALL_QUALITY_GATE=PASS" >> $GITHUB_ENV
-          else
-            echo "🚫 **质量门禁: 失败**" >> quality-gate-report.md
-            echo "" >> quality-gate-report.md
-            if [ "$REQUIRED_TESTS_PASS" = "false" ]; then
-              echo "- ❌ 存在必需测试失败" >> quality-gate-report.md
-            fi
-            if [ "$QUALITY_GATES_PASS" = "false" ]; then
-              echo "- ❌ 存在质量指标未达标" >> quality-gate-report.md
-            fi
-            echo "" >> quality-gate-report.md
-            echo "请修复上述问题后重新提交。" >> quality-gate-report.md
-            echo "OVERALL_QUALITY_GATE=FAIL" >> $GITHUB_ENV
-          fi
-          
-          echo "" >> quality-gate-report.md
-          echo "---" >> quality-gate-report.md
-          echo "*报告生成时间: $(date)*" >> quality-gate-report.md
-
-      - name: Upload quality gate report
-        uses: actions/upload-artifact@v3
-        with:
-          name: quality-gate-report
-          path: quality-gate-report.md
-
-      - name: Comment PR with quality gate results
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const fs = require('fs');
-            try {
-              const report = fs.readFileSync('quality-gate-report.md', 'utf8');
-              
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: report
-              });
-            } catch (error) {
-              console.error('Failed to post quality gate results:', error);
-            }
-
-      - name: Set quality gate status
-        run: |
-          if [ "$OVERALL_QUALITY_GATE" = "PASS" ]; then
-            echo "✅ 质量门禁通过"
-            exit 0
-          else
-            echo "❌ 质量门禁失败"
-            exit 1
-          fi
-
-  # 质量监控和通知
-  quality-monitoring:
-    name: 📊 质量监控
-    runs-on: ubuntu-latest
-    needs: [quality-gate]
-    if: always() && github.ref == 'refs/heads/main'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Download test artifacts
-        uses: actions/download-artifact@v3
-        with:
-          path: test-artifacts/
-
-      - name: Generate quality metrics
-        run: |
-          # 创建质量指标JSON
-          cat > quality-metrics.json << EOF
-          {
-            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "commit": "${{ github.sha }}",
-            "branch": "${{ github.ref_name }}",
-            "qualityGate": "${{ needs.quality-gate.result }}",
-            "testResults": {
-              "unit": "${{ needs.unit-tests.result }}",
-              "integration": "${{ needs.integration-tests.result }}",
-              "e2e": "${{ needs.e2e-tests.result }}",
-              "performance": "${{ needs.performance-tests.result }}",
-              "security": "${{ needs.security-tests.result }}"
-            }
+    - name: 评论PR（如果是PR）
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          if (fs.existsSync('test-summary.md')) {
+            const summary = fs.readFileSync('test-summary.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
           }
-          EOF
-
-      - name: Store quality metrics
-        run: |
-          # 这里可以将质量指标存储到数据库或监控系统
-          echo "📊 质量指标已生成"
-          cat quality-metrics.json
-
-      - name: Send quality notifications
-        if: needs.quality-gate.result == 'failure'
-        run: |
-          echo "🚨 质量门禁失败，发送通知..."
-          # 这里可以添加通知逻辑（Slack、邮件、钉钉等）

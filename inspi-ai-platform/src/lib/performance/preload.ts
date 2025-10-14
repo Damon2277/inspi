@@ -81,6 +81,12 @@ export class ResourcePreloader {
   private loadTimes = new Map<string, number>();
   private observers = new Map<string, IntersectionObserver>();
   private preloadCache = new Map<string, HTMLLinkElement>();
+  private resourceStats = new Map<ResourceType, {
+    count: number;
+    loaded: number;
+    failed: number;
+    totalTime: number;
+  }>();
 
   /**
    * 预加载关键资源
@@ -93,7 +99,7 @@ export class ResourcePreloader {
         await this.preloadResource(config, PreloadType.PRELOAD);
       } catch (error) {
         logger.error('Critical resource preload failed', error instanceof Error ? error : new Error(String(error)), {
-          href: config.href
+          href: config.href,
         });
       }
     });
@@ -116,7 +122,7 @@ export class ResourcePreloader {
         } catch (error) {
           logger.warn('Important resource prefetch failed', {
             href: config.href,
-            error: error instanceof Error ? error.message : String(error)
+            error: error instanceof Error ? error.message : String(error),
           });
         }
       });
@@ -147,7 +153,7 @@ export class ResourcePreloader {
               } catch (error) {
                 logger.warn('Optional resource lazy load failed', {
                   href: config.href,
-                  error: error instanceof Error ? error.message : String(error)
+                  error: error instanceof Error ? error.message : String(error),
                 });
               }
             });
@@ -157,8 +163,8 @@ export class ResourcePreloader {
       },
       {
         rootMargin: '50px', // 提前50px开始加载
-        threshold: 0.1
-      }
+        threshold: 0.1,
+      },
     );
 
     observer.observe(trigger);
@@ -200,19 +206,19 @@ export class ResourcePreloader {
         href: font.href,
         as: ResourceType.FONT,
         type: font.format ? `font/${font.format}` : undefined,
-        crossorigin: 'anonymous'
+        crossorigin: 'anonymous',
       };
 
       try {
         await this.preloadResource(config, PreloadType.PRELOAD);
-        
+
         // 设置font-display属性
         if (font.display) {
           this.setFontDisplay(font.href, font.display);
         }
       } catch (error) {
         logger.error('Font preload failed', error instanceof Error ? error : new Error(String(error)), {
-          href: font.href
+          href: font.href,
         });
       }
     });
@@ -236,14 +242,14 @@ export class ResourcePreloader {
         as: ResourceType.IMAGE,
         sizes: image.sizes,
         imageSrcSet: image.srcset,
-        media: image.media
+        media: image.media,
       };
 
       try {
         await this.preloadResource(config, PreloadType.PRELOAD);
       } catch (error) {
         logger.error('Image preload failed', error instanceof Error ? error : new Error(String(error)), {
-          href: image.href
+          href: image.href,
         });
       }
     });
@@ -263,14 +269,14 @@ export class ResourcePreloader {
     const {
       mouseoverDelay = 100,
       touchDelay = 150,
-      visibilityThreshold = 0.1
+      visibilityThreshold = 0.1,
     } = config;
 
     // 鼠标悬停预加载
     document.addEventListener('mouseover', (event) => {
       const target = event.target as HTMLElement;
       const link = target.closest('a[href]') as HTMLAnchorElement;
-      
+
       if (link && this.shouldPreload(link.href)) {
         setTimeout(() => {
           this.preloadPage(link.href);
@@ -282,7 +288,7 @@ export class ResourcePreloader {
     document.addEventListener('touchstart', (event) => {
       const target = event.target as HTMLElement;
       const link = target.closest('a[href]') as HTMLAnchorElement;
-      
+
       if (link && this.shouldPreload(link.href)) {
         setTimeout(() => {
           this.preloadPage(link.href);
@@ -302,7 +308,7 @@ export class ResourcePreloader {
           }
         });
       },
-      { threshold: visibilityThreshold }
+      { threshold: visibilityThreshold },
     );
 
     // 观察所有链接
@@ -327,13 +333,24 @@ export class ResourcePreloader {
     // 计算缓存命中率（简化版）
     const cacheHitRate = totalResources > 0 ? (loadedCount / totalResources) * 100 : 0;
 
+    const resourceBreakdown = Object.values(ResourceType).reduce<PreloadStats['resourceBreakdown']>((acc, type) => {
+      const stats = this.resourceStats.get(type) ?? { count: 0, loaded: 0, failed: 0, totalTime: 0 };
+      acc[type] = {
+        count: stats.count,
+        loaded: stats.loaded,
+        failed: stats.failed,
+        averageTime: stats.loaded > 0 ? stats.totalTime / stats.loaded : 0,
+      };
+      return acc;
+    }, {} as PreloadStats['resourceBreakdown']);
+
     return {
       totalResources,
       loadedResources: loadedCount,
       failedResources: failedCount,
       averageLoadTime,
       cacheHitRate,
-      resourceBreakdown: {} // 这里可以添加详细的资源类型统计
+      resourceBreakdown,
     };
   }
 
@@ -363,7 +380,11 @@ export class ResourcePreloader {
    */
   private async preloadResource(config: PreloadConfig, type: PreloadType): Promise<void> {
     const startTime = Date.now();
-    
+
+    const resourceType = this.getResourceType(config, type);
+    this.ensureResourceStats(resourceType);
+    this.incrementResourceStat(resourceType, 'count');
+
     return new Promise((resolve, reject) => {
       const link = document.createElement('link');
       link.rel = type;
@@ -413,30 +434,70 @@ export class ResourcePreloader {
         const loadTime = Date.now() - startTime;
         this.loadedResources.add(config.href);
         this.loadTimes.set(config.href, loadTime);
-        
+        this.incrementResourceStat(resourceType, 'loaded');
+        this.addResourceLoadTime(resourceType, loadTime);
+
         logger.debug('Resource preloaded successfully', {
           href: config.href,
           type,
-          loadTime
+          loadTime,
         });
-        
+
         resolve();
       };
 
       link.onerror = () => {
         this.failedResources.add(config.href);
-        
+        this.incrementResourceStat(resourceType, 'failed');
+
         logger.warn('Resource preload failed', {
           href: config.href,
-          type
+          type,
         });
-        
+
         reject(new Error(`Failed to preload ${config.href}`));
       };
 
       document.head.appendChild(link);
       this.preloadCache.set(config.href, link);
     });
+  }
+
+  private getResourceType(config: PreloadConfig, preloadType: PreloadType): ResourceType {
+    if (config.as) {
+      return config.as;
+    }
+
+    switch (preloadType) {
+      case PreloadType.MODULE_PRELOAD:
+        return ResourceType.SCRIPT;
+      case PreloadType.PRELOAD:
+      case PreloadType.PREFETCH:
+        return ResourceType.FETCH;
+      case PreloadType.PRECONNECT:
+      case PreloadType.DNS_PREFETCH:
+        return ResourceType.DOCUMENT;
+      default:
+        return ResourceType.FETCH;
+    }
+  }
+
+  private ensureResourceStats(type: ResourceType): void {
+    if (!this.resourceStats.has(type)) {
+      this.resourceStats.set(type, { count: 0, loaded: 0, failed: 0, totalTime: 0 });
+    }
+  }
+
+  private incrementResourceStat(type: ResourceType, field: 'count' | 'loaded' | 'failed'): void {
+    const stats = this.resourceStats.get(type);
+    if (!stats) return;
+    stats[field] += 1;
+  }
+
+  private addResourceLoadTime(type: ResourceType, loadTime: number): void {
+    const stats = this.resourceStats.get(type);
+    if (!stats) return;
+    stats.totalTime += loadTime;
   }
 
   /**
@@ -447,7 +508,7 @@ export class ResourcePreloader {
     link.rel = 'preconnect';
     link.href = domain;
     link.crossOrigin = 'anonymous';
-    
+
     document.head.appendChild(link);
     this.preloadCache.set(`preconnect:${domain}`, link);
   }
@@ -459,7 +520,7 @@ export class ResourcePreloader {
     const link = document.createElement('link');
     link.rel = 'dns-prefetch';
     link.href = domain;
-    
+
     document.head.appendChild(link);
     this.preloadCache.set(`dns-prefetch:${domain}`, link);
   }
@@ -489,14 +550,14 @@ export class ResourcePreloader {
     try {
       const config: PreloadConfig = {
         href,
-        as: ResourceType.DOCUMENT
+        as: ResourceType.DOCUMENT,
       };
 
       await this.preloadResource(config, PreloadType.PREFETCH);
     } catch (error) {
       logger.warn('Page preload failed', {
         href,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }
@@ -540,7 +601,7 @@ export class ResourcePreloader {
           } catch (error) {
             logger.warn('Idle resource load failed', {
               href: config.href,
-              error: error instanceof Error ? error.message : String(error)
+              error: error instanceof Error ? error.message : String(error),
             });
           }
         });
@@ -554,7 +615,7 @@ export class ResourcePreloader {
           } catch (error) {
             logger.warn('Idle resource load failed', {
               href: config.href,
-              error: error instanceof Error ? error.message : String(error)
+              error: error instanceof Error ? error.message : String(error),
             });
           }
         });
@@ -579,14 +640,14 @@ export class PreloadUtils {
     requestIdleCallback: boolean;
   } {
     const link = document.createElement('link');
-    
+
     return {
       preload: link.relList?.supports?.('preload') ?? false,
       prefetch: link.relList?.supports?.('prefetch') ?? false,
       preconnect: link.relList?.supports?.('preconnect') ?? false,
       modulePreload: link.relList?.supports?.('modulepreload') ?? false,
       intersectionObserver: 'IntersectionObserver' in window,
-      requestIdleCallback: 'requestIdleCallback' in window
+      requestIdleCallback: 'requestIdleCallback' in window,
     };
   }
 
@@ -599,7 +660,7 @@ export class PreloadUtils {
       {
         href: '/styles/critical.css',
         as: ResourceType.STYLE,
-        importance: 'high'
+        importance: 'high',
       },
       // 关键字体
       {
@@ -607,14 +668,14 @@ export class PreloadUtils {
         as: ResourceType.FONT,
         type: 'font/woff2',
         crossorigin: 'anonymous',
-        importance: 'high'
+        importance: 'high',
       },
       // 关键JavaScript
       {
         href: '/scripts/critical.js',
         as: ResourceType.SCRIPT,
-        importance: 'high'
-      }
+        importance: 'high',
+      },
     ];
   }
 
@@ -626,19 +687,19 @@ export class PreloadUtils {
       // 主要样式
       {
         href: '/styles/main.css',
-        as: ResourceType.STYLE
+        as: ResourceType.STYLE,
       },
       // 主要脚本
       {
         href: '/scripts/main.js',
-        as: ResourceType.SCRIPT
+        as: ResourceType.SCRIPT,
       },
       // 重要图片
       {
         href: '/images/hero.webp',
         as: ResourceType.IMAGE,
-        imageSizes: '(max-width: 768px) 100vw, 50vw'
-      }
+        imageSizes: '(max-width: 768px) 100vw, 50vw',
+      },
     ];
   }
 
@@ -647,10 +708,8 @@ export class PreloadUtils {
    */
   static getExternalDomains(): string[] {
     return [
-      'https://fonts.googleapis.com',
-      'https://fonts.gstatic.com',
       'https://cdn.jsdelivr.net',
-      'https://unpkg.com'
+      'https://unpkg.com',
     ];
   }
 
@@ -662,7 +721,7 @@ export class PreloadUtils {
       critical: PreloadUtils.getCriticalResources(),
       important: PreloadUtils.getImportantResources(),
       optional: [],
-      lazy: []
+      lazy: [],
     };
   }
 }

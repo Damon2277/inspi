@@ -1,4 +1,5 @@
 import { ObjectId } from 'mongoose';
+
 import { TestDataCollection } from './TestDataRelationshipManager';
 
 /**
@@ -76,7 +77,7 @@ class DataLifecycleManager {
   registerDataItem(
     id: string,
     type: DataItemMetadata['type'],
-    tags: string[] = []
+    tags: string[] = [],
   ): void {
     const now = new Date();
     this.metadata.set(id, {
@@ -92,7 +93,7 @@ class DataLifecycleManager {
   recordAccess(id: string): void {
     const now = new Date();
     this.accessLog.set(id, now);
-    
+
     const metadata = this.metadata.get(id);
     if (metadata) {
       metadata.lastAccessedAt = now;
@@ -124,8 +125,8 @@ class DataLifecycleManager {
 
   // 获取过期项
   getExpiredItems(ttl: number): DataItemMetadata[] {
-    return Array.from(this.metadata.values()).filter(item => 
-      this.isExpired(item.id, ttl)
+    return Array.from(this.metadata.values()).filter(item =>
+      this.isExpired(item.id, ttl),
     );
   }
 
@@ -136,8 +137,8 @@ class DataLifecycleManager {
 
   // 获取按标签分组的项
   getItemsByTag(tag: string): DataItemMetadata[] {
-    return Array.from(this.metadata.values()).filter(item => 
-      item.tags.includes(tag)
+    return Array.from(this.metadata.values()).filter(item =>
+      item.tags.includes(tag),
     );
   }
 
@@ -162,7 +163,7 @@ class DataLifecycleManager {
   } {
     const items = Array.from(this.metadata.values());
     const byType: Record<string, number> = {};
-    
+
     items.forEach(item => {
       byType[item.type] = (byType[item.type] || 0) + 1;
     });
@@ -225,7 +226,7 @@ class CleanupExecutor {
           break;
       }
 
-      stats.totalDeleted = stats.usersDeleted + stats.worksDeleted + 
+      stats.totalDeleted = stats.usersDeleted + stats.worksDeleted +
                           stats.graphsDeleted + stats.relationshipsDeleted;
     } catch (error) {
       stats.errors.push(`Cleanup execution failed: ${error.message}`);
@@ -247,15 +248,15 @@ class CleanupExecutor {
   private async cleanupUsers(config: CleanupConfig, stats: CleanupStats): Promise<void> {
     const users = this.collection.getAllUsers();
     const toDelete = this.filterItemsForCleanup(users, config, 'user');
-    
+
     for (const user of toDelete) {
       try {
         // 清理相关的作品和图谱
-        const userWorks = this.collection.getAllWorks().filter(w => 
-          w.author.toString() === user._id.toString()
+        const userWorks = this.collection.getAllWorks().filter(w =>
+          w.author.toString() === user._id.toString(),
         );
-        const userGraphs = this.collection.getAllGraphs().filter(g => 
-          g.userId.toString() === user._id.toString()
+        const userGraphs = this.collection.getAllGraphs().filter(g =>
+          g.userId.toString() === user._id.toString(),
         );
 
         // 删除用户数据
@@ -282,7 +283,7 @@ class CleanupExecutor {
   private async cleanupWorks(config: CleanupConfig, stats: CleanupStats): Promise<void> {
     const works = this.collection.getAllWorks();
     const toDelete = this.filterItemsForCleanup(works, config, 'work');
-    
+
     for (const work of toDelete) {
       try {
         this.lifecycleManager.removeMetadata(work._id.toString());
@@ -297,7 +298,7 @@ class CleanupExecutor {
   private async cleanupGraphs(config: CleanupConfig, stats: CleanupStats): Promise<void> {
     const graphs = this.collection.getAllGraphs();
     const toDelete = this.filterItemsForCleanup(graphs, config, 'graph');
-    
+
     for (const graph of toDelete) {
       try {
         this.lifecycleManager.removeMetadata(graph._id.toString());
@@ -312,7 +313,7 @@ class CleanupExecutor {
   private async cleanupRelationships(config: CleanupConfig, stats: CleanupStats): Promise<void> {
     const relationships = this.collection.getRelationships();
     const toDelete = this.filterItemsForCleanup(relationships, config, 'relationship');
-    
+
     stats.relationshipsDeleted = toDelete.length;
   }
 
@@ -367,7 +368,7 @@ class CleanupExecutor {
   private filterItemsForCleanup<T extends { _id?: ObjectId; id?: string }>(
     items: T[],
     config: CleanupConfig,
-    type: DataItemMetadata['type']
+    type: DataItemMetadata['type'],
   ): T[] {
     return items.filter(item => {
       const id = (item._id || item.id)?.toString();
@@ -419,7 +420,7 @@ export class TestDataCleanupManager {
   registerDataItem(
     id: string,
     type: DataItemMetadata['type'],
-    tags: string[] = []
+    tags: string[] = [],
   ): void {
     this.lifecycleManager.registerDataItem(id, type, tags);
   }
@@ -438,7 +439,7 @@ export class TestDataCleanupManager {
   async cleanupNow(config?: Partial<CleanupConfig>): Promise<CleanupStats> {
     const finalConfig = { ...this.defaultConfig, ...config };
     const stats = await this.executor.execute(finalConfig);
-    
+
     if (finalConfig.onCleanup) {
       finalConfig.onCleanup(stats);
     }
@@ -450,7 +451,7 @@ export class TestDataCleanupManager {
   scheduleCleanup(config?: Partial<CleanupConfig>, delay: number = 0): string {
     const taskId = `task_${++this.taskIdCounter}`;
     const finalConfig = { ...this.defaultConfig, ...config };
-    
+
     const task: CleanupTask = {
       id: taskId,
       config: finalConfig,
@@ -529,7 +530,7 @@ export class TestDataCleanupManager {
   // 批量清理
   async batchCleanup(
     configs: Partial<CleanupConfig>[],
-    concurrent: boolean = false
+    concurrent: boolean = false,
   ): Promise<CleanupStats[]> {
     if (concurrent) {
       const promises = configs.map(config => this.cleanupNow(config));
@@ -634,5 +635,5 @@ export class TestDataCleanupManager {
 }
 
 // 默认导出
-export const createTestDataCleanupManager = (collection: TestDataCollection) => 
+export const createTestDataCleanupManager = (collection: TestDataCollection) =>
   new TestDataCleanupManager(collection);

@@ -40,6 +40,7 @@ export interface ResizeConfig {
   background?: string; // 背景色
   withoutEnlargement?: boolean; // 不放大
   kernel?: 'nearest' | 'cubic' | 'mitchell' | 'lanczos2' | 'lanczos3';
+  [key: string]: unknown;
 }
 
 /**
@@ -53,6 +54,7 @@ export interface WatermarkConfig {
   margin?: number;
   fontSize?: number;
   fontColor?: string;
+  [key: string]: unknown;
 }
 
 /**
@@ -80,7 +82,7 @@ export class ImageCompressor {
     optimizeScans: true,
     mozjpeg: true,
     effort: 4,
-    smartSubsample: true
+    smartSubsample: true,
   };
 
   /**
@@ -89,7 +91,7 @@ export class ImageCompressor {
   async compress(
     input: Buffer,
     format: ImageFormat,
-    config?: Partial<CompressionConfig>
+    config?: Partial<CompressionConfig>,
   ): Promise<CompressionResult> {
     const startTime = Date.now();
     const finalConfig = { ...this.defaultConfig, ...config };
@@ -135,7 +137,7 @@ export class ImageCompressor {
         quality,
         compressionRatio,
         processingTime: Date.now() - startTime,
-        metadata: originalInfo.metadata
+        metadata: originalInfo.metadata,
       };
 
       logger.debug('Image compressed', {
@@ -143,7 +145,7 @@ export class ImageCompressor {
         originalSize,
         compressedSize,
         compressionRatio: Math.round(compressionRatio * 100) + '%',
-        processingTime: result.processingTime
+        processingTime: result.processingTime,
       });
 
       return result;
@@ -151,7 +153,7 @@ export class ImageCompressor {
     } catch (error) {
       logger.error('Image compression failed', error instanceof Error ? error : new Error(String(error)), {
         format,
-        config: finalConfig
+        config: finalConfig,
       });
       throw error;
     }
@@ -162,7 +164,7 @@ export class ImageCompressor {
    */
   async resize(
     input: Buffer,
-    config: ResizeConfig
+    config: ResizeConfig,
   ): Promise<Buffer> {
     try {
       // 这里应该使用实际的图片处理库，如 sharp
@@ -181,7 +183,7 @@ export class ImageCompressor {
    */
   async addWatermark(
     input: Buffer,
-    config: WatermarkConfig
+    config: WatermarkConfig,
   ): Promise<Buffer> {
     try {
       // 这里应该使用实际的图片处理库来添加水印
@@ -201,7 +203,7 @@ export class ImageCompressor {
   async generateThumbnail(
     input: Buffer,
     sizes: number[],
-    format?: ImageFormat
+    format?: ImageFormat,
   ): Promise<Array<{ size: number; buffer: Buffer; width: number; height: number }>> {
     const thumbnails: Array<{ size: number; buffer: Buffer; width: number; height: number }> = [];
 
@@ -210,7 +212,7 @@ export class ImageCompressor {
         const resized = await this.resize(input, {
           width: size,
           height: size,
-          fit: 'cover'
+          fit: 'cover',
         });
 
         let compressed = resized;
@@ -223,7 +225,7 @@ export class ImageCompressor {
           size,
           buffer: compressed,
           width: size,
-          height: size
+          height: size,
         });
 
       } catch (error) {
@@ -242,14 +244,14 @@ export class ImageCompressor {
       buffer: Buffer;
       format: ImageFormat;
       config?: Partial<CompressionConfig>;
-    }>
+    }>,
   ): Promise<CompressionResult[]> {
     const results: CompressionResult[] = [];
     const batchSize = 3; // 并发处理数量
 
     for (let i = 0; i < images.length; i += batchSize) {
       const batch = images.slice(i, i + batchSize);
-      
+
       const batchPromises = batch.map(async (image) => {
         try {
           return await this.compress(image.buffer, image.format, image.config);
@@ -260,7 +262,7 @@ export class ImageCompressor {
       });
 
       const batchResults = await Promise.allSettled(batchPromises);
-      
+
       batchResults.forEach((result) => {
         if (result.status === 'fulfilled') {
           results.push(result.value);
@@ -276,7 +278,7 @@ export class ImageCompressor {
    */
   async selectBestFormat(
     input: Buffer,
-    supportedFormats: ImageFormat[] = [ImageFormat.AVIF, ImageFormat.WEBP, ImageFormat.JPEG]
+    supportedFormats: ImageFormat[] = [ImageFormat.AVIF, ImageFormat.WEBP, ImageFormat.JPEG],
   ): Promise<{ format: ImageFormat; result: CompressionResult }> {
     const results: Array<{ format: ImageFormat; result: CompressionResult }> = [];
 
@@ -295,14 +297,14 @@ export class ImageCompressor {
     }
 
     // 选择压缩比最好的格式
-    const best = results.reduce((prev, current) => 
-      current.result.compressionRatio > prev.result.compressionRatio ? current : prev
+    const best = results.reduce((prev, current) =>
+      current.result.compressionRatio > prev.result.compressionRatio ? current : prev,
     );
 
     logger.debug('Best format selected', {
       format: best.format,
       compressionRatio: Math.round(best.result.compressionRatio * 100) + '%',
-      size: best.result.size
+      size: best.result.size,
     });
 
     return best;
@@ -313,7 +315,7 @@ export class ImageCompressor {
    */
   private async compressJPEG(
     input: Buffer,
-    config: CompressionConfig
+    config: CompressionConfig,
   ): Promise<{ buffer: Buffer; quality: number }> {
     // 这里应该使用实际的JPEG压缩库
     // 为了演示，我们模拟压缩过程
@@ -321,7 +323,7 @@ export class ImageCompressor {
     const compressionFactor = quality / 100;
     const compressedSize = Math.floor(input.length * compressionFactor);
     const compressedBuffer = Buffer.alloc(compressedSize);
-    
+
     return { buffer: compressedBuffer, quality };
   }
 
@@ -330,7 +332,7 @@ export class ImageCompressor {
    */
   private async compressPNG(
     input: Buffer,
-    config: CompressionConfig
+    config: CompressionConfig,
   ): Promise<Buffer> {
     // 这里应该使用实际的PNG压缩库
     // 为了演示，我们模拟压缩过程
@@ -344,14 +346,14 @@ export class ImageCompressor {
    */
   private async compressWebP(
     input: Buffer,
-    config: CompressionConfig
+    config: CompressionConfig,
   ): Promise<{ buffer: Buffer; quality: number }> {
     // 这里应该使用实际的WebP压缩库
     const quality = config.quality;
     const compressionFactor = config.lossless ? 0.8 : quality / 100 * 0.6;
     const compressedSize = Math.floor(input.length * compressionFactor);
     const compressedBuffer = Buffer.alloc(compressedSize);
-    
+
     return { buffer: compressedBuffer, quality };
   }
 
@@ -360,14 +362,14 @@ export class ImageCompressor {
    */
   private async compressAVIF(
     input: Buffer,
-    config: CompressionConfig
+    config: CompressionConfig,
   ): Promise<{ buffer: Buffer; quality: number }> {
     // 这里应该使用实际的AVIF压缩库
     const quality = config.quality;
     const compressionFactor = quality / 100 * 0.5; // AVIF通常有更好的压缩比
     const compressedSize = Math.floor(input.length * compressionFactor);
     const compressedBuffer = Buffer.alloc(compressedSize);
-    
+
     return { buffer: compressedBuffer, quality };
   }
 
@@ -376,7 +378,7 @@ export class ImageCompressor {
    */
   private async compressGIF(
     input: Buffer,
-    config: CompressionConfig
+    config: CompressionConfig,
   ): Promise<Buffer> {
     // 这里应该使用实际的GIF压缩库
     const compressionFactor = 0.8;
@@ -402,8 +404,8 @@ export class ImageCompressor {
       metadata: {
         density: 72,
         hasAlpha: false,
-        channels: 3
-      }
+        channels: 3,
+      },
     };
   }
 }
@@ -420,7 +422,7 @@ export class ImageConverter {
   async convert(
     input: Buffer,
     targetFormat: ImageFormat,
-    config?: Partial<CompressionConfig>
+    config?: Partial<CompressionConfig>,
   ): Promise<CompressionResult> {
     return await this.compressor.compress(input, targetFormat, config);
   }
@@ -433,12 +435,12 @@ export class ImageConverter {
       buffer: Buffer;
       targetFormat: ImageFormat;
       config?: Partial<CompressionConfig>;
-    }>
+    }>,
   ): Promise<CompressionResult[]> {
     const convertTasks = images.map(image => ({
       buffer: image.buffer,
       format: image.targetFormat,
-      config: image.config
+      config: image.config,
     }));
 
     return await this.compressor.compressBatch(convertTasks);
@@ -450,10 +452,10 @@ export class ImageConverter {
   async smartConvert(
     input: Buffer,
     userAgent: string,
-    fallbackFormat: ImageFormat = ImageFormat.JPEG
+    fallbackFormat: ImageFormat = ImageFormat.JPEG,
   ): Promise<CompressionResult> {
     const supportedFormats = this.getSupportedFormats(userAgent);
-    
+
     if (supportedFormats.length === 0) {
       return await this.convert(input, fallbackFormat);
     }
@@ -521,7 +523,7 @@ export class ImageOptimizer {
       watermark?: WatermarkConfig;
       generateThumbnails?: number[];
       userAgent?: string;
-    }
+    },
   ): Promise<{
     main: CompressionResult;
     thumbnails?: Array<{ size: number; buffer: Buffer; width: number; height: number }>;
@@ -543,7 +545,7 @@ export class ImageOptimizer {
       let main: CompressionResult;
       if (options?.targetFormat) {
         main = await this.converter.convert(processedBuffer, options.targetFormat, {
-          quality: options.quality
+          quality: options.quality,
         });
       } else if (options?.userAgent) {
         main = await this.converter.smartConvert(processedBuffer, options.userAgent);
@@ -558,7 +560,7 @@ export class ImageOptimizer {
         thumbnails = await this.compressor.generateThumbnail(
           processedBuffer,
           options.generateThumbnails,
-          main.format
+          main.format,
         );
       }
 
@@ -577,7 +579,7 @@ export class ImageOptimizer {
     images: Array<{
       buffer: Buffer;
       options?: Parameters<typeof this.optimize>[1];
-    }>
+    }>,
   ): Promise<Array<{
     main: CompressionResult;
     thumbnails?: Array<{ size: number; buffer: Buffer; width: number; height: number }>;
@@ -591,7 +593,7 @@ export class ImageOptimizer {
 
     for (let i = 0; i < images.length; i += batchSize) {
       const batch = images.slice(i, i + batchSize);
-      
+
       const batchPromises = batch.map(async (image) => {
         try {
           return await this.optimize(image.buffer, image.options);
@@ -602,7 +604,7 @@ export class ImageOptimizer {
       });
 
       const batchResults = await Promise.allSettled(batchPromises);
-      
+
       batchResults.forEach((result) => {
         if (result.status === 'fulfilled') {
           results.push(result.value);

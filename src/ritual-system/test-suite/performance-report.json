@@ -1,0 +1,101 @@
+{
+  "summary": {
+    "totalBenchmarks": 7,
+    "fastestOperation": {
+      "name": "视觉效果应用",
+      "iterations": 5000,
+      "totalDuration": 7.12897,
+      "averageDuration": 0.001425794,
+      "operationsPerSecond": 701364,
+      "memoryDelta": -323632,
+      "memoryPerOperation": -64.7264
+    },
+    "slowestOperation": {
+      "name": "音频播放",
+      "iterations": 500,
+      "totalDuration": 5598.026649,
+      "averageDuration": 11.196053298,
+      "operationsPerSecond": 89,
+      "memoryDelta": 18155312,
+      "memoryPerOperation": 36310.624
+    },
+    "totalMemoryUsed": 39791040
+  },
+  "details": [
+    {
+      "name": "仪式感检测",
+      "iterations": 10000,
+      "totalDuration": 67.020455,
+      "averageDuration": 0.0067020455,
+      "operationsPerSecond": 149208,
+      "memoryDelta": 608312,
+      "memoryPerOperation": 60.8312
+    },
+    {
+      "name": "视觉效果应用",
+      "iterations": 5000,
+      "totalDuration": 7.12897,
+      "averageDuration": 0.001425794,
+      "operationsPerSecond": 701364,
+      "memoryDelta": -323632,
+      "memoryPerOperation": -64.7264
+    },
+    {
+      "name": "动画执行",
+      "iterations": 1000,
+      "totalDuration": 4.268484,
+      "averageDuration": 0.004268484,
+      "operationsPerSecond": 234275,
+      "memoryDelta": -450488,
+      "memoryPerOperation": -450.488
+    },
+    {
+      "name": "音频播放",
+      "iterations": 500,
+      "totalDuration": 5598.026649,
+      "averageDuration": 11.196053298,
+      "operationsPerSecond": 89,
+      "memoryDelta": 18155312,
+      "memoryPerOperation": 36310.624
+    },
+    {
+      "name": "个性化学习",
+      "iterations": 1000,
+      "totalDuration": 20.581913,
+      "averageDuration": 0.020581913,
+      "operationsPerSecond": 48586,
+      "memoryDelta": 10655456,
+      "memoryPerOperation": 10655.456
+    },
+    {
+      "name": "配置验证",
+      "iterations": 2000,
+      "totalDuration": 6.00781,
+      "averageDuration": 0.003003905,
+      "operationsPerSecond": 332900,
+      "memoryDelta": 3395640,
+      "memoryPerOperation": 1697.82
+    },
+    {
+      "name": "完整仪式执行",
+      "iterations": 500,
+      "totalDuration": 4982.723884,
+      "averageDuration": 9.965447768,
+      "operationsPerSecond": 100,
+      "memoryDelta": 6976320,
+      "memoryPerOperation": 13952.64
+    }
+  ],
+  "environment": {
+    "platform": "darwin",
+    "nodeVersion": "v22.17.0",
+    "memory": {
+      "rss": 30203904,
+      "heapTotal": 5574656,
+      "heapUsed": 4302248,
+      "external": 1475852,
+      "arrayBuffers": 10515
+    }
+  },
+  "timestamp": "2025-09-18T05:16:02.705Z"
+}

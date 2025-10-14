@@ -2,10 +2,10 @@
  * Tests for CrossPlatformTestRunner
  */
 
-import { CrossPlatformTestRunner } from '../../../../lib/testing/compatibility/CrossPlatformTestRunner';
-import { NodeVersionTester } from '../../../../lib/testing/compatibility/NodeVersionTester';
 import { BrowserCompatibilityTester } from '../../../../lib/testing/compatibility/BrowserCompatibilityTester';
 import { ContainerTestRunner } from '../../../../lib/testing/compatibility/ContainerTestRunner';
+import { CrossPlatformTestRunner } from '../../../../lib/testing/compatibility/CrossPlatformTestRunner';
+import { NodeVersionTester } from '../../../../lib/testing/compatibility/NodeVersionTester';
 
 // Mock the dependencies
 jest.mock('../../../../lib/testing/compatibility/NodeVersionTester');
@@ -38,7 +38,7 @@ describe('CrossPlatformTestRunner', () => {
         totalMemory: 17179869184,
         availableMemory: 8589934592,
         timezone: 'America/New_York',
-        locale: 'en-US'
+        locale: 'en-US',
       },
       testSuite: 'node-18.18.0',
       passed: true,
@@ -48,8 +48,8 @@ describe('CrossPlatformTestRunner', () => {
       performance: {
         executionTime: 30000,
         memoryUsage: { peak: 100000000, average: 80000000, final: 90000000 },
-        cpuUsage: { peak: 50, average: 30 }
-      }
+        cpuUsage: { peak: 50, average: 30 },
+      },
     });
 
     mockBrowserTester.testMultipleBrowsers = jest.fn().mockResolvedValue([]);
@@ -64,7 +64,7 @@ describe('CrossPlatformTestRunner', () => {
         totalMemory: 8589934592,
         availableMemory: 4294967296,
         timezone: 'UTC',
-        locale: 'en-US'
+        locale: 'en-US',
       },
       testSuite: 'docker-node:18-alpine',
       passed: true,
@@ -74,8 +74,8 @@ describe('CrossPlatformTestRunner', () => {
       performance: {
         executionTime: 45000,
         memoryUsage: { peak: 120000000, average: 100000000, final: 110000000 },
-        cpuUsage: { peak: 60, average: 40 }
-      }
+        cpuUsage: { peak: 60, average: 40 },
+      },
     });
 
     mockNodeTester.getCompatibilityMatrix = jest.fn().mockResolvedValue([
@@ -83,8 +83,8 @@ describe('CrossPlatformTestRunner', () => {
         version: '18.18.0',
         compatible: true,
         issues: [],
-        features: ['fetch', 'test-runner', 'watch-mode']
-      }
+        features: ['fetch', 'test-runner', 'watch-mode'],
+      },
     ]);
 
     mockBrowserTester.getBrowserFeatureMatrix = jest.fn().mockResolvedValue([
@@ -93,9 +93,9 @@ describe('CrossPlatformTestRunner', () => {
         version: 'latest',
         features: [
           { name: 'es6-modules', supported: true, polyfillRequired: false },
-          { name: 'fetch-api', supported: true, polyfillRequired: false }
-        ]
-      }
+          { name: 'fetch-api', supported: true, polyfillRequired: false },
+        ],
+      },
     ]);
   });
 
@@ -123,7 +123,7 @@ describe('CrossPlatformTestRunner', () => {
       const config = {
         nodeVersions: ['20.8.0'],
         parallel: false,
-        timeout: 120000
+        timeout: 120000,
       };
 
       const report = await runner.runComprehensiveTests(testCommand, config);
@@ -143,7 +143,7 @@ describe('CrossPlatformTestRunner', () => {
           totalMemory: 17179869184,
           availableMemory: 8589934592,
           timezone: 'America/New_York',
-          locale: 'en-US'
+          locale: 'en-US',
         },
         testSuite: 'node-18.18.0',
         passed: false,
@@ -152,14 +152,14 @@ describe('CrossPlatformTestRunner', () => {
           type: 'version',
           message: 'Test failed',
           severity: 'major',
-          affectedTests: ['test1.js']
+          affectedTests: ['test1.js'],
         }],
         warnings: [],
         performance: {
           executionTime: 30000,
           memoryUsage: { peak: 100000000, average: 80000000, final: 90000000 },
-          cpuUsage: { peak: 50, average: 30 }
-        }
+          cpuUsage: { peak: 50, average: 30 },
+        },
       });
 
       const testCommand = 'npm test';
@@ -210,7 +210,7 @@ describe('CrossPlatformTestRunner', () => {
           totalMemory: 17179869184,
           availableMemory: 8589934592,
           timezone: 'America/New_York',
-          locale: 'en-US'
+          locale: 'en-US',
         },
         testSuite: 'node-18.18.0',
         passed: false,
@@ -219,14 +219,14 @@ describe('CrossPlatformTestRunner', () => {
           type: 'version',
           message: 'Compatibility issue',
           severity: 'major',
-          affectedTests: ['test1.js']
+          affectedTests: ['test1.js'],
         }],
         warnings: [],
         performance: {
           executionTime: 30000,
           memoryUsage: { peak: 100000000, average: 80000000, final: 90000000 },
-          cpuUsage: { peak: 50, average: 30 }
-        }
+          cpuUsage: { peak: 50, average: 30 },
+        },
       });
 
       const testCommand = 'npm test';
@@ -283,7 +283,7 @@ describe('CrossPlatformTestRunner', () => {
       const matrix = await runner.generateSupportMatrix();
 
       expect(matrix.containers.length).toBeGreaterThan(0);
-      
+
       const dockerSupport = matrix.containers.find(c => c.runtime === 'docker');
       expect(dockerSupport).toBeDefined();
       expect(dockerSupport?.supported).toBe(true);
@@ -296,7 +296,7 @@ describe('CrossPlatformTestRunner', () => {
       const testCommand = 'npm test';
       const config = {
         nodeVersions: ['18.18.0', '20.8.0'],
-        parallel: true
+        parallel: true,
       };
 
       await runner.runComprehensiveTests(testCommand, config);
@@ -311,7 +311,7 @@ describe('CrossPlatformTestRunner', () => {
       const testCommand = 'npm test';
       const config = {
         nodeVersions: ['18.18.0', '20.8.0'],
-        parallel: false
+        parallel: false,
       };
 
       await runner.runComprehensiveTests(testCommand, config);
@@ -347,8 +347,8 @@ describe('CrossPlatformTestRunner', () => {
       const testCommand = 'npm test';
       const report = await runner.runComprehensiveTests(testCommand);
 
-      expect(report.recommendations.some(rec => 
-        rec.includes('All environments passed')
+      expect(report.recommendations.some(rec =>
+        rec.includes('All environments passed'),
       )).toBe(true);
     });
 
@@ -364,7 +364,7 @@ describe('CrossPlatformTestRunner', () => {
           totalMemory: 17179869184,
           availableMemory: 8589934592,
           timezone: 'America/New_York',
-          locale: 'en-US'
+          locale: 'en-US',
         },
         testSuite: 'node-18.18.0',
         passed: false,
@@ -373,21 +373,21 @@ describe('CrossPlatformTestRunner', () => {
           type: 'version',
           message: 'Test failed',
           severity: 'major',
-          affectedTests: ['test1.js']
+          affectedTests: ['test1.js'],
         }],
         warnings: [],
         performance: {
           executionTime: 30000,
           memoryUsage: { peak: 100000000, average: 80000000, final: 90000000 },
-          cpuUsage: { peak: 50, average: 30 }
-        }
+          cpuUsage: { peak: 50, average: 30 },
+        },
       });
 
       const testCommand = 'npm test';
       const report = await runner.runComprehensiveTests(testCommand);
 
-      expect(report.recommendations.some(rec => 
-        rec.includes('environments failed')
+      expect(report.recommendations.some(rec =>
+        rec.includes('environments failed'),
       )).toBe(true);
     });
 
@@ -403,7 +403,7 @@ describe('CrossPlatformTestRunner', () => {
           totalMemory: 17179869184,
           availableMemory: 8589934592,
           timezone: 'America/New_York',
-          locale: 'en-US'
+          locale: 'en-US',
         },
         testSuite: 'node-18.18.0',
         passed: true,
@@ -413,15 +413,15 @@ describe('CrossPlatformTestRunner', () => {
         performance: {
           executionTime: 120000,
           memoryUsage: { peak: 100000000, average: 80000000, final: 90000000 },
-          cpuUsage: { peak: 50, average: 30 }
-        }
+          cpuUsage: { peak: 50, average: 30 },
+        },
       });
 
       const testCommand = 'npm test';
       const report = await runner.runComprehensiveTests(testCommand);
 
-      expect(report.recommendations.some(rec => 
-        rec.includes('slow') || rec.includes('performance')
+      expect(report.recommendations.some(rec =>
+        rec.includes('slow') || rec.includes('performance'),
       )).toBe(true);
     });
   });

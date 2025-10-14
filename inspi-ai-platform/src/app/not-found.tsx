@@ -1,7 +1,7 @@
-'use client';
-
-import Link from 'next/link';
 import type { Viewport } from 'next';
+import Link from 'next/link';
+
+import { BackButton } from '@/components/common/BackButton';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -67,13 +67,10 @@ export default function NotFound() {
             >
               返回首页
             </Link>
-            
-            <button
-              onClick={() => window.history.back()}
+            <BackButton
               className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-            >
-              返回上一页
-            </button>
+              label="返回上一页"
+            />
           </div>
 
           {/* 快速导航 */}
@@ -91,7 +88,7 @@ export default function NotFound() {
                 </svg>
                 <span className="text-xs font-medium text-gray-700">开始创作</span>
               </Link>
-              
+
               <Link
                 href="/square"
                 className="flex flex-col items-center p-3 text-center border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
@@ -101,7 +98,7 @@ export default function NotFound() {
                 </svg>
                 <span className="text-xs font-medium text-gray-700">智慧广场</span>
               </Link>
-              
+
               <Link
                 href="/help"
                 className="flex flex-col items-center p-3 text-center border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
@@ -111,7 +108,7 @@ export default function NotFound() {
                 </svg>
                 <span className="text-xs font-medium text-gray-700">帮助中心</span>
               </Link>
-              
+
               <Link
                 href="/contact"
                 className="flex flex-col items-center p-3 text-center border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"

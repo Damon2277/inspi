@@ -8,8 +8,10 @@ QUICK_START_SCRIPT="$SCRIPT_DIR/.kiro/quick-start.js"
 
 # 检查快速启动脚本是否存在
 if [ ! -f "$QUICK_START_SCRIPT" ]; then
-    echo "❌ 错误: 找不到快速启动脚本 $QUICK_START_SCRIPT"
-    exit 1
+    echo "⚠️ 提示: 未找到 $QUICK_START_SCRIPT"
+    echo "   当前仓库未包含 .kiro 工具，快速启动流程暂不可用。"
+    echo "   请参考 README.md / QUICK_START.md 的手动步骤或补充 .kiro 资源。"
+    exit 0
 fi
 
 # 检查 Node.js 是否可用

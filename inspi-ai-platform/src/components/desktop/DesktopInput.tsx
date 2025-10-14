@@ -42,14 +42,14 @@ export const DesktopInput = forwardRef<
   rows = 4,
   className = '',
   icon,
-  iconPosition = 'left'
+  iconPosition = 'left',
 }, ref) => {
   const baseClasses = 'desktop-input';
-  
+
   const sizeClasses = {
     sm: 'desktop-input-sm',
     md: '',
-    lg: 'desktop-input-lg'
+    lg: 'desktop-input-lg',
   };
 
   const inputClasses = `
@@ -100,7 +100,7 @@ export const DesktopInput = forwardRef<
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
-      
+
       <div className="relative">
         {icon && (
           <div className={`absolute inset-y-0 ${iconPosition === 'left' ? 'left-0 pl-3' : 'right-0 pr-3'} flex items-center pointer-events-none`}>
@@ -111,13 +111,13 @@ export const DesktopInput = forwardRef<
         )}
         {renderInput()}
       </div>
-      
+
       {error && (
         <p className="desktop-form-error">
           {error}
         </p>
       )}
-      
+
       {help && !error && (
         <p className="desktop-form-help">
           {help}
@@ -137,11 +137,11 @@ export function DesktopSearchInput({
   value,
   onChange,
   onSearch,
-  className = ''
+  className = '',
 }: {
   placeholder?: string;
   value?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onSearch?: (query: string) => void;
   className?: string;
 }) {

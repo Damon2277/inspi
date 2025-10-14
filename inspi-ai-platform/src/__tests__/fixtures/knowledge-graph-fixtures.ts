@@ -42,20 +42,20 @@ export const createGraphNodeFixture = (overrides: Partial<MockGraphNode> = {}): 
   level: 1,
   color: '#3B82F6',
   ...overrides,
-})
+});
 
 // 边工厂
 export const createGraphEdgeFixture = (
   source: string,
   target: string,
-  overrides: Partial<MockGraphEdge> = {}
+  overrides: Partial<MockGraphEdge> = {},
 ): MockGraphEdge => ({
   source,
   target,
   type: 'prerequisite',
   weight: 1,
   ...overrides,
-})
+});
 
 // 数学知识图谱节点
 export const createMathNodesFixture = (): MockGraphNode[] => [
@@ -99,7 +99,7 @@ export const createMathNodesFixture = (): MockGraphNode[] => [
     type: 'concept',
     level: 3,
   }),
-]
+];
 
 // 数学知识图谱边
 export const createMathEdgesFixture = (): MockGraphEdge[] => [
@@ -108,7 +108,7 @@ export const createMathEdgesFixture = (): MockGraphEdge[] => [
   createGraphEdgeFixture('math-multiplication', 'math-fractions', { type: 'prerequisite' }),
   createGraphEdgeFixture('math-division', 'math-fractions', { type: 'prerequisite' }),
   createGraphEdgeFixture('math-addition', 'math-subtraction', { type: 'related' }),
-]
+];
 
 // 科学知识图谱节点
 export const createScienceNodesFixture = (): MockGraphNode[] => [
@@ -144,7 +144,7 @@ export const createScienceNodesFixture = (): MockGraphNode[] => [
     type: 'topic',
     level: 3,
   }),
-]
+];
 
 // 知识图谱工厂
 export const createKnowledgeGraphFixture = (overrides: Partial<MockKnowledgeGraph> = {}): MockKnowledgeGraph => ({
@@ -157,20 +157,26 @@ export const createKnowledgeGraphFixture = (overrides: Partial<MockKnowledgeGrap
   updatedAt: new Date().toISOString(),
   isTemplate: false,
   ...overrides,
-})
+});
 
 // 数学知识图谱
-export const createMathGraphFixture = (userId: string, overrides: Partial<MockKnowledgeGraph> = {}): MockKnowledgeGraph =>
+export const createMathGraphFixture = (
+  userId: string,
+  overrides: Partial<MockKnowledgeGraph> = {},
+): MockKnowledgeGraph =>
   createKnowledgeGraphFixture({
     userId,
     subject: 'Mathematics',
     nodes: createMathNodesFixture(),
     edges: createMathEdgesFixture(),
     ...overrides,
-  })
+  });
 
 // 科学知识图谱
-export const createScienceGraphFixture = (userId: string, overrides: Partial<MockKnowledgeGraph> = {}): MockKnowledgeGraph =>
+export const createScienceGraphFixture = (
+  userId: string,
+  overrides: Partial<MockKnowledgeGraph> = {},
+): MockKnowledgeGraph =>
   createKnowledgeGraphFixture({
     userId,
     subject: 'Science',
@@ -182,7 +188,7 @@ export const createScienceGraphFixture = (userId: string, overrides: Partial<Moc
       createGraphEdgeFixture('science-respiration', 'science-ecosystem', { type: 'prerequisite' }),
     ],
     ...overrides,
-  })
+  });
 
 // 空知识图谱
 export const createEmptyGraphFixture = (userId: string, subject: string): MockKnowledgeGraph =>
@@ -191,7 +197,7 @@ export const createEmptyGraphFixture = (userId: string, subject: string): MockKn
     subject,
     nodes: [],
     edges: [],
-  })
+  });
 
 // 模板知识图谱
 export const createTemplateGraphFixture = (subject: string): MockKnowledgeGraph =>
@@ -199,12 +205,18 @@ export const createTemplateGraphFixture = (subject: string): MockKnowledgeGraph 
     userId: 'system',
     subject,
     isTemplate: true,
-    nodes: subject === 'Mathematics' ? createMathNodesFixture() : createScienceNodesFixture(),
-    edges: subject === 'Mathematics' ? createMathEdgesFixture() : [
-      createGraphEdgeFixture('science-plants', 'science-photosynthesis', { type: 'contains' }),
-      createGraphEdgeFixture('science-plants', 'science-respiration', { type: 'contains' }),
-    ],
-  })
+    nodes:
+      subject === 'Mathematics'
+        ? createMathNodesFixture()
+        : createScienceNodesFixture(),
+    edges:
+      subject === 'Mathematics'
+        ? createMathEdgesFixture()
+        : [
+            createGraphEdgeFixture('science-plants', 'science-photosynthesis', { type: 'contains' }),
+            createGraphEdgeFixture('science-plants', 'science-respiration', { type: 'contains' }),
+          ],
+  });
 
 // 图谱统计数据
 export const createGraphStatsFixture = (graphId: string) => ({
@@ -214,7 +226,7 @@ export const createGraphStatsFixture = (graphId: string) => ({
   totalWorks: Math.floor(Math.random() * 100) + 20,
   completionRate: Math.random() * 0.8 + 0.2, // 20% - 100%
   lastUpdated: new Date().toISOString(),
-})
+});
 
 // 节点进度数据
 export const createNodeProgressFixture = (nodeId: string, userId: string) => ({
@@ -225,7 +237,7 @@ export const createNodeProgressFixture = (nodeId: string, userId: string) => ({
   totalWorks: Math.floor(Math.random() * 10) + 5,
   lastAccessedAt: new Date().toISOString(),
   timeSpent: Math.floor(Math.random() * 3600), // seconds
-})
+});
 
 // 图谱布局数据
 export const createGraphLayoutFixture = (graphId: string) => ({
@@ -243,4 +255,4 @@ export const createGraphLayoutFixture = (graphId: string) => ({
     scale: 1,
   },
   savedAt: new Date().toISOString(),
-})
+});

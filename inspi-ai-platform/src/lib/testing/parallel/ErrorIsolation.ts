@@ -65,13 +65,13 @@ export class ErrorIsolation extends EventEmitter {
       timeWindowMs: 300000, // 5分钟
       isolationDurationMs: 60000, // 1分钟
       autoRestart: true,
-      ...policy
+      ...policy,
     };
 
     this.initializeDefaultPatterns();
     this.initializeDefaultStrategies();
   }  /**
-  
+
  * 初始化默认错误模式
    */
   private initializeDefaultPatterns(): void {
@@ -82,7 +82,7 @@ export class ErrorIsolation extends EventEmitter {
         type: 'timeout',
         severity: 'high',
         description: 'Test execution timeout',
-        recovery: { type: 'retry', maxAttempts: 2, backoffMs: 1000 }
+        recovery: { type: 'retry', maxAttempts: 2, backoffMs: 1000 },
       },
       {
         id: 'memory',
@@ -90,7 +90,7 @@ export class ErrorIsolation extends EventEmitter {
         type: 'memory',
         severity: 'critical',
         description: 'Memory exhaustion',
-        recovery: { type: 'restart', maxAttempts: 1, backoffMs: 5000 }
+        recovery: { type: 'restart', maxAttempts: 1, backoffMs: 5000 },
       },
       {
         id: 'network',
@@ -98,7 +98,7 @@ export class ErrorIsolation extends EventEmitter {
         type: 'network',
         severity: 'medium',
         description: 'Network connectivity issue',
-        recovery: { type: 'retry', maxAttempts: 3, backoffMs: 2000 }
+        recovery: { type: 'retry', maxAttempts: 3, backoffMs: 2000 },
       },
       {
         id: 'assertion',
@@ -106,7 +106,7 @@ export class ErrorIsolation extends EventEmitter {
         type: 'assertion',
         severity: 'low',
         description: 'Test assertion failure',
-        recovery: { type: 'skip', maxAttempts: 1, backoffMs: 0 }
+        recovery: { type: 'skip', maxAttempts: 1, backoffMs: 0 },
       },
       {
         id: 'setup',
@@ -114,8 +114,8 @@ export class ErrorIsolation extends EventEmitter {
         type: 'setup',
         severity: 'high',
         description: 'Test setup failure',
-        recovery: { type: 'isolate', maxAttempts: 2, backoffMs: 3000 }
-      }
+        recovery: { type: 'isolate', maxAttempts: 2, backoffMs: 3000 },
+      },
     ];
 
     patterns.forEach(pattern => {
@@ -133,7 +133,7 @@ export class ErrorIsolation extends EventEmitter {
       ['network', { type: 'retry', maxAttempts: 3, backoffMs: 2000 }],
       ['assertion', { type: 'skip', maxAttempts: 1, backoffMs: 0 }],
       ['setup', { type: 'isolate', maxAttempts: 2, backoffMs: 3000 }],
-      ['runtime', { type: 'isolate', maxAttempts: 1, backoffMs: 10000 }]
+      ['runtime', { type: 'isolate', maxAttempts: 1, backoffMs: 10000 }],
     ];
 
     strategies.forEach(([type, strategy]) => {
@@ -150,7 +150,7 @@ export class ErrorIsolation extends EventEmitter {
       isHealthy: true,
       errorCount: 0,
       errorRate: 0,
-      restartCount: 0
+      restartCount: 0,
     });
 
     this.emit('worker:registered', { workerId });
@@ -162,7 +162,7 @@ export class ErrorIsolation extends EventEmitter {
   async handleError(error: TestError): Promise<ErrorHandlingResult> {
     // 分类错误
     const classifiedError = this.classifyError(error);
-    
+
     // 记录错误历史
     this.recordError(classifiedError);
 
@@ -196,7 +196,7 @@ export class ErrorIsolation extends EventEmitter {
           ...error,
           type: pattern.type,
           severity: pattern.severity,
-          timestamp: error.timestamp || Date.now()
+          timestamp: error.timestamp || Date.now(),
         };
       }
     }
@@ -206,7 +206,7 @@ export class ErrorIsolation extends EventEmitter {
       ...error,
       type: 'runtime',
       severity: 'medium',
-      timestamp: error.timestamp || Date.now()
+      timestamp: error.timestamp || Date.now(),
     };
   }
 
@@ -255,8 +255,8 @@ export class ErrorIsolation extends EventEmitter {
    */
   private getRecentErrorsForWorker(workerId: number): TestError[] {
     const cutoffTime = Date.now() - this.policy.timeWindowMs;
-    return this.errorHistory.filter(e => 
-      e.workerId === workerId && e.timestamp > cutoffTime
+    return this.errorHistory.filter(e =>
+      e.workerId === workerId && e.timestamp > cutoffTime,
     );
   }
 
@@ -288,10 +288,10 @@ export class ErrorIsolation extends EventEmitter {
     health.isHealthy = false;
     health.isolatedUntil = Date.now() + this.policy.isolationDurationMs;
 
-    this.emit('worker:isolated', { 
-      workerId, 
+    this.emit('worker:isolated', {
+      workerId,
       reason: 'High error rate',
-      isolatedUntil: health.isolatedUntil 
+      isolatedUntil: health.isolatedUntil,
     });
 
     // 设置自动恢复
@@ -325,7 +325,7 @@ export class ErrorIsolation extends EventEmitter {
     // 优先使用错误模式中的恢复策略
     const pattern = Array.from(this.errorPatterns.values())
       .find(p => p.pattern.test(error.message));
-    
+
     if (pattern?.recovery) {
       return pattern.recovery;
     }
@@ -344,27 +344,27 @@ export class ErrorIsolation extends EventEmitter {
    * 执行恢复策略
    */
   private async executeRecoveryStrategy(
-    error: TestError, 
-    strategy: RecoveryStrategy
+    error: TestError,
+    strategy: RecoveryStrategy,
   ): Promise<ErrorHandlingResult> {
     switch (strategy.type) {
       case 'retry':
         return this.executeRetryStrategy(error, strategy);
-      
+
       case 'restart':
         return this.executeRestartStrategy(error, strategy);
-      
+
       case 'isolate':
         return this.executeIsolateStrategy(error, strategy);
-      
+
       case 'skip':
         return this.executeSkipStrategy(error, strategy);
-      
+
       default:
         return {
           action: 'skip',
           success: true,
-          message: 'Unknown recovery strategy - skipping task'
+          message: 'Unknown recovery strategy - skipping task',
         };
     }
   }
@@ -373,8 +373,8 @@ export class ErrorIsolation extends EventEmitter {
    * 执行重试策略
    */
   private async executeRetryStrategy(
-    error: TestError, 
-    strategy: RecoveryStrategy
+    error: TestError,
+    strategy: RecoveryStrategy,
   ): Promise<ErrorHandlingResult> {
     if (strategy.backoffMs > 0) {
       await this.delay(strategy.backoffMs);
@@ -384,7 +384,7 @@ export class ErrorIsolation extends EventEmitter {
       action: 'retry',
       success: true,
       message: `Retrying after ${strategy.backoffMs}ms delay`,
-      maxAttempts: strategy.maxAttempts
+      maxAttempts: strategy.maxAttempts,
     };
   }
 
@@ -392,13 +392,13 @@ export class ErrorIsolation extends EventEmitter {
    * 执行重启策略
    */
   private async executeRestartStrategy(
-    error: TestError, 
-    strategy: RecoveryStrategy
+    error: TestError,
+    strategy: RecoveryStrategy,
   ): Promise<ErrorHandlingResult> {
     if (error.workerId !== undefined) {
-      this.emit('worker:restart_requested', { 
-        workerId: error.workerId, 
-        reason: error.message 
+      this.emit('worker:restart_requested', {
+        workerId: error.workerId,
+        reason: error.message,
       });
     }
 
@@ -410,7 +410,7 @@ export class ErrorIsolation extends EventEmitter {
       action: 'restart',
       success: true,
       message: 'Worker restart requested',
-      workerId: error.workerId
+      workerId: error.workerId,
     };
   }
 
@@ -418,8 +418,8 @@ export class ErrorIsolation extends EventEmitter {
    * 执行隔离策略
    */
   private async executeIsolateStrategy(
-    error: TestError, 
-    strategy: RecoveryStrategy
+    error: TestError,
+    strategy: RecoveryStrategy,
   ): Promise<ErrorHandlingResult> {
     if (error.workerId !== undefined) {
       this.isolateWorker(error.workerId);
@@ -429,7 +429,7 @@ export class ErrorIsolation extends EventEmitter {
       action: 'isolate',
       success: true,
       message: 'Worker isolated due to critical error',
-      workerId: error.workerId
+      workerId: error.workerId,
     };
   }
 
@@ -437,14 +437,14 @@ export class ErrorIsolation extends EventEmitter {
    * 执行跳过策略
    */
   private async executeSkipStrategy(
-    error: TestError, 
-    strategy: RecoveryStrategy
+    error: TestError,
+    strategy: RecoveryStrategy,
   ): Promise<ErrorHandlingResult> {
     return {
       action: 'skip',
       success: true,
       message: 'Test skipped due to error',
-      testName: error.testName
+      testName: error.testName,
     };
   }
 
@@ -488,8 +488,8 @@ export class ErrorIsolation extends EventEmitter {
    * 获取错误统计
    */
   getErrorStatistics(): ErrorStatistics {
-    const recentErrors = this.errorHistory.filter(e => 
-      e.timestamp > Date.now() - this.policy.timeWindowMs
+    const recentErrors = this.errorHistory.filter(e =>
+      e.timestamp > Date.now() - this.policy.timeWindowMs,
     );
 
     const errorsByType = new Map<string, number>();
@@ -499,7 +499,7 @@ export class ErrorIsolation extends EventEmitter {
     recentErrors.forEach(error => {
       errorsByType.set(error.type, (errorsByType.get(error.type) || 0) + 1);
       errorsBySeverity.set(error.severity, (errorsBySeverity.get(error.severity) || 0) + 1);
-      
+
       if (error.workerId !== undefined) {
         errorsByWorker.set(error.workerId, (errorsByWorker.get(error.workerId) || 0) + 1);
       }
@@ -512,7 +512,7 @@ export class ErrorIsolation extends EventEmitter {
       errorsByWorker,
       timeWindow: this.policy.timeWindowMs,
       healthyWorkers: Array.from(this.workerHealth.values()).filter(h => h.isHealthy).length,
-      isolatedWorkers: Array.from(this.workerHealth.values()).filter(h => !h.isHealthy).length
+      isolatedWorkers: Array.from(this.workerHealth.values()).filter(h => !h.isHealthy).length,
     };
   }
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { seoService } from '@/lib/seo/service';
 
 /**
@@ -12,14 +13,14 @@ export async function POST(request: NextRequest) {
     if (!contentType || !contentId) {
       return NextResponse.json(
         { error: 'contentType and contentId are required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!['work', 'user'].includes(contentType)) {
       return NextResponse.json(
         { error: 'contentType must be "work" or "user"' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -28,13 +29,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'SEO update triggered successfully'
+      message: 'SEO update triggered successfully',
     });
   } catch (error) {
     console.error('Error in SEO update API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -45,13 +46,13 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     const healthStatus = await seoService.monitorSEOHealth();
-    
+
     return NextResponse.json(healthStatus);
   } catch (error) {
     console.error('Error getting SEO health status:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

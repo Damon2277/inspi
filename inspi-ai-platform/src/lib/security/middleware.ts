@@ -3,6 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
 import { defaultContentValidator, ContentValidator, VALIDATOR_PRESETS } from './contentValidator';
 import { ContentFilterOptions } from './types';
 
@@ -25,14 +26,14 @@ export function createSecurityMiddleware(options: SecurityMiddlewareOptions = {}
     validatorOptions = VALIDATOR_PRESETS.STANDARD,
     fieldsToValidate = ['content', 'message', 'description', 'title'],
     includeDetails = false,
-    customErrorResponse
+    customErrorResponse,
   } = options;
 
   const validator = new ContentValidator(validatorOptions);
 
   return async function securityMiddleware(
     request: NextRequest,
-    handler: (req: NextRequest) => Promise<NextResponse>
+    handler: (req: NextRequest) => Promise<NextResponse>,
   ): Promise<NextResponse> {
     try {
       // 只对POST、PUT、PATCH请求进行验证
@@ -42,23 +43,23 @@ export function createSecurityMiddleware(options: SecurityMiddlewareOptions = {}
 
       // 获取请求体
       const body = await request.json().catch(() => ({}));
-      
+
       // 验证指定字段
       const allIssues: any[] = [];
       const cleanedBody: any = { ...body };
 
       for (const field of fieldsToValidate) {
         if (body[field] && typeof body[field] === 'string') {
-          const result = validator.validate(body[field]);
-          
+          const result = await validator.validate(body[field]);
+
           if (!result.isValid) {
             allIssues.push({
               field,
               issues: result.issues,
-              riskLevel: result.riskLevel
+              riskLevel: result.riskLevel,
             });
           }
-          
+
           // 使用清理后的内容
           cleanedBody[field] = result.cleanContent;
         }
@@ -73,7 +74,7 @@ export function createSecurityMiddleware(options: SecurityMiddlewareOptions = {}
         return NextResponse.json({
           success: false,
           error: '内容验证失败',
-          details: includeDetails ? allIssues : undefined
+          details: includeDetails ? allIssues : undefined,
         }, { status: 400 });
       }
 
@@ -81,7 +82,7 @@ export function createSecurityMiddleware(options: SecurityMiddlewareOptions = {}
       const cleanedRequest = new NextRequest(request.url, {
         method: request.method,
         headers: request.headers,
-        body: JSON.stringify(cleanedBody)
+        body: JSON.stringify(cleanedBody),
       });
 
       return handler(cleanedRequest);
@@ -89,7 +90,7 @@ export function createSecurityMiddleware(options: SecurityMiddlewareOptions = {}
       console.error('Security middleware error:', error);
       return NextResponse.json({
         success: false,
-        error: '内容验证过程中发生错误'
+        error: '内容验证过程中发生错误',
       }, { status: 500 });
     }
   };
@@ -103,22 +104,22 @@ export const SECURITY_MIDDLEWARE_PRESETS = {
   USER_CONTENT: createSecurityMiddleware({
     validatorOptions: VALIDATOR_PRESETS.STANDARD,
     fieldsToValidate: ['content', 'message', 'description'],
-    includeDetails: true
+    includeDetails: true,
   }),
 
   // 管理员内容验证
   ADMIN_CONTENT: createSecurityMiddleware({
     validatorOptions: VALIDATOR_PRESETS.RELAXED,
     fieldsToValidate: ['content', 'message', 'description', 'title'],
-    includeDetails: true
+    includeDetails: true,
   }),
 
   // 公开内容验证（如首页展示）
   PUBLIC_CONTENT: createSecurityMiddleware({
     validatorOptions: VALIDATOR_PRESETS.STRICT,
     fieldsToValidate: ['content', 'title', 'description'],
-    includeDetails: false
-  })
+    includeDetails: false,
+  }),
 };
 
 /**
@@ -126,10 +127,10 @@ export const SECURITY_MIDDLEWARE_PRESETS = {
  */
 export function withSecurity(
   handler: (req: NextRequest) => Promise<NextResponse>,
-  options?: SecurityMiddlewareOptions
+  options?: SecurityMiddlewareOptions,
 ) {
   const middleware = createSecurityMiddleware(options);
-  
+
   return async function securedHandler(req: NextRequest): Promise<NextResponse> {
     return middleware(req, handler);
   };
@@ -140,7 +141,7 @@ export function withSecurity(
  */
 export function validateField(
   content: string,
-  options?: ContentFilterOptions
+  options?: ContentFilterOptions,
 ) {
   const validator = new ContentValidator(options);
   return validator.validate(content);
@@ -151,8 +152,8 @@ export function validateField(
  */
 export function cleanContent(
   content: string,
-  options?: ContentFilterOptions
+  options?: ContentFilterOptions,
 ): string {
   const validator = new ContentValidator(options);
-  return validator.clean(content);
+  return validator.validateSync(content).cleanContent;
 }

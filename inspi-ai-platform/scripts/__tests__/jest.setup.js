@@ -77,9 +77,9 @@ global.testUtils = {
     const parseVersion = (version) => {
       const parts = version.replace(/^v/, '').split('.');
       return {
-        major: parseInt(parts[0]) || 0,
-        minor: parseInt(parts[1]) || 0,
-        patch: parseInt(parts[2]) || 0
+        major: parseInt(parts[0], 10) || 0,
+        minor: parseInt(parts[1], 10) || 0,
+        patch: parseInt(parts[2], 10) || 0
       };
     };
     
@@ -196,7 +196,8 @@ expect.extend({
   },
   
   toHaveValidCommitFormat(received) {
-    const conventionalCommitRegex = /^(feat|fix|docs|style|refactor|perf|test|chore|ci|build)(\(.+\))?(!)?: .{1,50}/;
+    const conventionalCommitRegex =
+      /^(feat|fix|docs|style|refactor|perf|test|chore|ci|build)(\(.+\))?(!)?: .{1,50}/;
     const pass = conventionalCommitRegex.test(received);
     
     if (pass) {
@@ -215,7 +216,8 @@ expect.extend({
 
 // 测试数据常量
 global.TEST_DATA = {
-  VALID_COMMIT_TYPES: ['feat', 'fix', 'docs', 'style', 'refactor', 'perf', 'test', 'chore', 'ci', 'build'],
+  VALID_COMMIT_TYPES: ['feat', 'fix', 'docs', 'style', 'refactor', 'perf',
+    'test', 'chore', 'ci', 'build'],
   VALID_SCOPES: ['ui', 'api', 'core', 'auth', 'db', 'config', 'deps'],
   SAMPLE_VERSIONS: ['1.0.0', '1.2.3', '2.0.0-alpha.1', '1.0.0-beta.2', '3.1.4-rc.1'],
   SAMPLE_COMMITS: [

@@ -4,6 +4,7 @@
  */
 
 import mongoose from 'mongoose';
+
 import User, { UserDocument } from '@/lib/models/User';
 
 // Mock mongoose
@@ -23,7 +24,7 @@ describe('User模型完整验证测试', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Setup mock user data
     mockUser = {
       email: 'test@example.com',
@@ -124,7 +125,7 @@ describe('User模型完整验证测试', () => {
       for (const email of invalidEmails) {
         const user = new User({ ...mockUser, email });
         const validationError = user.validateSync();
-        
+
         // 在实际实现中，应该有邮箱格式验证
         // 这里我们测试基本的必填验证
         if (email === '') {
@@ -136,7 +137,7 @@ describe('User模型完整验证测试', () => {
     it('应该验证邮箱唯一性', async () => {
       // Arrange
       const email = 'duplicate@example.com';
-      
+
       // Mock existing user
       User.findOne = jest.fn().mockResolvedValue({ email });
 
@@ -167,10 +168,10 @@ describe('User模型完整验证测试', () => {
       const nameWithSpaces = '  Test User  ';
 
       // Act
-      const user = new User({ 
-        ...mockUser, 
+      const user = new User({
+        ...mockUser,
         email: emailWithSpaces,
-        name: nameWithSpaces 
+        name: nameWithSpaces,
       });
 
       // Assert
@@ -185,7 +186,7 @@ describe('User模型完整验证测试', () => {
       // Act
       const user = new User({
         ...mockUser,
-        subscription: { ...mockUser.subscription, plan: invalidPlan as any }
+        subscription: { ...mockUser.subscription, plan: invalidPlan as any },
       });
       const validationError = user.validateSync();
 
@@ -216,7 +217,7 @@ describe('User模型完整验证测试', () => {
       // Arrange
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      
+
       const user = {
         usage: {
           dailyGenerations: 5,
@@ -274,7 +275,7 @@ describe('User模型完整验证测试', () => {
       // Arrange
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      
+
       const user = {
         usage: {
           dailyGenerations: 5,
@@ -611,7 +612,7 @@ describe('User模型完整验证测试', () => {
             user.canGenerate();
             user.canReuse();
             user.resetDailyUsage();
-          })
+          }),
         );
       }
 
@@ -661,7 +662,7 @@ describe('User模型完整验证测试', () => {
 
       // Act - 升级到Pro
       expect(user.canGenerate()).toBe(false); // 免费用户已达限制
-      
+
       user.subscription.plan = 'pro';
       expect(user.canGenerate()).toBe(true); // Pro用户可以继续生成
     });
@@ -670,7 +671,7 @@ describe('User模型完整验证测试', () => {
       // Arrange
       const originalTimezone = process.env.TZ;
       process.env.TZ = 'UTC';
-      
+
       const user = {
         usage: {
           dailyGenerations: 5,
@@ -686,7 +687,7 @@ describe('User模型完整验证测试', () => {
 
       // Assert
       expect(user.usage.dailyGenerations).toBe(0); // 应该重置
-      
+
       // Cleanup
       process.env.TZ = originalTimezone;
     });
@@ -721,7 +722,7 @@ describe('User模型完整验证测试', () => {
 
       // Act & Assert
       expect(user.canGenerate()).toBe(true);
-      
+
       // 模拟恶意修改
       user.subscription.plan = 'super';
       expect(user.canGenerate()).toBe(true); // 应该允许，因为订阅已升级
@@ -742,7 +743,7 @@ describe('User模型完整验证测试', () => {
           ...mockUser,
           name: input,
         });
-        
+
         expect(user.name).toBe(input); // 应该存储原始值，但在使用时进行清理
       });
     });
@@ -765,7 +766,7 @@ describe('User模型完整验证测试', () => {
     it('应该支持事务操作', async () => {
       // Arrange
       const user = new User(mockUser);
-      
+
       // Act & Assert
       // 在实际实现中，应该测试事务中的用户操作
       expect(user).toBeDefined();

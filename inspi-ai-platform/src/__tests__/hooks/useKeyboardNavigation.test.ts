@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react';
-import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation';
+
+import { useKeyboardNavigation } from '@/shared/hooks/useKeyboardNavigation';
 
 // Mock document.addEventListener and removeEventListener
 const mockAddEventListener = jest.fn();
@@ -7,12 +8,12 @@ const mockRemoveEventListener = jest.fn();
 
 Object.defineProperty(document, 'addEventListener', {
   value: mockAddEventListener,
-  writable: true
+  writable: true,
 });
 
 Object.defineProperty(document, 'removeEventListener', {
   value: mockRemoveEventListener,
-  writable: true
+  writable: true,
 });
 
 describe('useKeyboardNavigation', () => {
@@ -22,18 +23,18 @@ describe('useKeyboardNavigation', () => {
 
   it('should register global keyboard shortcuts', () => {
     const mockAction = jest.fn();
-    
+
     renderHook(() =>
       useKeyboardNavigation({
         shortcuts: [
           {
             key: 'Enter',
             action: mockAction,
-            description: 'Test shortcut'
-          }
+            description: 'Test shortcut',
+          },
         ],
-        scope: 'global'
-      })
+        scope: 'global',
+      }),
     );
 
     expect(mockAddEventListener).toHaveBeenCalledWith('keydown', expect.any(Function));
@@ -41,18 +42,18 @@ describe('useKeyboardNavigation', () => {
 
   it('should not register event listeners for local scope', () => {
     const mockAction = jest.fn();
-    
+
     const { result } = renderHook(() =>
       useKeyboardNavigation({
         shortcuts: [
           {
             key: 'Enter',
             action: mockAction,
-            description: 'Test shortcut'
-          }
+            description: 'Test shortcut',
+          },
         ],
-        scope: 'local'
-      })
+        scope: 'local',
+      }),
     );
 
     expect(mockAddEventListener).not.toHaveBeenCalled();
@@ -61,18 +62,18 @@ describe('useKeyboardNavigation', () => {
 
   it('should not register shortcuts when disabled', () => {
     const mockAction = jest.fn();
-    
+
     renderHook(() =>
       useKeyboardNavigation({
         shortcuts: [
           {
             key: 'Enter',
             action: mockAction,
-            description: 'Test shortcut'
-          }
+            description: 'Test shortcut',
+          },
         ],
-        disabled: true
-      })
+        disabled: true,
+      }),
     );
 
     expect(mockAddEventListener).toHaveBeenCalledWith('keydown', expect.any(Function));
@@ -80,18 +81,18 @@ describe('useKeyboardNavigation', () => {
 
   it('should cleanup event listeners on unmount', () => {
     const mockAction = jest.fn();
-    
+
     const { unmount } = renderHook(() =>
       useKeyboardNavigation({
         shortcuts: [
           {
             key: 'Enter',
             action: mockAction,
-            description: 'Test shortcut'
-          }
+            description: 'Test shortcut',
+          },
         ],
-        scope: 'global'
-      })
+        scope: 'global',
+      }),
     );
 
     unmount();
@@ -115,11 +116,11 @@ describe('useKeyboardNavigation', () => {
           {
             key: 'Enter',
             action: mockAction,
-            description: 'Test shortcut'
-          }
+            description: 'Test shortcut',
+          },
         ],
-        scope: 'global'
-      })
+        scope: 'global',
+      }),
     );
 
     // Simulate Enter key press
@@ -128,12 +129,12 @@ describe('useKeyboardNavigation', () => {
       ctrlKey: false,
       altKey: false,
       shiftKey: false,
-      metaKey: false
+      metaKey: false,
     });
 
     Object.defineProperty(mockEvent, 'target', {
       value: { tagName: 'DIV' },
-      writable: false
+      writable: false,
     });
 
     keydownHandler!(mockEvent);
@@ -157,11 +158,11 @@ describe('useKeyboardNavigation', () => {
           {
             key: 'Enter',
             action: mockAction,
-            description: 'Test shortcut'
-          }
+            description: 'Test shortcut',
+          },
         ],
-        scope: 'global'
-      })
+        scope: 'global',
+      }),
     );
 
     // Simulate Enter key press on input element
@@ -170,12 +171,12 @@ describe('useKeyboardNavigation', () => {
       ctrlKey: false,
       altKey: false,
       shiftKey: false,
-      metaKey: false
+      metaKey: false,
     });
 
     Object.defineProperty(mockEvent, 'target', {
       value: { tagName: 'INPUT' },
-      writable: false
+      writable: false,
     });
 
     keydownHandler!(mockEvent);

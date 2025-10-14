@@ -3,9 +3,11 @@
  * 测试作品的CRUD操作、搜索、筛选等功能
  */
 
-import { executeApiRoute, expectApiResponse } from '../setup/test-server'
-import { mockDatabaseService, resetAllMocks } from '../mocks/api-mocks'
-import { createWorkFixture, createUserFixture, createWorksResponse } from '../../fixtures'
+import { GET as getWorksHandler, POST as createWorkHandler } from '@/app/api/works/route';
+
+import { createWorkFixture, createUserFixture, createWorksResponse } from '../../fixtures';
+import { mockDatabaseService, resetAllMocks } from '../mocks/api-mocks';
+import { executeApiRoute, expectApiResponse } from '../setup/test-server';
 
 // Mock作品服务
 jest.mock('@/lib/services/workService', () => ({
@@ -17,12 +19,12 @@ jest.mock('@/lib/services/workService', () => ({
     getWorkById: jest.fn(),
     publishWork: jest.fn(),
   },
-}))
+}));
 
 // Mock认证中间件
-jest.mock('@/lib/auth/middleware', () => ({
+jest.mock('@/core/auth/middleware', () => ({
   requireAuth: (handler: any) => handler,
-}))
+}));
 
 // Mock错误处理
 jest.mock('@/lib/utils/errorHandler', () => ({
@@ -30,23 +32,20 @@ jest.mock('@/lib/utils/errorHandler', () => ({
     status: 500,
     body: { error: 'Internal server error' },
   })),
-}))
-
-// 导入要测试的API路由
-import { GET as getWorksHandler, POST as createWorkHandler } from '@/app/api/works/route'
+}));
 
 describe('作品API测试', () => {
   beforeEach(() => {
-    resetAllMocks()
-    jest.clearAllMocks()
-  })
+    resetAllMocks();
+    jest.clearAllMocks();
+  });
 
   describe('GET /api/works', () => {
     test('应该返回作品列表', async () => {
       const response = await executeApiRoute(getWorksHandler, {
         method: 'GET',
         url: 'http://localhost:3000/api/works',
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
@@ -66,8 +65,8 @@ describe('作品API测试', () => {
               availableTags: expect.any(Array),
             }),
           }),
-        })
-    })
+        });
+    });
 
     test('应该支持分页参数', async () => {
       const response = await executeApiRoute(getWorksHandler, {
@@ -77,7 +76,7 @@ describe('作品API测试', () => {
           page: '2',
           limit: '6',
         },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
@@ -89,8 +88,8 @@ describe('作品API测试', () => {
               limit: 6,
             }),
           }),
-        })
-    })
+        });
+    });
 
     test('应该支持学科筛选', async () => {
       const response = await executeApiRoute(getWorksHandler, {
@@ -99,14 +98,14 @@ describe('作品API测试', () => {
         searchParams: {
           subject: '数学',
         },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
         .toHaveBodyContaining({
           success: true,
-        })
-    })
+        });
+    });
 
     test('应该支持年级筛选', async () => {
       const response = await executeApiRoute(getWorksHandler, {
@@ -115,14 +114,14 @@ describe('作品API测试', () => {
         searchParams: {
           gradeLevel: '小学二年级',
         },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
         .toHaveBodyContaining({
           success: true,
-        })
-    })
+        });
+    });
 
     test('应该支持搜索功能', async () => {
       const response = await executeApiRoute(getWorksHandler, {
@@ -131,14 +130,14 @@ describe('作品API测试', () => {
         searchParams: {
           search: '加法',
         },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
         .toHaveBodyContaining({
           success: true,
-        })
-    })
+        });
+    });
 
     test('应该支持标签筛选', async () => {
       const response = await executeApiRoute(getWorksHandler, {
@@ -147,14 +146,14 @@ describe('作品API测试', () => {
         searchParams: {
           tags: '数学,加法',
         },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
         .toHaveBodyContaining({
           success: true,
-        })
-    })
+        });
+    });
 
     test('应该支持排序参数', async () => {
       const response = await executeApiRoute(getWorksHandler, {
@@ -163,14 +162,14 @@ describe('作品API测试', () => {
         searchParams: {
           sortBy: 'popular',
         },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
         .toHaveBodyContaining({
           success: true,
-        })
-    })
+        });
+    });
 
     test('应该支持作者筛选', async () => {
       const response = await executeApiRoute(getWorksHandler, {
@@ -179,14 +178,14 @@ describe('作品API测试', () => {
         searchParams: {
           author: 'user123',
         },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
         .toHaveBodyContaining({
           success: true,
-        })
-    })
+        });
+    });
 
     test('应该支持状态筛选', async () => {
       const response = await executeApiRoute(getWorksHandler, {
@@ -195,14 +194,14 @@ describe('作品API测试', () => {
         searchParams: {
           status: 'draft',
         },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
         .toHaveBodyContaining({
           success: true,
-        })
-    })
+        });
+    });
 
     test('应该处理无效的分页参数', async () => {
       const response = await executeApiRoute(getWorksHandler, {
@@ -212,7 +211,7 @@ describe('作品API测试', () => {
           page: 'invalid',
           limit: 'invalid',
         },
-      })
+      });
 
       // 应该使用默认值
       expectApiResponse(response)
@@ -225,12 +224,12 @@ describe('作品API测试', () => {
               limit: 12,
             }),
           }),
-        })
-    })
-  })
+        });
+    });
+  });
 
   describe('POST /api/works', () => {
-    const mockWorkService = require('@/lib/services/workService').default
+    const mockWorkService = require('@/lib/services/workService').default;
 
     test('应该成功创建作品', async () => {
       const workData = {
@@ -248,14 +247,14 @@ describe('作品API测试', () => {
         ],
         tags: ['数学', '加法'],
         status: 'draft',
-      }
+      };
 
       const createdWork = createWorkFixture({
         ...workData,
         authorId: 'temp-user-id',
-      })
+      });
 
-      mockWorkService.createWork.mockResolvedValue(createdWork)
+      mockWorkService.createWork.mockResolvedValue(createdWork);
 
       const response = await executeApiRoute(createWorkHandler, {
         method: 'POST',
@@ -264,7 +263,7 @@ describe('作品API测试', () => {
           'Authorization': 'Bearer valid-token',
         },
         body: workData,
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
@@ -277,10 +276,10 @@ describe('作品API测试', () => {
             gradeLevel: workData.gradeLevel,
           }),
           message: '作品保存成功',
-        })
+        });
 
-      expect(mockWorkService.createWork).toHaveBeenCalledWith('temp-user-id', workData)
-    })
+      expect(mockWorkService.createWork).toHaveBeenCalledWith('temp-user-id', workData);
+    });
 
     test('应该成功发布作品', async () => {
       const workData = {
@@ -298,14 +297,14 @@ describe('作品API测试', () => {
         ],
         tags: ['数学', '加法'],
         status: 'published',
-      }
+      };
 
       const createdWork = createWorkFixture({
         ...workData,
         authorId: 'temp-user-id',
-      })
+      });
 
-      mockWorkService.createWork.mockResolvedValue(createdWork)
+      mockWorkService.createWork.mockResolvedValue(createdWork);
 
       const response = await executeApiRoute(createWorkHandler, {
         method: 'POST',
@@ -314,15 +313,15 @@ describe('作品API测试', () => {
           'Authorization': 'Bearer valid-token',
         },
         body: workData,
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
         .toHaveBodyContaining({
           success: true,
           message: '作品发布成功',
-        })
-    })
+        });
+    });
 
     test('应该要求用户认证', async () => {
       const workData = {
@@ -331,27 +330,27 @@ describe('作品API测试', () => {
         subject: '数学',
         gradeLevel: '小学二年级',
         cards: [],
-      }
+      };
 
       const response = await executeApiRoute(createWorkHandler, {
         method: 'POST',
         url: 'http://localhost:3000/api/works',
         body: workData,
-      })
+      });
 
       expectApiResponse(response)
         .toRequireAuthentication()
         .toHaveBodyContaining({
           success: false,
           message: '请先登录',
-        })
-    })
+        });
+    });
 
     test('应该验证必填字段', async () => {
       const incompleteData = {
         title: '测试作品',
         // 缺少其他必填字段
-      }
+      };
 
       const response = await executeApiRoute(createWorkHandler, {
         method: 'POST',
@@ -360,15 +359,15 @@ describe('作品API测试', () => {
           'Authorization': 'Bearer valid-token',
         },
         body: incompleteData,
-      })
+      });
 
       expectApiResponse(response)
         .toHaveValidationError()
         .toHaveBodyContaining({
           success: false,
           message: '缺少必填字段',
-        })
-    })
+        });
+    });
 
     test('应该验证卡片数据', async () => {
       const workDataWithoutCards = {
@@ -377,7 +376,7 @@ describe('作品API测试', () => {
         subject: '数学',
         gradeLevel: '小学二年级',
         cards: [], // 空卡片数组
-      }
+      };
 
       const response = await executeApiRoute(createWorkHandler, {
         method: 'POST',
@@ -386,15 +385,15 @@ describe('作品API测试', () => {
           'Authorization': 'Bearer valid-token',
         },
         body: workDataWithoutCards,
-      })
+      });
 
       expectApiResponse(response)
         .toHaveValidationError()
         .toHaveBodyContaining({
           success: false,
           message: '至少需要一张教学卡片',
-        })
-    })
+        });
+    });
 
     test('应该验证卡片数据类型', async () => {
       const workDataWithInvalidCards = {
@@ -403,7 +402,7 @@ describe('作品API测试', () => {
         subject: '数学',
         gradeLevel: '小学二年级',
         cards: 'invalid', // 非数组类型
-      }
+      };
 
       const response = await executeApiRoute(createWorkHandler, {
         method: 'POST',
@@ -412,15 +411,15 @@ describe('作品API测试', () => {
           'Authorization': 'Bearer valid-token',
         },
         body: workDataWithInvalidCards,
-      })
+      });
 
       expectApiResponse(response)
         .toHaveValidationError()
         .toHaveBodyContaining({
           success: false,
           message: '至少需要一张教学卡片',
-        })
-    })
+        });
+    });
 
     test('应该处理服务错误', async () => {
       const workData = {
@@ -436,9 +435,9 @@ describe('作品API测试', () => {
             order: 0,
           },
         ],
-      }
+      };
 
-      mockWorkService.createWork.mockRejectedValue(new Error('Database error'))
+      mockWorkService.createWork.mockRejectedValue(new Error('Database error'));
 
       const response = await executeApiRoute(createWorkHandler, {
         method: 'POST',
@@ -447,14 +446,14 @@ describe('作品API测试', () => {
           'Authorization': 'Bearer valid-token',
         },
         body: workData,
-      })
+      });
 
       expectApiResponse(response)
         .toHaveStatus(500)
         .toHaveBodyContaining({
           error: 'Internal server error',
-        })
-    })
+        });
+    });
 
     test('应该处理无效的认证令牌格式', async () => {
       const workData = {
@@ -470,7 +469,7 @@ describe('作品API测试', () => {
             order: 0,
           },
         ],
-      }
+      };
 
       const response = await executeApiRoute(createWorkHandler, {
         method: 'POST',
@@ -479,16 +478,16 @@ describe('作品API测试', () => {
           'Authorization': 'InvalidToken',
         },
         body: workData,
-      })
+      });
 
       expectApiResponse(response)
         .toRequireAuthentication()
         .toHaveBodyContaining({
           success: false,
           message: '请先登录',
-        })
-    })
-  })
+        });
+    });
+  });
 
   describe('作品API边界情况测试', () => {
     test('应该处理极大的分页参数', async () => {
@@ -499,14 +498,14 @@ describe('作品API测试', () => {
           page: '999999',
           limit: '1000',
         },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
         .toHaveBodyContaining({
           success: true,
-        })
-    })
+        });
+    });
 
     test('应该处理负数分页参数', async () => {
       const response = await executeApiRoute(getWorksHandler, {
@@ -516,7 +515,7 @@ describe('作品API测试', () => {
           page: '-1',
           limit: '-10',
         },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
@@ -528,8 +527,8 @@ describe('作品API测试', () => {
               limit: 12, // 应该使用默认值
             }),
           }),
-        })
-    })
+        });
+    });
 
     test('应该处理特殊字符搜索', async () => {
       const response = await executeApiRoute(getWorksHandler, {
@@ -538,14 +537,14 @@ describe('作品API测试', () => {
         searchParams: {
           search: '!@#$%^&*()',
         },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
         .toHaveBodyContaining({
           success: true,
-        })
-    })
+        });
+    });
 
     test('应该处理空字符串参数', async () => {
       const response = await executeApiRoute(getWorksHandler, {
@@ -556,13 +555,13 @@ describe('作品API测试', () => {
           search: '',
           tags: '',
         },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
         .toHaveBodyContaining({
           success: true,
-        })
-    })
-  })
-})
+        });
+    });
+  });
+});

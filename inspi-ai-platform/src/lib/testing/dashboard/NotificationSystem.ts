@@ -1,6 +1,6 @@
 /**
  * Real-Time Notification System
- * 
+ *
  * Handles instant notifications for test failures, coverage drops,
  * performance issues, and team collaboration events.
  */
@@ -80,7 +80,7 @@ export class NotificationSystem extends EventEmitter {
         const prefix = `[${notification.type.toUpperCase()}]`;
         const timestamp = notification.timestamp.toISOString();
         console.log(`${prefix} ${timestamp} - ${notification.title}: ${notification.message}`);
-      }
+      },
     });
 
     // Browser notification channel
@@ -94,7 +94,7 @@ export class NotificationSystem extends EventEmitter {
             new Notification(notification.title, {
               body: notification.message,
               icon: this.getNotificationIcon(notification.type),
-              tag: notification.id
+              tag: notification.id,
             });
           } else if (Notification.permission !== 'denied') {
             const permission = await Notification.requestPermission();
@@ -102,12 +102,12 @@ export class NotificationSystem extends EventEmitter {
               new Notification(notification.title, {
                 body: notification.message,
                 icon: this.getNotificationIcon(notification.type),
-                tag: notification.id
+                tag: notification.id,
               });
             }
           }
         }
-      }
+      },
     });
 
     // Webhook channel
@@ -125,7 +125,7 @@ export class NotificationSystem extends EventEmitter {
         } catch (error) {
           console.error('Failed to send webhook notification:', error);
         }
-      }
+      },
     });
 
     // Email channel
@@ -138,7 +138,7 @@ export class NotificationSystem extends EventEmitter {
         if (!config?.recipients?.length) return;
 
         console.log(`Email notification to ${config.recipients.join(', ')}:`, notification);
-      }
+      },
     });
 
     // Slack channel
@@ -158,13 +158,13 @@ export class NotificationSystem extends EventEmitter {
             fields: [
               { title: 'Category', value: notification.category, short: true },
               { title: 'Priority', value: notification.priority, short: true },
-              { title: 'Time', value: notification.timestamp.toISOString(), short: true }
-            ]
-          }]
+              { title: 'Time', value: notification.timestamp.toISOString(), short: true },
+            ],
+          }],
         };
 
-        console.log(`Slack notification:`, slackMessage);
-      }
+        console.log('Slack notification:', slackMessage);
+      },
     });
   }
 
@@ -179,12 +179,12 @@ export class NotificationSystem extends EventEmitter {
       enabled: true,
       conditions: {
         category: ['test_failure'],
-        priority: ['critical', 'high']
+        priority: ['critical', 'high'],
       },
       actions: {
         channels: ['console', 'browser', 'webhook'],
-        delay: 0
-      }
+        delay: 0,
+      },
     });
 
     // Coverage drops rule
@@ -194,12 +194,12 @@ export class NotificationSystem extends EventEmitter {
       enabled: true,
       conditions: {
         category: ['coverage_drop'],
-        priority: ['medium', 'high']
+        priority: ['medium', 'high'],
       },
       actions: {
         channels: ['console', 'email'],
-        throttle: 300000 // 5 minutes
-      }
+        throttle: 300000, // 5 minutes
+      },
     });
 
     // Performance issues rule
@@ -208,12 +208,12 @@ export class NotificationSystem extends EventEmitter {
       name: 'Performance Issues',
       enabled: true,
       conditions: {
-        category: ['performance_issue']
+        category: ['performance_issue'],
       },
       actions: {
         channels: ['console'],
-        throttle: 600000 // 10 minutes
-      }
+        throttle: 600000, // 10 minutes
+      },
     });
 
     // Team events rule
@@ -223,11 +223,11 @@ export class NotificationSystem extends EventEmitter {
       enabled: true,
       conditions: {
         category: ['team_event'],
-        priority: ['medium', 'high']
+        priority: ['medium', 'high'],
       },
       actions: {
-        channels: ['console', 'slack']
-      }
+        channels: ['console', 'slack'],
+      },
     });
   }
 
@@ -238,7 +238,7 @@ export class NotificationSystem extends EventEmitter {
     const fullNotification: Notification = {
       id: this.generateId(),
       timestamp: new Date(),
-      ...notification
+      ...notification,
     };
 
     // Store notification
@@ -298,8 +298,8 @@ export class NotificationSystem extends EventEmitter {
     // Check keywords
     if (conditions.keywords) {
       const text = `${notification.title} ${notification.message}`.toLowerCase();
-      const hasKeyword = conditions.keywords.some(keyword => 
-        text.includes(keyword.toLowerCase())
+      const hasKeyword = conditions.keywords.some(keyword =>
+        text.includes(keyword.toLowerCase()),
       );
       if (!hasKeyword) return false;
     }
@@ -453,7 +453,7 @@ export class NotificationSystem extends EventEmitter {
   public getHistory(limit?: number): Notification[] {
     const history = [...this.notificationHistory]
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-    
+
     return limit ? history.slice(0, limit) : history;
   }
 
@@ -500,7 +500,7 @@ export class NotificationSystem extends EventEmitter {
       total: total.length,
       byCategory: this.groupBy(total, 'category'),
       byPriority: this.groupBy(total, 'priority'),
-      byType: this.groupBy(total, 'type')
+      byType: this.groupBy(total, 'type'),
     };
   }
 
@@ -514,7 +514,7 @@ export class NotificationSystem extends EventEmitter {
       title: 'Notification System Test',
       message: 'This is a test notification to verify the system is working correctly.',
       priority: 'low',
-      autoClose: 5000
+      autoClose: 5000,
     });
   }
 
@@ -533,7 +533,7 @@ export class NotificationSystem extends EventEmitter {
       success: '/icons/success.png',
       warning: '/icons/warning.png',
       error: '/icons/error.png',
-      info: '/icons/info.png'
+      info: '/icons/info.png',
     };
     return icons[type as keyof typeof icons] || icons.info;
   }
@@ -546,7 +546,7 @@ export class NotificationSystem extends EventEmitter {
       success: 'good',
       warning: 'warning',
       error: 'danger',
-      info: '#36a64f'
+      info: '#36a64f',
     };
     return colors[type as keyof typeof colors] || colors.info;
   }

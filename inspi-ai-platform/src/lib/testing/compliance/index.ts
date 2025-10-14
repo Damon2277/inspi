@@ -1,12 +1,12 @@
 /**
  * Compliance Testing Module
- * 
+ *
  * Comprehensive compliance checking system for code quality standards,
  * test coverage requirements, documentation completeness, and regulatory compliance.
  */
 
-export { 
-  ComplianceChecker, 
+export {
+  ComplianceChecker,
   createComplianceChecker,
   type ComplianceConfig,
   type ComplianceResult,
@@ -22,7 +22,7 @@ export {
   type CategoryDetail,
   type ComplianceTrend,
   type CustomRule,
-  type SonarQubeConfig
+  type SonarQubeConfig,
 } from './ComplianceChecker';
 
 export {
@@ -37,7 +37,7 @@ export {
   type NotificationTrigger,
   type RetentionConfig,
   type ReportMetadata,
-  type GeneratedReport
+  type GeneratedReport,
 } from './ComplianceReporter';
 
 export {
@@ -63,7 +63,7 @@ export {
   type TableConfig,
   type DataRetentionConfig,
   type RetryPolicy,
-  type AutomationStatus
+  type AutomationStatus,
 } from './ComplianceAutomation';
 
 // Re-export utility functions
@@ -78,8 +78,8 @@ export const DEFAULT_COMPLIANCE_CONFIG: Partial<ComplianceConfig> = {
       complexity: 10,
       maintainabilityIndex: 70,
       duplicateLines: 50,
-      codeSmells: 10
-    }
+      codeSmells: 10,
+    },
   },
   testCoverage: {
     enabled: true,
@@ -87,11 +87,11 @@ export const DEFAULT_COMPLIANCE_CONFIG: Partial<ComplianceConfig> = {
       statements: 80,
       branches: 75,
       functions: 80,
-      lines: 80
+      lines: 80,
     },
     excludePatterns: ['**/*.test.ts', '**/*.spec.ts', '**/node_modules/**'],
     requireTestFiles: true,
-    testFilePatterns: ['**/*.test.ts', '**/*.spec.ts']
+    testFilePatterns: ['**/*.test.ts', '**/*.spec.ts'],
   },
   documentation: {
     enabled: true,
@@ -99,13 +99,13 @@ export const DEFAULT_COMPLIANCE_CONFIG: Partial<ComplianceConfig> = {
     apiDocumentation: {
       required: true,
       format: 'jsdoc',
-      coverage: 70
+      coverage: 70,
     },
     readmeRequirements: {
       sections: ['Installation', 'Usage', 'API', 'Contributing'],
-      minimumLength: 500
+      minimumLength: 500,
     },
-    changelogRequired: true
+    changelogRequired: true,
   },
   security: {
     enabled: true,
@@ -114,14 +114,14 @@ export const DEFAULT_COMPLIANCE_CONFIG: Partial<ComplianceConfig> = {
     secretsDetection: true,
     codeAnalysis: true,
     allowedLicenses: ['MIT', 'Apache-2.0', 'BSD-3-Clause', 'ISC'],
-    securityHeaders: ['Content-Security-Policy', 'X-Frame-Options', 'X-Content-Type-Options']
+    securityHeaders: ['Content-Security-Policy', 'X-Frame-Options', 'X-Content-Type-Options'],
   },
   accessibility: {
     enabled: true,
     wcagLevel: 'AA',
     testPatterns: ['**/*.tsx', '**/*.jsx'],
     requiredAttributes: ['alt', 'aria-label', 'role'],
-    colorContrastRatio: 4.5
+    colorContrastRatio: 4.5,
   },
   performance: {
     enabled: true,
@@ -129,12 +129,12 @@ export const DEFAULT_COMPLIANCE_CONFIG: Partial<ComplianceConfig> = {
       bundleSize: 500, // KB
       loadTime: 3000, // ms
       memoryUsage: 100, // MB
-      cpuUsage: 80 // %
+      cpuUsage: 80, // %
     },
-    metrics: ['FCP', 'LCP', 'FID', 'CLS']
+    metrics: ['FCP', 'LCP', 'FID', 'CLS'],
   },
   outputPath: './compliance-reports',
-  reportFormats: ['json', 'html', 'markdown']
+  reportFormats: ['json', 'html', 'markdown'],
 };
 
 export const DEFAULT_REPORT_CONFIG: Partial<ReportConfig> = {
@@ -142,7 +142,7 @@ export const DEFAULT_REPORT_CONFIG: Partial<ReportConfig> = {
   formats: [
     { type: 'json', enabled: true },
     { type: 'html', enabled: true },
-    { type: 'markdown', enabled: true }
+    { type: 'markdown', enabled: true },
   ],
   templates: [],
   scheduling: {
@@ -150,18 +150,18 @@ export const DEFAULT_REPORT_CONFIG: Partial<ReportConfig> = {
     frequency: 'daily',
     time: '09:00',
     timezone: 'UTC',
-    autoGenerate: true
+    autoGenerate: true,
   },
   notifications: {
     enabled: false,
     channels: [],
-    triggers: []
+    triggers: [],
   },
   retention: {
     maxReports: 50,
     maxAge: 30,
-    archiveOldReports: true
-  }
+    archiveOldReports: true,
+  },
 };
 
 export const DEFAULT_AUTOMATION_CONFIG: Partial<AutomationConfig> = {
@@ -172,15 +172,15 @@ export const DEFAULT_AUTOMATION_CONFIG: Partial<AutomationConfig> = {
     retryPolicy: {
       maxRetries: 3,
       backoffMs: 1000,
-      exponential: true
-    }
+      exponential: true,
+    },
   },
   monitoring: {
     enabled: false,
     watchPaths: ['src/**/*'],
     debounceMs: 5000,
     triggers: [],
-    realTimeReporting: false
+    realTimeReporting: false,
   },
   cicd: {
     enabled: false,
@@ -190,15 +190,15 @@ export const DEFAULT_AUTOMATION_CONFIG: Partial<AutomationConfig> = {
       formats: ['json'],
       artifacts: true,
       comments: false,
-      badges: false
-    }
+      badges: false,
+    },
   },
   hooks: [],
   notifications: {
     enabled: false,
     channels: [],
     events: [],
-    templates: []
+    templates: [],
   },
   persistence: {
     enabled: false,
@@ -206,14 +206,14 @@ export const DEFAULT_AUTOMATION_CONFIG: Partial<AutomationConfig> = {
       type: 'sqlite',
       connectionString: './compliance.db',
       tables: [],
-      indexes: []
+      indexes: [],
     },
     retention: {
       maxRecords: 1000,
       maxAge: 90,
-      archiveOldData: true
-    }
-  }
+      archiveOldData: true,
+    },
+  },
 };
 
 /**
@@ -222,21 +222,21 @@ export const DEFAULT_AUTOMATION_CONFIG: Partial<AutomationConfig> = {
 export function createComplianceSystem(
   complianceConfig?: Partial<ComplianceConfig>,
   reportConfig?: Partial<ReportConfig>,
-  automationConfig?: Partial<AutomationConfig>
+  automationConfig?: Partial<AutomationConfig>,
 ) {
   const finalComplianceConfig = {
     ...DEFAULT_COMPLIANCE_CONFIG,
-    ...complianceConfig
+    ...complianceConfig,
   } as ComplianceConfig;
 
   const finalReportConfig = {
     ...DEFAULT_REPORT_CONFIG,
-    ...reportConfig
+    ...reportConfig,
   } as ReportConfig;
 
   const finalAutomationConfig = {
     ...DEFAULT_AUTOMATION_CONFIG,
-    ...automationConfig
+    ...automationConfig,
   } as AutomationConfig;
 
   const checker = createComplianceChecker(finalComplianceConfig);
@@ -244,7 +244,7 @@ export function createComplianceSystem(
   const automation = createComplianceAutomation(
     finalAutomationConfig,
     finalComplianceConfig,
-    finalReportConfig
+    finalReportConfig,
   );
 
   return {
@@ -261,6 +261,6 @@ export function createComplianceSystem(
     },
     async stopAutomation() {
       return automation.stop();
-    }
+    },
   };
 }

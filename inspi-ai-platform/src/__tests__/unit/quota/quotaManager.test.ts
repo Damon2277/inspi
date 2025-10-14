@@ -1,5 +1,5 @@
-import { QuotaManager } from '@/lib/quota/quotaManager';
 import { User } from '@/lib/models/User';
+import { QuotaManager } from '@/lib/quota/quotaManager';
 
 // Mock User model
 jest.mock('@/lib/models/User');
@@ -11,7 +11,7 @@ describe('QuotaManager', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     quotaManager = new QuotaManager();
-    
+
     mockUser = {
       id: 'user123',
       email: 'test@example.com',
@@ -19,7 +19,7 @@ describe('QuotaManager', () => {
       quotaUsed: 0,
       quotaLimit: 10,
       quotaResetDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
-      save: jest.fn().mockResolvedValue(true)
+      save: jest.fn().mockResolvedValue(true),
     };
   });
 
@@ -38,7 +38,7 @@ describe('QuotaManager', () => {
         remaining: 5,
         limit: 10,
         used: 5,
-        resetDate: mockUser.quotaResetDate
+        resetDate: mockUser.quotaResetDate,
       });
     });
 
@@ -57,7 +57,7 @@ describe('QuotaManager', () => {
         limit: 10,
         used: 10,
         resetDate: mockUser.quotaResetDate,
-        reason: 'Quota limit exceeded'
+        reason: 'Quota limit exceeded',
       });
     });
 
@@ -76,7 +76,7 @@ describe('QuotaManager', () => {
         limit: 10,
         used: 15,
         resetDate: mockUser.quotaResetDate,
-        reason: 'Quota limit exceeded'
+        reason: 'Quota limit exceeded',
       });
     });
 
@@ -85,7 +85,7 @@ describe('QuotaManager', () => {
       const subscriptionLimits = {
         free: 10,
         pro: 100,
-        enterprise: 1000
+        enterprise: 1000,
       };
 
       for (const [subscription, expectedLimit] of Object.entries(subscriptionLimits)) {
@@ -107,7 +107,7 @@ describe('QuotaManager', () => {
       const operationCosts = {
         ai_generation: 1,
         image_upload: 2,
-        export_data: 5
+        export_data: 5,
       };
 
       mockUser.quotaUsed = 8;
@@ -156,7 +156,7 @@ describe('QuotaManager', () => {
         success: true,
         newUsage: 7,
         remaining: 3,
-        limit: 10
+        limit: 10,
       });
       expect(mockUser.quotaUsed).toBe(7);
       expect(mockUser.save).toHaveBeenCalled();
@@ -176,7 +176,7 @@ describe('QuotaManager', () => {
         error: 'Insufficient quota',
         remaining: 1,
         limit: 10,
-        requested: 2
+        requested: 2,
       });
       expect(mockUser.quotaUsed).toBe(9); // Should not change
       expect(mockUser.save).not.toHaveBeenCalled();
@@ -191,7 +191,7 @@ describe('QuotaManager', () => {
       const promises = [
         quotaManager.consumeQuota(mockUser, 'ai_generation', 1),
         quotaManager.consumeQuota(mockUser, 'ai_generation', 1),
-        quotaManager.consumeQuota(mockUser, 'ai_generation', 1)
+        quotaManager.consumeQuota(mockUser, 'ai_generation', 1),
       ];
 
       const results = await Promise.all(promises);
@@ -219,8 +219,8 @@ describe('QuotaManager', () => {
           userId: mockUser.id,
           operation: 'ai_generation',
           cost: 2,
-          timestamp: expect.any(Date)
-        })
+          timestamp: expect.any(Date),
+        }),
       );
     });
   });
@@ -238,7 +238,7 @@ describe('QuotaManager', () => {
         success: true,
         previousUsage: 10,
         newUsage: 0,
-        resetDate: expect.any(Date)
+        resetDate: expect.any(Date),
       });
     });
 
@@ -247,7 +247,7 @@ describe('QuotaManager', () => {
       const mockUsers = [
         { id: 'user1', quotaUsed: 5, save: jest.fn() },
         { id: 'user2', quotaUsed: 8, save: jest.fn() },
-        { id: 'user3', quotaUsed: 10, save: jest.fn() }
+        { id: 'user3', quotaUsed: 10, save: jest.fn() },
       ];
 
       (User.find as jest.Mock).mockResolvedValue(mockUsers);
@@ -259,7 +259,7 @@ describe('QuotaManager', () => {
       expect(result).toEqual({
         success: true,
         usersReset: 3,
-        totalUsageCleared: 23
+        totalUsageCleared: 23,
       });
 
       mockUsers.forEach(user => {
@@ -280,8 +280,8 @@ describe('QuotaManager', () => {
       expect(mockScheduler).toHaveBeenCalledWith(
         expect.objectContaining({
           schedule: 'daily',
-          task: expect.any(Function)
-        })
+          task: expect.any(Function),
+        }),
       );
     });
   });
@@ -306,7 +306,7 @@ describe('QuotaManager', () => {
         resetDate: mockUser.quotaResetDate,
         daysUntilReset: expect.any(Number),
         isNearLimit: false,
-        isAtLimit: false
+        isAtLimit: false,
       });
     });
 
@@ -352,7 +352,7 @@ describe('QuotaManager', () => {
         previousSubscription: 'free',
         newSubscription: 'pro',
         previousLimit: 10,
-        newLimit: 100
+        newLimit: 100,
       });
     });
 
@@ -366,7 +366,7 @@ describe('QuotaManager', () => {
       // Assert
       expect(result).toEqual({
         success: false,
-        error: 'Cannot downgrade subscription'
+        error: 'Cannot downgrade subscription',
       });
     });
 
@@ -392,7 +392,7 @@ describe('QuotaManager', () => {
       const mockHistory = [
         { operation: 'ai_generation', cost: 1, timestamp: new Date() },
         { operation: 'ai_generation', cost: 2, timestamp: new Date() },
-        { operation: 'image_upload', cost: 1, timestamp: new Date() }
+        { operation: 'image_upload', cost: 1, timestamp: new Date() },
       ];
 
       jest.spyOn(quotaManager, 'getUsageHistory').mockResolvedValue(mockHistory);
@@ -405,11 +405,11 @@ describe('QuotaManager', () => {
         totalUsage: 4,
         operationBreakdown: {
           ai_generation: 3,
-          image_upload: 1
+          image_upload: 1,
         },
         averageDailyUsage: expect.any(Number),
         peakUsageDay: expect.any(String),
-        projectedMonthlyUsage: expect.any(Number)
+        projectedMonthlyUsage: expect.any(Number),
       });
     });
 
@@ -438,7 +438,7 @@ describe('QuotaManager', () => {
       // Assert
       expect(result).toEqual({
         success: false,
-        error: 'Failed to update quota usage'
+        error: 'Failed to update quota usage',
       });
     });
 
@@ -447,7 +447,7 @@ describe('QuotaManager', () => {
       const invalidUser = {
         id: 'user123',
         quotaUsed: 'invalid',
-        quotaLimit: null
+        quotaLimit: null,
       };
 
       // Act
@@ -456,7 +456,7 @@ describe('QuotaManager', () => {
       // Assert
       expect(result).toEqual({
         allowed: false,
-        error: 'Invalid user quota data'
+        error: 'Invalid user quota data',
       });
     });
 
@@ -469,7 +469,7 @@ describe('QuotaManager', () => {
 
       // Assert
       expect(result).toEqual({
-        error: 'User not found'
+        error: 'User not found',
       });
     });
   });
@@ -492,7 +492,7 @@ describe('QuotaManager', () => {
       // Arrange
       const mockCache = new Map();
       quotaManager.setCache(mockCache);
-      
+
       await quotaManager.getQuotaStatus(mockUser.id);
       expect(mockCache.size).toBe(1);
 
@@ -508,7 +508,7 @@ describe('QuotaManager', () => {
     it('should send notification when approaching quota limit', async () => {
       // Arrange
       const mockNotificationService = {
-        sendQuotaWarning: jest.fn()
+        sendQuotaWarning: jest.fn(),
       };
       quotaManager.setNotificationService(mockNotificationService);
 
@@ -523,15 +523,15 @@ describe('QuotaManager', () => {
         mockUser.id,
         expect.objectContaining({
           remaining: 1,
-          limit: 10
-        })
+          limit: 10,
+        }),
       );
     });
 
     it('should send notification when quota is exceeded', async () => {
       // Arrange
       const mockNotificationService = {
-        sendQuotaExceeded: jest.fn()
+        sendQuotaExceeded: jest.fn(),
       };
       quotaManager.setNotificationService(mockNotificationService);
 
@@ -546,8 +546,8 @@ describe('QuotaManager', () => {
         mockUser.id,
         expect.objectContaining({
           limit: 10,
-          attempted: 1
-        })
+          attempted: 1,
+        }),
       );
     });
   });

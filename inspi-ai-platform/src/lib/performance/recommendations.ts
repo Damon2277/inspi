@@ -2,14 +2,15 @@
  * 性能优化建议系统
  */
 import { logger } from '@/lib/logging/logger';
-import { WebVitalsMetric } from './web-vitals';
+
 import { CustomMetric } from './custom-metrics';
 import { MemoryInfo } from './memory';
+import { WebVitalsMetric } from './web-vitals';
 
 /**
  * 性能问题类型
  */
-export type PerformanceIssueType = 
+export type PerformanceIssueType =
   | 'slow-lcp'
   | 'high-cls'
   | 'high-fid'
@@ -135,13 +136,13 @@ export class PerformanceRecommendationEngine {
             'Use a Content Delivery Network (CDN)',
             'Preload critical resources with <link rel="preload">',
             'Minimize server response times',
-            'Remove unused CSS and JavaScript'
+            'Remove unused CSS and JavaScript',
           ],
           codeExamples: [
             {
               language: 'html',
               code: '<link rel="preload" href="/critical-image.jpg" as="image">',
-              description: 'Preload critical images'
+              description: 'Preload critical images',
             },
             {
               language: 'javascript',
@@ -157,25 +158,25 @@ const imageObserver = new IntersectionObserver((entries) => {
   });
 });
 images.forEach(img => imageObserver.observe(img));`,
-              description: 'Implement lazy loading for images'
-            }
+              description: 'Implement lazy loading for images',
+            },
           ],
           resources: [
             {
               title: 'Optimize LCP - Web.dev',
               url: 'https://web.dev/optimize-lcp/',
-              type: 'documentation'
-            }
-          ]
+              type: 'documentation',
+            },
+          ],
         },
         expectedImpact: {
           metric: 'LCP',
           improvement: '30-50% reduction',
-          timeframe: '1-2 weeks'
+          timeframe: '1-2 weeks',
         },
         difficulty: 'medium',
         estimatedTime: '2-5 days',
-        tags: ['loading', 'images', 'cdn', 'preload']
+        tags: ['loading', 'images', 'cdn', 'preload'],
       },
       {
         id: 'reduce-cls',
@@ -190,7 +191,7 @@ images.forEach(img => imageObserver.observe(img));`,
             'Reserve space for ads and dynamic content',
             'Use CSS aspect-ratio property',
             'Avoid inserting content above existing content',
-            'Use transform animations instead of changing layout properties'
+            'Use transform animations instead of changing layout properties',
           ],
           codeExamples: [
             {
@@ -205,7 +206,7 @@ images.forEach(img => imageObserver.observe(img));`,
   height: 100%;
   object-fit: cover;
 }`,
-              description: 'Use aspect-ratio to prevent layout shifts'
+              description: 'Use aspect-ratio to prevent layout shifts',
             },
             {
               language: 'css',
@@ -216,25 +217,25 @@ images.forEach(img => imageObserver.observe(img));`,
   align-items: center;
   justify-content: center;
 }`,
-              description: 'Reserve space for ads'
-            }
+              description: 'Reserve space for ads',
+            },
           ],
           resources: [
             {
               title: 'Optimize CLS - Web.dev',
               url: 'https://web.dev/optimize-cls/',
-              type: 'documentation'
-            }
-          ]
+              type: 'documentation',
+            },
+          ],
         },
         expectedImpact: {
           metric: 'CLS',
           improvement: '50-80% reduction',
-          timeframe: '1 week'
+          timeframe: '1 week',
         },
         difficulty: 'easy',
         estimatedTime: '1-3 days',
-        tags: ['layout', 'images', 'ads', 'css']
+        tags: ['layout', 'images', 'ads', 'css'],
       },
       {
         id: 'improve-fid',
@@ -249,7 +250,7 @@ images.forEach(img => imageObserver.observe(img));`,
             'Use code splitting to reduce bundle size',
             'Defer non-critical JavaScript',
             'Use web workers for heavy computations',
-            'Optimize third-party scripts'
+            'Optimize third-party scripts',
           ],
           codeExamples: [
             {
@@ -280,25 +281,25 @@ function processLargeArray(array) {
     processBatch();
   });
 }`,
-              description: 'Break up long-running tasks'
-            }
+              description: 'Break up long-running tasks',
+            },
           ],
           resources: [
             {
               title: 'Optimize FID - Web.dev',
               url: 'https://web.dev/optimize-fid/',
-              type: 'documentation'
-            }
-          ]
+              type: 'documentation',
+            },
+          ],
         },
         expectedImpact: {
           metric: 'FID',
           improvement: '40-60% reduction',
-          timeframe: '2-3 weeks'
+          timeframe: '2-3 weeks',
         },
         difficulty: 'medium',
         estimatedTime: '3-7 days',
-        tags: ['javascript', 'code-splitting', 'web-workers']
+        tags: ['javascript', 'code-splitting', 'web-workers'],
       },
       {
         id: 'fix-memory-leak',
@@ -313,7 +314,7 @@ function processLargeArray(array) {
             'Clear timers and intervals',
             'Unsubscribe from observables',
             'Avoid circular references',
-            'Use WeakMap and WeakSet for temporary references'
+            'Use WeakMap and WeakSet for temporary references',
           ],
           codeExamples: [
             {
@@ -330,7 +331,7 @@ useEffect(() => {
     window.removeEventListener('resize', handleResize);
   };
 }, []);`,
-              description: 'Proper event listener cleanup in React'
+              description: 'Proper event listener cleanup in React',
             },
             {
               language: 'javascript',
@@ -344,25 +345,25 @@ useEffect(() => {
     clearInterval(timer);
   };
 }, []);`,
-              description: 'Clear timers on cleanup'
-            }
+              description: 'Clear timers on cleanup',
+            },
           ],
           resources: [
             {
               title: 'Memory Management - MDN',
               url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_Management',
-              type: 'documentation'
-            }
-          ]
+              type: 'documentation',
+            },
+          ],
         },
         expectedImpact: {
           metric: 'Memory Usage',
           improvement: '20-50% reduction',
-          timeframe: '1-2 weeks'
+          timeframe: '1-2 weeks',
         },
         difficulty: 'medium',
         estimatedTime: '2-5 days',
-        tags: ['memory', 'cleanup', 'react', 'javascript']
+        tags: ['memory', 'cleanup', 'react', 'javascript'],
       },
       {
         id: 'optimize-bundle-size',
@@ -377,13 +378,13 @@ useEffect(() => {
             'Use dynamic imports for heavy components',
             'Enable tree shaking in your bundler',
             'Remove unused dependencies',
-            'Use bundle analyzer to identify large modules'
+            'Use bundle analyzer to identify large modules',
           ],
           codeExamples: [
             {
               language: 'javascript',
               code: `// Dynamic import for code splitting
-const HeavyComponent = lazy(() => import('./HeavyComponent'));
+const HeavyComponent = lazy(() => );
 
 function App() {
   return (
@@ -392,26 +393,26 @@ function App() {
     </Suspense>
   );
 }`,
-              description: 'Dynamic imports with React.lazy'
-            }
+              description: 'Dynamic imports with React.lazy',
+            },
           ],
           resources: [
             {
               title: 'Code Splitting - React Docs',
               url: 'https://reactjs.org/docs/code-splitting.html',
-              type: 'documentation'
-            }
-          ]
+              type: 'documentation',
+            },
+          ],
         },
         expectedImpact: {
           metric: 'Bundle Size',
           improvement: '20-40% reduction',
-          timeframe: '1-2 weeks'
+          timeframe: '1-2 weeks',
         },
         difficulty: 'medium',
         estimatedTime: '3-5 days',
-        tags: ['bundle', 'code-splitting', 'tree-shaking']
-      }
+        tags: ['bundle', 'code-splitting', 'tree-shaking'],
+      },
     ];
 
     recommendations.forEach(rec => {
@@ -446,7 +447,7 @@ function App() {
       FID: { good: 100, poor: 300, type: 'high-fid' as PerformanceIssueType },
       FCP: { good: 1800, poor: 3000, type: 'slow-fcp' as PerformanceIssueType },
       TTFB: { good: 800, poor: 1800, type: 'high-ttfb' as PerformanceIssueType },
-      INP: { good: 200, poor: 500, type: 'high-inp' as PerformanceIssueType }
+      INP: { good: 200, poor: 500, type: 'high-inp' as PerformanceIssueType },
     };
 
     const threshold = thresholds[name as keyof typeof thresholds];
@@ -467,9 +468,9 @@ function App() {
       metrics: {
         current: metric.value,
         threshold: threshold.good,
-        unit: name === 'CLS' ? '' : 'ms'
+        unit: name === 'CLS' ? '' : 'ms',
       },
-      frequency: 1
+      frequency: 1,
     };
   }
 
@@ -506,7 +507,7 @@ function App() {
     if (usageMetrics.length === 0) return null;
 
     const avgUsage = usageMetrics.reduce((sum, m) => sum + m.value, 0) / usageMetrics.length;
-    
+
     if (avgUsage > 85) {
       return {
         type: 'high-memory-usage',
@@ -518,9 +519,9 @@ function App() {
         metrics: {
           current: avgUsage,
           threshold: 70,
-          unit: '%'
+          unit: '%',
         },
-        frequency: usageMetrics.length / metrics.length
+        frequency: usageMetrics.length / metrics.length,
       };
     }
 
@@ -534,7 +535,7 @@ function App() {
     if (metrics.length === 0) return null;
 
     const avgResponseTime = metrics.reduce((sum, m) => sum + m.value, 0) / metrics.length;
-    
+
     if (avgResponseTime > 2000) {
       return {
         type: 'slow-api',
@@ -546,9 +547,9 @@ function App() {
         metrics: {
           current: avgResponseTime,
           threshold: 1000,
-          unit: 'ms'
+          unit: 'ms',
         },
-        frequency: 1
+        frequency: 1,
       };
     }
 
@@ -567,7 +568,7 @@ function App() {
         // 调整优先级基于严重程度
         const adjustedRecommendation = {
           ...recommendation,
-          priority: this.adjustPriority(recommendation.priority, issue.severity)
+          priority: this.adjustPriority(recommendation.priority, issue.severity),
         };
         recommendations.push(adjustedRecommendation);
       }
@@ -591,7 +592,7 @@ function App() {
       'memory-leak': 'fix-memory-leak',
       'high-memory-usage': 'fix-memory-leak',
       'large-bundle': 'optimize-bundle-size',
-      'slow-api': 'optimize-api'
+      'slow-api': 'optimize-api',
     };
 
     return mapping[issueType] || 'general-optimization';
@@ -602,7 +603,7 @@ function App() {
    */
   private adjustPriority(
     basePriority: PerformanceRecommendation['priority'],
-    severity: IssueSeverity
+    severity: IssueSeverity,
   ): PerformanceRecommendation['priority'] {
     if (severity === 'critical') return 'critical';
     if (severity === 'high' && basePriority !== 'critical') return 'high';
@@ -627,7 +628,7 @@ function App() {
       'unoptimized-images': 'Large images slow down loading and waste bandwidth',
       'blocking-resources': 'Blocking resources delay page rendering',
       'inefficient-rendering': 'Inefficient rendering causes jank and poor UX',
-      'poor-caching': 'Poor caching leads to unnecessary network requests'
+      'poor-caching': 'Poor caching leads to unnecessary network requests',
     };
 
     return impacts[issueType] || 'May negatively impact user experience';
@@ -644,7 +645,7 @@ function App() {
         critical: 25,
         high: 15,
         medium: 8,
-        low: 3
+        low: 3,
       };
 
       score -= penalty[issue.severity] * issue.frequency;
@@ -669,7 +670,7 @@ function App() {
    */
   analyzePerformance(
     webVitals: Record<string, WebVitalsMetric>,
-    customMetrics: CustomMetric[]
+    customMetrics: CustomMetric[],
   ): PerformanceAnalysis {
     const webVitalIssues = this.analyzeWebVitals(webVitals);
     const customIssues = this.analyzeCustomMetrics(customMetrics);
@@ -684,7 +685,7 @@ function App() {
       criticalIssues: allIssues.filter(i => i.severity === 'critical').length,
       highIssues: allIssues.filter(i => i.severity === 'high').length,
       mediumIssues: allIssues.filter(i => i.severity === 'medium').length,
-      lowIssues: allIssues.filter(i => i.severity === 'low').length
+      lowIssues: allIssues.filter(i => i.severity === 'low').length,
     };
 
     const trends = this.analyzeTrends();
@@ -695,11 +696,11 @@ function App() {
       issues: allIssues,
       recommendations,
       summary,
-      trends
+      trends,
     };
 
     this.analysisHistory.push(analysis);
-    
+
     // 保持最近10次分析
     if (this.analysisHistory.length > 10) {
       this.analysisHistory = this.analysisHistory.slice(-10);
@@ -709,7 +710,7 @@ function App() {
       score,
       grade,
       issuesCount: allIssues.length,
-      recommendationsCount: recommendations.length
+      recommendationsCount: recommendations.length,
     });
 
     return analysis;

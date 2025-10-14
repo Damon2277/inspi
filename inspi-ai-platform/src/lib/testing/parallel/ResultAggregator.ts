@@ -135,13 +135,13 @@ export class ResultAggregator extends EventEmitter {
         statements: 95,
         branches: 90,
         functions: 95,
-        lines: 95
+        lines: 95,
       },
       performanceThreshold: 60000, // 60秒
       errorThreshold: 0.05, // 5%错误率
       outputFormats: ['json', 'html'],
       outputDir: 'test-results',
-      ...options
+      ...options,
     };
   }
 
@@ -153,7 +153,7 @@ export class ResultAggregator extends EventEmitter {
     this.results.clear();
     this.timeline = [];
     this.workerMetrics.clear();
-    
+
     this.emit('aggregation:started');
   }
 
@@ -162,14 +162,14 @@ export class ResultAggregator extends EventEmitter {
    */
   addResult(result: TestResult): void {
     this.results.set(result.suiteId, result);
-    
+
     // 记录时间线
     this.timeline.push({
       timestamp: Date.now(),
       workerId: result.workerId || -1,
       event: result.status === 'failed' ? 'error' : 'complete',
       suiteId: result.suiteId,
-      duration: result.duration
+      duration: result.duration,
     });
 
     // 更新工作节点指标
@@ -186,7 +186,7 @@ export class ResultAggregator extends EventEmitter {
       timestamp: Date.now(),
       workerId,
       event: 'start',
-      suiteId
+      suiteId,
     });
 
     // 初始化工作节点指标
@@ -198,7 +198,7 @@ export class ResultAggregator extends EventEmitter {
         activeTime: 0,
         tasksCompleted: 0,
         errors: 0,
-        lastActivity: Date.now()
+        lastActivity: Date.now(),
       });
     }
   }
@@ -209,12 +209,12 @@ export class ResultAggregator extends EventEmitter {
   private updateWorkerMetrics(result: TestResult): void {
     const workerId = result.workerId || -1;
     const metrics = this.workerMetrics.get(workerId);
-    
+
     if (metrics) {
       metrics.tasksCompleted++;
       metrics.activeTime += result.duration;
       metrics.lastActivity = Date.now();
-      
+
       if (result.status === 'failed') {
         metrics.errors++;
       }
@@ -238,7 +238,7 @@ export class ResultAggregator extends EventEmitter {
       coverage: this.aggregateCoverage(),
       performance: this.analyzePerformance(totalDuration),
       errors: this.analyzeErrors(),
-      timeline: this.timeline
+      timeline: this.timeline,
     };
 
     // 生成报告
@@ -262,7 +262,7 @@ export class ResultAggregator extends EventEmitter {
    */
   private generateSummary(totalDuration: number): TestSummary {
     const results = Array.from(this.results.values());
-    
+
     const totalSuites = results.length;
     const passedSuites = results.filter(r => r.status === 'passed').length;
     const failedSuites = results.filter(r => r.status === 'failed').length;
@@ -286,7 +286,7 @@ export class ResultAggregator extends EventEmitter {
       failedTests,
       skippedTests,
       totalDuration,
-      successRate
+      successRate,
     };
   }
 
@@ -305,7 +305,7 @@ export class ResultAggregator extends EventEmitter {
         byFile: new Map(),
         byModule: new Map(),
         threshold: this.options.coverageThreshold,
-        passed: false
+        passed: false,
       };
     }
 
@@ -314,12 +314,12 @@ export class ResultAggregator extends EventEmitter {
       statements: this.calculateWeightedAverage(coverageData, 'statements'),
       branches: this.calculateWeightedAverage(coverageData, 'branches'),
       functions: this.calculateWeightedAverage(coverageData, 'functions'),
-      lines: this.calculateWeightedAverage(coverageData, 'lines')
+      lines: this.calculateWeightedAverage(coverageData, 'lines'),
     };
 
     // 检查是否达到阈值
     const threshold = this.options.coverageThreshold;
-    const passed = 
+    const passed =
       overall.statements >= threshold.statements &&
       overall.branches >= threshold.branches &&
       overall.functions >= threshold.functions &&
@@ -330,7 +330,7 @@ export class ResultAggregator extends EventEmitter {
       byFile: new Map(), // TODO: 实现文件级覆盖率聚合
       byModule: new Map(), // TODO: 实现模块级覆盖率聚合
       threshold,
-      passed
+      passed,
     };
   }
 
@@ -348,7 +348,7 @@ export class ResultAggregator extends EventEmitter {
   private analyzePerformance(totalDuration: number): PerformanceMetrics {
     const results = Array.from(this.results.values());
     const allTests = results.flatMap(r => r.tests);
-    
+
     // 计算并行效率
     const sequentialTime = results.reduce((sum, r) => sum + r.duration, 0);
     const parallelEfficiency = sequentialTime > 0 ? sequentialTime / totalDuration : 0;
@@ -360,7 +360,7 @@ export class ResultAggregator extends EventEmitter {
         totalTime: metrics.totalTime,
         activeTime: metrics.activeTime,
         utilization: metrics.totalTime > 0 ? metrics.activeTime / metrics.totalTime : 0,
-        tasksCompleted: metrics.tasksCompleted
+        tasksCompleted: metrics.tasksCompleted,
       }));
 
     // 识别瓶颈
@@ -371,7 +371,7 @@ export class ResultAggregator extends EventEmitter {
       .sort((a, b) => b.duration - a.duration)
       .slice(0, 10);
 
-    const averageTaskTime = results.length > 0 ? 
+    const averageTaskTime = results.length > 0 ?
       results.reduce((sum, r) => sum + r.duration, 0) / results.length : 0;
 
     return {
@@ -380,7 +380,7 @@ export class ResultAggregator extends EventEmitter {
       workerUtilization,
       bottlenecks,
       averageTaskTime,
-      slowestTests
+      slowestTests,
     };
   }
 
@@ -388,16 +388,16 @@ export class ResultAggregator extends EventEmitter {
    * 识别性能瓶颈
    */
   private identifyBottlenecks(
-    workerUtilization: WorkerUtilization[], 
-    results: TestResult[]
+    workerUtilization: WorkerUtilization[],
+    results: TestResult[],
   ): Bottleneck[] {
     const bottlenecks: Bottleneck[] = [];
 
     // 工作节点利用率不均
     const utilizationVariance = this.calculateVariance(
-      workerUtilization.map(w => w.utilization)
+      workerUtilization.map(w => w.utilization),
     );
-    
+
     if (utilizationVariance > 0.1) {
       bottlenecks.push({
         type: 'worker',
@@ -406,8 +406,8 @@ export class ResultAggregator extends EventEmitter {
         suggestions: [
           'Consider adjusting load balancing strategy',
           'Review task distribution algorithm',
-          'Check for worker performance differences'
-        ]
+          'Check for worker performance differences',
+        ],
       });
     }
 
@@ -421,8 +421,8 @@ export class ResultAggregator extends EventEmitter {
         suggestions: [
           'Optimize slow test cases',
           'Consider breaking down complex tests',
-          'Review test setup and teardown procedures'
-        ]
+          'Review test setup and teardown procedures',
+        ],
       });
     }
 
@@ -434,10 +434,10 @@ export class ResultAggregator extends EventEmitter {
    */
   private calculateVariance(values: number[]): number {
     if (values.length === 0) return 0;
-    
+
     const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
     const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
-    
+
     return variance;
   }
 
@@ -447,7 +447,7 @@ export class ResultAggregator extends EventEmitter {
   private analyzeErrors(): ErrorSummary {
     const results = Array.from(this.results.values());
     const allTests = results.flatMap(r => r.tests);
-    
+
     const failedTests = allTests.filter(t => t.status === 'failed');
     const totalErrors = failedTests.length;
 
@@ -460,7 +460,7 @@ export class ResultAggregator extends EventEmitter {
       if (result.error) {
         const errorType = result.error.type;
         errorsByType.set(errorType, (errorsByType.get(errorType) || 0) + 1);
-        
+
         if (result.workerId !== undefined) {
           errorsByWorker.set(result.workerId, (errorsByWorker.get(result.workerId) || 0) + 1);
         }
@@ -480,7 +480,7 @@ export class ResultAggregator extends EventEmitter {
       errorsByType,
       errorsByWorker,
       flakyTests,
-      criticalErrors
+      criticalErrors,
     };
   }
 
@@ -490,7 +490,7 @@ export class ResultAggregator extends EventEmitter {
   private identifyFlakyTests(results: TestResult[]): string[] {
     // 简化实现：基于错误模式识别
     const testFailures = new Map<string, number>();
-    
+
     results.forEach(result => {
       result.tests.forEach(test => {
         if (test.status === 'failed' && test.error) {
@@ -511,7 +511,7 @@ export class ResultAggregator extends EventEmitter {
    */
   private async generateReports(result: AggregatedResult): Promise<void> {
     const outputDir = this.options.outputDir;
-    
+
     // 确保输出目录存在
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
@@ -530,9 +530,9 @@ export class ResultAggregator extends EventEmitter {
    * 生成特定格式的报告
    */
   private async generateReport(
-    result: AggregatedResult, 
-    format: string, 
-    outputDir: string
+    result: AggregatedResult,
+    format: string,
+    outputDir: string,
   ): Promise<void> {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const extension = format === 'markdown' ? 'md' : format;
@@ -650,9 +650,9 @@ export class ResultAggregator extends EventEmitter {
   private generateXmlReport(result: AggregatedResult): string {
     const testsuites = result.results.map(suite => {
       const tests = suite.tests.map(test => {
-        const failure = test.status === 'failed' ? 
+        const failure = test.status === 'failed' ?
           `<failure message="${test.error || 'Test failed'}">${test.error || ''}</failure>` : '';
-        
+
         return `
         <testcase name="${test.name}" time="${test.duration / 1000}" classname="${suite.suiteId}">
             ${failure}
@@ -712,8 +712,8 @@ ${result.performance.bottlenecks.map(b => `- ${b.description}`).join('\n')}
 
 | Suite | Status | Duration | Tests | Worker |
 |-------|--------|----------|-------|--------|
-${result.results.map(r => 
-  `| ${r.suiteId} | ${r.status} | ${r.duration}ms | ${r.tests.length} | ${r.workerId || 'N/A'} |`
+${result.results.map(r =>
+  `| ${r.suiteId} | ${r.status} | ${r.duration}ms | ${r.tests.length} | ${r.workerId || 'N/A'} |`,
 ).join('\n')}
     `;
   }

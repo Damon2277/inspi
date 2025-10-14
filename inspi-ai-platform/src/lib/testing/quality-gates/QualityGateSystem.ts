@@ -1,6 +1,6 @@
 /**
  * Quality Gate System
- * 
+ *
  * Comprehensive quality gate system that enforces quality standards
  * through automated checks for coverage, performance, security, and compliance.
  */
@@ -158,21 +158,21 @@ export class QualityGateSystem {
           statements: 90,
           branches: 85,
           functions: 90,
-          lines: 90
+          lines: 90,
         },
         excludePatterns: ['**/*.test.ts', '**/*.spec.ts', '**/node_modules/**'],
         failOnThreshold: true,
-        ...config.coverage
+        ...config.coverage,
       },
       performance: {
         enabled: true,
         thresholds: {
           maxRegressionPercent: 20,
           maxExecutionTime: 60000, // 60 seconds
-          maxMemoryUsage: 512 * 1024 * 1024 // 512MB
+          maxMemoryUsage: 512 * 1024 * 1024, // 512MB
         },
         failOnRegression: true,
-        ...config.performance
+        ...config.performance,
       },
       security: {
         enabled: true,
@@ -180,10 +180,10 @@ export class QualityGateSystem {
           noHardcodedSecrets: true,
           noInsecureRandomness: true,
           noSqlInjection: true,
-          noXssVulnerabilities: true
+          noXssVulnerabilities: true,
         },
         failOnViolation: true,
-        ...config.security
+        ...config.security,
       },
       compliance: {
         enabled: true,
@@ -191,11 +191,11 @@ export class QualityGateSystem {
           requireTestDocumentation: true,
           enforceNamingConventions: true,
           requireErrorHandling: true,
-          enforceTypeScript: true
+          enforceTypeScript: true,
         },
         failOnViolation: false, // Warnings by default
-        ...config.compliance
-      }
+        ...config.compliance,
+      },
     };
 
     this.coverageChecker = new CoverageChecker(this.config.coverage);
@@ -213,7 +213,7 @@ export class QualityGateSystem {
       coverage: await this.checkCoverage(),
       performance: await this.checkPerformance(testResults),
       security: await this.checkSecurity(),
-      compliance: await this.checkCompliance()
+      compliance: await this.checkCompliance(),
     };
 
     const passed = this.determineOverallResult(results);
@@ -227,7 +227,7 @@ export class QualityGateSystem {
       results,
       overallScore,
       recommendations,
-      blockers
+      blockers,
     };
   }
 
@@ -241,7 +241,7 @@ export class QualityGateSystem {
         current: { statements: 100, branches: 100, functions: 100, lines: 100 },
         thresholds: this.config.coverage.thresholds,
         violations: [],
-        uncoveredFiles: []
+        uncoveredFiles: [],
       };
     }
 
@@ -257,7 +257,7 @@ export class QualityGateSystem {
         passed: true,
         current: { executionTime: 0, memoryUsage: 0, testCount: 0 },
         regressions: { executionTime: 0, memoryUsage: 0 },
-        violations: []
+        violations: [],
       };
     }
 
@@ -273,7 +273,7 @@ export class QualityGateSystem {
         passed: true,
         violations: [],
         riskLevel: 'low',
-        summary: { total: 0, critical: 0, high: 0, medium: 0, low: 0 }
+        summary: { total: 0, critical: 0, high: 0, medium: 0, low: 0 },
       };
     }
 
@@ -288,7 +288,7 @@ export class QualityGateSystem {
       return {
         passed: true,
         violations: [],
-        summary: { total: 0, documentation: 0, naming: 0, errorHandling: 0, typeScript: 0 }
+        summary: { total: 0, documentation: 0, naming: 0, errorHandling: 0, typeScript: 0 },
       };
     }
 
@@ -303,7 +303,7 @@ export class QualityGateSystem {
       coverage: { ...this.config.coverage, ...newConfig.coverage },
       performance: { ...this.config.performance, ...newConfig.performance },
       security: { ...this.config.security, ...newConfig.security },
-      compliance: { ...this.config.compliance, ...newConfig.compliance }
+      compliance: { ...this.config.compliance, ...newConfig.compliance },
     };
 
     // Update checker configurations
@@ -329,7 +329,7 @@ export class QualityGateSystem {
       `Generated: ${result.timestamp.toISOString()}`,
       `Overall Result: ${result.passed ? '✅ PASSED' : '❌ FAILED'}`,
       `Quality Score: ${result.overallScore.toFixed(1)}/100`,
-      ''
+      '',
     ];
 
     // Coverage section
@@ -340,7 +340,7 @@ export class QualityGateSystem {
     lines.push(`- Branches: ${coverage.current.branches.toFixed(1)}% (threshold: ${coverage.thresholds.branches}%)`);
     lines.push(`- Functions: ${coverage.current.functions.toFixed(1)}% (threshold: ${coverage.thresholds.functions}%)`);
     lines.push(`- Lines: ${coverage.current.lines.toFixed(1)}% (threshold: ${coverage.thresholds.lines}%)`);
-    
+
     if (coverage.violations.length > 0) {
       lines.push('### Coverage Violations:');
       coverage.violations.forEach(violation => lines.push(`- ${violation}`));
@@ -354,7 +354,7 @@ export class QualityGateSystem {
     lines.push(`- Execution Time: ${performance.current.executionTime}ms`);
     lines.push(`- Memory Usage: ${(performance.current.memoryUsage / 1024 / 1024).toFixed(1)}MB`);
     lines.push(`- Test Count: ${performance.current.testCount}`);
-    
+
     if (performance.baseline) {
       lines.push('### Performance Regressions:');
       lines.push(`- Execution Time: ${performance.regressions.executionTime > 0 ? '+' : ''}${performance.regressions.executionTime.toFixed(1)}%`);
@@ -368,7 +368,7 @@ export class QualityGateSystem {
     lines.push(`Status: ${security.passed ? '✅ PASSED' : '❌ FAILED'}`);
     lines.push(`Risk Level: ${security.riskLevel.toUpperCase()}`);
     lines.push(`Total Violations: ${security.summary.total}`);
-    
+
     if (security.violations.length > 0) {
       lines.push('### Security Violations:');
       security.violations.forEach(violation => {
@@ -383,7 +383,7 @@ export class QualityGateSystem {
     const compliance = result.results.compliance;
     lines.push(`Status: ${compliance.passed ? '✅ PASSED' : '❌ FAILED'}`);
     lines.push(`Total Violations: ${compliance.summary.total}`);
-    
+
     if (compliance.violations.length > 0) {
       lines.push('### Compliance Violations:');
       compliance.violations.forEach(violation => {
@@ -414,7 +414,7 @@ export class QualityGateSystem {
       !this.config.coverage.enabled || !this.config.coverage.failOnThreshold || results.coverage.passed,
       !this.config.performance.enabled || !this.config.performance.failOnRegression || results.performance.passed,
       !this.config.security.enabled || !this.config.security.failOnViolation || results.security.passed,
-      !this.config.compliance.enabled || !this.config.compliance.failOnViolation || results.compliance.passed
+      !this.config.compliance.enabled || !this.config.compliance.failOnViolation || results.compliance.passed,
     ];
 
     return checks.every(check => check);
@@ -427,7 +427,7 @@ export class QualityGateSystem {
     // Coverage score (weight: 30)
     if (this.config.coverage.enabled) {
       const coverage = results.coverage;
-      const avgCoverage = (coverage.current.statements + coverage.current.branches + 
+      const avgCoverage = (coverage.current.statements + coverage.current.branches +
                           coverage.current.functions + coverage.current.lines) / 4;
       totalScore += avgCoverage * 0.3;
       totalWeight += 0.3;
@@ -437,13 +437,13 @@ export class QualityGateSystem {
     if (this.config.performance.enabled) {
       const performance = results.performance;
       let perfScore = 100;
-      
+
       if (performance.baseline) {
         // Deduct points for regressions
         perfScore -= Math.abs(performance.regressions.executionTime) * 2;
         perfScore -= Math.abs(performance.regressions.memoryUsage) * 2;
       }
-      
+
       perfScore = Math.max(0, perfScore);
       totalScore += perfScore * 0.25;
       totalWeight += 0.25;
@@ -453,13 +453,13 @@ export class QualityGateSystem {
     if (this.config.security.enabled) {
       const security = results.security;
       let secScore = 100;
-      
+
       // Deduct points based on violations
       secScore -= security.summary.critical * 25;
       secScore -= security.summary.high * 15;
       secScore -= security.summary.medium * 10;
       secScore -= security.summary.low * 5;
-      
+
       secScore = Math.max(0, secScore);
       totalScore += secScore * 0.25;
       totalWeight += 0.25;
@@ -469,10 +469,10 @@ export class QualityGateSystem {
     if (this.config.compliance.enabled) {
       const compliance = results.compliance;
       let compScore = 100;
-      
+
       // Deduct points for violations
       compScore -= compliance.summary.total * 5;
-      
+
       compScore = Math.max(0, compScore);
       totalScore += compScore * 0.2;
       totalWeight += 0.2;
@@ -547,7 +547,7 @@ export class QualityGateSystem {
 }
 
 // Import checker classes (to be implemented)
+import { ComplianceChecker } from './ComplianceChecker';
 import { CoverageChecker } from './CoverageChecker';
 import { PerformanceChecker } from './PerformanceChecker';
 import { SecurityChecker } from './SecurityChecker';
-import { ComplianceChecker } from './ComplianceChecker';

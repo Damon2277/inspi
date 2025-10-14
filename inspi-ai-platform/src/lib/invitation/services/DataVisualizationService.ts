@@ -3,8 +3,8 @@
  * 提供各种图表数据的生成和配置
  */
 
-import { DatabaseService } from '../database'
-import { TimePeriod, SharePlatform } from '../types'
+import { DatabaseService } from '../database';
+import { TimePeriod, SharePlatform } from '../types';
 
 export interface ChartConfig {
   type: 'line' | 'bar' | 'pie' | 'doughnut' | 'area' | 'scatter' | 'radar'
@@ -62,25 +62,25 @@ export interface ChartOptions {
 export interface DataVisualizationService {
   // 生成邀请趋势图
   generateInviteTrendChart(period: TimePeriod, granularity?: 'day' | 'week' | 'month'): Promise<ChartConfig>
-  
+
   // 生成转化漏斗图
   generateConversionFunnelChart(period: TimePeriod): Promise<ChartConfig>
-  
+
   // 生成平台分布饼图
   generatePlatformDistributionChart(period: TimePeriod): Promise<ChartConfig>
-  
+
   // 生成排行榜柱状图
   generateLeaderboardChart(period: TimePeriod, limit?: number): Promise<ChartConfig>
-  
+
   // 生成用户活跃度热力图数据
   generateUserActivityHeatmap(period: TimePeriod): Promise<{
     data: Array<{ x: string; y: string; value: number }>
     config: any
   }>
-  
+
   // 生成转化率对比图
   generateConversionComparisonChart(periods: TimePeriod[]): Promise<ChartConfig>
-  
+
   // 生成实时数据仪表盘
   generateRealTimeDashboard(): Promise<{
     metrics: Array<{
@@ -92,7 +92,7 @@ export interface DataVisualizationService {
     }>
     charts: ChartConfig[]
   }>
-  
+
   // 生成地理分布图数据
   generateGeographicDistribution(period: TimePeriod): Promise<{
     type: 'map'
@@ -102,10 +102,10 @@ export interface DataVisualizationService {
       coordinates?: [number, number]
     }>
   }>
-  
+
   // 获取图表颜色主题
   getChartColorThemes(): { [themeName: string]: string[] }
-  
+
   // 导出图表为图片
   exportChartAsImage(chartConfig: ChartConfig, format: 'png' | 'jpg' | 'svg'): Promise<Buffer>
 }
@@ -115,8 +115,8 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
     default: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'],
     pastel: ['#93c5fd', '#86efac', '#fde68a', '#fca5a5', '#c4b5fd', '#67e8f9'],
     dark: ['#1e40af', '#059669', '#d97706', '#dc2626', '#7c3aed', '#0891b2'],
-    monochrome: ['#374151', '#6b7280', '#9ca3af', '#d1d5db', '#e5e7eb', '#f3f4f6']
-  }
+    monochrome: ['#374151', '#6b7280', '#9ca3af', '#d1d5db', '#e5e7eb', '#f3f4f6'],
+  };
 
   constructor(private db: DatabaseService) {}
 
@@ -124,25 +124,25 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
    * 生成邀请趋势图
    */
   async generateInviteTrendChart(
-    period: TimePeriod, 
-    granularity: 'day' | 'week' | 'month' = 'day'
+    period: TimePeriod,
+    granularity: 'day' | 'week' | 'month' = 'day',
   ): Promise<ChartConfig> {
     try {
-      let dateFormat: string
-      let groupBy: string
+      let dateFormat: string;
+      let groupBy: string;
 
       switch (granularity) {
         case 'week':
-          dateFormat = '%Y-%u'
-          groupBy = 'YEARWEEK(ic.created_at)'
-          break
+          dateFormat = '%Y-%u';
+          groupBy = 'YEARWEEK(ic.created_at)';
+          break;
         case 'month':
-          dateFormat = '%Y-%m'
-          groupBy = 'DATE_FORMAT(ic.created_at, "%Y-%m")'
-          break
+          dateFormat = '%Y-%m';
+          groupBy = 'DATE_FORMAT(ic.created_at, "%Y-%m")';
+          break;
         default:
-          dateFormat = '%Y-%m-%d'
-          groupBy = 'DATE(ic.created_at)'
+          dateFormat = '%Y-%m-%d';
+          groupBy = 'DATE(ic.created_at)';
       }
 
       const query = `
@@ -156,14 +156,14 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
         WHERE ic.created_at BETWEEN ? AND ?
         GROUP BY ${groupBy}
         ORDER BY date
-      `
+      `;
 
-      const results = await this.db.query(query, [period.start, period.end])
-      
-      const labels = results.map((row: any) => row.date)
-      const invitesData = results.map((row: any) => parseInt(row.invites) || 0)
-      const registrationsData = results.map((row: any) => parseInt(row.registrations) || 0)
-      const activationsData = results.map((row: any) => parseInt(row.activations) || 0)
+      const results = await this.db.query(query, [period.start, period.end]);
+
+      const labels = results.map((row: any) => row.date);
+      const invitesData = results.map((row: any) => parseInt(row.invites, 10) || 0);
+      const registrationsData = results.map((row: any) => parseInt(row.registrations, 10) || 0);
+      const activationsData = results.map((row: any) => parseInt(row.activations, 10) || 0);
 
       return {
         type: 'line',
@@ -178,7 +178,7 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
               borderColor: this.colorThemes.default[0],
               backgroundColor: this.colorThemes.pastel[0],
               fill: false,
-              tension: 0.4
+              tension: 0.4,
             },
             {
               label: '注册数',
@@ -186,7 +186,7 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
               borderColor: this.colorThemes.default[1],
               backgroundColor: this.colorThemes.pastel[1],
               fill: false,
-              tension: 0.4
+              tension: 0.4,
             },
             {
               label: '激活数',
@@ -194,9 +194,9 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
               borderColor: this.colorThemes.default[2],
               backgroundColor: this.colorThemes.pastel[2],
               fill: false,
-              tension: 0.4
-            }
-          ]
+              tension: 0.4,
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -204,35 +204,35 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
           plugins: {
             legend: {
               display: true,
-              position: 'top'
+              position: 'top',
             },
             tooltip: {
               enabled: true,
-              mode: 'index'
-            }
+              mode: 'index',
+            },
           },
           scales: {
             x: {
               display: true,
               title: {
                 display: true,
-                text: '时间'
-              }
+                text: '时间',
+              },
             },
             y: {
               display: true,
               beginAtZero: true,
               title: {
                 display: true,
-                text: '数量'
-              }
-            }
-          }
-        }
-      }
+                text: '数量',
+              },
+            },
+          },
+        },
+      };
     } catch (error) {
-      console.error('Failed to generate invite trend chart:', error)
-      throw new Error('Failed to generate invite trend chart')
+      console.error('Failed to generate invite trend chart:', error);
+      throw new Error('Failed to generate invite trend chart');
     }
   }
 
@@ -251,21 +251,26 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
         LEFT JOIN share_events se ON ic.id = se.invite_code_id AND se.event_type = 'click'
         LEFT JOIN invite_registrations ir ON ic.id = ir.invite_code_id
         WHERE ic.created_at BETWEEN ? AND ?
-      `
+      `;
 
-      const result = await this.db.queryOne(query, [period.start, period.end])
-      
-      const totalInvites = parseInt(result?.total_invites) || 0
-      const totalClicks = parseInt(result?.total_clicks) || 0
-      const totalRegistrations = parseInt(result?.total_registrations) || 0
-      const totalActivations = parseInt(result?.total_activations) || 0
+      const result = await this.db.queryOne<{
+        total_invites: number | string;
+        total_clicks: number | string;
+        total_registrations: number | string;
+        total_activations: number | string;
+      }>(query, [period.start, period.end]);
+
+      const totalInvites = Number(result?.total_invites) || 0;
+      const totalClicks = Number(result?.total_clicks) || 0;
+      const totalRegistrations = Number(result?.total_registrations) || 0;
+      const totalActivations = Number(result?.total_activations) || 0;
 
       const funnelData = [
         { step: '邀请生成', count: totalInvites },
         { step: '链接点击', count: totalClicks },
         { step: '用户注册', count: totalRegistrations },
-        { step: '用户激活', count: totalActivations }
-      ]
+        { step: '用户激活', count: totalActivations },
+      ];
 
       return {
         type: 'bar',
@@ -280,50 +285,50 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
               this.colorThemes.default[0],
               this.colorThemes.default[1],
               this.colorThemes.default[2],
-              this.colorThemes.default[3]
+              this.colorThemes.default[3],
             ],
             borderColor: [
               this.colorThemes.dark[0],
               this.colorThemes.dark[1],
               this.colorThemes.dark[2],
-              this.colorThemes.dark[3]
+              this.colorThemes.dark[3],
             ],
-            borderWidth: 2
-          }]
+            borderWidth: 2,
+          }],
         },
         options: {
           responsive: true,
           plugins: {
             legend: {
-              display: false
+              display: false,
             },
             tooltip: {
               enabled: true,
-              mode: 'point'
-            }
+              mode: 'point',
+            },
           },
           scales: {
             x: {
               display: true,
               title: {
                 display: true,
-                text: '转化步骤'
-              }
+                text: '转化步骤',
+              },
             },
             y: {
               display: true,
               beginAtZero: true,
               title: {
                 display: true,
-                text: '用户数量'
-              }
-            }
-          }
-        }
-      }
+                text: '用户数量',
+              },
+            },
+          },
+        },
+      };
     } catch (error) {
-      console.error('Failed to generate conversion funnel chart:', error)
-      throw new Error('Failed to generate conversion funnel chart')
+      console.error('Failed to generate conversion funnel chart:', error);
+      throw new Error('Failed to generate conversion funnel chart');
     }
   }
 
@@ -341,12 +346,12 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
         AND se.event_type = 'share'
         GROUP BY se.platform
         ORDER BY share_count DESC
-      `
+      `;
 
-      const results = await this.db.query(query, [period.start, period.end])
-      
-      const labels = results.map((row: any) => this.getPlatformDisplayName(row.platform))
-      const data = results.map((row: any) => parseInt(row.share_count) || 0)
+      const results = await this.db.query(query, [period.start, period.end]);
+
+      const labels = results.map((row: any) => this.getPlatformDisplayName(row.platform));
+      const data = results.map((row: any) => parseInt(row.share_count, 10) || 0);
 
       return {
         type: 'doughnut',
@@ -359,26 +364,26 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
             data,
             backgroundColor: this.colorThemes.default.slice(0, labels.length),
             borderColor: this.colorThemes.dark.slice(0, labels.length),
-            borderWidth: 2
-          }]
+            borderWidth: 2,
+          }],
         },
         options: {
           responsive: true,
           plugins: {
             legend: {
               display: true,
-              position: 'right'
+              position: 'right',
             },
             tooltip: {
               enabled: true,
-              mode: 'point'
-            }
-          }
-        }
-      }
+              mode: 'point',
+            },
+          },
+        },
+      };
     } catch (error) {
-      console.error('Failed to generate platform distribution chart:', error)
-      throw new Error('Failed to generate platform distribution chart')
+      console.error('Failed to generate platform distribution chart:', error);
+      throw new Error('Failed to generate platform distribution chart');
     }
   }
 
@@ -399,12 +404,12 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
         HAVING invite_count > 0
         ORDER BY invite_count DESC
         LIMIT ?
-      `
+      `;
 
-      const results = await this.db.query(query, [period.start, period.end, limit])
-      
-      const labels = results.map((row: any) => row.user_name)
-      const data = results.map((row: any) => parseInt(row.invite_count) || 0)
+      const results = await this.db.query(query, [period.start, period.end, limit]);
+
+      const labels = results.map((row: any) => row.user_name);
+      const data = results.map((row: any) => parseInt(row.invite_count, 10) || 0);
 
       return {
         type: 'bar',
@@ -417,38 +422,38 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
             data,
             backgroundColor: this.colorThemes.default[0],
             borderColor: this.colorThemes.dark[0],
-            borderWidth: 1
-          }]
+            borderWidth: 1,
+          }],
         },
         options: {
           responsive: true,
           plugins: {
             legend: {
-              display: false
-            }
+              display: false,
+            },
           },
           scales: {
             x: {
               display: true,
               title: {
                 display: true,
-                text: '用户'
-              }
+                text: '用户',
+              },
             },
             y: {
               display: true,
               beginAtZero: true,
               title: {
                 display: true,
-                text: '邀请数量'
-              }
-            }
-          }
-        }
-      }
+                text: '邀请数量',
+              },
+            },
+          },
+        },
+      };
     } catch (error) {
-      console.error('Failed to generate leaderboard chart:', error)
-      throw new Error('Failed to generate leaderboard chart')
+      console.error('Failed to generate leaderboard chart:', error);
+      throw new Error('Failed to generate leaderboard chart');
     }
   }
 
@@ -469,15 +474,15 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
         WHERE ic.created_at BETWEEN ? AND ?
         GROUP BY HOUR(ic.created_at), DAYNAME(ic.created_at), DAYOFWEEK(ic.created_at)
         ORDER BY DAYOFWEEK(ic.created_at), HOUR(ic.created_at)
-      `
+      `;
 
-      const results = await this.db.query(query, [period.start, period.end])
-      
+      const results = await this.db.query(query, [period.start, period.end]);
+
       const data = results.map((row: any) => ({
         x: `${row.hour}:00`,
         y: row.day_name,
-        value: parseInt(row.activity_count) || 0
-      }))
+        value: parseInt(row.activity_count, 10) || 0,
+      }));
 
       return {
         data,
@@ -486,13 +491,13 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
           subtitle: '按时间和星期分布的邀请活动',
           colorScale: ['#f3f4f6', '#3b82f6'],
           tooltip: {
-            format: (d: any) => `${d.y} ${d.x}: ${d.value} 次邀请`
-          }
-        }
-      }
+            format: (d: any) => `${d.y} ${d.x}: ${d.value} 次邀请`,
+          },
+        },
+      };
     } catch (error) {
-      console.error('Failed to generate user activity heatmap:', error)
-      throw new Error('Failed to generate user activity heatmap')
+      console.error('Failed to generate user activity heatmap:', error);
+      throw new Error('Failed to generate user activity heatmap');
     }
   }
 
@@ -501,7 +506,7 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
    */
   async generateConversionComparisonChart(periods: TimePeriod[]): Promise<ChartConfig> {
     try {
-      const conversionData = []
+      const conversionData = [];
 
       for (const period of periods) {
         const query = `
@@ -511,17 +516,20 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
           FROM invite_codes ic
           LEFT JOIN invite_registrations ir ON ic.id = ir.invite_code_id
           WHERE ic.created_at BETWEEN ? AND ?
-        `
+        `;
 
-        const result = await this.db.queryOne(query, [period.start, period.end])
-        const totalInvites = parseInt(result?.total_invites) || 0
-        const totalRegistrations = parseInt(result?.total_registrations) || 0
-        const conversionRate = totalInvites > 0 ? (totalRegistrations / totalInvites) * 100 : 0
+        const result = await this.db.queryOne<{
+          total_invites: number | string;
+          total_registrations: number | string;
+        }>(query, [period.start, period.end]);
+        const totalInvites = Number(result?.total_invites) || 0;
+        const totalRegistrations = Number(result?.total_registrations) || 0;
+        const conversionRate = totalInvites > 0 ? (totalRegistrations / totalInvites) * 100 : 0;
 
         conversionData.push({
           period: `${period.start.toLocaleDateString()} - ${period.end.toLocaleDateString()}`,
-          conversionRate
-        })
+          conversionRate,
+        });
       }
 
       return {
@@ -536,16 +544,16 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
             borderColor: this.colorThemes.default[1],
             backgroundColor: this.colorThemes.pastel[1],
             fill: true,
-            tension: 0.4
-          }]
+            tension: 0.4,
+          }],
         },
         options: {
           responsive: true,
           plugins: {
             legend: {
               display: true,
-              position: 'top'
-            }
+              position: 'top',
+            },
           },
           scales: {
             y: {
@@ -553,15 +561,15 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
               beginAtZero: true,
               title: {
                 display: true,
-                text: '转化率 (%)'
-              }
-            }
-          }
-        }
-      }
+                text: '转化率 (%)',
+              },
+            },
+          },
+        },
+      };
     } catch (error) {
-      console.error('Failed to generate conversion comparison chart:', error)
-      throw new Error('Failed to generate conversion comparison chart')
+      console.error('Failed to generate conversion comparison chart:', error);
+      throw new Error('Failed to generate conversion comparison chart');
     }
   }
 
@@ -580,9 +588,9 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
   }> {
     try {
       // 获取实时指标
-      const today = new Date()
-      const yesterday = new Date(today)
-      yesterday.setDate(yesterday.getDate() - 1)
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
 
       const todayQuery = `
         SELECT 
@@ -591,7 +599,7 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
         FROM invite_codes ic
         LEFT JOIN invite_registrations ir ON ic.id = ir.invite_code_id
         WHERE DATE(ic.created_at) = CURDATE()
-      `
+      `;
 
       const yesterdayQuery = `
         SELECT 
@@ -600,21 +608,27 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
         FROM invite_codes ic
         LEFT JOIN invite_registrations ir ON ic.id = ir.invite_code_id
         WHERE DATE(ic.created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
-      `
+      `;
 
       const [todayResult, yesterdayResult] = await Promise.all([
-        this.db.queryOne(todayQuery),
-        this.db.queryOne(yesterdayQuery)
-      ])
+        this.db.queryOne<{
+          today_invites: number | string;
+          today_registrations: number | string;
+        }>(todayQuery),
+        this.db.queryOne<{
+          yesterday_invites: number | string;
+          yesterday_registrations: number | string;
+        }>(yesterdayQuery),
+      ]);
 
-      const todayInvites = parseInt(todayResult?.today_invites) || 0
-      const todayRegistrations = parseInt(todayResult?.today_registrations) || 0
-      const yesterdayInvites = parseInt(yesterdayResult?.yesterday_invites) || 0
-      const yesterdayRegistrations = parseInt(yesterdayResult?.yesterday_registrations) || 0
+      const todayInvites = Number(todayResult?.today_invites) || 0;
+      const todayRegistrations = Number(todayResult?.today_registrations) || 0;
+      const yesterdayInvites = Number(yesterdayResult?.yesterday_invites) || 0;
+      const yesterdayRegistrations = Number(yesterdayResult?.yesterday_registrations) || 0;
 
-      const inviteChange = yesterdayInvites > 0 ? ((todayInvites - yesterdayInvites) / yesterdayInvites) * 100 : 0
-      const registrationChange = yesterdayRegistrations > 0 ? ((todayRegistrations - yesterdayRegistrations) / yesterdayRegistrations) * 100 : 0
-      const conversionRate = todayInvites > 0 ? (todayRegistrations / todayInvites) * 100 : 0
+      const inviteChange = yesterdayInvites > 0 ? ((todayInvites - yesterdayInvites) / yesterdayInvites) * 100 : 0;
+      const registrationChange = yesterdayRegistrations > 0 ? ((todayRegistrations - yesterdayRegistrations) / yesterdayRegistrations) * 100 : 0;
+      const conversionRate = todayInvites > 0 ? (todayRegistrations / todayInvites) * 100 : 0;
 
       const metrics = [
         {
@@ -622,40 +636,40 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
           value: todayInvites,
           change: inviteChange,
           trend: inviteChange > 0 ? 'up' as const : inviteChange < 0 ? 'down' as const : 'stable' as const,
-          format: 'number' as const
+          format: 'number' as const,
         },
         {
           title: '今日注册',
           value: todayRegistrations,
           change: registrationChange,
           trend: registrationChange > 0 ? 'up' as const : registrationChange < 0 ? 'down' as const : 'stable' as const,
-          format: 'number' as const
+          format: 'number' as const,
         },
         {
           title: '转化率',
           value: conversionRate,
           change: 0, // 需要计算
           trend: 'stable' as const,
-          format: 'percentage' as const
-        }
-      ]
+          format: 'percentage' as const,
+        },
+      ];
 
       // 生成小型图表
       const last7DaysPeriod: TimePeriod = {
         start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        end: new Date()
-      }
+        end: new Date(),
+      };
 
-      const trendChart = await this.generateInviteTrendChart(last7DaysPeriod, 'day')
-      trendChart.title = '7天趋势'
+      const trendChart = await this.generateInviteTrendChart(last7DaysPeriod, 'day');
+      trendChart.title = '7天趋势';
 
       return {
         metrics,
-        charts: [trendChart]
-      }
+        charts: [trendChart],
+      };
     } catch (error) {
-      console.error('Failed to generate real-time dashboard:', error)
-      throw new Error('Failed to generate real-time dashboard')
+      console.error('Failed to generate real-time dashboard:', error);
+      throw new Error('Failed to generate real-time dashboard');
     }
   }
 
@@ -677,16 +691,16 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
         { region: '上海', value: 38, coordinates: [121.4737, 31.2304] as [number, number] },
         { region: '广州', value: 32, coordinates: [113.2644, 23.1291] as [number, number] },
         { region: '深圳', value: 28, coordinates: [114.0579, 22.5431] as [number, number] },
-        { region: '杭州', value: 22, coordinates: [120.1551, 30.2741] as [number, number] }
-      ]
+        { region: '杭州', value: 22, coordinates: [120.1551, 30.2741] as [number, number] },
+      ];
 
       return {
         type: 'map',
-        data: mockData
-      }
+        data: mockData,
+      };
     } catch (error) {
-      console.error('Failed to generate geographic distribution:', error)
-      throw new Error('Failed to generate geographic distribution')
+      console.error('Failed to generate geographic distribution:', error);
+      throw new Error('Failed to generate geographic distribution');
     }
   }
 
@@ -694,7 +708,7 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
    * 获取图表颜色主题
    */
   getChartColorThemes(): { [themeName: string]: string[] } {
-    return this.colorThemes
+    return this.colorThemes;
   }
 
   /**
@@ -704,11 +718,11 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
     try {
       // 这里应该使用图表渲染库（如Chart.js + Canvas）
       // 暂时返回空Buffer
-      console.log(`Exporting chart as ${format}:`, chartConfig.title)
-      return Buffer.from(`Chart image placeholder for ${chartConfig.title}`)
+      console.log(`Exporting chart as ${format}:`, chartConfig.title);
+      return Buffer.from(`Chart image placeholder for ${chartConfig.title}`);
     } catch (error) {
-      console.error('Failed to export chart as image:', error)
-      throw new Error('Failed to export chart as image')
+      console.error('Failed to export chart as image:', error);
+      throw new Error('Failed to export chart as image');
     }
   }
 
@@ -722,8 +736,8 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
       'dingtalk': '钉钉',
       'wework': '企业微信',
       'email': '邮件',
-      'link': '链接复制'
-    }
-    return platformNames[platform] || platform
+      'link': '链接复制',
+    };
+    return platformNames[platform] || platform;
   }
 }

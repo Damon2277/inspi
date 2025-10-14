@@ -1,10 +1,11 @@
 /**
  * Middleware Test Framework Tests
- * 
+ *
  * Comprehensive tests for the middleware testing framework including
  * functional tests, boundary tests, integration tests, and performance benchmarks.
  */
 import { NextRequest, NextResponse } from 'next/server';
+
 import {
   MiddlewareTestFramework,
   createMiddlewareTestFramework,
@@ -14,7 +15,7 @@ import {
   type MiddlewareDefinition,
   type TestScenario,
   type BoundaryTestCase,
-  type IntegrationTestSuite
+  type IntegrationTestSuite,
 } from '../../../../lib/testing/middleware';
 
 describe('MiddlewareTestFramework', () => {
@@ -34,7 +35,7 @@ describe('MiddlewareTestFramework', () => {
           throw new Error('Test error');
         }
         return NextResponse.json({ message: 'success' }, { status: 200 });
-      }
+      },
     };
 
     framework.registerMiddleware(mockMiddleware);
@@ -48,7 +49,7 @@ describe('MiddlewareTestFramework', () => {
     it('should register middleware successfully', () => {
       const newMiddleware: MiddlewareDefinition = {
         name: 'new-middleware',
-        handler: async () => NextResponse.next()
+        handler: async () => NextResponse.next(),
       };
 
       expect(() => framework.registerMiddleware(newMiddleware)).not.toThrow();
@@ -62,7 +63,7 @@ describe('MiddlewareTestFramework', () => {
 
       const eventMiddleware: MiddlewareDefinition = {
         name: 'event-middleware',
-        handler: async () => NextResponse.next()
+        handler: async () => NextResponse.next(),
       };
 
       framework.registerMiddleware(eventMiddleware);
@@ -80,16 +81,16 @@ describe('MiddlewareTestFramework', () => {
           input: {
             request: {
               url: 'http://localhost:3000/api/test',
-              method: 'GET'
-            }
+              method: 'GET',
+            },
           },
           expected: {
             response: {
               status: 200,
-              body: { message: 'success' }
-            }
-          }
-        }
+              body: { message: 'success' },
+            },
+          },
+        },
       ];
 
       const results = await framework.runFunctionalTests(scenarios);
@@ -110,16 +111,16 @@ describe('MiddlewareTestFramework', () => {
           input: {
             request: {
               url: 'http://localhost:3000/error',
-              method: 'GET'
-            }
+              method: 'GET',
+            },
           },
           expected: {
             errors: {
               shouldThrow: true,
-              errorMessage: 'Test error'
-            }
-          }
-        }
+              errorMessage: 'Test error',
+            },
+          },
+        },
       ];
 
       const results = await framework.runFunctionalTests(scenarios);
@@ -140,25 +141,25 @@ describe('MiddlewareTestFramework', () => {
           input: {
             request: {
               url: 'http://localhost:3000/api/test',
-              method: 'GET'
-            }
+              method: 'GET',
+            },
           },
           expected: {
             response: {
               status: 200,
               headers: {
-                'content-type': 'application/json'
-              }
-            }
-          }
-        }
+                'content-type': 'application/json',
+              },
+            },
+          },
+        },
       ];
 
       const results = await framework.runFunctionalTests(scenarios);
 
       expect(results[0].assertions).toBeDefined();
       expect(results[0].assertions.length).toBeGreaterThan(0);
-      
+
       const statusAssertion = results[0].assertions.find(a => a.name === 'Response status');
       expect(statusAssertion).toBeDefined();
       expect(statusAssertion?.passed).toBe(true);
@@ -173,22 +174,22 @@ describe('MiddlewareTestFramework', () => {
           description: 'Test with null input',
           input: null,
           expectedBehavior: 'error',
-          category: 'null'
+          category: 'null',
         },
         {
           name: 'Empty object',
           description: 'Test with empty object',
           input: {},
           expectedBehavior: 'error',
-          category: 'empty'
+          category: 'empty',
         },
         {
           name: 'Large input',
           description: 'Test with extremely large input',
           input: { data: 'x'.repeat(10000) },
           expectedBehavior: 'error',
-          category: 'extreme'
-        }
+          category: 'extreme',
+        },
       ];
 
       const results = await framework.runBoundaryTests('test-middleware', testCases);
@@ -228,7 +229,7 @@ describe('MiddlewareTestFramework', () => {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
           }
           return NextResponse.next();
-        }
+        },
       };
 
       framework.registerMiddleware(authMiddleware);
@@ -241,9 +242,9 @@ describe('MiddlewareTestFramework', () => {
           description: 'Authentication chain',
           middlewares: [
             { name: 'auth', handler: authMiddleware.handler },
-            { name: 'test-middleware', handler: mockMiddleware.handler }
+            { name: 'test-middleware', handler: mockMiddleware.handler },
           ],
-          order: 'sequential'
+          order: 'sequential',
         },
         scenarios: [
           {
@@ -254,25 +255,25 @@ describe('MiddlewareTestFramework', () => {
                 middleware: 'auth',
                 input: { authorization: 'Bearer valid-token' },
                 expectedOutput: { authorized: true },
-                sideEffects: []
+                sideEffects: [],
               },
               {
                 middleware: 'test-middleware',
                 input: { data: 'test' },
                 expectedOutput: { message: 'success' },
-                sideEffects: []
-              }
+                sideEffects: [],
+              },
             ],
             assertions: [
               {
                 type: 'response',
                 target: 'final',
                 condition: { status: 200 },
-                message: 'Should return success for authenticated request'
-              }
-            ]
-          }
-        ]
+                message: 'Should return success for authenticated request',
+              },
+            ],
+          },
+        ],
       };
 
       const results = await framework.runIntegrationTests([suite]);
@@ -293,16 +294,16 @@ describe('MiddlewareTestFramework', () => {
           input: {
             request: {
               url: 'http://localhost:3000/api/test',
-              method: 'GET'
-            }
+              method: 'GET',
+            },
           },
           expected: {
             performance: {
               maxExecutionTime: 1000,
-              minThroughput: 100
-            }
-          }
-        }
+              minThroughput: 100,
+            },
+          },
+        },
       ];
 
       const results = await framework.runPerformanceBenchmarks('test-middleware', scenarios);
@@ -321,7 +322,7 @@ describe('MiddlewareTestFramework', () => {
         handler: async (request: NextRequest) => {
           await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
           return NextResponse.json({ message: 'slow response' });
-        }
+        },
       };
 
       framework.registerMiddleware(slowMiddleware);
@@ -335,16 +336,16 @@ describe('MiddlewareTestFramework', () => {
           input: {
             request: {
               url: 'http://localhost:3000/api/test',
-              method: 'GET'
-            }
+              method: 'GET',
+            },
           },
           expected: {
             performance: {
               maxExecutionTime: 50, // Threshold lower than actual execution time
-              minThroughput: 1000
-            }
-          }
-        }
+              minThroughput: 1000,
+            },
+          },
+        },
       ];
 
       const results = await framework.runPerformanceBenchmarks('slow-middleware', scenarios);
@@ -364,7 +365,7 @@ describe('MiddlewareTestFramework', () => {
         headers: { 'content-type': 'application/json' },
         body: { data: 'test' },
         cookies: { session: 'abc123' },
-        searchParams: { filter: 'active' }
+        searchParams: { filter: 'active' },
       });
 
       expect(request.url).toContain('/api/test');
@@ -380,7 +381,7 @@ describe('MiddlewareTestFramework', () => {
         statusText: 'Created',
         headers: { 'x-custom': 'value' },
         body: { id: 123 },
-        cookies: { token: 'xyz789' }
+        cookies: { token: 'xyz789' },
       });
 
       expect(response.status).toBe(201);
@@ -479,7 +480,7 @@ describe('MiddlewareTestFramework', () => {
       const request = MiddlewareTestUtils.createMockRequest({
         url: 'http://localhost:3000/api/specific',
         method: 'POST',
-        headers: { 'x-test': 'value' }
+        headers: { 'x-test': 'value' },
       });
 
       await spy.middleware(request);
@@ -487,13 +488,13 @@ describe('MiddlewareTestFramework', () => {
       const assertion = MiddlewareAssertions.wasCalledWith(spy, {
         url: '/api/specific',
         method: 'POST',
-        headers: { 'x-test': 'value' }
+        headers: { 'x-test': 'value' },
       });
       expect(assertion.passed).toBe(true);
 
       const wrongAssertion = MiddlewareAssertions.wasCalledWith(spy, {
         url: '/api/different',
-        method: 'GET'
+        method: 'GET',
       });
       expect(wrongAssertion.passed).toBe(false);
     });
@@ -501,18 +502,18 @@ describe('MiddlewareTestFramework', () => {
     it('should assert response properties', () => {
       const response = MiddlewareTestUtils.createMockResponse({
         status: 200,
-        headers: { 'x-custom': 'test' }
+        headers: { 'x-custom': 'test' },
       });
 
       const assertion = MiddlewareAssertions.responseHas(response, {
         status: 200,
-        headers: { 'x-custom': 'test' }
+        headers: { 'x-custom': 'test' },
       });
       expect(assertion.passed).toBe(true);
 
       const wrongAssertion = MiddlewareAssertions.responseHas(response, {
         status: 404,
-        headers: { 'x-custom': 'wrong' }
+        headers: { 'x-custom': 'wrong' },
       });
       expect(wrongAssertion.passed).toBe(false);
     });
@@ -534,13 +535,13 @@ describe('MiddlewareTestFramework', () => {
 
       const assertion = await MiddlewareAssertions.throwsError(errorMiddleware, request, {
         type: 'TypeError',
-        message: 'Custom error message'
+        message: 'Custom error message',
       });
       expect(assertion.passed).toBe(true);
 
       const wrongAssertion = await MiddlewareAssertions.throwsError(errorMiddleware, request, {
         type: 'ReferenceError',
-        message: 'Different message'
+        message: 'Different message',
       });
       expect(wrongAssertion.passed).toBe(false);
     });
@@ -557,12 +558,12 @@ describe('MiddlewareTestFramework', () => {
           input: {
             request: {
               url: 'http://localhost:3000/api/test',
-              method: 'GET'
-            }
+              method: 'GET',
+            },
           },
           expected: {
-            response: { status: 200 }
-          }
+            response: { status: 200 },
+          },
         },
         {
           name: 'Test 2',
@@ -572,13 +573,13 @@ describe('MiddlewareTestFramework', () => {
           input: {
             request: {
               url: 'http://localhost:3000/error',
-              method: 'GET'
-            }
+              method: 'GET',
+            },
           },
           expected: {
-            response: { status: 200 }
-          }
-        }
+            response: { status: 200 },
+          },
+        },
       ];
 
       const results = await framework.runFunctionalTests(scenarios);
@@ -600,7 +601,7 @@ describe('MiddlewareTestFramework', () => {
       expect(() => {
         framework.registerMiddleware({
           name: '',
-          handler: async () => NextResponse.next()
+          handler: async () => NextResponse.next(),
         });
       }).not.toThrow();
     });
@@ -612,7 +613,7 @@ describe('MiddlewareTestFramework', () => {
           return new Promise(() => {
             // Never resolves, causing timeout
           });
-        }
+        },
       };
 
       framework.registerMiddleware(timeoutMiddleware);
@@ -626,13 +627,13 @@ describe('MiddlewareTestFramework', () => {
           input: {
             request: {
               url: 'http://localhost:3000/api/test',
-              method: 'GET'
-            }
+              method: 'GET',
+            },
           },
           expected: {
-            response: { status: 200 }
-          }
-        }
+            response: { status: 200 },
+          },
+        },
       ];
 
       // This should complete within reasonable time due to timeout handling
@@ -649,11 +650,11 @@ describe('MiddlewareTestFramework', () => {
     it('should cleanup resources properly', () => {
       framework.registerMiddleware({
         name: 'cleanup-test',
-        handler: async () => NextResponse.next()
+        handler: async () => NextResponse.next(),
       });
 
       expect(() => framework.cleanup()).not.toThrow();
-      
+
       // After cleanup, the framework should be in a clean state
       // This is more of a smoke test to ensure cleanup doesn't crash
     });

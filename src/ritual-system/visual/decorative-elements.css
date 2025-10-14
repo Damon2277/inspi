@@ -1,0 +1,436 @@
+/**
+ * 仪式感设计系统 - 装饰元素库
+ * Decorative Elements Library for Ritual Design
+ */
+
+:root {
+  /* 装饰元素尺寸 - Decorative Element Sizes */
+  --ritual-decoration-xs: 0.5rem;
+  --ritual-decoration-sm: 1rem;
+  --ritual-decoration-md: 1.5rem;
+  --ritual-decoration-lg: 2rem;
+  --ritual-decoration-xl: 3rem;
+  --ritual-decoration-2xl: 4rem;
+
+  /* 装饰元素动画时长 - Animation Durations */
+  --ritual-animation-fast: 0.3s;
+  --ritual-animation-normal: 0.6s;
+  --ritual-animation-slow: 1.2s;
+  --ritual-animation-epic: 2.4s;
+}
+
+/* 基础装饰容器 - Base Decorative Container */
+.ritual-decoration {
+  position: relative;
+  display: inline-block;
+}
+
+/* 光晕效果 - Glow Effects */
+.ritual-glow {
+  position: relative;
+  overflow: visible;
+}
+
+.ritual-glow::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background: var(--ritual-gradient-divine);
+  border-radius: inherit;
+  opacity: 0.3;
+  filter: blur(10px);
+  z-index: -1;
+  animation: ritual-pulse 2s ease-in-out infinite;
+}
+
+.ritual-glow-subtle::before {
+  filter: blur(5px);
+  opacity: 0.2;
+}
+
+.ritual-glow-dramatic::before {
+  filter: blur(20px);
+  opacity: 0.5;
+}
+
+@keyframes ritual-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+/* 边框装饰 - Border Decorations */
+.ritual-border {
+  border: 2px solid var(--ritual-gold);
+  border-radius: 8px;
+  position: relative;
+}
+
+.ritual-border-ornate {
+  border: 3px solid transparent;
+  background: linear-gradient(white, white) padding-box,
+              var(--ritual-gradient-divine) border-box;
+  border-radius: 12px;
+}
+
+.ritual-border-sacred {
+  border: 1px solid var(--ritual-gold);
+  border-radius: 16px;
+  position: relative;
+  padding: 1rem;
+}
+
+.ritual-border-sacred::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: var(--ritual-gradient-celestial);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0.7;
+}
+
+/* 角落装饰 - Corner Decorations */
+.ritual-corners {
+  position: relative;
+}
+
+.ritual-corners::before,
+.ritual-corners::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--ritual-gold);
+}
+
+.ritual-corners::before {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.ritual-corners::after {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+}
+
+/* 分隔线装饰 - Divider Decorations */
+.ritual-divider {
+  display: flex;
+  align-items: center;
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.ritual-divider::before,
+.ritual-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--ritual-gradient-gold);
+  margin: 0 1rem;
+}
+
+.ritual-divider-ornate {
+  position: relative;
+  height: 1px;
+  background: var(--ritual-gradient-divine);
+  margin: 3rem 0;
+  overflow: visible;
+}
+
+.ritual-divider-ornate::before {
+  content: '◆';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  color: var(--ritual-gold);
+  font-size: var(--ritual-text-lg);
+  padding: 0 1rem;
+  font-family: var(--ritual-font-ceremonial);
+}
+
+/* 图标装饰 - Icon Decorations */
+.ritual-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ritual-decoration-md);
+  height: var(--ritual-decoration-md);
+  color: var(--ritual-gold);
+  font-size: var(--ritual-text-lg);
+}
+
+.ritual-icon-star::before {
+  content: '★';
+  animation: ritual-twinkle 2s ease-in-out infinite;
+}
+
+.ritual-icon-crown::before {
+  content: '♔';
+  color: var(--ritual-gold);
+}
+
+.ritual-icon-diamond::before {
+  content: '◆';
+  color: var(--ritual-purple);
+}
+
+.ritual-icon-circle::before {
+  content: '●';
+  color: var(--ritual-deep-blue);
+}
+
+@keyframes ritual-twinkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+/* 粒子效果容器 - Particle Effect Container */
+.ritual-particles {
+  position: relative;
+  overflow: hidden;
+}
+
+.ritual-particles::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, var(--ritual-gold), transparent),
+    radial-gradient(2px 2px at 40px 70px, var(--ritual-purple), transparent),
+    radial-gradient(1px 1px at 90px 40px, var(--ritual-deep-blue), transparent),
+    radial-gradient(1px 1px at 130px 80px, var(--ritual-gold), transparent),
+    radial-gradient(2px 2px at 160px 30px, var(--ritual-purple), transparent);
+  background-repeat: repeat;
+  background-size: 200px 100px;
+  animation: ritual-float 20s linear infinite;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+@keyframes ritual-float {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
+
+/* 几何图案 - Geometric Patterns */
+.ritual-pattern {
+  position: relative;
+  background-size: 40px 40px;
+  background-repeat: repeat;
+}
+
+.ritual-pattern-sacred {
+  background-image: 
+    linear-gradient(45deg, transparent 35%, var(--ritual-gold-glow) 35%, var(--ritual-gold-glow) 65%, transparent 65%),
+    linear-gradient(-45deg, transparent 35%, var(--ritual-purple-glow) 35%, var(--ritual-purple-glow) 65%, transparent 65%);
+}
+
+.ritual-pattern-celestial {
+  background-image: 
+    radial-gradient(circle at 50% 50%, var(--ritual-gold-glow) 2px, transparent 2px);
+  background-size: 20px 20px;
+}
+
+/* 装饰性背景 - Decorative Backgrounds */
+.ritual-bg-sacred {
+  background: 
+    radial-gradient(ellipse at top, var(--ritual-gold-glow) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom, var(--ritual-purple-glow) 0%, transparent 50%),
+    var(--ritual-gradient-divine);
+  background-attachment: fixed;
+}
+
+.ritual-bg-ethereal {
+  background: 
+    linear-gradient(45deg, transparent 30%, var(--ritual-gold-glow) 30%, var(--ritual-gold-glow) 70%, transparent 70%),
+    linear-gradient(-45deg, transparent 30%, var(--ritual-purple-glow) 30%, var(--ritual-purple-glow) 70%, transparent 70%),
+    var(--ritual-deep-blue);
+  background-size: 60px 60px;
+}
+
+/* 装饰性框架 - Decorative Frames */
+.ritual-frame {
+  position: relative;
+  padding: 2rem;
+  border: 2px solid var(--ritual-gold);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+}
+
+.ritual-frame::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background: var(--ritual-gradient-celestial);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0.3;
+}
+
+.ritual-frame-ornate {
+  border: 4px solid transparent;
+  background: 
+    linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)) padding-box,
+    var(--ritual-gradient-divine) border-box;
+  position: relative;
+}
+
+.ritual-frame-ornate::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  border: 1px solid var(--ritual-gold-glow);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+/* 悬浮效果 - Hover Effects */
+.ritual-hover {
+  transition: all var(--ritual-animation-normal) ease;
+  cursor: pointer;
+}
+
+.ritual-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ritual-shadow-dramatic);
+}
+
+.ritual-hover-glow:hover {
+  box-shadow: 
+    var(--ritual-shadow-epic),
+    0 0 30px var(--ritual-gold-glow);
+}
+
+.ritual-hover-sacred:hover {
+  transform: scale(1.02);
+  filter: brightness(1.1);
+}
+
+/* 加载动画 - Loading Animations */
+.ritual-loading {
+  position: relative;
+  display: inline-block;
+}
+
+.ritual-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid var(--ritual-gold-glow);
+  border-top: 2px solid var(--ritual-gold);
+  border-radius: 50%;
+  animation: ritual-spin 1s linear infinite;
+}
+
+@keyframes ritual-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.ritual-loading-sacred::after {
+  border: none;
+  background: var(--ritual-gradient-divine);
+  border-radius: 50%;
+  animation: ritual-pulse-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes ritual-pulse-loading {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* 响应式装饰 - Responsive Decorations */
+@media (max-width: 768px) {
+  .ritual-frame {
+    padding: 1rem;
+  }
+  
+  .ritual-divider {
+    margin: 1rem 0;
+  }
+  
+  .ritual-particles::before {
+    animation-duration: 15s;
+  }
+}
+
+/* 可访问性支持 - Accessibility Support */
+@media (prefers-reduced-motion: reduce) {
+  .ritual-glow::before,
+  .ritual-icon-star::before,
+  .ritual-particles::before,
+  .ritual-loading::after,
+  .ritual-loading-sacred::after {
+    animation: none;
+  }
+  
+  .ritual-hover {
+    transition: none;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .ritual-border,
+  .ritual-border-sacred,
+  .ritual-frame {
+    border-color: var(--ritual-high-contrast-fg);
+  }
+  
+  .ritual-glow::before,
+  .ritual-particles::before {
+    display: none;
+  }
+}

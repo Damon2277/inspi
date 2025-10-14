@@ -10,7 +10,7 @@ export { TestDatabaseManager } from './TestDatabaseManager';
 export { JestConfigGenerator } from './JestConfigGenerator';
 
 // 测试数据工厂系统
-export { 
+export {
   TestDataFactory,
   UserFactory,
   TeachingCardFactory,
@@ -18,7 +18,7 @@ export {
   GraphNodeFactory,
   GraphEdgeFactory,
   KnowledgeGraphFactory,
-  testDataFactory
+  testDataFactory,
 } from './TestDataFactory';
 
 // 测试数据构建器模式
@@ -30,7 +30,7 @@ export {
   GraphNodeBuilder,
   GraphEdgeBuilder,
   KnowledgeGraphBuilder,
-  testDataBuilder
+  testDataBuilder,
 } from './TestDataBuilder';
 
 // 测试数据关系管理
@@ -38,7 +38,7 @@ export {
   TestDataRelationshipManager,
   TestDataCollection,
   testDataRelationshipManager,
-  RelationshipType
+  RelationshipType,
 } from './TestDataRelationshipManager';
 
 // 测试数据清理管理
@@ -46,29 +46,29 @@ export {
   TestDataCleanupManager,
   createTestDataCleanupManager,
   CleanupStrategy,
-  CleanupScope
+  CleanupScope,
 } from './TestDataCleanupManager';
 
 // Mock服务管理系统
 export {
   MockServiceManager,
-  mockServiceManager
+  mockServiceManager,
 } from './MockServiceManager';
 
 export {
-  BaseMockService
+  BaseMockService,
 } from './mocks/BaseMockService';
 
 export {
-  MockGeminiService
+  MockGeminiService,
 } from './mocks/MockGeminiService';
 
 export {
-  MockEmailService
+  MockEmailService,
 } from './mocks/MockEmailService';
 
 export {
-  MockDatabaseService
+  MockDatabaseService,
 } from './mocks/MockDatabaseService';
 
 // 类型导出
@@ -94,17 +94,17 @@ export type {
   JestConfigOptions,
 } from './JestConfigGenerator';
 
-export type { 
-  DataRelationship, 
-  DataReference, 
-  RelationshipConstraint 
+export type {
+  DataRelationship,
+  DataReference,
+  RelationshipConstraint,
 } from './TestDataRelationshipManager';
 
-export type { 
-  CleanupConfig, 
-  CleanupStats, 
-  CleanupTask, 
-  DataItemMetadata 
+export type {
+  CleanupConfig,
+  CleanupStats,
+  CleanupTask,
+  DataItemMetadata,
 } from './TestDataCleanupManager';
 
 // Mock服务类型
@@ -115,16 +115,16 @@ export type {
   MockCall,
   MockVerificationResult,
   MockServiceVerificationResult,
-  MockManagerStats
+  MockManagerStats,
 } from './MockServiceManager';
 
 export type {
-  MockAIResponse
+  MockAIResponse,
 } from './mocks/MockGeminiService';
 
 export type {
   MockEmailRecord,
-  MockEmailConfig
+  MockEmailConfig,
 } from './mocks/MockEmailService';
 
 export type {
@@ -132,7 +132,7 @@ export type {
   MockCollection,
   MockQuery,
   MockTransaction,
-  MockOperation
+  MockOperation,
 } from './mocks/MockDatabaseService';
 
 // 便捷函数

@@ -1,13 +1,14 @@
-import { ParallelTestExecutor, TestSuite, ParallelExecutionOptions } from '../../../../lib/testing/parallel/ParallelTestExecutor';
 import { EventEmitter } from 'events';
+
+import { ParallelTestExecutor, TestSuite, ParallelExecutionOptions } from '../../../../lib/testing/parallel/ParallelTestExecutor';
 
 // Mock worker_threads
 jest.mock('worker_threads', () => ({
   Worker: jest.fn().mockImplementation(() => ({
     on: jest.fn(),
     postMessage: jest.fn(),
-    terminate: jest.fn().mockResolvedValue(undefined)
-  }))
+    terminate: jest.fn().mockResolvedValue(undefined),
+  })),
 }));
 
 describe('ParallelTestExecutor', () => {
@@ -19,14 +20,14 @@ describe('ParallelTestExecutor', () => {
     mockWorker = {
       on: jest.fn(),
       postMessage: jest.fn(),
-      terminate: jest.fn().mockResolvedValue(undefined)
+      terminate: jest.fn().mockResolvedValue(undefined),
     };
     Worker.mockImplementation(() => mockWorker);
 
     executor = new ParallelTestExecutor({
       maxWorkers: 2,
       timeout: 30000,
-      loadBalancing: 'weighted'
+      loadBalancing: 'weighted',
     });
   });
 
@@ -46,9 +47,9 @@ describe('ParallelTestExecutor', () => {
       const options: ParallelExecutionOptions = {
         maxWorkers: 4,
         timeout: 60000,
-        loadBalancing: 'round-robin'
+        loadBalancing: 'round-robin',
       };
-      
+
       const customExecutor = new ParallelTestExecutor(options);
       expect(customExecutor['maxWorkers']).toBe(4);
       expect(customExecutor['options'].timeout).toBe(60000);
@@ -62,7 +63,7 @@ describe('ParallelTestExecutor', () => {
         name: 'Test Suite 1',
         files: ['test1.spec.ts'],
         config: { timeout: 5000, retries: 1, parallel: true },
-        priority: 'P0'
+        priority: 'P0',
       }];
 
       // Mock worker ready event
@@ -85,15 +86,15 @@ describe('ParallelTestExecutor', () => {
               status: 'passed',
               duration: 1000,
               tests: [],
-              workerId: 0
+              workerId: 0,
             },
-            duration: 1000
-          }
+            duration: 1000,
+          },
         });
       }, 50);
 
       const results = await executor.runTestsInParallel(testSuites);
-      
+
       expect(results).toHaveLength(1);
       expect(results[0].status).toBe('passed');
     });
@@ -104,7 +105,7 @@ describe('ParallelTestExecutor', () => {
         name: 'Test Suite 1',
         files: ['test1.spec.ts'],
         config: { timeout: 5000, retries: 1, parallel: true },
-        priority: 'P0'
+        priority: 'P0',
       }];
 
       // Mock worker ready event
@@ -129,14 +130,14 @@ describe('ParallelTestExecutor', () => {
             taskId: expect.any(String),
             error: {
               message: 'Test failed',
-              type: 'runtime'
-            }
-          }
+              type: 'runtime',
+            },
+          },
         });
       }, 50);
 
       const results = await executor.runTestsInParallel(testSuites);
-      
+
       expect(results).toHaveLength(1);
       expect(results[0].status).toBe('failed');
     });
@@ -151,7 +152,7 @@ describe('ParallelTestExecutor', () => {
           files: ['test1.spec.ts'],
           config: { timeout: 5000, retries: 1, parallel: true },
           priority: 'P2',
-          estimatedDuration: 1000
+          estimatedDuration: 1000,
         },
         {
           id: 'p0-suite',
@@ -159,7 +160,7 @@ describe('ParallelTestExecutor', () => {
           files: ['test2.spec.ts'],
           config: { timeout: 5000, retries: 1, parallel: true },
           priority: 'P0',
-          estimatedDuration: 2000
+          estimatedDuration: 2000,
         },
         {
           id: 'p1-suite',
@@ -167,12 +168,12 @@ describe('ParallelTestExecutor', () => {
           files: ['test3.spec.ts'],
           config: { timeout: 5000, retries: 1, parallel: true },
           priority: 'P1',
-          estimatedDuration: 1500
-        }
+          estimatedDuration: 1500,
+        },
       ];
 
       const sorted = executor['sortSuitesByLoadBalancing'](testSuites);
-      
+
       // P0 should come first (highest priority * duration)
       expect(sorted[0].priority).toBe('P0');
       expect(sorted[1].priority).toBe('P1');
@@ -181,7 +182,7 @@ describe('ParallelTestExecutor', () => {
 
     it('should handle dynamic load balancing', () => {
       const dynamicExecutor = new ParallelTestExecutor({
-        loadBalancing: 'dynamic'
+        loadBalancing: 'dynamic',
       });
 
       const testSuites: TestSuite[] = [
@@ -191,7 +192,7 @@ describe('ParallelTestExecutor', () => {
           files: ['test1.spec.ts'],
           config: { timeout: 5000, retries: 1, parallel: true },
           priority: 'P1',
-          estimatedDuration: 500
+          estimatedDuration: 500,
         },
         {
           id: 'complex-suite',
@@ -199,12 +200,12 @@ describe('ParallelTestExecutor', () => {
           files: ['test1.spec.ts', 'test2.spec.ts', 'test3.spec.ts'],
           config: { timeout: 5000, retries: 1, parallel: true },
           priority: 'P1',
-          estimatedDuration: 3000
-        }
+          estimatedDuration: 3000,
+        },
       ];
 
       const sorted = dynamicExecutor['sortSuitesByLoadBalancing'](testSuites);
-      
+
       // Complex suite should come first (more files * longer duration)
       expect(sorted[0].id).toBe('complex-suite');
     });
@@ -218,19 +219,19 @@ describe('ParallelTestExecutor', () => {
           name: 'Suite 1',
           files: ['test1.spec.ts'],
           config: { timeout: 5000, retries: 1, parallel: true },
-          priority: 'P0'
+          priority: 'P0',
         },
         {
           id: 'suite-2',
           name: 'Suite 2',
           files: ['test2.spec.ts'],
           config: { timeout: 5000, retries: 1, parallel: true },
-          priority: 'P1'
-        }
+          priority: 'P1',
+        },
       ];
 
-      let taskCount = 0;
-      
+      const taskCount = 0;
+
       // Mock worker ready events
       setTimeout(() => {
         const readyHandler = mockWorker.on.mock.calls.find(call => call[0] === 'message')[1];
@@ -241,7 +242,7 @@ describe('ParallelTestExecutor', () => {
       // Mock task completions
       setTimeout(() => {
         const messageHandler = mockWorker.on.mock.calls.find(call => call[0] === 'message')[1];
-        
+
         // Complete first task
         messageHandler({
           type: 'task:complete',
@@ -253,10 +254,10 @@ describe('ParallelTestExecutor', () => {
               status: 'passed',
               duration: 1000,
               tests: [{ name: 'test1', status: 'passed', duration: 500 }],
-              workerId: 0
+              workerId: 0,
             },
-            duration: 1000
-          }
+            duration: 1000,
+          },
         });
 
         // Complete second task
@@ -270,15 +271,15 @@ describe('ParallelTestExecutor', () => {
               status: 'passed',
               duration: 800,
               tests: [{ name: 'test2', status: 'passed', duration: 400 }],
-              workerId: 1
+              workerId: 1,
             },
-            duration: 800
-          }
+            duration: 800,
+          },
         });
       }, 50);
 
       const results = await executor.runTestsInParallel(testSuites);
-      
+
       expect(results).toHaveLength(2);
       expect(results.find(r => r.suiteId === 'suite-1')).toBeDefined();
       expect(results.find(r => r.suiteId === 'suite-2')).toBeDefined();
@@ -290,7 +291,7 @@ describe('ParallelTestExecutor', () => {
         name: 'Flaky Suite',
         files: ['flaky.spec.ts'],
         config: { timeout: 5000, retries: 2, parallel: true },
-        priority: 'P0'
+        priority: 'P0',
       }];
 
       let attemptCount = 0;
@@ -305,7 +306,7 @@ describe('ParallelTestExecutor', () => {
       // Mock task failure then success
       setTimeout(() => {
         const messageHandler = mockWorker.on.mock.calls.find(call => call[0] === 'message')[1];
-        
+
         if (attemptCount === 0) {
           attemptCount++;
           // First attempt fails
@@ -315,11 +316,11 @@ describe('ParallelTestExecutor', () => {
               taskId: expect.any(String),
               error: {
                 message: 'Flaky test failed',
-                type: 'assertion'
-              }
-            }
+                type: 'assertion',
+              },
+            },
           });
-          
+
           // Retry succeeds
           setTimeout(() => {
             messageHandler({
@@ -332,17 +333,17 @@ describe('ParallelTestExecutor', () => {
                   status: 'passed',
                   duration: 1200,
                   tests: [{ name: 'flaky-test', status: 'passed', duration: 600 }],
-                  workerId: 0
+                  workerId: 0,
                 },
-                duration: 1200
-              }
+                duration: 1200,
+              },
             });
           }, 20);
         }
       }, 50);
 
       const results = await executor.runTestsInParallel(testSuites);
-      
+
       expect(results).toHaveLength(1);
       expect(results[0].status).toBe('passed');
     });
@@ -357,7 +358,7 @@ describe('ParallelTestExecutor', () => {
         totalDuration: 10000,
         errors: 1,
         isAvailable: true,
-        currentLoad: 0
+        currentLoad: 0,
       });
 
       executor['workerStats'].set(1, {
@@ -366,11 +367,11 @@ describe('ParallelTestExecutor', () => {
         totalDuration: 6000,
         errors: 0,
         isAvailable: false,
-        currentLoad: 2000
+        currentLoad: 2000,
       });
 
       const stats = executor.getExecutionStats();
-      
+
       expect(stats.totalWorkers).toBe(2);
       expect(stats.activeWorkers).toBe(1); // One worker is not available
       expect(stats.totalTasksCompleted).toBe(8);
@@ -383,7 +384,7 @@ describe('ParallelTestExecutor', () => {
   describe('error handling', () => {
     it('should handle execution timeout', async () => {
       const shortTimeoutExecutor = new ParallelTestExecutor({
-        timeout: 100 // Very short timeout
+        timeout: 100, // Very short timeout
       });
 
       const testSuites: TestSuite[] = [{
@@ -391,7 +392,7 @@ describe('ParallelTestExecutor', () => {
         name: 'Slow Suite',
         files: ['slow.spec.ts'],
         config: { timeout: 5000, retries: 1, parallel: true },
-        priority: 'P0'
+        priority: 'P0',
       }];
 
       // Don't mock any responses to simulate hanging
@@ -406,7 +407,7 @@ describe('ParallelTestExecutor', () => {
         name: 'Deadlock Suite',
         files: ['deadlock.spec.ts'],
         config: { timeout: 5000, retries: 1, parallel: true },
-        priority: 'P0'
+        priority: 'P0',
       }];
 
       // Mock workers as ready but never complete tasks
@@ -433,7 +434,7 @@ describe('ParallelTestExecutor', () => {
         name: 'Cleanup Suite',
         files: ['cleanup.spec.ts'],
         config: { timeout: 5000, retries: 1, parallel: true },
-        priority: 'P0'
+        priority: 'P0',
       }];
 
       // Mock successful execution
@@ -455,10 +456,10 @@ describe('ParallelTestExecutor', () => {
               status: 'passed',
               duration: 1000,
               tests: [],
-              workerId: 0
+              workerId: 0,
             },
-            duration: 1000
-          }
+            duration: 1000,
+          },
         });
       }, 50);
 

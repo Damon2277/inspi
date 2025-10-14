@@ -1,10 +1,12 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import { Attribution, AttributionDisplayConfig } from '@/types/reuse';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import Link from 'next/link';
+import React from 'react';
+
+import { Attribution, AttributionDisplayConfig } from '@/shared/types/reuse';
+
 
 export interface AttributionDisplayProps {
   attribution: Attribution;
@@ -18,20 +20,20 @@ const defaultConfig: AttributionDisplayConfig = {
   showWorkTitle: true,
   showReuseDate: true,
   format: 'full',
-  linkToOriginal: true
+  linkToOriginal: true,
 };
 
 export const AttributionDisplay: React.FC<AttributionDisplayProps> = ({
   attribution,
   config = {},
   className = '',
-  showRemoveWarning = false
+  showRemoveWarning = false,
 }) => {
   const finalConfig = { ...defaultConfig, ...config };
   const reuseDate = new Date(attribution.reuseDate);
   const timeAgo = formatDistanceToNow(reuseDate, {
     addSuffix: true,
-    locale: zhCN
+    locale: zhCN,
   });
 
   // 根据格式类型渲染不同样式
@@ -70,7 +72,7 @@ export const AttributionDisplay: React.FC<AttributionDisplayProps> = ({
               {attribution.reuseType === 'full' ? '完整复用' : '部分复用'}
             </span>
           </div>
-          
+
           <div className="text-sm text-blue-800 space-y-1">
             {finalConfig.showAuthor && (
               <p>
@@ -78,12 +80,12 @@ export const AttributionDisplay: React.FC<AttributionDisplayProps> = ({
                 <span className="text-blue-700">{attribution.originalAuthorName}</span>
               </p>
             )}
-            
+
             {finalConfig.showWorkTitle && (
               <p>
                 <span className="font-medium">原作品：</span>
                 {finalConfig.linkToOriginal ? (
-                  <Link 
+                  <Link
                     href={`/works/${attribution.originalWorkId}`}
                     className="text-blue-600 hover:text-blue-800 underline"
                   >
@@ -94,7 +96,7 @@ export const AttributionDisplay: React.FC<AttributionDisplayProps> = ({
                 )}
               </p>
             )}
-            
+
             {finalConfig.showReuseDate && (
               <p>
                 <span className="font-medium">复用时间：</span>
@@ -129,9 +131,9 @@ export const AttributionDisplay: React.FC<AttributionDisplayProps> = ({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
         </svg>
         <span>
-          复用自 
+          复用自
           {finalConfig.linkToOriginal ? (
-            <Link 
+            <Link
               href={`/works/${attribution.originalWorkId}`}
               className="text-blue-600 hover:text-blue-800 underline mx-1"
             >
@@ -152,9 +154,9 @@ export const AttributionDisplay: React.FC<AttributionDisplayProps> = ({
   // 最小格式
   const renderMinimalFormat = () => (
     <div className={`text-xs text-gray-500 ${className}`}>
-      复用自 
+      复用自
       {finalConfig.linkToOriginal ? (
-        <Link 
+        <Link
           href={`/works/${attribution.originalWorkId}`}
           className="text-blue-600 hover:text-blue-800 underline mx-1"
         >

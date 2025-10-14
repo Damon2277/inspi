@@ -201,7 +201,8 @@ describe('DevTools', () => {
       expect(console.log).toHaveBeenCalledWith('✅ .env.local exists');
       expect(console.log).toHaveBeenCalledWith('⚠️  .env.example missing');
       expect(console.log).toHaveBeenCalledWith('✅ Git hook commit-msg installed');
-      expect(console.log).toHaveBeenCalledWith('⚠️  Git hook prepare-commit-msg missing. Run: npm run git:hooks:install');
+      expect(console.log).toHaveBeenCalledWith('⚠️  Git hook prepare-commit-
+        msg missing. Run: npm run git:hooks:install');
     });
   });
 

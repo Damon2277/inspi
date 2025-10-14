@@ -1,6 +1,6 @@
 /**
  * State Management Test Framework
- * 
+ *
  * Comprehensive testing framework for state management including
  * Zustand store testing, state consistency validation, persistence testing,
  * and concurrency testing.
@@ -195,10 +195,10 @@ export class StateTestFramework<T = any> extends EventEmitter {
 
     for (const scenario of scenarios) {
       this.emit('testStarted', { scenario: scenario.name, type: scenario.type });
-      
+
       const result = await this.executeScenario(scenario);
       results.push(result);
-      
+
       this.emit('testCompleted', { scenario: scenario.name, result });
     }
 
@@ -221,8 +221,8 @@ export class StateTestFramework<T = any> extends EventEmitter {
         memoryUsage: [],
         subscriptionCallCount: 0,
         averageUpdateTime: 0,
-        peakMemoryUsage: 0
-      }
+        peakMemoryUsage: 0,
+      },
     };
 
     const result: StateTestResult<T> = {
@@ -236,8 +236,8 @@ export class StateTestFramework<T = any> extends EventEmitter {
         timestamp: new Date(),
         environment: process.env.NODE_ENV || 'test',
         storeType: this.getStoreType(scenario.store),
-        testId: this.generateTestId()
-      }
+        testId: this.generateTestId(),
+      },
     };
 
     try {
@@ -248,7 +248,7 @@ export class StateTestFramework<T = any> extends EventEmitter {
 
       // Initialize store with initial state
       scenario.store.setState(scenario.initialState as any);
-      
+
       // Setup subscription monitoring
       const unsubscribe = this.setupSubscriptionMonitoring(scenario.store, context);
 
@@ -257,7 +257,7 @@ export class StateTestFramework<T = any> extends EventEmitter {
 
       // Run assertions
       result.assertions = await this.runAssertions(scenario.assertions, scenario.store, context);
-      
+
       // Check if all assertions passed
       result.status = result.assertions.every(a => a.passed) ? 'passed' : 'failed';
 
@@ -275,7 +275,7 @@ export class StateTestFramework<T = any> extends EventEmitter {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         type: error instanceof Error ? error.constructor.name : 'Unknown',
-        context: { scenario: scenario.name }
+        context: { scenario: scenario.name },
       };
     }
 
@@ -287,17 +287,17 @@ export class StateTestFramework<T = any> extends EventEmitter {
    * Setup subscription monitoring
    */
   private setupSubscriptionMonitoring(
-    store: StateStore<T>, 
-    context: StateTestContext<T>
+    store: StateStore<T>,
+    context: StateTestContext<T>,
   ): () => void {
     return store.subscribe((state, prevState) => {
       context.subscriptionCalls.push({
         timestamp: new Date(),
         state,
         prevState,
-        changeType: this.determineChangeType(state, prevState)
+        changeType: this.determineChangeType(state, prevState),
       });
-      
+
       context.currentState = state;
       context.previousStates.push(prevState);
       context.performanceMetrics.subscriptionCallCount++;
@@ -313,13 +313,13 @@ export class StateTestFramework<T = any> extends EventEmitter {
    * Execute actions on the store
    */
   private async executeActions(
-    actions: StateAction<T>[], 
-    store: StateStore<T>, 
-    context: StateTestContext<T>
+    actions: StateAction<T>[],
+    store: StateStore<T>,
+    context: StateTestContext<T>,
   ): Promise<void> {
     for (const action of actions) {
       const startTime = performance.now();
-      
+
       try {
         if (action.delay) {
           await this.delay(action.delay);
@@ -346,7 +346,7 @@ export class StateTestFramework<T = any> extends EventEmitter {
           context.performanceMetrics.memoryUsage.push(memoryUsage);
           context.performanceMetrics.peakMemoryUsage = Math.max(
             context.performanceMetrics.peakMemoryUsage,
-            memoryUsage
+            memoryUsage,
           );
         }
 
@@ -357,8 +357,8 @@ export class StateTestFramework<T = any> extends EventEmitter {
 
     // Calculate average update time
     if (context.performanceMetrics.updateTimes.length > 0) {
-      context.performanceMetrics.averageUpdateTime = 
-        context.performanceMetrics.updateTimes.reduce((sum, time) => sum + time, 0) / 
+      context.performanceMetrics.averageUpdateTime =
+        context.performanceMetrics.updateTimes.reduce((sum, time) => sum + time, 0) /
         context.performanceMetrics.updateTimes.length;
     }
   }
@@ -367,9 +367,9 @@ export class StateTestFramework<T = any> extends EventEmitter {
    * Execute batch action
    */
   private async executeBatchAction(
-    action: StateAction<T>, 
-    store: StateStore<T>, 
-    context: StateTestContext<T>
+    action: StateAction<T>,
+    store: StateStore<T>,
+    context: StateTestContext<T>,
   ): Promise<void> {
     // Batch actions should be executed atomically
     const currentState = store.getState();
@@ -398,9 +398,9 @@ export class StateTestFramework<T = any> extends EventEmitter {
    * Execute concurrent action
    */
   private executeConcurrentAction(
-    action: StateAction<T>, 
-    store: StateStore<T>, 
-    context: StateTestContext<T>
+    action: StateAction<T>,
+    store: StateStore<T>,
+    context: StateTestContext<T>,
   ): void {
     // Execute action without waiting
     Promise.resolve(action.execute(store)).catch(error => {
@@ -412,15 +412,15 @@ export class StateTestFramework<T = any> extends EventEmitter {
    * Run assertions
    */
   private async runAssertions(
-    assertions: StateAssertion<T>[], 
-    store: StateStore<T>, 
-    context: StateTestContext<T>
+    assertions: StateAssertion<T>[],
+    store: StateStore<T>,
+    context: StateTestContext<T>,
   ): Promise<StateAssertionResult[]> {
     const results: StateAssertionResult[] = [];
 
     for (const assertion of assertions) {
       const startTime = performance.now();
-      
+
       try {
         const passed = await assertion.check(store, context);
         const endTime = performance.now();
@@ -432,12 +432,12 @@ export class StateTestFramework<T = any> extends EventEmitter {
           expected: assertion.expected,
           actual: this.getActualValue(assertion, store, context),
           message: assertion.message || (passed ? 'Assertion passed' : 'Assertion failed'),
-          executionTime: endTime - startTime
+          executionTime: endTime - startTime,
         });
 
       } catch (error) {
         const endTime = performance.now();
-        
+
         results.push({
           name: assertion.name,
           type: assertion.type,
@@ -445,7 +445,7 @@ export class StateTestFramework<T = any> extends EventEmitter {
           expected: assertion.expected,
           actual: error,
           message: `Assertion error: ${error}`,
-          executionTime: endTime - startTime
+          executionTime: endTime - startTime,
         });
       }
     }
@@ -482,9 +482,9 @@ export class StateTestFramework<T = any> extends EventEmitter {
         memoryUsage: [],
         subscriptionCallCount: 0,
         averageUpdateTime: 0,
-        peakMemoryUsage: 0
+        peakMemoryUsage: 0,
       },
-      persistenceData: {}
+      persistenceData: {},
     };
 
     const result: StateTestResult<any> = {
@@ -498,8 +498,8 @@ export class StateTestFramework<T = any> extends EventEmitter {
         timestamp: new Date(),
         environment: process.env.NODE_ENV || 'test',
         storeType: 'persistence',
-        testId: this.generateTestId()
-      }
+        testId: this.generateTestId(),
+      },
     };
 
     try {
@@ -512,9 +512,9 @@ export class StateTestFramework<T = any> extends EventEmitter {
       const assertions: StateAssertionResult[] = [];
       for (const validation of test.validations) {
         const assertionResult = await this.executePersistenceValidation(
-          validation, 
-          test.storageKey, 
-          context
+          validation,
+          test.storageKey,
+          context,
         );
         assertions.push(assertionResult);
       }
@@ -528,7 +528,7 @@ export class StateTestFramework<T = any> extends EventEmitter {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         type: error instanceof Error ? error.constructor.name : 'Unknown',
-        context: { test: test.name }
+        context: { test: test.name },
       };
     }
 
@@ -540,9 +540,9 @@ export class StateTestFramework<T = any> extends EventEmitter {
    * Execute persistence operation
    */
   private async executePersistenceOperation(
-    operation: PersistenceOperation, 
-    storageKey: string, 
-    context: StateTestContext<any>
+    operation: PersistenceOperation,
+    storageKey: string,
+    context: StateTestContext<any>,
   ): Promise<void> {
     if (operation.delay) {
       await this.delay(operation.delay);
@@ -571,12 +571,12 @@ export class StateTestFramework<T = any> extends EventEmitter {
    * Execute persistence validation
    */
   private async executePersistenceValidation(
-    validation: PersistenceValidation, 
-    storageKey: string, 
-    context: StateTestContext<any>
+    validation: PersistenceValidation,
+    storageKey: string,
+    context: StateTestContext<any>,
   ): Promise<StateAssertionResult> {
     const startTime = performance.now();
-    
+
     try {
       let passed = false;
       let actual: any;
@@ -613,12 +613,12 @@ export class StateTestFramework<T = any> extends EventEmitter {
         expected: validation.expected,
         actual,
         message: validation.message,
-        executionTime: endTime - startTime
+        executionTime: endTime - startTime,
       };
 
     } catch (error) {
       const endTime = performance.now();
-      
+
       return {
         name: `Persistence ${validation.type}`,
         type: 'persistence',
@@ -626,7 +626,7 @@ export class StateTestFramework<T = any> extends EventEmitter {
         expected: validation.expected,
         actual: error,
         message: `Validation error: ${error}`,
-        executionTime: endTime - startTime
+        executionTime: endTime - startTime,
       };
     }
   }
@@ -660,8 +660,8 @@ export class StateTestFramework<T = any> extends EventEmitter {
         memoryUsage: [],
         subscriptionCallCount: 0,
         averageUpdateTime: 0,
-        peakMemoryUsage: 0
-      }
+        peakMemoryUsage: 0,
+      },
     };
 
     const result: StateTestResult<T> = {
@@ -675,8 +675,8 @@ export class StateTestFramework<T = any> extends EventEmitter {
         timestamp: new Date(),
         environment: process.env.NODE_ENV || 'test',
         storeType: this.getStoreType(test.store),
-        testId: this.generateTestId()
-      }
+        testId: this.generateTestId(),
+      },
     };
 
     try {
@@ -700,7 +700,7 @@ export class StateTestFramework<T = any> extends EventEmitter {
 
       // Run consistency checks
       const assertions: StateAssertionResult[] = [];
-      
+
       // Final state assertion
       assertions.push({
         name: 'Final state matches expected',
@@ -709,14 +709,14 @@ export class StateTestFramework<T = any> extends EventEmitter {
         expected: test.expectedFinalState,
         actual: finalState,
         message: finalStateMatches ? 'Final state is correct' : 'Final state does not match expected',
-        executionTime: 0
+        executionTime: 0,
       });
 
       // Custom consistency checks
       for (const check of test.consistencyChecks) {
         const states = [context.initialState, ...context.previousStates, context.currentState];
         const passed = check.check(states);
-        
+
         assertions.push({
           name: check.name,
           type: 'consistency',
@@ -724,7 +724,7 @@ export class StateTestFramework<T = any> extends EventEmitter {
           expected: true,
           actual: passed,
           message: check.message,
-          executionTime: 0
+          executionTime: 0,
         });
       }
 
@@ -740,7 +740,7 @@ export class StateTestFramework<T = any> extends EventEmitter {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         type: error instanceof Error ? error.constructor.name : 'Unknown',
-        context: { test: test.name }
+        context: { test: test.name },
       };
     }
 
@@ -754,24 +754,24 @@ export class StateTestFramework<T = any> extends EventEmitter {
   private takeSnapshot(store: StateStore<T>, context: StateTestContext<T>, operation: string): void {
     const testId = this.generateTestId();
     const snapshots = this.snapshots.get(testId) || [];
-    
+
     const snapshot: StateSnapshot<T> = {
       timestamp: new Date(),
       state: store.getState(),
       operation,
       metadata: {
         subscriptionCallCount: context.performanceMetrics.subscriptionCallCount,
-        memoryUsage: this.getMemoryUsage()
-      }
+        memoryUsage: this.getMemoryUsage(),
+      },
     };
 
     snapshots.push(snapshot);
-    
+
     // Limit snapshots to max count
     if (snapshots.length > this.config.consistency.maxSnapshots) {
       snapshots.shift();
     }
-    
+
     this.snapshots.set(testId, snapshots);
   }
 
@@ -814,15 +814,15 @@ export class StateTestFramework<T = any> extends EventEmitter {
     if (typeof state === 'object' && typeof prevState === 'object') {
       const stateKeys = Object.keys(state as any);
       const prevStateKeys = Object.keys(prevState as any);
-      
+
       if (stateKeys.length !== prevStateKeys.length) {
         return 'replace';
       }
-      
+
       const hasNewKeys = stateKeys.some(key => !prevStateKeys.includes(key));
       return hasNewKeys ? 'replace' : 'merge';
     }
-    
+
     return 'update';
   }
 
@@ -860,7 +860,7 @@ export class StateTestFramework<T = any> extends EventEmitter {
     if (typeof obj !== 'object' || obj === null) {
       return obj === expected;
     }
-    
+
     return JSON.stringify(obj).includes(JSON.stringify(expected));
   }
 
@@ -869,15 +869,15 @@ export class StateTestFramework<T = any> extends EventEmitter {
     if (typeof format === 'string') {
       return typeof data === format;
     }
-    
+
     if (Array.isArray(format)) {
       return Array.isArray(data);
     }
-    
+
     if (typeof format === 'object') {
       return typeof data === 'object' && data !== null;
     }
-    
+
     return false;
   }
 
@@ -898,8 +898,8 @@ export class StateTestFramework<T = any> extends EventEmitter {
     const failedTests = results.filter(r => r.status === 'failed').length;
     const skippedTests = results.filter(r => r.status === 'skipped').length;
 
-    let report = `# State Management Test Report\n\n`;
-    report += `**Summary:**\n`;
+    let report = '# State Management Test Report\n\n';
+    report += '**Summary:**\n';
     report += `- Total Tests: ${totalTests}\n`;
     report += `- Passed: ${passedTests}\n`;
     report += `- Failed: ${failedTests}\n`;
@@ -914,7 +914,7 @@ export class StateTestFramework<T = any> extends EventEmitter {
       typeBreakdown.set(result.type, stats);
     });
 
-    report += `## Test Type Breakdown\n\n`;
+    report += '## Test Type Breakdown\n\n';
     typeBreakdown.forEach((stats, type) => {
       const total = stats.passed + stats.failed + stats.skipped;
       const successRate = total > 0 ? ((stats.passed / total) * 100).toFixed(1) : 0;
@@ -924,7 +924,7 @@ export class StateTestFramework<T = any> extends EventEmitter {
     // Performance summary
     const performanceResults = results.filter(r => r.context.performanceMetrics.updateTimes.length > 0);
     if (performanceResults.length > 0) {
-      report += `\n## Performance Summary\n\n`;
+      report += '\n## Performance Summary\n\n';
       performanceResults.forEach(result => {
         const metrics = result.context.performanceMetrics;
         report += `### ${result.scenario}\n`;
@@ -937,19 +937,19 @@ export class StateTestFramework<T = any> extends EventEmitter {
     // Failed tests details
     const failedResults = results.filter(r => r.status === 'failed');
     if (failedResults.length > 0) {
-      report += `\n## Failed Tests\n\n`;
+      report += '\n## Failed Tests\n\n';
       failedResults.forEach(result => {
         report += `### ${result.scenario} (${result.type})\n`;
         report += `- Duration: ${result.duration}ms\n`;
         report += `- Error: ${result.error?.message || 'Unknown error'}\n`;
-        
+
         if (result.assertions.length > 0) {
-          report += `- Failed Assertions:\n`;
+          report += '- Failed Assertions:\n';
           result.assertions.filter(a => !a.passed).forEach(assertion => {
             report += `  - ${assertion.name}: ${assertion.message}\n`;
           });
         }
-        report += `\n`;
+        report += '\n';
       });
     }
 

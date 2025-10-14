@@ -1,16 +1,17 @@
 /**
  * Middleware Chain Tester
- * 
+ *
  * Specialized testing utilities for middleware chains including
  * execution order validation, chain composition testing, and integration scenarios.
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  MiddlewareChain, 
-  MiddlewareDefinition, 
+
+import {
+  MiddlewareChain,
+  MiddlewareDefinition,
   IntegrationTestSuite,
   IntegrationScenario,
-  TestResult 
+  TestResult,
 } from './MiddlewareTestFramework';
 
 export interface ChainTestConfig {
@@ -82,7 +83,7 @@ export class MiddlewareChainTester {
           severity: 'critical',
           middleware: middlewareRef.name,
           description: `Middleware ${middlewareRef.name} is not registered`,
-          suggestion: `Register middleware ${middlewareRef.name} before using it in chain`
+          suggestion: `Register middleware ${middlewareRef.name} before using it in chain`,
         });
       }
     }
@@ -99,7 +100,7 @@ export class MiddlewareChainTester {
               severity: 'high',
               middleware: middlewareRef.name,
               description: `Middleware ${middlewareRef.name} depends on ${dependency} which is not in the chain`,
-              suggestion: `Add ${dependency} to the chain before ${middlewareRef.name}`
+              suggestion: `Add ${dependency} to the chain before ${middlewareRef.name}`,
             });
           }
         }
@@ -119,15 +120,15 @@ export class MiddlewareChainTester {
       recommendations.push('Chain configuration is valid');
     } else {
       recommendations.push('Review and fix identified issues');
-      
+
       if (issues.some(i => i.type === 'dependency')) {
         recommendations.push('Ensure all middleware dependencies are satisfied');
       }
-      
+
       if (issues.some(i => i.type === 'order')) {
         recommendations.push('Review middleware execution order');
       }
-      
+
       if (issues.some(i => i.type === 'performance')) {
         recommendations.push('Consider optimizing middleware chain for performance');
       }
@@ -136,7 +137,7 @@ export class MiddlewareChainTester {
     return {
       isValid: issues.filter(i => i.severity === 'critical' || i.severity === 'high').length === 0,
       issues,
-      recommendations
+      recommendations,
     };
   }
 
@@ -147,7 +148,7 @@ export class MiddlewareChainTester {
     const startTime = Date.now();
     const intermediateStates: IntermediateState[] = [];
     const executionOrder: string[] = [];
-    
+
     try {
       let currentRequest = request;
       let currentResponse = NextResponse.next();
@@ -166,7 +167,7 @@ export class MiddlewareChainTester {
           currentResponse = await this.executeWithTimeout(
             middleware.handler,
             currentRequest,
-            this.config.timeout
+            this.config.timeout,
           );
 
           const stepEndTime = Date.now();
@@ -181,7 +182,7 @@ export class MiddlewareChainTester {
               response: currentResponse,
               executionTime: stepEndTime - stepStartTime,
               memoryUsage: (endMemory - startMemory) / 1024 / 1024, // MB
-              timestamp: new Date()
+              timestamp: new Date(),
             });
           }
 
@@ -203,7 +204,7 @@ export class MiddlewareChainTester {
           const response = await this.executeWithTimeout(
             middleware.handler,
             currentRequest,
-            this.config.timeout
+            this.config.timeout,
           );
 
           const stepEndTime = Date.now();
@@ -218,7 +219,7 @@ export class MiddlewareChainTester {
               response: response,
               executionTime: stepEndTime - stepStartTime,
               memoryUsage: (endMemory - startMemory) / 1024 / 1024, // MB
-              timestamp: new Date()
+              timestamp: new Date(),
             });
           }
 
@@ -247,7 +248,7 @@ export class MiddlewareChainTester {
         intermediateStates,
         executionOrder,
         totalExecutionTime: Date.now() - startTime,
-        error: error instanceof Error ? error : new Error(String(error))
+        error: error instanceof Error ? error : new Error(String(error)),
       };
     }
   }
@@ -272,14 +273,14 @@ export class MiddlewareChainTester {
           nodeVersion: process.version,
           testFrameworkVersion: '1.0.0',
           middleware: chain.name,
-          requestId: this.generateRequestId()
-        }
+          requestId: this.generateRequestId(),
+        },
       };
 
       try {
         // Execute the scenario flow
         const flowResults = await this.executeScenarioFlow(chain, scenario);
-        
+
         // Validate assertions
         result.assertions = await this.validateScenarioAssertions(scenario, flowResults);
         result.status = result.assertions.every(a => a.passed) ? 'passed' : 'failed';
@@ -290,7 +291,7 @@ export class MiddlewareChainTester {
           message: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
           type: error instanceof Error ? error.constructor.name : 'Unknown',
-          context: { scenario: scenario.name, chain: chain.name }
+          context: { scenario: scenario.name, chain: chain.name },
         };
       }
 
@@ -305,9 +306,9 @@ export class MiddlewareChainTester {
    * Benchmark chain performance
    */
   async benchmarkChain(
-    chain: MiddlewareChain, 
-    request: NextRequest, 
-    iterations: number = 100
+    chain: MiddlewareChain,
+    request: NextRequest,
+    iterations: number = 100,
   ): Promise<{
     averageExecutionTime: number;
     minExecutionTime: number;
@@ -366,9 +367,9 @@ export class MiddlewareChainTester {
       throughput,
       memoryUsage: {
         average: averageMemoryUsage,
-        peak: peakMemoryUsage
+        peak: peakMemoryUsage,
       },
-      bottlenecks
+      bottlenecks,
     };
   }
 
@@ -382,7 +383,7 @@ export class MiddlewareChainTester {
       middlewareName: string;
       errorType: 'sync' | 'async' | 'timeout';
       expectedBehavior: 'fail-fast' | 'continue' | 'fallback';
-    }>
+    }>,
   ): Promise<Array<{
     scenario: string;
     success: boolean;
@@ -399,22 +400,22 @@ export class MiddlewareChainTester {
     for (const scenario of errorScenarios) {
       // Create a modified chain with error-inducing middleware
       const modifiedChain = this.createChainWithError(chain, scenario.middlewareName, scenario.errorType);
-      
+
       try {
         const result = await this.executeChain(modifiedChain, request);
-        
+
         results.push({
           scenario: `${scenario.middlewareName} - ${scenario.errorType}`,
           success: result.success,
           behavior: this.determineBehavior(result, scenario.expectedBehavior),
-          error: result.error
+          error: result.error,
         });
       } catch (error) {
         results.push({
           scenario: `${scenario.middlewareName} - ${scenario.errorType}`,
           success: false,
           behavior: 'fail-fast',
-          error: error instanceof Error ? error : new Error(String(error))
+          error: error instanceof Error ? error : new Error(String(error)),
         });
       }
     }
@@ -440,7 +441,7 @@ export class MiddlewareChainTester {
               severity: 'high',
               middleware: middleware.name,
               description: `Middleware ${middleware.name} depends on ${dependency} but ${dependency} comes after it in the chain`,
-              suggestion: `Move ${dependency} before ${middleware.name} in the execution order`
+              suggestion: `Move ${dependency} before ${middleware.name} in the execution order`,
             });
           }
         }
@@ -451,14 +452,14 @@ export class MiddlewareChainTester {
     for (let i = 0; i < chain.middlewares.length - 1; i++) {
       const current = chain.middlewares[i];
       const next = chain.middlewares[i + 1];
-      
+
       if (current.priority && next.priority && current.priority < next.priority) {
         issues.push({
           type: 'order',
           severity: 'medium',
           middleware: current.name,
           description: `Middleware ${current.name} (priority ${current.priority}) should come after ${next.name} (priority ${next.priority})`,
-          suggestion: `Reorder middlewares based on priority values`
+          suggestion: 'Reorder middlewares based on priority values',
         });
       }
     }
@@ -475,9 +476,9 @@ export class MiddlewareChainTester {
     // Check for potentially slow middleware combinations
     const heavyMiddlewares = ['auth', 'database', 'external-api', 'file-upload'];
     const chainMiddlewareNames = chain.middlewares.map(m => m.name.toLowerCase());
-    
-    const heavyCount = chainMiddlewareNames.filter(name => 
-      heavyMiddlewares.some(heavy => name.includes(heavy))
+
+    const heavyCount = chainMiddlewareNames.filter(name =>
+      heavyMiddlewares.some(heavy => name.includes(heavy)),
     ).length;
 
     if (heavyCount > 3) {
@@ -486,7 +487,7 @@ export class MiddlewareChainTester {
         severity: 'medium',
         middleware: 'chain',
         description: `Chain contains ${heavyCount} potentially heavy middlewares`,
-        suggestion: 'Consider optimizing or parallelizing heavy operations'
+        suggestion: 'Consider optimizing or parallelizing heavy operations',
       });
     }
 
@@ -497,7 +498,7 @@ export class MiddlewareChainTester {
         severity: 'low',
         middleware: 'chain',
         description: `Chain is quite long with ${chain.middlewares.length} middlewares`,
-        suggestion: 'Consider breaking down into smaller, focused chains'
+        suggestion: 'Consider breaking down into smaller, focused chains',
       });
     }
 
@@ -510,7 +511,7 @@ export class MiddlewareChainTester {
   private async executeWithTimeout(
     handler: (request: NextRequest) => Promise<NextResponse> | NextResponse,
     request: NextRequest,
-    timeout: number
+    timeout: number,
   ): Promise<NextResponse> {
     return new Promise(async (resolve, reject) => {
       const timeoutId = setTimeout(() => {
@@ -543,7 +544,7 @@ export class MiddlewareChainTester {
   private async executeScenarioFlow(chain: MiddlewareChain, scenario: IntegrationScenario): Promise<any[]> {
     // Simplified implementation - would need more sophisticated flow execution
     const results: any[] = [];
-    
+
     for (const step of scenario.flow) {
       const middleware = this.middlewares.get(step.middleware);
       if (!middleware) {
@@ -554,7 +555,7 @@ export class MiddlewareChainTester {
       const request = new NextRequest('http://localhost:3000/test', {
         method: 'POST',
         body: JSON.stringify(step.input),
-        headers: { 'content-type': 'application/json' }
+        headers: { 'content-type': 'application/json' },
       });
 
       const response = await middleware.handler(request);
@@ -574,7 +575,7 @@ export class MiddlewareChainTester {
       passed: true, // Placeholder
       expected: assertion.condition,
       actual: 'validated',
-      message: assertion.message
+      message: assertion.message,
     }));
   }
 
@@ -582,15 +583,15 @@ export class MiddlewareChainTester {
    * Create chain with error-inducing middleware
    */
   private createChainWithError(
-    chain: MiddlewareChain, 
-    middlewareName: string, 
-    errorType: 'sync' | 'async' | 'timeout'
+    chain: MiddlewareChain,
+    middlewareName: string,
+    errorType: 'sync' | 'async' | 'timeout',
   ): MiddlewareChain {
     const modifiedMiddlewares = chain.middlewares.map(middlewareRef => {
       if (middlewareRef.name === middlewareName) {
         return {
           ...middlewareRef,
-          handler: this.createErrorHandler(errorType)
+          handler: this.createErrorHandler(errorType),
         };
       }
       return middlewareRef;
@@ -598,7 +599,7 @@ export class MiddlewareChainTester {
 
     return {
       ...chain,
-      middlewares: modifiedMiddlewares
+      middlewares: modifiedMiddlewares,
     };
   }
 
@@ -628,21 +629,21 @@ export class MiddlewareChainTester {
    * Determine behavior from execution result
    */
   private determineBehavior(
-    result: ChainExecutionResult, 
-    expectedBehavior: 'fail-fast' | 'continue' | 'fallback'
+    result: ChainExecutionResult,
+    expectedBehavior: 'fail-fast' | 'continue' | 'fallback',
   ): string {
     if (!result.success) {
       return 'fail-fast';
     }
-    
+
     if (result.finalResponse.status >= 200 && result.finalResponse.status < 300) {
       return 'continue';
     }
-    
+
     if (result.finalResponse.status >= 400) {
       return 'fallback';
     }
-    
+
     return 'unknown';
   }
 

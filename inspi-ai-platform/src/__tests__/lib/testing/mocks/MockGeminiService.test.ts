@@ -3,8 +3,8 @@
  * 验证AI服务Mock的功能和一致性
  */
 
+import { AIGenerationOptions } from '@/core/ai/geminiService';
 import { MockGeminiService, MockAIResponse } from '@/lib/testing';
-import { AIGenerationOptions } from '@/lib/ai/geminiService';
 
 describe('MockGeminiService', () => {
   let mockService: MockGeminiService;
@@ -30,7 +30,7 @@ describe('MockGeminiService', () => {
       const prompt = 'Generate a test response';
       const options: AIGenerationOptions = {
         temperature: 0.7,
-        maxTokens: 100
+        maxTokens: 100,
       };
 
       // Act
@@ -73,8 +73,8 @@ describe('MockGeminiService', () => {
         usage: {
           promptTokens: 5,
           completionTokens: 10,
-          totalTokens: 15
-        }
+          totalTokens: 15,
+        },
       };
 
       // Act
@@ -94,8 +94,8 @@ describe('MockGeminiService', () => {
         usage: {
           promptTokens: 8,
           completionTokens: 12,
-          totalTokens: 20
-        }
+          totalTokens: 20,
+        },
       };
 
       // Act
@@ -112,7 +112,7 @@ describe('MockGeminiService', () => {
       const prompt = 'Custom prompt';
       const customResponse: MockAIResponse = {
         content: 'Custom response',
-        usage: { promptTokens: 5, completionTokens: 10, totalTokens: 15 }
+        usage: { promptTokens: 5, completionTokens: 10, totalTokens: 15 },
       };
 
       mockService.setPromptResponse(prompt, customResponse);
@@ -141,7 +141,7 @@ describe('MockGeminiService', () => {
       const failingResponse: MockAIResponse = {
         content: 'This should not be returned',
         shouldFail: true,
-        errorMessage: 'Custom error message'
+        errorMessage: 'Custom error message',
       };
 
       mockService.setPromptResponse('failing prompt', failingResponse);
@@ -161,7 +161,7 @@ describe('MockGeminiService', () => {
         mockService.generateContent('test 2'),
         mockService.generateContent('test 3'),
         mockService.healthCheck(),
-        mockService.healthCheck()
+        mockService.healthCheck(),
       ]);
 
       // Assert

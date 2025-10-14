@@ -3,21 +3,22 @@
  * GET /api/users/[id]/rank - 获取用户排名信息
  */
 import { NextRequest, NextResponse } from 'next/server';
+
+import { requireAuth } from '@/core/auth/middleware';
 import contributionService from '@/lib/services/contributionService';
-import { requireAuth } from '@/lib/auth/middleware';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const userId = params.id;
-    
+    const { id } = await params;
+
     // 验证用户ID格式
-    if (!userId || userId.length !== 24) {
+    if (!id || id.length !== 24) {
       return NextResponse.json({
         success: false,
-        error: '无效的用户ID'
+        error: '无效的用户ID',
       }, { status: 400 });
     }
 
@@ -28,36 +29,36 @@ export async function GET(
     if (!['total', 'weekly', 'monthly'].includes(type)) {
       return NextResponse.json({
         success: false,
-        error: '无效的排行榜类型'
+        error: '无效的排行榜类型',
       }, { status: 400 });
     }
 
     // 获取用户在排行榜中的排名
-    const userRank = await contributionService.getUserRankInLeaderboard(userId, type);
+    const userRank = await contributionService.getUserRankInLeaderboard(id, type);
 
     if (!userRank) {
       return NextResponse.json({
         success: false,
-        error: '用户排名信息不存在'
+        error: '用户排名信息不存在',
       }, { status: 404 });
     }
 
     // 获取用户贡献度统计
-    const userStats = await contributionService.getUserContributionStats(userId);
+    const userStats = await contributionService.getUserContributionStats(id);
 
     return NextResponse.json({
       success: true,
       data: {
         rank: userRank,
-        stats: userStats
-      }
+        stats: userStats,
+      },
     });
 
   } catch (error) {
     console.error('获取用户排名失败:', error);
     return NextResponse.json({
       success: false,
-      error: '获取用户排名失败'
+      error: '获取用户排名失败',
     }, { status: 500 });
   }
 }

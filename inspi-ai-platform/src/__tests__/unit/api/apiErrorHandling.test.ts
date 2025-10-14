@@ -10,26 +10,26 @@ const mockLogger = {
   info: jest.fn(),
   error: jest.fn(),
   warn: jest.fn(),
-  debug: jest.fn()
+  debug: jest.fn(),
 };
 
 jest.mock('@/lib/utils/logger', () => ({
-  logger: mockLogger
+  logger: mockLogger,
 }));
 
 // Helper function to create mock request
 function createMockRequest(
-  method: string, 
-  body?: any, 
+  method: string,
+  body?: any,
   headers: Record<string, string> = {},
-  url: string = 'http://localhost:3000/api/test'
+  url: string = 'http://localhost:3000/api/test',
 ) {
   return {
     method,
     json: jest.fn().mockResolvedValue(body || {}),
     headers: new Map(Object.entries(headers)),
     cookies: new Map(),
-    url
+    url,
   } as unknown as NextRequest;
 }
 
@@ -38,151 +38,151 @@ const createTestApiHandler = (scenario: string) => {
   return async (request: NextRequest) => {
     try {
       const body = await request.json();
-      
+
       switch (scenario) {
         case 'json-parse-error':
           throw new SyntaxError('Unexpected token in JSON');
-          
+
         case 'validation-error':
           if (!body.email || !body.email.includes('@')) {
             return new NextResponse(
               JSON.stringify({ error: 'Invalid email format' }),
-              { status: 400 }
+              { status: 400 },
             );
           }
           break;
-          
+
         case 'database-error':
           throw new Error('Database connection failed');
-          
+
         case 'timeout-error':
           await new Promise(resolve => setTimeout(resolve, 10000));
           break;
-          
+
         case 'memory-error':
           throw new Error('Out of memory');
-          
+
         case 'network-error':
           throw new Error('Network unreachable');
-          
+
         case 'rate-limit-error':
           return new NextResponse(
-            JSON.stringify({ 
+            JSON.stringify({
               error: 'Rate limit exceeded',
-              retryAfter: 60
+              retryAfter: 60,
             }),
-            { 
+            {
               status: 429,
-              headers: { 'Retry-After': '60' }
-            }
+              headers: { 'Retry-After': '60' },
+            },
           );
-          
+
         case 'auth-error':
           return new NextResponse(
             JSON.stringify({ error: 'Unauthorized' }),
-            { status: 401 }
+            { status: 401 },
           );
-          
+
         case 'forbidden-error':
           return new NextResponse(
             JSON.stringify({ error: 'Forbidden' }),
-            { status: 403 }
+            { status: 403 },
           );
-          
+
         case 'not-found-error':
           return new NextResponse(
             JSON.stringify({ error: 'Resource not found' }),
-            { status: 404 }
+            { status: 404 },
           );
-          
+
         case 'method-not-allowed':
           return new NextResponse(
             JSON.stringify({ error: 'Method not allowed' }),
-            { status: 405 }
+            { status: 405 },
           );
-          
+
         case 'payload-too-large':
           return new NextResponse(
             JSON.stringify({ error: 'Payload too large' }),
-            { status: 413 }
+            { status: 413 },
           );
-          
+
         case 'unsupported-media-type':
           return new NextResponse(
             JSON.stringify({ error: 'Unsupported media type' }),
-            { status: 415 }
+            { status: 415 },
           );
-          
+
         case 'internal-server-error':
           throw new Error('Internal server error');
-          
+
         case 'service-unavailable':
           return new NextResponse(
             JSON.stringify({ error: 'Service temporarily unavailable' }),
-            { status: 503 }
+            { status: 503 },
           );
-          
+
         case 'gateway-timeout':
           return new NextResponse(
             JSON.stringify({ error: 'Gateway timeout' }),
-            { status: 504 }
+            { status: 504 },
           );
-          
+
         default:
           return new NextResponse(
             JSON.stringify({ message: 'Success' }),
-            { status: 200 }
+            { status: 200 },
           );
       }
-      
+
       return new NextResponse(
         JSON.stringify({ message: 'Success' }),
-        { status: 200 }
+        { status: 200 },
       );
-      
+
     } catch (error) {
       mockLogger.error('API error occurred', error);
-      
+
       if (error instanceof SyntaxError) {
         return new NextResponse(
           JSON.stringify({ error: 'Invalid JSON format' }),
-          { status: 400 }
+          { status: 400 },
         );
       }
-      
+
       if (error instanceof Error) {
         if (error.message.includes('timeout')) {
           return new NextResponse(
             JSON.stringify({ error: 'Request timeout' }),
-            { status: 408 }
+            { status: 408 },
           );
         }
-        
+
         if (error.message.includes('memory')) {
           return new NextResponse(
             JSON.stringify({ error: 'Server overloaded' }),
-            { status: 503 }
+            { status: 503 },
           );
         }
-        
+
         if (error.message.includes('Database')) {
           return new NextResponse(
             JSON.stringify({ error: 'Database error' }),
-            { status: 500 }
+            { status: 500 },
           );
         }
-        
+
         if (error.message.includes('Network')) {
           return new NextResponse(
             JSON.stringify({ error: 'Network error' }),
-            { status: 502 }
+            { status: 502 },
           );
         }
       }
-      
+
       return new NextResponse(
         JSON.stringify({ error: 'Internal server error' }),
-        { status: 500 }
+        { status: 500 },
       );
     }
   };
@@ -422,7 +422,7 @@ describe('API错误处理边界测试', () => {
         json: jest.fn().mockResolvedValue(null),
         headers: new Map(),
         cookies: new Map(),
-        url: 'http://localhost:3000/api/test'
+        url: 'http://localhost:3000/api/test',
       } as unknown as NextRequest;
 
       // Act
@@ -439,8 +439,8 @@ describe('API错误处理边界测试', () => {
         data: Array(10000).fill(null).map((_, i) => ({
           id: i,
           name: `Item ${i}`,
-          description: 'x'.repeat(1000)
-        }))
+          description: 'x'.repeat(1000),
+        })),
       };
       const request = createMockRequest('POST', largeObject);
 
@@ -473,7 +473,7 @@ describe('API错误处理边界测试', () => {
       const specialCharsData = {
         text: '🚀 Special chars: <>&"\'\\n\\t\\r',
         unicode: '你好世界 🌍 مرحبا بالعالم',
-        emoji: '😀😃😄😁😆😅😂🤣'
+        emoji: '😀😃😄😁😆😅😂🤣',
       };
       const request = createMockRequest('POST', specialCharsData);
 
@@ -489,13 +489,13 @@ describe('API错误处理边界测试', () => {
       const handler = createTestApiHandler('success');
       const circularObject: any = { name: 'test' };
       circularObject.self = circularObject;
-      
+
       const request = {
         method: 'POST',
         json: jest.fn().mockRejectedValue(new TypeError('Converting circular structure to JSON')),
         headers: new Map(),
         cookies: new Map(),
-        url: 'http://localhost:3000/api/test'
+        url: 'http://localhost:3000/api/test',
       } as unknown as NextRequest;
 
       // Act
@@ -515,7 +515,7 @@ describe('API错误处理边界测试', () => {
         json: jest.fn().mockRejectedValue(new Error('Invalid UTF-8 sequence')),
         headers: new Map(),
         cookies: new Map(),
-        url: 'http://localhost:3000/api/test'
+        url: 'http://localhost:3000/api/test',
       } as unknown as NextRequest;
 
       // Act
@@ -532,13 +532,13 @@ describe('API错误处理边界测试', () => {
     it('应该处理并发请求中的错误', async () => {
       // Arrange
       const handler = createTestApiHandler('database-error');
-      const requests = Array(10).fill(null).map(() => 
-        createMockRequest('POST', { test: 'data' })
+      const requests = Array(10).fill(null).map(() =>
+        createMockRequest('POST', { test: 'data' }),
       );
 
       // Act
       const responses = await Promise.all(
-        requests.map(request => handler(request))
+        requests.map(request => handler(request)),
       );
 
       // Assert
@@ -547,7 +547,7 @@ describe('API错误处理边界测试', () => {
         const data = await response.json();
         expect(data.error).toBe('Database error');
       });
-      
+
       expect(mockLogger.error).toHaveBeenCalledTimes(10);
     });
 
@@ -555,12 +555,12 @@ describe('API错误处理边界测试', () => {
       // Arrange
       const successHandler = createTestApiHandler('success');
       const errorHandler = createTestApiHandler('database-error');
-      
+
       const requests = [
         successHandler(createMockRequest('POST', {})),
         errorHandler(createMockRequest('POST', {})),
         successHandler(createMockRequest('POST', {})),
-        errorHandler(createMockRequest('POST', {}))
+        errorHandler(createMockRequest('POST', {})),
       ];
 
       // Act
@@ -568,11 +568,11 @@ describe('API错误处理边界测试', () => {
 
       // Assert
       expect(responses.filter(r => r.status === 'fulfilled')).toHaveLength(4);
-      
-      const actualResponses = responses.map(r => 
-        r.status === 'fulfilled' ? r.value : null
+
+      const actualResponses = responses.map(r =>
+        r.status === 'fulfilled' ? r.value : null,
       ).filter(Boolean);
-      
+
       expect(actualResponses).toHaveLength(4);
     });
   });
@@ -611,7 +611,7 @@ describe('API错误处理边界测试', () => {
       // Arrange
       const permanentHandler = createTestApiHandler('not-found-error');
       const temporaryHandler = createTestApiHandler('service-unavailable');
-      
+
       const permanentRequest = createMockRequest('POST', {});
       const temporaryRequest = createMockRequest('POST', {});
 
@@ -637,7 +637,7 @@ describe('API错误处理边界测试', () => {
       // Assert
       expect(mockLogger.error).toHaveBeenCalledWith(
         'API error occurred',
-        expect.any(Error)
+        expect.any(Error),
       );
     });
 
@@ -646,7 +646,7 @@ describe('API错误处理边界测试', () => {
       const handlers = [
         { handler: createTestApiHandler('validation-error'), level: 'warn' },
         { handler: createTestApiHandler('database-error'), level: 'error' },
-        { handler: createTestApiHandler('rate-limit-error'), level: 'info' }
+        { handler: createTestApiHandler('rate-limit-error'), level: 'info' },
       ];
 
       // Act & Assert
@@ -665,7 +665,7 @@ describe('API错误处理边界测试', () => {
       const sensitiveData = {
         password: 'secret123',
         creditCard: '4111-1111-1111-1111',
-        ssn: '123-45-6789'
+        ssn: '123-45-6789',
       };
       const request = createMockRequest('POST', sensitiveData);
 
@@ -676,7 +676,7 @@ describe('API错误处理边界测试', () => {
       expect(mockLogger.error).toHaveBeenCalled();
       const logCall = mockLogger.error.mock.calls[0];
       const logMessage = JSON.stringify(logCall);
-      
+
       // 确保敏感信息没有被记录
       expect(logMessage).not.toContain('secret123');
       expect(logMessage).not.toContain('4111-1111-1111-1111');
@@ -691,14 +691,14 @@ describe('API错误处理边界测试', () => {
       const request = createMockRequest('POST', {});
 
       // 模拟超时
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 100)
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout')), 100),
       );
 
       // Act & Assert
       await expect(Promise.race([
         handler(request),
-        timeoutPromise
+        timeoutPromise,
       ])).rejects.toThrow('Request timeout');
     });
 

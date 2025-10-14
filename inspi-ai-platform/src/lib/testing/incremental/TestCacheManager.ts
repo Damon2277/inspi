@@ -1,6 +1,6 @@
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as crypto from 'crypto';
 
 export interface TestResult {
   testFile: string;
@@ -83,7 +83,7 @@ export class TestCacheManager {
       maxSize: 100 * 1024 * 1024, // 100MB
       compressionEnabled: true,
       cleanupInterval: 60 * 60 * 1000, // 1 hour
-      ...options
+      ...options,
     };
 
     this.stats = {
@@ -93,7 +93,7 @@ export class TestCacheManager {
       totalMisses: 0,
       cacheSize: 0,
       oldestEntry: null,
-      newestEntry: null
+      newestEntry: null,
     };
 
     this.ensureCacheDirectory();
@@ -215,13 +215,13 @@ export class TestCacheManager {
    * 缓存测试结果
    */
   cacheResult(
-    testFile: string, 
-    sourceFiles: string[], 
-    result: TestResult, 
-    dependencies: string[] = []
+    testFile: string,
+    sourceFiles: string[],
+    result: TestResult,
+    dependencies: string[] = [],
   ): void {
     const cacheKey = this.generateCacheKey(testFile, sourceFiles);
-    
+
     // 生成源文件哈希
     const sourceHashes: Record<string, string> = {};
     for (const sourceFile of sourceFiles) {
@@ -240,7 +240,7 @@ export class TestCacheManager {
       dependencies,
       createdAt: now,
       lastUsed: now,
-      useCount: 0
+      useCount: 0,
     };
 
     this.cache.set(cacheKey, entry);
@@ -263,7 +263,7 @@ export class TestCacheManager {
    */
   private updateStats(): void {
     this.stats.totalEntries = this.cache.size;
-    
+
     const entries = Array.from(this.cache.values());
     if (entries.length > 0) {
       const dates = entries.map(e => e.createdAt);
@@ -329,7 +329,7 @@ export class TestCacheManager {
     }
 
     expiredKeys.forEach(key => this.cache.delete(key));
-    
+
     if (expiredKeys.length > 0) {
       this.updateStats();
     }
@@ -369,15 +369,15 @@ export class TestCacheManager {
         lastUsed: entry.lastUsed.toISOString(),
         result: {
           ...entry.result,
-          timestamp: entry.result.timestamp.toISOString()
-        }
+          timestamp: entry.result.timestamp.toISOString(),
+        },
       })),
-      stats: this.stats
+      stats: this.stats,
     };
 
     try {
       let content = JSON.stringify(cacheData, null, 2);
-      
+
       if (this.options.compressionEnabled) {
         const zlib = require('zlib');
         content = zlib.gzipSync(content).toString('base64');
@@ -394,14 +394,14 @@ export class TestCacheManager {
    */
   private loadCache(): void {
     const cacheFile = path.join(this.options.cacheDir, 'test-cache.json');
-    
+
     if (!fs.existsSync(cacheFile)) {
       return;
     }
 
     try {
       let content = fs.readFileSync(cacheFile, 'utf8');
-      
+
       if (this.options.compressionEnabled) {
         try {
           const zlib = require('zlib');
@@ -412,7 +412,7 @@ export class TestCacheManager {
       }
 
       const cacheData = JSON.parse(content);
-      
+
       // 恢复缓存条目
       for (const entryData of cacheData.entries) {
         const entry: CacheEntry = {
@@ -421,10 +421,10 @@ export class TestCacheManager {
           lastUsed: new Date(entryData.lastUsed),
           result: {
             ...entryData.result,
-            timestamp: new Date(entryData.result.timestamp)
-          }
+            timestamp: new Date(entryData.result.timestamp),
+          },
         };
-        
+
         this.cache.set(entryData.key, entry);
       }
 
@@ -433,13 +433,13 @@ export class TestCacheManager {
         this.stats = {
           ...cacheData.stats,
           oldestEntry: cacheData.stats.oldestEntry ? new Date(cacheData.stats.oldestEntry) : null,
-          newestEntry: cacheData.stats.newestEntry ? new Date(cacheData.stats.newestEntry) : null
+          newestEntry: cacheData.stats.newestEntry ? new Date(cacheData.stats.newestEntry) : null,
         };
       }
 
       // 清理过期条目
       this.cleanup();
-      
+
     } catch (error) {
       console.warn(`Failed to load test cache: ${error.message}`);
       // 如果加载失败，从空缓存开始
@@ -459,7 +459,7 @@ export class TestCacheManager {
       totalMisses: 0,
       cacheSize: 0,
       oldestEntry: null,
-      newestEntry: null
+      newestEntry: null,
     };
   }
 
@@ -468,7 +468,7 @@ export class TestCacheManager {
    */
   invalidateTest(testFile: string): void {
     const keysToDelete: string[] = [];
-    
+
     for (const [key, entry] of this.cache.entries()) {
       if (entry.testFile === testFile) {
         keysToDelete.push(key);
@@ -484,16 +484,16 @@ export class TestCacheManager {
    */
   invalidateAffectedTests(affectedFiles: string[]): void {
     const keysToDelete: string[] = [];
-    
+
     for (const [key, entry] of this.cache.entries()) {
       // 检查是否有受影响的源文件
-      const hasAffectedSource = entry.sourceFiles.some(file => 
-        affectedFiles.includes(file)
+      const hasAffectedSource = entry.sourceFiles.some(file =>
+        affectedFiles.includes(file),
       );
-      
+
       // 检查是否有受影响的依赖
-      const hasAffectedDependency = entry.dependencies.some(file => 
-        affectedFiles.includes(file)
+      const hasAffectedDependency = entry.dependencies.some(file =>
+        affectedFiles.includes(file),
       );
 
       if (hasAffectedSource || hasAffectedDependency) {
@@ -529,7 +529,7 @@ export class TestCacheManager {
       timestamp: new Date().toISOString(),
       options: this.options,
       entries: Array.from(this.cache.entries()),
-      stats: this.stats
+      stats: this.stats,
     };
   }
 
@@ -538,7 +538,7 @@ export class TestCacheManager {
    */
   importCache(data: any): void {
     this.clear();
-    
+
     if (data.entries) {
       for (const [key, entry] of data.entries) {
         // 确保日期对象正确恢复
@@ -548,10 +548,10 @@ export class TestCacheManager {
           lastUsed: new Date(entry.lastUsed),
           result: {
             ...entry.result,
-            timestamp: new Date(entry.result.timestamp)
-          }
+            timestamp: new Date(entry.result.timestamp),
+          },
         };
-        
+
         this.cache.set(key, restoredEntry);
       }
     }

@@ -260,9 +260,9 @@ class CompatibilityChecker {
     }
     
     return {
-      major: parseInt(match[1]),
-      minor: parseInt(match[2]),
-      patch: parseInt(match[3]),
+      major: parseInt(match[1], 10),
+      minor: parseInt(match[2], 10),
+      patch: parseInt(match[3], 10),
       prerelease: match[4] || null
     };
   }
@@ -379,11 +379,14 @@ class CompatibilityChecker {
     markdown += `## 📊 兼容性摘要\n\n`;
     markdown += `- **破坏性变更**: ${report.summary.hasBreakingChanges ? '是' : '否'}\n`;
     markdown += `- **建议操作**: ${report.summary.recommendedAction}\n`;
-    markdown += `- **API文件变更**: ${report.apiChanges.added.length + report.apiChanges.modified.length + report.apiChanges.removed.length} 个\n`;
-    markdown += `- **破坏性变更数量**: ${report.breakingChanges.fromCommits.length + report.breakingChanges.fromAPI.length} 个\n\n`;
+    markdown += `- **API文件变更**: ${report.apiChanges.added.length +
+      report.apiChanges.modified.length + report.apiChanges.removed.length} 个\n`;
+    markdown += `- **破坏性变更数量**:
+      ${report.breakingChanges.fromCommits.length + report.breakingChanges.fromAPI.length} 个\n\n`;
 
     // API变更详情
-    if (report.apiChanges.added.length > 0 || report.apiChanges.modified.length > 0 || report.apiChanges.removed.length > 0) {
+    if (report.apiChanges.added.length > 0 ||
+      report.apiChanges.modified.length > 0 || report.apiChanges.removed.length > 0) {
       markdown += `## 🔄 API变更详情\n\n`;
       
       if (report.apiChanges.added.length > 0) {
@@ -433,7 +436,8 @@ class CompatibilityChecker {
     }
 
     // 版本验证结果
-    if (report.versionValidation.errors.length > 0 || report.versionValidation.warnings.length > 0) {
+    if (report.versionValidation.errors.length > 0 ||
+      report.versionValidation.warnings.length > 0) {
       markdown += `## 🔍 版本验证结果\n\n`;
       
       if (report.versionValidation.errors.length > 0) {
@@ -588,7 +592,8 @@ function main() {
         console.log('  --new-version <version>   指定新版本号进行验证');
         console.log('  --help                    显示帮助信息\n');
         console.log('示例:');
-        console.log('  node scripts/compatibility-checker.js --from-version 1.0.0 --new-version 2.0.0');
+        console.log('  node scripts/compatibility-checker.js --from-
+          version 1.0.0 --new-version 2.0.0');
         return;
     }
   }

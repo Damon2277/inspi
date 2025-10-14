@@ -5,7 +5,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ContributionHistory, ContributionRecord, ContributionType } from '@/types/contribution';
+
+import { ContributionHistory, ContributionRecord, ContributionType } from '@/shared/types/contribution';
 
 interface ContributionHistoryProps {
   userId: string;
@@ -132,7 +133,7 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ record }) => {
 const ContributionHistoryComponent: React.FC<ContributionHistoryProps> = ({
   userId,
   className = '',
-  limit = 20
+  limit = 20,
 }) => {
   const [history, setHistory] = useState<ContributionHistory | null>(null);
   const [loading, setLoading] = useState(true);
@@ -153,7 +154,7 @@ const ContributionHistoryComponent: React.FC<ContributionHistoryProps> = ({
       const params = new URLSearchParams({
         userId,
         limit: limit.toString(),
-        offset: offset.toString()
+        offset: offset.toString(),
       });
 
       if (type !== 'all') {
@@ -171,7 +172,7 @@ const ContributionHistoryComponent: React.FC<ContributionHistoryProps> = ({
         if (append && history) {
           setHistory({
             ...data.data,
-            records: [...history.records, ...data.data.records]
+            records: [...history.records, ...data.data.records],
           });
         } else {
           setHistory(data.data);

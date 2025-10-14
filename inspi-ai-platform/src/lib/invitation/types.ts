@@ -234,10 +234,10 @@ export class InviteError extends Error {
   constructor(
     public code: InviteErrorCode,
     public message: string,
-    public details?: any
+    public details?: any,
   ) {
-    super(message)
-    this.name = 'InviteError'
+    super(message);
+    this.name = 'InviteError';
   }
 }
 

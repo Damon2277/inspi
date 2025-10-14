@@ -2,11 +2,12 @@
  * 全局错误处理中间件
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { CustomError } from '@/lib/errors/CustomError';
-import { ErrorCode, ErrorContext } from '@/lib/errors/types';
-import { createErrorResponse, handleUnknownError } from '@/lib/errors/responses';
+
 import { logger, createTracedLogger } from '@/lib/logging/logger';
 import { extractRequestContext } from '@/lib/logging/utils';
+import { CustomError } from '@/shared/errors/CustomError';
+import { createErrorResponse, handleUnknownError } from '@/shared/errors/responses';
+import { ErrorCode, ErrorContext } from '@/shared/errors/types';
 
 /**
  * 错误处理中间件配置
@@ -29,7 +30,7 @@ const defaultConfig: ErrorHandlerConfig = {
   includeStackTrace: process.env.NODE_ENV === 'development',
   sanitizeErrors: process.env.NODE_ENV === 'production',
   rateLimitErrors: true,
-  maxErrorsPerMinute: 60
+  maxErrorsPerMinute: 60,
 };
 
 /**
@@ -37,23 +38,23 @@ const defaultConfig: ErrorHandlerConfig = {
  */
 const getConfig = (): ErrorHandlerConfig => {
   const env = process.env.NODE_ENV || 'development';
-  
+
   if (env === 'test') {
     return {
       ...defaultConfig,
       enabled: false,
-      logErrors: false
+      logErrors: false,
     };
   }
-  
+
   if (env === 'production') {
     return {
       ...defaultConfig,
       includeStackTrace: false,
-      sanitizeErrors: true
+      sanitizeErrors: true,
     };
   }
-  
+
   return defaultConfig;
 };
 
@@ -63,27 +64,27 @@ const getConfig = (): ErrorHandlerConfig => {
 class ErrorRateLimiter {
   private errorCounts = new Map<string, number[]>();
   private readonly windowMs = 60 * 1000; // 1分钟窗口
-  
+
   /**
    * 检查是否超过错误频率限制
    */
   isRateLimited(identifier: string, maxErrors: number): boolean {
     const now = Date.now();
     const windowStart = now - this.windowMs;
-    
+
     // 获取当前错误计数
     const errors = this.errorCounts.get(identifier) || [];
-    
+
     // 清理过期的错误记录
     const recentErrors = errors.filter(timestamp => timestamp > windowStart);
-    
+
     // 更新错误计数
     this.errorCounts.set(identifier, recentErrors);
-    
+
     // 检查是否超过限制
     return recentErrors.length >= maxErrors;
   }
-  
+
   /**
    * 记录错误
    */
@@ -93,14 +94,14 @@ class ErrorRateLimiter {
     errors.push(now);
     this.errorCounts.set(identifier, errors);
   }
-  
+
   /**
    * 清理过期记录
    */
   cleanup(): void {
     const now = Date.now();
     const windowStart = now - this.windowMs;
-    
+
     for (const [identifier, errors] of this.errorCounts.entries()) {
       const recentErrors = errors.filter(timestamp => timestamp > windowStart);
       if (recentErrors.length === 0) {
@@ -125,14 +126,21 @@ setInterval(() => {
  */
 const extractErrorContext = (request: NextRequest): ErrorContext => {
   const requestContext = extractRequestContext(request);
-  
+
+  const userAgent = typeof requestContext.context?.userAgent === 'string'
+    ? requestContext.context.userAgent
+    : undefined;
+  const ip = typeof requestContext.context?.ip === 'string'
+    ? requestContext.context.ip
+    : undefined;
+
   return {
     url: request.url,
     method: request.method,
-    userAgent: requestContext.context?.userAgent,
-    ip: requestContext.context?.ip,
+    userAgent,
+    ip,
     traceId: requestContext.traceId,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 };
 
@@ -148,11 +156,11 @@ const sanitizeError = (error: CustomError): CustomError => {
         ErrorCode.INTERNAL_SERVER_ERROR,
         'An internal server error occurred',
         undefined,
-        error.context
+        error.context,
       );
     }
   }
-  
+
   return error;
 };
 
@@ -164,11 +172,11 @@ const isIgnorableError = (error: Error): boolean => {
     'ECONNRESET',
     'ECONNABORTED',
     'EPIPE',
-    'Client closed connection'
+    'Client closed connection',
   ];
-  
-  return ignorableMessages.some(msg => 
-    error.message.includes(msg) || error.name.includes(msg)
+
+  return ignorableMessages.some(msg =>
+    error.message.includes(msg) || error.name.includes(msg),
   );
 };
 
@@ -177,23 +185,23 @@ const isIgnorableError = (error: Error): boolean => {
  */
 export const errorHandlerMiddleware = async (
   request: NextRequest,
-  error: unknown
+  error: unknown,
 ): Promise<NextResponse> => {
   const config = getConfig();
-  
+
   if (!config.enabled) {
     throw error;
   }
-  
+
   // 提取错误上下文
   const errorContext = extractErrorContext(request);
   const traceId = errorContext.traceId || request.headers.get('x-trace-id') || undefined;
-  
+
   // 创建带追踪的日志器
   const requestLogger = createTracedLogger(traceId, errorContext);
-  
+
   let customError: CustomError;
-  
+
   // 转换为CustomError
   if (error instanceof CustomError) {
     customError = error.withContext(errorContext);
@@ -201,51 +209,51 @@ export const errorHandlerMiddleware = async (
     // 检查是否为可忽略的错误
     if (isIgnorableError(error)) {
       requestLogger.debug(`Ignorable error: ${error.message}`, {
-        metadata: { ignorable: true }
+        metadata: { ignorable: true },
       });
       return NextResponse.json(
         { success: false, error: { message: 'Request aborted' } },
-        { status: 499 }
+        { status: 499 },
       );
     }
-    
+
     customError = CustomError.fromError(error, ErrorCode.INTERNAL_SERVER_ERROR, errorContext);
   } else {
     customError = new CustomError(
       ErrorCode.UNKNOWN_ERROR,
       'An unknown error occurred',
       undefined,
-      errorContext
+      errorContext,
     );
   }
-  
+
   // 错误频率限制检查
   if (config.rateLimitErrors && errorContext.ip) {
     const identifier = `${errorContext.ip}:${customError.code}`;
-    
+
     if (errorRateLimiter.isRateLimited(identifier, config.maxErrorsPerMinute)) {
       requestLogger.warn('Error rate limit exceeded', {
         metadata: {
           ip: errorContext.ip,
           errorCode: customError.code,
-          rateLimited: true
-        }
+          rateLimited: true,
+        },
       });
-      
+
       return createErrorResponse(
         CustomError.rateLimit('Too many errors from this client'),
-        traceId
+        traceId,
       );
     }
-    
+
     errorRateLimiter.recordError(identifier);
   }
-  
+
   // 清理敏感信息
   if (config.sanitizeErrors) {
     customError = sanitizeError(customError);
   }
-  
+
   // 记录错误日志
   if (config.logErrors) {
     const logLevel = customError.getLogLevel();
@@ -260,17 +268,17 @@ export const errorHandlerMiddleware = async (
         url: errorContext.url,
         method: errorContext.method,
         userAgent: errorContext.userAgent,
-        ip: errorContext.ip
+        ip: errorContext.ip,
       },
-      context: customError.context
+      context: customError.context,
     };
-    
+
     switch (logLevel) {
       case 'error':
         requestLogger.error(
           `API Error: ${customError.message}`,
           error instanceof Error ? error : undefined,
-          logContext
+          logContext,
         );
         break;
       case 'warn':
@@ -281,7 +289,7 @@ export const errorHandlerMiddleware = async (
         break;
     }
   }
-  
+
   // 创建错误响应
   return createErrorResponse(customError, traceId);
 };
@@ -290,7 +298,7 @@ export const errorHandlerMiddleware = async (
  * API路由错误处理装饰器
  */
 export const withErrorHandler = <T extends any[], R>(
-  handler: (...args: T) => Promise<R>
+  handler: (...args: T) => Promise<R>,
 ) => {
   return async (...args: T): Promise<R | NextResponse> => {
     try {
@@ -307,7 +315,7 @@ export const withErrorHandler = <T extends any[], R>(
  */
 export const withAsyncErrorHandler = <T extends any[], R>(
   operation: (...args: T) => Promise<R>,
-  context?: ErrorContext
+  context?: ErrorContext,
 ) => {
   return async (...args: T): Promise<R> => {
     try {
@@ -316,16 +324,16 @@ export const withAsyncErrorHandler = <T extends any[], R>(
       if (error instanceof CustomError) {
         throw context ? error.withContext(context) : error;
       }
-      
+
       if (error instanceof Error) {
         throw CustomError.fromError(error, ErrorCode.INTERNAL_SERVER_ERROR, context);
       }
-      
+
       throw new CustomError(
         ErrorCode.UNKNOWN_ERROR,
         'An unknown error occurred',
         undefined,
-        context
+        context,
       );
     }
   };
@@ -336,18 +344,18 @@ export const withAsyncErrorHandler = <T extends any[], R>(
  */
 export const handleErrorBoundary = (
   error: Error,
-  errorInfo: { componentStack: string }
+  errorInfo: { componentStack: string },
 ): void => {
   const customError = CustomError.fromError(error, ErrorCode.INTERNAL_SERVER_ERROR, {
-    componentStack: errorInfo.componentStack
+    componentStack: errorInfo.componentStack,
   });
-  
+
   logger.error('React Error Boundary caught an error', error, {
     metadata: {
       code: customError.code,
       type: customError.type,
-      componentStack: errorInfo.componentStack
-    }
+      componentStack: errorInfo.componentStack,
+    },
   });
 };
 
@@ -358,15 +366,15 @@ export const handleUnhandledRejection = (reason: any, promise: Promise<any>): vo
   const error = reason instanceof Error ? reason : new Error(String(reason));
   const customError = CustomError.fromError(error, ErrorCode.INTERNAL_SERVER_ERROR, {
     unhandledRejection: true,
-    promise: promise.toString()
+    promise: promise.toString(),
   });
-  
+
   logger.error('Unhandled Promise Rejection', error, {
     metadata: {
       code: customError.code,
       type: customError.type,
-      unhandledRejection: true
-    }
+      unhandledRejection: true,
+    },
   });
 };
 
@@ -375,17 +383,17 @@ export const handleUnhandledRejection = (reason: any, promise: Promise<any>): vo
  */
 export const handleUncaughtException = (error: Error): void => {
   const customError = CustomError.fromError(error, ErrorCode.INTERNAL_SERVER_ERROR, {
-    uncaughtException: true
+    uncaughtException: true,
   });
-  
+
   logger.error('Uncaught Exception', error, {
     metadata: {
       code: customError.code,
       type: customError.type,
-      uncaughtException: true
-    }
+      uncaughtException: true,
+    },
   });
-  
+
   // 在生产环境中，记录错误后优雅退出
   if (process.env.NODE_ENV === 'production') {
     process.exit(1);
@@ -398,10 +406,10 @@ export const handleUncaughtException = (error: Error): void => {
 export const initializeGlobalErrorHandling = (): void => {
   // 处理未处理的Promise拒绝
   process.on('unhandledRejection', handleUnhandledRejection);
-  
+
   // 处理未捕获的异常
   process.on('uncaughtException', handleUncaughtException);
-  
+
   logger.info('Global error handling initialized');
 };
 
@@ -417,17 +425,17 @@ export const checkErrorHandlerHealth = (): {
   };
 } => {
   const config = getConfig();
-  
+
   // 计算频率限制器统计信息
   const rateLimiterStats = {
     activeClients: errorRateLimiter['errorCounts'].size,
     totalErrors: Array.from(errorRateLimiter['errorCounts'].values())
-      .reduce((total, errors) => total + errors.length, 0)
+      .reduce((total, errors) => total + errors.length, 0),
   };
-  
+
   return {
     healthy: config.enabled,
     config,
-    rateLimiterStats
+    rateLimiterStats,
   };
 };

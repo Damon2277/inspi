@@ -3,20 +3,21 @@
  * 自动检测测试环境并进行相应的初始化配置
  */
 
-const { TestConfigManager } = require('./TestConfigManager');
 const fs = require('fs');
-const path = require('path');
 const os = require('os');
+const path = require('path');
+
+const { TestConfigManager } = require('./TestConfigManager');
 
 class TestEnvironment {
   constructor() {
     if (TestEnvironment.instance) {
       return TestEnvironment.instance;
     }
-    
+
     this.configManager = TestConfigManager.getInstance();
     this.initialized = false;
-    
+
     TestEnvironment.instance = this;
   }
 
@@ -32,7 +33,7 @@ class TestEnvironment {
    */
   detectEnvironment() {
     const testType = this.detectTestType();
-    
+
     return {
       type: testType,
       nodeVersion: process.version,
@@ -96,7 +97,7 @@ class TestEnvironment {
    */
   isDocker() {
     try {
-      return fs.existsSync('/.dockerenv') || 
+      return fs.existsSync('/.dockerenv') ||
              fs.readFileSync('/proc/1/cgroup', 'utf8').includes('docker');
     } catch (error) {
       return false;
@@ -109,14 +110,14 @@ class TestEnvironment {
   async initialize() {
     const errors = [];
     const warnings = [];
-    
+
     try {
       // 检测环境
       const environment = this.detectEnvironment();
-      
+
       // 获取配置
       const config = this.configManager.getConfigForType(environment.type);
-      
+
       // 验证配置
       const validation = this.configManager.validateConfig();
       if (!validation.valid) {
@@ -147,7 +148,7 @@ class TestEnvironment {
       };
     } catch (error) {
       errors.push(`Environment initialization failed: ${error}`);
-      
+
       return {
         success: false,
         environment: this.detectEnvironment(),
@@ -208,7 +209,7 @@ class TestEnvironment {
    */
   checkSystemResources(environment) {
     const warnings = [];
-    
+
     // 检查内存
     const memoryGB = environment.memory / (1024 * 1024 * 1024);
     if (memoryGB < 2) {
@@ -236,13 +237,13 @@ class TestEnvironment {
       isE2ETest: environment.type === 'e2e',
       isCI: environment.ci,
       isDocker: environment.docker,
-      
+
       // 工具函数
       createTestId: () => `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      
+
       // 等待函数
       wait: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
-      
+
       // 重试函数
       retry: async (fn, maxAttempts = 3, delay = 1000) => {
         let lastError;

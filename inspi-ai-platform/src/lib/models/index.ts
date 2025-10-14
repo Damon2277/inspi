@@ -11,8 +11,24 @@ export { default as Payment } from './Payment';
 
 // 导出类型定义
 export type { UserDocument } from './User';
-export type { WorkDocument, IWork, TeachingCard, Attribution } from './Work';
+export type {
+  WorkDocument,
+  IWork,
+  TeachingCard,
+  Attribution,
+  WorkAuthor,
+  WorkAuthorReference,
+} from './Work';
+export {
+  isWorkAuthorPopulated,
+  getWorkAuthorId,
+  getWorkAuthorObjectId,
+  getWorkAuthorSummary,
+} from './Work';
 // 知识图谱相关类型将从types文件导入
+export type { KnowledgeGraphDocument, KnowledgeGraphModelType } from './KnowledgeGraph';
+export type { WorkMountDocument, WorkMountModelType } from './WorkMount';
+export type { GraphTemplateDocument, GraphTemplateModelType } from './GraphTemplate';
 export type { ContributionLogDocument, IContributionLog } from './ContributionLog';
 export type { SubscriptionDocument } from './Subscription';
 export type { UsageDocument } from './Usage';

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { getRedisClient } from '@/lib/redis';
+
 import { AuthenticatedRequest } from './auth';
 
 export interface RateLimitOptions {
@@ -10,11 +12,11 @@ export interface RateLimitOptions {
 export function checkUsageLimit(options: RateLimitOptions) {
   return async (request: AuthenticatedRequest) => {
     const user = request.user;
-    
+
     if (!user) {
       return NextResponse.json(
         { code: 'UNAUTHORIZED', message: '请先登录' },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -24,7 +26,7 @@ export function checkUsageLimit(options: RateLimitOptions) {
     // Check limits based on type
     let canProceed = false;
     let limitType = '';
-    
+
     if (options.type === 'generation') {
       canProceed = user.canGenerate();
       limitType = '生成';
@@ -59,7 +61,7 @@ export async function incrementUsage(userId: string, type: 'generation' | 'reuse
     const redis = await getRedisClient();
     const today = new Date().toISOString().split('T')[0];
     const key = `usage:${userId}:${type}:${today}`;
-    
+
     await redis.incr(key);
     await redis.expire(key, 24 * 60 * 60); // Expire after 24 hours
   } catch (error) {

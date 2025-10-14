@@ -37,36 +37,36 @@ export const createUserFixture = (overrides: Partial<MockUser> = {}): MockUser =
   emailVerified: true,
   lastLoginAt: new Date().toISOString(),
   ...overrides,
-})
+});
 
 // 免费用户
 export const createFreeUserFixture = (overrides: Partial<MockUser> = {}): MockUser =>
-  createUserFixture({ subscription: 'free', ...overrides })
+  createUserFixture({ subscription: 'free', ...overrides });
 
 // Pro用户
 export const createProUserFixture = (overrides: Partial<MockUser> = {}): MockUser =>
-  createUserFixture({ subscription: 'pro', ...overrides })
+  createUserFixture({ subscription: 'pro', ...overrides });
 
 // Super用户
 export const createSuperUserFixture = (overrides: Partial<MockUser> = {}): MockUser =>
-  createUserFixture({ subscription: 'super', ...overrides })
+  createUserFixture({ subscription: 'super', ...overrides });
 
 // 新用户（刚注册）
 export const createNewUserFixture = (overrides: Partial<MockUser> = {}): MockUser => {
-  const now = new Date().toISOString()
+  const now = new Date().toISOString();
   return createUserFixture({
     createdAt: now,
     updatedAt: now,
     lastLoginAt: now,
     emailVerified: false,
     ...overrides,
-  })
-}
+  });
+};
 
 // 用户资料工厂
 export const createUserProfileFixture = (
   userId: string,
-  overrides: Partial<MockUserProfile> = {}
+  overrides: Partial<MockUserProfile> = {},
 ): MockUserProfile => ({
   userId,
   bio: 'Test user bio',
@@ -77,7 +77,7 @@ export const createUserProfileFixture = (
   totalWorks: 5,
   totalViews: 100,
   ...overrides,
-})
+});
 
 // 批量创建用户
 export const createUsersFixture = (count: number, baseOverrides: Partial<MockUser> = {}): MockUser[] => {
@@ -86,17 +86,17 @@ export const createUsersFixture = (count: number, baseOverrides: Partial<MockUse
       name: `Test User ${index + 1}`,
       email: `test-user-${index + 1}@example.com`,
       ...baseOverrides,
-    })
-  )
-}
+    }),
+  );
+};
 
 // 用户认证数据
 export const createAuthUserFixture = (user: MockUser) => ({
   user,
-  token: `jwt-token-${user.id}`,
-  refreshToken: `refresh-token-${user.id}`,
+  token: `jwt-token-${(user.id || (user as any)._id)}`,
+  refreshToken: `refresh-token-${(user.id || (user as any)._id)}`,
   expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-})
+});
 
 // 用户使用统计
 export const createUserUsageFixture = (userId: string, subscription: string = 'free') => {
@@ -104,9 +104,9 @@ export const createUserUsageFixture = (userId: string, subscription: string = 'f
     free: { aiGenerations: 10, worksCreated: 5, dailyViews: 50 },
     pro: { aiGenerations: 100, worksCreated: 50, dailyViews: 500 },
     super: { aiGenerations: -1, worksCreated: -1, dailyViews: -1 }, // unlimited
-  }
+  };
 
-  const limit = limits[subscription as keyof typeof limits] || limits.free
+  const limit = limits[subscription as keyof typeof limits] || limits.free;
 
   return {
     userId,
@@ -118,8 +118,8 @@ export const createUserUsageFixture = (userId: string, subscription: string = 'f
     },
     limits: limit,
     resetDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-  }
-}
+  };
+};
 
 // 用户偏好设置
 export const createUserPreferencesFixture = (userId: string) => ({
@@ -142,17 +142,17 @@ export const createUserPreferencesFixture = (userId: string) => ({
     defaultView: 'grid' as 'grid' | 'list',
     showTutorials: true,
   },
-})
+});
 
 // 移除用户关注关系相关代码
 
 // 用户会话数据
 export const createUserSessionFixture = (user: MockUser) => ({
-  sessionId: `session-${user.id}-${Date.now()}`,
-  userId: user.id,
+  sessionId: `session-${(user.id || (user as any)._id)}-${Date.now()}`,
+  userId: (user.id || (user as any)._id),
   userAgent: 'Mozilla/5.0 (Test Browser)',
   ipAddress: '127.0.0.1',
   createdAt: new Date().toISOString(),
   lastActiveAt: new Date().toISOString(),
   expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-})
+});

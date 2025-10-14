@@ -30,7 +30,8 @@ async function testAIMagic() {
     console.log(`🎴 成功生成 ${cards} 张教学卡片`);
     
     // 检查卡片类型
-    const cardTypes = await page.locator('h3:has-text("可视化理解"), h3:has-text("类比延展"), h3:has-text("启发思考"), h3:has-text("互动氛围")').count();
+    const cardTypes = await page.locator('h3:has-text("可视化理解"),
+      h3:has-text("类比延展"), h3:has-text("启发思考"), h3:has-text("互动氛围")').count();
     console.log(`📋 找到 ${cardTypes} 种不同类型的卡片`);
     
     // 截图保存结果

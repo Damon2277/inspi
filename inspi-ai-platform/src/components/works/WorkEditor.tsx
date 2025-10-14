@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { TeachingCard } from '@/types/teaching';
-import CardEditor from '@/components/magic/CardEditor';
+
+import CardEditor from '@/features/magic/CardEditor';
+import { TeachingCard } from '@/shared/types/teaching';
 
 interface WorkEditorProps {
   initialData?: {
@@ -22,22 +23,22 @@ interface WorkEditorProps {
 }
 
 const SUBJECTS = [
-  '数学', '语文', '英语', '物理', '化学', '生物', 
-  '历史', '地理', '政治', '音乐', '美术', '体育'
+  '数学', '语文', '英语', '物理', '化学', '生物',
+  '历史', '地理', '政治', '音乐', '美术', '体育',
 ];
 
 const GRADE_LEVELS = [
   '小学一年级', '小学二年级', '小学三年级', '小学四年级', '小学五年级', '小学六年级',
   '初中一年级', '初中二年级', '初中三年级',
-  '高中一年级', '高中二年级', '高中三年级'
+  '高中一年级', '高中二年级', '高中三年级',
 ];
 
-export default function WorkEditor({ 
-  initialData, 
-  onSave, 
-  onPublish, 
+export default function WorkEditor({
+  initialData,
+  onSave,
+  onPublish,
   onAutoSave,
-  isLoading = false 
+  isLoading = false,
 }: WorkEditorProps) {
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
@@ -46,7 +47,7 @@ export default function WorkEditor({
     gradeLevel: initialData?.gradeLevel || '',
     cards: initialData?.cards || [],
     tags: initialData?.tags || [],
-    status: initialData?.status || 'draft'
+    status: initialData?.status || 'draft',
   });
 
   const [tagInput, setTagInput] = useState('');
@@ -82,7 +83,7 @@ export default function WorkEditor({
         }
       }
     }, 2000),
-    [onAutoSave, hasChanges]
+    [onAutoSave, hasChanges],
   );
 
   // 监听数据变化，触发自动保存
@@ -93,7 +94,7 @@ export default function WorkEditor({
   }, [formData, hasChanges, debouncedAutoSave]);
 
   const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData({ ...formData, [field]: value });
     setHasChanges(true);
   };
 
@@ -133,10 +134,10 @@ export default function WorkEditor({
     }
   };
 
-  const isFormValid = formData.title.trim() && 
-                     formData.knowledgePoint.trim() && 
-                     formData.subject && 
-                     formData.gradeLevel && 
+  const isFormValid = formData.title.trim() &&
+                     formData.knowledgePoint.trim() &&
+                     formData.subject &&
+                     formData.gradeLevel &&
                      formData.cards.length > 0;
 
   return (
@@ -165,7 +166,7 @@ export default function WorkEditor({
       {/* 基本信息表单 */}
       <div className="bg-white rounded-lg shadow-sm border p-6 space-y-4">
         <h2 className="text-lg font-semibold text-gray-900">基本信息</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -271,7 +272,7 @@ export default function WorkEditor({
       {/* 教学卡片编辑 */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">教学卡片</h2>
-        
+
         {formData.cards.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <p>暂无教学卡片</p>
@@ -327,7 +328,7 @@ export default function WorkEditor({
         <div className="text-sm text-gray-500">
           {formData.cards.length} 张卡片
         </div>
-        
+
         <div className="flex gap-3">
           <button
             onClick={handleSave}
@@ -336,7 +337,7 @@ export default function WorkEditor({
           >
             {isLoading ? '保存中...' : '保存草稿'}
           </button>
-          
+
           <button
             onClick={handlePublish}
             disabled={!isFormValid || isLoading}
@@ -351,9 +352,9 @@ export default function WorkEditor({
 }
 
 // 防抖函数
-function debounce<T extends (...args: any[]) => any>(
+function debounce<T extends(...args: any[]) => any>(
   func: T,
-  wait: number
+  wait: number,
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout;
   return (...args: Parameters<T>) => {

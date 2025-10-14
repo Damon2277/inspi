@@ -3,10 +3,11 @@
  */
 
 import { NextResponse } from 'next/server';
-import { CustomError } from '@/lib/errors/CustomError';
-import { ErrorCode } from '@/lib/errors/types';
+
 import { logger } from '@/lib/logging/logger';
 import { reportError } from '@/lib/monitoring';
+import { CustomError } from '@/shared/errors/CustomError';
+import { ErrorCode } from '@/shared/errors/types';
 
 /**
  * 标准API响应接口
@@ -16,13 +17,14 @@ export interface ApiResponse<T = any> {
   data?: T;
   error?: ApiError;
   meta?: ApiMeta;
+  status?: number;
 }
 
 /**
  * API错误接口
  */
 export interface ApiError {
-  code: string;
+  code: ErrorCode;
   message: string;
   details?: any;
   timestamp: string;
@@ -72,7 +74,7 @@ function generateTraceId(): string {
 export function createSuccessResponse<T>(
   data: T,
   meta?: Partial<ApiMeta>,
-  status: number = 200
+  status: number = 200,
 ): NextResponse<ApiResponse<T>> {
   const response: ApiResponse<T> = {
     success: true,
@@ -81,8 +83,8 @@ export function createSuccessResponse<T>(
       timestamp: new Date().toISOString(),
       version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
       requestId: generateTraceId(),
-      ...meta
-    }
+      ...meta,
+    },
   };
 
   return NextResponse.json(response, { status });
@@ -95,7 +97,7 @@ export function createErrorResponse(
   error: Error | CustomError | string,
   status?: number,
   details?: any,
-  field?: string
+  field?: string,
 ): NextResponse<ApiResponse> {
   let customError: CustomError;
   let httpStatus = status || 500;
@@ -107,10 +109,8 @@ export function createErrorResponse(
   } else if (error instanceof Error) {
     customError = CustomError.fromError(error, ErrorCode.INTERNAL_SERVER_ERROR);
   } else {
-    customError = new CustomError(
-      typeof error === 'string' ? error : 'Unknown error',
-      ErrorCode.INTERNAL_SERVER_ERROR
-    );
+    const message = typeof error === 'string' ? error : 'Unknown error';
+    customError = new CustomError(ErrorCode.INTERNAL_SERVER_ERROR, message);
   }
 
   const traceId = generateTraceId();
@@ -122,8 +122,8 @@ export function createErrorResponse(
       traceId,
       httpStatus,
       field,
-      details
-    }
+      details,
+    },
   });
 
   // 报告错误到监控系统
@@ -131,13 +131,13 @@ export function createErrorResponse(
     tags: {
       api_error: 'true',
       http_status: httpStatus.toString(),
-      error_code: customError.code
+      error_code: customError.code,
     },
     extra: {
       traceId,
       field,
-      details
-    }
+      details,
+    },
   });
 
   const apiError: ApiError = {
@@ -147,12 +147,12 @@ export function createErrorResponse(
     traceId,
     ...(details && { details }),
     ...(field && { field }),
-    ...(isDevelopment && customError.stack && { stack: customError.stack })
+    ...(isDevelopment && customError.stack && { stack: customError.stack }),
   };
 
   const response: ApiResponse = {
     success: false,
-    error: apiError
+    error: apiError,
   };
 
   return NextResponse.json(response, { status: httpStatus });
@@ -164,9 +164,9 @@ export function createErrorResponse(
 export function createValidationErrorResponse(
   message: string,
   field?: string,
-  details?: any
+  details?: any,
 ): NextResponse<ApiResponse> {
-  const error = new CustomError(message, ErrorCode.VALIDATION_ERROR);
+  const error = new CustomError(ErrorCode.VALIDATION_ERROR, message);
   return createErrorResponse(error, 400, details, field);
 }
 
@@ -174,9 +174,9 @@ export function createValidationErrorResponse(
  * 创建认证错误响应
  */
 export function createAuthErrorResponse(
-  message: string = '认证失败，请重新登录'
+  message: string = '认证失败，请重新登录',
 ): NextResponse<ApiResponse> {
-  const error = new CustomError(message, ErrorCode.AUTHENTICATION_ERROR);
+  const error = new CustomError(ErrorCode.AUTHENTICATION_ERROR, message);
   return createErrorResponse(error, 401);
 }
 
@@ -184,9 +184,9 @@ export function createAuthErrorResponse(
  * 创建权限错误响应
  */
 export function createPermissionErrorResponse(
-  message: string = '权限不足，无法访问此资源'
+  message: string = '权限不足，无法访问此资源',
 ): NextResponse<ApiResponse> {
-  const error = new CustomError(message, ErrorCode.AUTHORIZATION_ERROR);
+  const error = new CustomError(ErrorCode.AUTHORIZATION_ERROR, message);
   return createErrorResponse(error, 403);
 }
 
@@ -194,9 +194,9 @@ export function createPermissionErrorResponse(
  * 创建资源未找到错误响应
  */
 export function createNotFoundErrorResponse(
-  resource: string = '资源'
+  resource: string = '资源',
 ): NextResponse<ApiResponse> {
-  const error = new CustomError(`${resource}不存在`, ErrorCode.RESOURCE_NOT_FOUND);
+  const error = new CustomError(ErrorCode.RESOURCE_NOT_FOUND, `${resource}不存在`);
   return createErrorResponse(error, 404);
 }
 
@@ -205,10 +205,11 @@ export function createNotFoundErrorResponse(
  */
 export function createBusinessErrorResponse(
   message: string,
-  code?: string,
-  details?: any
+  code?: ErrorCode,
+  details?: any,
 ): NextResponse<ApiResponse> {
-  const error = new CustomError(message, code || ErrorCode.BUSINESS_LOGIC_ERROR);
+  const errorCode = code || ErrorCode.BUSINESS_LOGIC_ERROR;
+  const error = new CustomError(errorCode, message);
   return createErrorResponse(error, 400, details);
 }
 
@@ -216,9 +217,9 @@ export function createBusinessErrorResponse(
  * 创建服务器错误响应
  */
 export function createServerErrorResponse(
-  message: string = '服务器内部错误，请稍后重试'
+  message: string = '服务器内部错误，请稍后重试',
 ): NextResponse<ApiResponse> {
-  const error = new CustomError(message, ErrorCode.INTERNAL_SERVER_ERROR);
+  const error = new CustomError(ErrorCode.INTERNAL_SERVER_ERROR, message);
   return createErrorResponse(error, 500);
 }
 
@@ -232,18 +233,18 @@ export function createPaginatedResponse<T>(
     limit: number;
     total: number;
   },
-  meta?: Partial<ApiMeta>
+  meta?: Partial<ApiMeta>,
 ): NextResponse<ApiResponse<T[]>> {
   const totalPages = Math.ceil(pagination.total / pagination.limit);
-  
+
   return createSuccessResponse(data, {
     ...meta,
     pagination: {
       page: pagination.page,
       limit: pagination.limit,
       total: pagination.total,
-      totalPages
-    }
+      totalPages,
+    },
   });
 }
 
@@ -266,7 +267,7 @@ export function parsePaginationParams(searchParams: URLSearchParams): {
  * API错误处理装饰器
  */
 export function withErrorHandling<T extends any[], R>(
-  handler: (...args: T) => Promise<R>
+  handler: (...args: T) => Promise<R>,
 ) {
   return async (...args: T): Promise<R | NextResponse<ApiResponse>> => {
     try {
@@ -288,14 +289,14 @@ export function withErrorHandling<T extends any[], R>(
  */
 export async function validateRequestBody<T>(
   request: Request,
-  validator: (data: any) => T | Promise<T>
+  validator: (data: any) => T | Promise<T>,
 ): Promise<T> {
   try {
     const body = await request.json();
     return await validator(body);
   } catch (error) {
     if (error instanceof SyntaxError) {
-      throw new CustomError('请求体格式错误，请检查JSON格式', ErrorCode.VALIDATION_ERROR);
+      throw new CustomError(ErrorCode.VALIDATION_ERROR, '请求体格式错误，请检查JSON格式');
     }
     throw error;
   }
@@ -306,65 +307,73 @@ export async function validateRequestBody<T>(
  */
 export function validateQueryParams<T>(
   searchParams: URLSearchParams,
-  validator: (params: Record<string, string>) => T
+  validator: (params: Record<string, string>) => T,
 ): T {
   const params: Record<string, string> = {};
   searchParams.forEach((value, key) => {
     params[key] = value;
   });
-  
+
   return validator(params);
 }
 
 /**
  * 错误码映射
  */
-export const ERROR_CODE_MAP: Record<string, { status: number; message: string }> = {
+export const ERROR_CODE_MAP: Partial<Record<ErrorCode, { status: number; message: string }>> = {
   [ErrorCode.VALIDATION_ERROR]: {
     status: 400,
-    message: '请求参数验证失败'
+    message: '请求参数验证失败',
   },
   [ErrorCode.AUTHENTICATION_ERROR]: {
     status: 401,
-    message: '认证失败，请重新登录'
+    message: '认证失败，请重新登录',
   },
   [ErrorCode.AUTHORIZATION_ERROR]: {
     status: 403,
-    message: '权限不足，无法访问此资源'
+    message: '权限不足，无法访问此资源',
   },
   [ErrorCode.RESOURCE_NOT_FOUND]: {
     status: 404,
-    message: '请求的资源不存在'
+    message: '请求的资源不存在',
   },
   [ErrorCode.BUSINESS_LOGIC_ERROR]: {
     status: 400,
-    message: '业务逻辑错误'
+    message: '业务逻辑错误',
   },
   [ErrorCode.RATE_LIMIT_EXCEEDED]: {
     status: 429,
-    message: '请求频率过高，请稍后重试'
+    message: '请求频率过高，请稍后重试',
+  },
+  [ErrorCode.CIRCUIT_BREAKER_OPEN]: {
+    status: 503,
+    message: '服务暂时不可用，请稍后重试',
+  },
+  [ErrorCode.CIRCUIT_BREAKER_HALF_OPEN_LIMIT]: {
+    status: 503,
+    message: '服务正在恢复中，请稍后重试',
   },
   [ErrorCode.INTERNAL_SERVER_ERROR]: {
     status: 500,
-    message: '服务器内部错误'
+    message: '服务器内部错误',
   },
   [ErrorCode.SERVICE_UNAVAILABLE]: {
     status: 503,
-    message: '服务暂时不可用'
-  }
+    message: '服务暂时不可用',
+  },
 };
 
 /**
  * 根据错误码获取HTTP状态码
  */
-export function getHttpStatusFromErrorCode(code: string): number {
+export function getHttpStatusFromErrorCode(code: ErrorCode): number {
   return ERROR_CODE_MAP[code]?.status || 500;
 }
 
 /**
  * 根据错误码获取默认错误消息
  */
-export function getDefaultErrorMessage(code: string): string {
+export function getDefaultErrorMessage(code: ErrorCode): string {
   return ERROR_CODE_MAP[code]?.message || '未知错误';
 }
 
@@ -381,5 +390,5 @@ export default {
   parsePaginationParams,
   withErrorHandling,
   validateRequestBody,
-  validateQueryParams
+  validateQueryParams,
 };

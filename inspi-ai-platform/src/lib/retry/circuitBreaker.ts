@@ -81,7 +81,7 @@ export class CircuitBreaker {
       onCallFailure: () => {},
       onCircuitOpen: () => {},
       onCircuitClose: () => {},
-      ...config
+      ...config,
     };
 
     // 定期清理历史记录
@@ -101,22 +101,22 @@ export class CircuitBreaker {
       const error = new Error(
         `Circuit breaker is OPEN. Service calls are blocked for ${
           Math.ceil((this.config.recoveryTimeout - (Date.now() - this.lastFailureTime)) / 1000)
-        } more seconds.`
+        } more seconds.`,
       );
-      
+
       logger.warn('Circuit breaker blocked call', {
         metadata: {
           state: this.state,
           failureCount: this.failureCount,
           lastFailureTime: this.lastFailureTime,
-          metrics: this.getMetrics()
-        }
+          metrics: this.getMetrics(),
+        },
       });
 
       throw error;
     }
 
-    if (this.state === CircuitBreakerState.HALF_OPEN && 
+    if (this.state === CircuitBreakerState.HALF_OPEN &&
         this.halfOpenCalls >= this.config.halfOpenMaxCalls) {
       throw new Error('Circuit breaker is HALF_OPEN and max calls limit reached.');
     }
@@ -126,13 +126,13 @@ export class CircuitBreaker {
     try {
       const result = await operation();
       const duration = Date.now() - startTime;
-      
+
       this.onCallSuccess(duration);
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
       const err = error instanceof Error ? error : new Error(String(error));
-      
+
       this.onCallFailure(err, duration);
       throw error;
     }
@@ -147,7 +147,7 @@ export class CircuitBreaker {
 
     if (this.state === CircuitBreakerState.HALF_OPEN) {
       this.halfOpenCalls++;
-      
+
       // 如果半开状态下的测试调用都成功，关闭断路器
       if (this.halfOpenCalls >= this.config.halfOpenMaxCalls) {
         this.changeState(CircuitBreakerState.CLOSED);
@@ -163,8 +163,8 @@ export class CircuitBreaker {
         duration,
         state: this.state,
         successCount: this.successCount,
-        halfOpenCalls: this.halfOpenCalls
-      }
+        halfOpenCalls: this.halfOpenCalls,
+      },
     });
   }
 
@@ -182,7 +182,7 @@ export class CircuitBreaker {
     } else if (this.state === CircuitBreakerState.CLOSED) {
       // 检查是否需要打开断路器
       const metrics = this.getMetrics();
-      
+
       if (this.shouldOpenCircuit(metrics)) {
         this.changeState(CircuitBreakerState.OPEN);
         this.config.onCircuitOpen(metrics);
@@ -198,8 +198,8 @@ export class CircuitBreaker {
         duration,
         state: this.state,
         failureCount: this.failureCount,
-        metrics: this.getMetrics()
-      }
+        metrics: this.getMetrics(),
+      },
     });
   }
 
@@ -250,8 +250,8 @@ export class CircuitBreaker {
       metadata: {
         from: oldState,
         to: newState,
-        metrics: this.getMetrics()
-      }
+        metrics: this.getMetrics(),
+      },
     });
 
     // 调用状态变化回调
@@ -262,12 +262,12 @@ export class CircuitBreaker {
       reportError(new Error('Circuit breaker opened'), {
         tags: {
           circuit_breaker: 'true',
-          state_change: `${oldState}_to_${newState}`
+          state_change: `${oldState}_to_${newState}`,
         },
         extra: {
           metrics: this.getMetrics(),
-          config: this.config
-        }
+          config: this.config,
+        },
       });
     }
   }
@@ -280,7 +280,7 @@ export class CircuitBreaker {
       timestamp: Date.now(),
       success,
       duration,
-      error
+      error,
     });
 
     // 限制历史记录大小
@@ -312,14 +312,14 @@ export class CircuitBreaker {
    */
   getMetrics(): CircuitBreakerMetrics {
     const recentCalls = this.callHistory.filter(
-      record => record.timestamp > Date.now() - this.config.monitoringPeriod
+      record => record.timestamp > Date.now() - this.config.monitoringPeriod,
     );
 
     const totalCalls = recentCalls.length;
     const successCalls = recentCalls.filter(record => record.success).length;
     const failureCalls = totalCalls - successCalls;
     const errorRate = totalCalls > 0 ? (failureCalls / totalCalls) * 100 : 0;
-    
+
     const totalDuration = recentCalls.reduce((sum, record) => sum + record.duration, 0);
     const averageResponseTime = totalCalls > 0 ? totalDuration / totalCalls : 0;
 
@@ -331,7 +331,7 @@ export class CircuitBreaker {
       averageResponseTime,
       lastFailureTime: this.lastFailureTime,
       state: this.state,
-      stateChangedAt: this.stateChangedAt
+      stateChangedAt: this.stateChangedAt,
     };
   }
 
@@ -380,7 +380,7 @@ export class CircuitBreaker {
  * 创建断路器
  */
 export function createCircuitBreaker(
-  config?: Partial<CircuitBreakerConfig>
+  config?: Partial<CircuitBreakerConfig>,
 ): CircuitBreaker {
   return new CircuitBreaker(config);
 }
@@ -390,7 +390,7 @@ export function createCircuitBreaker(
  */
 export function withCircuitBreaker<T extends any[], R>(
   fn: (...args: T) => Promise<R>,
-  config?: Partial<CircuitBreakerConfig>
+  config?: Partial<CircuitBreakerConfig>,
 ): (...args: T) => Promise<R> {
   const circuitBreaker = new CircuitBreaker(config);
 
@@ -412,7 +412,7 @@ export const CIRCUIT_BREAKER_CONFIGS = {
     monitoringPeriod: 5000,  // 5秒
     halfOpenMaxCalls: 2,
     volumeThreshold: 5,
-    errorThresholdPercentage: 30
+    errorThresholdPercentage: 30,
   },
 
   /**
@@ -424,7 +424,7 @@ export const CIRCUIT_BREAKER_CONFIGS = {
     monitoringPeriod: 10000, // 10秒
     halfOpenMaxCalls: 3,
     volumeThreshold: 10,
-    errorThresholdPercentage: 50
+    errorThresholdPercentage: 50,
   },
 
   /**
@@ -436,8 +436,8 @@ export const CIRCUIT_BREAKER_CONFIGS = {
     monitoringPeriod: 30000,  // 30秒
     halfOpenMaxCalls: 5,
     volumeThreshold: 20,
-    errorThresholdPercentage: 70
-  }
+    errorThresholdPercentage: 70,
+  },
 } as const;
 
 export default CircuitBreaker;

@@ -72,11 +72,11 @@ class HealthCheckManager {
     }
 
     const startTime = Date.now();
-    
+
     try {
       const result = await Promise.race([
         checkFn(),
-        this.timeout(5000) // 5秒超时
+        this.timeout(5000), // 5秒超时
       ]);
 
       const healthResult: HealthCheckResult = {
@@ -85,7 +85,7 @@ class HealthCheckManager {
         message: result.message,
         duration: Date.now() - startTime,
         timestamp: Date.now(),
-        metadata: result.metadata
+        metadata: result.metadata,
       };
 
       this.lastResults.set(name, healthResult);
@@ -96,7 +96,7 @@ class HealthCheckManager {
         status: 'unhealthy',
         message: error instanceof Error ? error.message : 'Unknown error',
         duration: Date.now() - startTime,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       this.lastResults.set(name, healthResult);
@@ -110,7 +110,7 @@ class HealthCheckManager {
   async runAllChecks(): Promise<HealthCheckResult[]> {
     const checkNames = Array.from(this.checks.keys());
     const results = await Promise.allSettled(
-      checkNames.map(name => this.runCheck(name))
+      checkNames.map(name => this.runCheck(name)),
     );
 
     return results.map((result, index) => {
@@ -122,7 +122,7 @@ class HealthCheckManager {
           status: 'unhealthy' as const,
           message: result.reason?.message || 'Check failed',
           duration: 0,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         };
       }
     });
@@ -133,12 +133,12 @@ class HealthCheckManager {
    */
   async getSystemHealth(): Promise<SystemHealth> {
     const checks = await this.runAllChecks();
-    
+
     const summary = {
       total: checks.length,
       healthy: checks.filter(c => c.status === 'healthy').length,
       unhealthy: checks.filter(c => c.status === 'unhealthy').length,
-      degraded: checks.filter(c => c.status === 'degraded').length
+      degraded: checks.filter(c => c.status === 'degraded').length,
     };
 
     let overallStatus: 'healthy' | 'unhealthy' | 'degraded' = 'healthy';
@@ -155,7 +155,7 @@ class HealthCheckManager {
       version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
       environment: process.env.NODE_ENV || 'development',
       checks,
-      summary
+      summary,
     };
   }
 
@@ -183,7 +183,7 @@ export const databaseHealthCheck: HealthCheckFunction = async () => {
   try {
     // 这里应该实际连接数据库进行检查
     // 例如：await db.ping() 或执行简单查询
-    
+
     // 模拟数据库检查
     const startTime = Date.now();
     await new Promise(resolve => setTimeout(resolve, Math.random() * 100));
@@ -193,19 +193,19 @@ export const databaseHealthCheck: HealthCheckFunction = async () => {
       return {
         status: 'degraded',
         message: `Database response time is slow: ${responseTime}ms`,
-        metadata: { responseTime }
+        metadata: { responseTime },
       };
     }
 
     return {
       status: 'healthy',
       message: 'Database is responding normally',
-      metadata: { responseTime }
+      metadata: { responseTime },
     };
   } catch (error) {
     return {
       status: 'unhealthy',
-      message: `Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      message: `Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
   }
 };
@@ -217,7 +217,7 @@ export const redisHealthCheck: HealthCheckFunction = async () => {
   try {
     // 这里应该实际连接Redis进行检查
     // 例如：await redis.ping()
-    
+
     // 模拟Redis检查
     const startTime = Date.now();
     await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
@@ -226,12 +226,12 @@ export const redisHealthCheck: HealthCheckFunction = async () => {
     return {
       status: 'healthy',
       message: 'Redis is responding normally',
-      metadata: { responseTime }
+      metadata: { responseTime },
     };
   } catch (error) {
     return {
       status: 'unhealthy',
-      message: `Redis connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      message: `Redis connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
   }
 };
@@ -265,13 +265,13 @@ export const memoryHealthCheck: HealthCheckFunction = async () => {
         totalMB,
         percentage: Math.round(percentage),
         rss: Math.round(memoryUsage.rss / 1024 / 1024),
-        external: Math.round(memoryUsage.external / 1024 / 1024)
-      }
+        external: Math.round(memoryUsage.external / 1024 / 1024),
+      },
     };
   } catch (error) {
     return {
       status: 'unhealthy',
-      message: `Memory check failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      message: `Memory check failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
   }
 };
@@ -283,7 +283,7 @@ export const diskHealthCheck: HealthCheckFunction = async () => {
   try {
     // 在Node.js环境中检查磁盘空间
     // 这里需要使用fs模块或第三方库
-    
+
     // 模拟磁盘检查
     const freeSpaceGB = Math.random() * 100;
     const totalSpaceGB = 500;
@@ -306,13 +306,13 @@ export const diskHealthCheck: HealthCheckFunction = async () => {
       metadata: {
         freeSpaceGB: Math.round(freeSpaceGB),
         totalSpaceGB,
-        usedPercentage: Math.round(usedPercentage)
-      }
+        usedPercentage: Math.round(usedPercentage),
+      },
     };
   } catch (error) {
     return {
       status: 'unhealthy',
-      message: `Disk check failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      message: `Disk check failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
   }
 };
@@ -326,7 +326,7 @@ export const externalServiceHealthCheck = (serviceName: string, url: string): He
       const startTime = Date.now();
       const response = await fetch(url, {
         method: 'GET',
-        timeout: 5000
+        timeout: 5000,
       } as any);
       const responseTime = Date.now() - startTime;
 
@@ -334,7 +334,7 @@ export const externalServiceHealthCheck = (serviceName: string, url: string): He
         return {
           status: 'unhealthy',
           message: `${serviceName} returned ${response.status}: ${response.statusText}`,
-          metadata: { statusCode: response.status, responseTime }
+          metadata: { statusCode: response.status, responseTime },
         };
       }
 
@@ -342,19 +342,19 @@ export const externalServiceHealthCheck = (serviceName: string, url: string): He
         return {
           status: 'degraded',
           message: `${serviceName} is slow: ${responseTime}ms`,
-          metadata: { statusCode: response.status, responseTime }
+          metadata: { statusCode: response.status, responseTime },
         };
       }
 
       return {
         status: 'healthy',
         message: `${serviceName} is responding normally`,
-        metadata: { statusCode: response.status, responseTime }
+        metadata: { statusCode: response.status, responseTime },
       };
     } catch (error) {
       return {
         status: 'unhealthy',
-        message: `${serviceName} is unreachable: ${error instanceof Error ? error.message : 'Unknown error'}`
+        message: `${serviceName} is unreachable: ${error instanceof Error ? error.message : 'Unknown error'}`,
       };
     }
   };
@@ -383,13 +383,13 @@ export const applicationHealthCheck: HealthCheckFunction = async () => {
         environment: process.env.NODE_ENV,
         nodeVersion: process.version,
         platform: process.platform,
-        uptime: process.uptime()
-      }
+        uptime: process.uptime(),
+      },
     };
   } catch (error) {
     return {
       status: 'unhealthy',
-      message: `Application check failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      message: `Application check failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
   }
 };
@@ -415,7 +415,7 @@ export function createHealthCheckMiddleware() {
   return async (req: any, res: any) => {
     try {
       const health = await healthManager.getSystemHealth();
-      
+
       // 根据健康状态设置HTTP状态码
       let statusCode = 200;
       if (health.status === 'degraded') {
@@ -427,12 +427,12 @@ export function createHealthCheckMiddleware() {
       res.status(statusCode).json(health);
     } catch (error) {
       logger.error('Health check failed', error instanceof Error ? error : new Error(String(error)));
-      
+
       res.status(500).json({
         status: 'unhealthy',
         timestamp: Date.now(),
         message: 'Health check system failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   };

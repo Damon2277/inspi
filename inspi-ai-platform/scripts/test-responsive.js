@@ -194,19 +194,25 @@ function generateHTMLReport(report) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PC端界面优化响应式测试报告</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background:
+          white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .header { text-align: center; margin-bottom: 30px; }
-        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .summary-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+        .summary { display: grid; grid-template-columns: repeat(auto-fit,
+          minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .summary-card { background: linear-gradient(135deg, #667eea 0%,
+          #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
         .summary-card h3 { margin: 0 0 10px 0; font-size: 2em; }
         .summary-card p { margin: 0; opacity: 0.9; }
         .results { margin-top: 30px; }
-        .result-item { background: #f8f9fa; margin-bottom: 15px; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745; }
+        .result-item { background: #f8f9fa; margin-bottom: 15px; padding:
+          20px; border-radius: 8px; border-left: 4px solid #28a745; }
         .result-item.failed { border-left-color: #dc3545; }
         .result-title { font-weight: bold; margin-bottom: 10px; }
         .result-details { color: #666; font-size: 0.9em; }
-        .breakpoints { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+        .breakpoints { display: grid; grid-template-columns: repeat(auto-fit,
+          minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
         .breakpoint { background: #e9ecef; padding: 15px; border-radius: 6px; text-align: center; }
         .timestamp { text-align: center; color: #666; margin-top: 30px; font-size: 0.9em; }
     </style>

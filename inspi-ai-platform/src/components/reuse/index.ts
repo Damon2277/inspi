@@ -9,5 +9,5 @@ export type {
   Attribution,
   AttributionDisplayConfig,
   UserReuseQuota,
-  ReuseRecord
-} from '@/types/reuse';
+  ReuseRecord,
+} from '@/shared/types/reuse';

@@ -2,6 +2,7 @@
  * 慢查询检测和告警系统
  */
 import { logger } from '@/lib/logging/logger';
+
 import { CacheManager } from '@/lib/cache/manager';
 
 /**
@@ -123,13 +124,13 @@ export class SlowQueryDetector {
       thresholds: {
         executionTime: 1000, // 1秒
         frequency: 10, // 10次
-        timeWindow: 300 // 5分钟
+        timeWindow: 300, // 5分钟
       },
       notifications: {
-        email: { enabled: false, recipients: [], template: 'slow-query-alert' }
+        email: { enabled: false, recipients: [], template: 'slow-query-alert' },
       },
       cooldown: 300, // 5分钟
-      ...alertConfig
+      ...alertConfig,
     };
 
     this.startCleanupTask();
@@ -142,12 +143,12 @@ export class SlowQueryDetector {
     const slowQuery: SlowQueryRecord = {
       ...record,
       id: this.generateQueryId(),
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     // 添加到内存记录
     this.slowQueries.push(slowQuery);
-    
+
     // 限制内存中的记录数量
     if (this.slowQueries.length > this.maxRecords) {
       this.slowQueries = this.slowQueries.slice(-Math.floor(this.maxRecords * 0.8));
@@ -164,7 +165,7 @@ export class SlowQueryDetector {
       executionTime: slowQuery.executionTime,
       documentsExamined: slowQuery.documentsExamined,
       documentsReturned: slowQuery.documentsReturned,
-      indexesUsed: slowQuery.indexesUsed
+      indexesUsed: slowQuery.indexesUsed,
     });
 
     // 检查是否需要告警
@@ -178,7 +179,7 @@ export class SlowQueryDetector {
     collection: string,
     operation: string,
     query: any,
-    executionStats: any
+    executionStats: any,
   ): Promise<QueryAnalysis> {
     const queryId = this.generateQueryId();
     const executionTime = executionStats.executionTimeMillis || 0;
@@ -186,7 +187,7 @@ export class SlowQueryDetector {
     const documentsReturned = executionStats.totalDocsReturned || 0;
 
     // 计算查询效率
-    const efficiency = documentsExamined > 0 
+    const efficiency = documentsExamined > 0
       ? Math.min(100, (documentsReturned / documentsExamined) * 100)
       : 100;
 
@@ -198,14 +199,14 @@ export class SlowQueryDetector {
       collection,
       query,
       executionStats,
-      efficiency
+      efficiency,
     );
 
     // 生成索引建议
     const indexSuggestions = this.generateIndexSuggestions(
       collection,
       query,
-      executionStats
+      executionStats,
     );
 
     // 生成优化后的查询
@@ -218,7 +219,7 @@ export class SlowQueryDetector {
       efficiency,
       recommendations,
       indexSuggestions,
-      optimizedQuery
+      optimizedQuery,
     };
   }
 
@@ -227,10 +228,10 @@ export class SlowQueryDetector {
    */
   getSlowQueryStats(timeRange?: { start: Date; end: Date }): SlowQueryStats {
     let queries = this.slowQueries;
-    
+
     if (timeRange) {
-      queries = queries.filter(q => 
-        q.timestamp >= timeRange.start && q.timestamp <= timeRange.end
+      queries = queries.filter(q =>
+        q.timestamp >= timeRange.start && q.timestamp <= timeRange.end,
       );
     }
 
@@ -246,9 +247,9 @@ export class SlowQueryDetector {
           '100-500ms': 0,
           '500ms-1s': 0,
           '1s-5s': 0,
-          '5s+': 0
+          '5s+': 0,
         },
-        topSlowQueries: []
+        topSlowQueries: [],
       };
     }
 
@@ -265,7 +266,7 @@ export class SlowQueryDetector {
         collectionStats[q.collection] = {
           count: 0,
           totalTime: 0,
-          maxTime: 0
+          maxTime: 0,
         };
       }
       const stats = collectionStats[q.collection];
@@ -286,7 +287,7 @@ export class SlowQueryDetector {
       if (!operationStats[q.operation]) {
         operationStats[q.operation] = {
           count: 0,
-          totalTime: 0
+          totalTime: 0,
         };
       }
       const stats = operationStats[q.operation];
@@ -304,7 +305,7 @@ export class SlowQueryDetector {
       '100-500ms': 0,
       '500ms-1s': 0,
       '1s-5s': 0,
-      '5s+': 0
+      '5s+': 0,
     };
 
     queries.forEach(q => {
@@ -333,7 +334,7 @@ export class SlowQueryDetector {
       collectionStats,
       operationStats,
       timeDistribution,
-      topSlowQueries
+      topSlowQueries,
     };
   }
 
@@ -360,7 +361,7 @@ export class SlowQueryDetector {
           description: `${collection}集合查询性能严重不佳`,
           impact: `影响${collStats.count}个查询，平均执行时间${Math.round(collStats.averageTime)}ms`,
           implementation: `分析${collection}集合的查询模式，创建复合索引`,
-          affectedQueries: collStats.count
+          affectedQueries: collStats.count,
         });
       }
     });
@@ -373,7 +374,7 @@ export class SlowQueryDetector {
         description: '查找操作性能不佳，可能缺少索引',
         impact: `影响${stats.operationStats.find.count}个查询`,
         implementation: '分析查询条件，创建相应索引',
-        affectedQueries: stats.operationStats.find.count
+        affectedQueries: stats.operationStats.find.count,
       });
     }
 
@@ -384,7 +385,7 @@ export class SlowQueryDetector {
         description: '聚合查询性能不佳',
         impact: `影响${stats.operationStats.aggregate.count}个聚合查询`,
         implementation: '优化聚合管道，将$match阶段前移',
-        affectedQueries: stats.operationStats.aggregate.count
+        affectedQueries: stats.operationStats.aggregate.count,
       });
     }
 
@@ -397,7 +398,7 @@ export class SlowQueryDetector {
         description: '大量查询执行时间过长，可能需要硬件升级',
         impact: `${Math.round(slowQueryRatio * 100)}%的查询执行时间超过1秒`,
         implementation: '考虑增加内存、使用SSD存储或数据库分片',
-        affectedQueries: stats.timeDistribution['1s-5s'] + stats.timeDistribution['5s+']
+        affectedQueries: stats.timeDistribution['1s-5s'] + stats.timeDistribution['5s+'],
       });
     }
 
@@ -412,7 +413,7 @@ export class SlowQueryDetector {
    */
   async cleanup(): Promise<void> {
     const cutoffTime = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7天前
-    
+
     // 清理内存记录
     const beforeCount = this.slowQueries.length;
     this.slowQueries = this.slowQueries.filter(q => q.timestamp > cutoffTime);
@@ -423,7 +424,7 @@ export class SlowQueryDetector {
 
     logger.info('Slow query records cleaned up', {
       removedCount: beforeCount - afterCount,
-      remainingCount: afterCount
+      remainingCount: afterCount,
     });
   }
 
@@ -434,7 +435,7 @@ export class SlowQueryDetector {
     collection: string,
     query: any,
     executionStats: any,
-    efficiency: number
+    efficiency: number,
   ): string[] {
     const recommendations: string[] = [];
 
@@ -478,7 +479,7 @@ export class SlowQueryDetector {
   private generateIndexSuggestions(
     collection: string,
     query: any,
-    executionStats: any
+    executionStats: any,
   ): Array<{
     collection: string;
     fields: Record<string, 1 | -1>;
@@ -489,7 +490,7 @@ export class SlowQueryDetector {
 
     // 分析查询字段
     const queryFields = this.extractQueryFields(query);
-    
+
     if (queryFields.length > 0) {
       // 单字段索引建议
       queryFields.forEach(field => {
@@ -498,7 +499,7 @@ export class SlowQueryDetector {
             collection,
             fields: { [field]: 1 },
             reason: `查询字段${field}缺少索引`,
-            estimatedImprovement: '50-80%性能提升'
+            estimatedImprovement: '50-80%性能提升',
           });
         }
       });
@@ -514,7 +515,7 @@ export class SlowQueryDetector {
           collection,
           fields: compoundIndex,
           reason: '多字段查询建议使用复合索引',
-          estimatedImprovement: '60-90%性能提升'
+          estimatedImprovement: '60-90%性能提升',
         });
       }
     }
@@ -574,7 +575,7 @@ export class SlowQueryDetector {
     const recentQueries = this.getRecentSlowQueries(
       slowQuery.collection,
       slowQuery.operation,
-      this.alertConfig.thresholds.timeWindow
+      this.alertConfig.thresholds.timeWindow,
     );
 
     if (recentQueries.length >= this.alertConfig.thresholds.frequency) {
@@ -588,7 +589,7 @@ export class SlowQueryDetector {
    */
   private async triggerAlert(
     slowQuery: SlowQueryRecord,
-    recentQueries: SlowQueryRecord[]
+    recentQueries: SlowQueryRecord[],
   ): Promise<void> {
     const alertData = {
       type: 'slow-query-alert',
@@ -599,8 +600,8 @@ export class SlowQueryDetector {
         operation: slowQuery.operation,
         executionTime: slowQuery.executionTime,
         recentCount: recentQueries.length,
-        averageTime: recentQueries.reduce((sum, q) => sum + q.executionTime, 0) / recentQueries.length
-      }
+        averageTime: recentQueries.reduce((sum, q) => sum + q.executionTime, 0) / recentQueries.length,
+      },
     };
 
     logger.warn('Slow query alert triggered', alertData);
@@ -630,9 +631,9 @@ export class SlowQueryDetector {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...config.headers
+          ...config.headers,
         },
-        body: JSON.stringify(alertData)
+        body: JSON.stringify(alertData),
       });
 
       if (!response.ok) {
@@ -652,22 +653,22 @@ export class SlowQueryDetector {
     try {
       const message = {
         channel: config.channel,
-        text: `🐌 慢查询告警`,
+        text: '🐌 慢查询告警',
         attachments: [{
           color: 'warning',
           fields: [
             { title: '集合', value: alertData.details.collection, short: true },
             { title: '操作', value: alertData.details.operation, short: true },
             { title: '执行时间', value: `${alertData.details.executionTime}ms`, short: true },
-            { title: '最近频次', value: `${alertData.details.recentCount}次`, short: true }
-          ]
-        }]
+            { title: '最近频次', value: `${alertData.details.recentCount}次`, short: true },
+          ],
+        }],
       };
 
       const response = await fetch(config.webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(message)
+        body: JSON.stringify(message),
       });
 
       if (!response.ok) {
@@ -694,14 +695,14 @@ export class SlowQueryDetector {
   private getRecentSlowQueries(
     collection: string,
     operation: string,
-    timeWindowSeconds: number
+    timeWindowSeconds: number,
   ): SlowQueryRecord[] {
     const cutoffTime = new Date(Date.now() - timeWindowSeconds * 1000);
-    
-    return this.slowQueries.filter(q => 
+
+    return this.slowQueries.filter(q =>
       q.collection === collection &&
       q.operation === operation &&
-      q.timestamp > cutoffTime
+      q.timestamp > cutoffTime,
     );
   }
 
@@ -809,8 +810,8 @@ export class SlowQueryDetector {
 
   private hasIndexForField(executionStats: any, field: string): boolean {
     const indexesUsed = executionStats.indexesUsed || [];
-    return indexesUsed.some((index: string) => 
-      index.includes(field) || index === `${field}_1` || index === `${field}_-1`
+    return indexesUsed.some((index: string) =>
+      index.includes(field) || index === `${field}_1` || index === `${field}_-1`,
     );
   }
 }

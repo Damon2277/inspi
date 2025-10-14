@@ -2,10 +2,11 @@
  * 订阅服务测试
  */
 
-import { SubscriptionService } from '@/lib/services/subscriptionService';
 import { Subscription, Usage } from '@/lib/models';
 import connectDB from '@/lib/mongodb';
 import { getRedisClient } from '@/lib/redis';
+
+import { SubscriptionService } from '@/lib/services/subscriptionService';
 
 // Mock Redis
 jest.mock('@/lib/redis', () => ({
@@ -14,14 +15,14 @@ jest.mock('@/lib/redis', () => ({
     set: jest.fn(),
     setex: jest.fn(),
     del: jest.fn(),
-    keys: jest.fn(() => [])
-  }))
+    keys: jest.fn(() => []),
+  })),
 }));
 
 // Mock MongoDB connection
 jest.mock('@/lib/mongodb', () => ({
   __esModule: true,
-  default: jest.fn()
+  default: jest.fn(),
 }));
 
 // Mock models
@@ -30,13 +31,13 @@ jest.mock('@/lib/models', () => ({
     findOne: jest.fn(),
     find: jest.fn(),
     create: jest.fn(),
-    constructor: jest.fn()
+    constructor: jest.fn(),
   },
   Usage: {
     findOne: jest.fn(),
     updateMany: jest.fn(),
-    constructor: jest.fn()
-  }
+    constructor: jest.fn(),
+  },
 }));
 
 describe('SubscriptionService', () => {
@@ -45,7 +46,7 @@ describe('SubscriptionService', () => {
     set: jest.fn(),
     setex: jest.fn(),
     del: jest.fn(),
-    keys: jest.fn(() => [])
+    keys: jest.fn(() => []),
   };
 
   beforeEach(() => {
@@ -60,7 +61,7 @@ describe('SubscriptionService', () => {
         userId: 'user123',
         plan: 'pro',
         status: 'active',
-        endDate: new Date(Date.now() + 86400000) // tomorrow
+        endDate: new Date(Date.now() + 86400000), // tomorrow
       };
 
       mockRedis.get.mockResolvedValue(JSON.stringify(mockSubscription));
@@ -77,7 +78,7 @@ describe('SubscriptionService', () => {
         userId: 'user123',
         plan: 'pro',
         status: 'active',
-        endDate: new Date(Date.now() + 86400000)
+        endDate: new Date(Date.now() + 86400000),
       };
 
       mockRedis.get.mockResolvedValue(null);
@@ -90,7 +91,7 @@ describe('SubscriptionService', () => {
       expect(mockRedis.setex).toHaveBeenCalledWith(
         'subscription:user123',
         3600,
-        JSON.stringify(mockSubscription)
+        JSON.stringify(mockSubscription),
       );
     });
 
@@ -111,17 +112,18 @@ describe('SubscriptionService', () => {
         reuses: 2,
         limits: {
           maxGenerations: 20,
-          maxReuses: 10
-        }
+          maxReuses: 10,
+        },
       };
 
       const mockSubscription = {
-        plan: 'pro'
+        plan: 'pro',
       };
 
       // Mock getTodayUsage and getActiveSubscription
       jest.spyOn(SubscriptionService, 'getTodayUsage').mockResolvedValue(mockUsage as any);
-      jest.spyOn(SubscriptionService, 'getActiveSubscription').mockResolvedValue(mockSubscription as any);
+      jest.spyOn(SubscriptionService,
+        'getActiveSubscription').mockResolvedValue(mockSubscription as any);
 
       const result = await SubscriptionService.checkUsageLimit('user123', 'generation');
 
@@ -129,7 +131,7 @@ describe('SubscriptionService', () => {
         allowed: true,
         current: 5,
         limit: 20,
-        plan: 'pro'
+        plan: 'pro',
       });
     });
 
@@ -139,16 +141,17 @@ describe('SubscriptionService', () => {
         reuses: 2,
         limits: {
           maxGenerations: 20,
-          maxReuses: 10
-        }
+          maxReuses: 10,
+        },
       };
 
       const mockSubscription = {
-        plan: 'pro'
+        plan: 'pro',
       };
 
       jest.spyOn(SubscriptionService, 'getTodayUsage').mockResolvedValue(mockUsage as any);
-      jest.spyOn(SubscriptionService, 'getActiveSubscription').mockResolvedValue(mockSubscription as any);
+      jest.spyOn(SubscriptionService,
+        'getActiveSubscription').mockResolvedValue(mockSubscription as any);
 
       const result = await SubscriptionService.checkUsageLimit('user123', 'generation');
 
@@ -156,7 +159,7 @@ describe('SubscriptionService', () => {
         allowed: false,
         current: 20,
         limit: 20,
-        plan: 'pro'
+        plan: 'pro',
       });
     });
   });
@@ -168,14 +171,14 @@ describe('SubscriptionService', () => {
           _id: 'sub1',
           userId: 'user1',
           status: 'active',
-          save: jest.fn()
+          save: jest.fn(),
         },
         {
           _id: 'sub2',
           userId: 'user2',
           status: 'active',
-          save: jest.fn()
-        }
+          save: jest.fn(),
+        },
       ];
 
       (Subscription.find as jest.Mock).mockResolvedValue(mockExpiredSubscriptions);

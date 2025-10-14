@@ -24,7 +24,7 @@ function useNetworkStatus() {
   useEffect(() => {
     // 检查初始网络状态
     setIsOnline(navigator.onLine);
-    
+
     // 获取连接类型（如果支持）
     if ('connection' in navigator) {
       const connection = (navigator as any).connection;
@@ -34,7 +34,7 @@ function useNetworkStatus() {
     // 监听网络状态变化
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-    
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
@@ -45,7 +45,7 @@ function useNetworkStatus() {
         setConnectionType(connection?.effectiveType || 'unknown');
       };
       connection?.addEventListener('change', handleConnectionChange);
-      
+
       return () => {
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
@@ -71,7 +71,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
   retryDelay = 3000,
   maxRetries = 3,
   showDetails = false,
-  className = ''
+  className = '',
 }) => {
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
@@ -97,7 +97,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
     }
 
     setIsRetrying(true);
-    setRetryCount(prev => prev + 1);
+    setRetryCount(retryCount + 1);
 
     try {
       if (onRetry) {
@@ -117,7 +117,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
     if (retryCount >= maxRetries) {
       return;
     }
-    
+
     setCountdown(Math.ceil(retryDelay / 1000));
     setIsRetrying(true);
   };
@@ -146,15 +146,15 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
     if (!isOnline) {
       return 'offline';
     }
-    
+
     if (error?.message.includes('timeout')) {
       return 'timeout';
     }
-    
+
     if (error?.message.includes('fetch')) {
       return 'fetch';
     }
-    
+
     return 'network';
   };
 
@@ -163,7 +163,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
    */
   const getErrorInfo = () => {
     const errorType = getErrorType();
-    
+
     switch (errorType) {
       case 'offline':
         return {
@@ -173,7 +173,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
             <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-          )
+          ),
         };
       case 'timeout':
         return {
@@ -183,7 +183,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
             <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-          )
+          ),
         };
       default:
         return {
@@ -193,7 +193,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
             <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-          )
+          ),
         };
     }
   };
@@ -272,7 +272,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
             {isRetrying ? '重试中...' : '立即重试'}
           </button>
         )}
-        
+
         {canRetry && !isRetrying && (
           <button
             onClick={startAutoRetry}
@@ -282,7 +282,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
             自动重试
           </button>
         )}
-        
+
         {isRetrying && countdown > 0 && (
           <button
             onClick={cancelAutoRetry}
@@ -291,7 +291,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
             取消重试 ({countdown}s)
           </button>
         )}
-        
+
         {retryCount >= maxRetries && (
           <button
             onClick={resetRetries}
@@ -350,6 +350,6 @@ export function useNetworkError() {
     isOnline,
     handleNetworkError,
     clearNetworkError,
-    isNetworkError
+    isNetworkError,
   };
 }

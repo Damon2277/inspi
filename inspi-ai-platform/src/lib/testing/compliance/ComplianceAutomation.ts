@@ -1,12 +1,14 @@
 /**
  * Compliance Automation
- * 
+ *
  * Automated compliance checking system with scheduling,
  * continuous monitoring, and integration with CI/CD pipelines.
  */
 
 import { EventEmitter } from 'events';
+
 import * as cron from 'node-cron';
+
 import { ComplianceChecker, ComplianceConfig, ComplianceResult } from './ComplianceChecker';
 import { ComplianceReporter, ReportConfig } from './ComplianceReporter';
 
@@ -159,13 +161,13 @@ export class ComplianceAutomation extends EventEmitter {
   constructor(
     config: AutomationConfig,
     complianceConfig: ComplianceConfig,
-    reportConfig: ReportConfig
+    reportConfig: ReportConfig,
   ) {
     super();
     this.config = config;
     this.checker = new ComplianceChecker(complianceConfig);
     this.reporter = new ComplianceReporter(reportConfig);
-    
+
     this.setupEventHandlers();
   }
 
@@ -245,7 +247,7 @@ export class ComplianceAutomation extends EventEmitter {
       scheduleId?: string;
       categories?: string[];
       reportFormats?: string[];
-    } = {}
+    } = {},
   ): Promise<ComplianceResult> {
     this.emit('manualCheckStarted', options);
 
@@ -298,7 +300,7 @@ export class ComplianceAutomation extends EventEmitter {
       isRunning: this.isRunning,
       scheduledJobs: Array.from(this.scheduledJobs.keys()),
       lastResults: Object.fromEntries(this.lastResults),
-      uptime: this.isRunning ? Date.now() - this.getStartTime() : 0
+      uptime: this.isRunning ? Date.now() - this.getStartTime() : 0,
     };
   }
 
@@ -330,8 +332,8 @@ export class ComplianceAutomation extends EventEmitter {
           },
           {
             scheduled: false,
-            timezone: this.config.scheduling.timezone
-          }
+            timezone: this.config.scheduling.timezone,
+          },
         );
 
         this.scheduledJobs.set(schedule.name, job);
@@ -360,7 +362,7 @@ export class ComplianceAutomation extends EventEmitter {
       // Run compliance check with retry policy
       const result = await this.runWithRetry(
         () => this.runComplianceCheck({ scheduleId: schedule.name }),
-        this.config.scheduling.retryPolicy
+        this.config.scheduling.retryPolicy,
       );
 
       this.emit('scheduleJobCompleted', schedule.name, result);
@@ -458,7 +460,7 @@ export class ComplianceAutomation extends EventEmitter {
   private async checkQualityGates(result: ComplianceResult): Promise<void> {
     for (const gate of this.config.cicd.gates) {
       const passed = await this.evaluateQualityGate(gate, result);
-      
+
       this.emit('qualityGateEvaluated', gate.name, passed);
 
       if (!passed && gate.blocking) {
@@ -529,7 +531,7 @@ export class ComplianceAutomation extends EventEmitter {
    */
   private async executeHooks(event: string): Promise<void> {
     const hooks = this.config.hooks.filter(h => h.event === event);
-    
+
     for (const hook of hooks) {
       try {
         if (hook.async) {
@@ -565,27 +567,31 @@ export class ComplianceAutomation extends EventEmitter {
    */
   private async runWithRetry<T>(
     operation: () => Promise<T>,
-    retryPolicy: RetryPolicy
+    retryPolicy: RetryPolicy,
   ): Promise<T> {
     let lastError: Error;
-    
+
     for (let attempt = 0; attempt <= retryPolicy.maxRetries; attempt++) {
       try {
         return await operation();
       } catch (error) {
         lastError = error as Error;
-        
+
         if (attempt < retryPolicy.maxRetries) {
-          const delay = retryPolicy.exponential 
+          const delay = retryPolicy.exponential
             ? retryPolicy.backoffMs * Math.pow(2, attempt)
             : retryPolicy.backoffMs;
-          
+
           await this.sleep(delay);
         }
       }
     }
-    
-    throw lastError!;
+
+    if (lastError instanceof Error) {
+      throw lastError;
+    }
+
+    throw new Error('Compliance automation failed');
   }
 
   /**
@@ -662,7 +668,7 @@ export interface AutomationStatus {
 export function createComplianceAutomation(
   config: AutomationConfig,
   complianceConfig: ComplianceConfig,
-  reportConfig: ReportConfig
+  reportConfig: ReportConfig,
 ): ComplianceAutomation {
   return new ComplianceAutomation(config, complianceConfig, reportConfig);
 }

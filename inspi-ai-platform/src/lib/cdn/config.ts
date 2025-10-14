@@ -151,25 +151,25 @@ export class CDNManager {
       region?: string;
       transformations?: any;
       version?: string;
-    }
+    },
   ): string {
     try {
       // 确定资源类型
       const assetType = options?.assetType || this.detectAssetType(path);
-      
+
       // 应用分发规则
       const rule = this.findMatchingRule(path, assetType);
-      
+
       // 选择CDN域名
       const cdnDomain = this.selectCDNDomain(
         rule?.cdnDomain,
         options?.region,
-        assetType
+        assetType,
       );
 
       // 构建基础URL
       let url = `${this.config.ssl.enabled ? 'https' : 'http'}://${cdnDomain}`;
-      
+
       // 添加路径
       const cleanPath = path.startsWith('/') ? path : `/${path}`;
       url += cleanPath;
@@ -184,7 +184,7 @@ export class CDNManager {
       if (rule?.transformations || options?.transformations) {
         url = this.applyTransformations(url, {
           ...rule?.transformations,
-          ...options?.transformations
+          ...options?.transformations,
         });
       }
 
@@ -192,7 +192,7 @@ export class CDNManager {
         originalPath: path,
         assetType,
         cdnDomain,
-        finalUrl: url
+        finalUrl: url,
       });
 
       return url;
@@ -200,9 +200,9 @@ export class CDNManager {
     } catch (error) {
       logger.error('Failed to generate CDN URL', error instanceof Error ? error : new Error(String(error)), {
         path,
-        options
+        options,
       });
-      
+
       // 返回原始路径作为fallback
       return path;
     }
@@ -219,24 +219,24 @@ export class CDNManager {
     const preloadPromises = assets.map(async (asset) => {
       try {
         const url = this.getAssetUrl(asset.path, { assetType: asset.assetType });
-        
+
         // 创建预加载链接
         const link = document.createElement('link');
         link.rel = 'preload';
         link.href = url;
         link.as = this.getPreloadAs(asset.assetType || this.detectAssetType(asset.path));
-        
+
         if (asset.priority) {
           link.setAttribute('importance', asset.priority);
         }
 
         document.head.appendChild(link);
-        
+
         logger.debug('Asset preloaded', { url, assetType: asset.assetType });
-        
+
       } catch (error) {
         logger.error('Failed to preload asset', error instanceof Error ? error : new Error(String(error)), {
-          path: asset.path
+          path: asset.path,
         });
       }
     });
@@ -258,12 +258,12 @@ export class CDNManager {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.caching.purgeKey}`
+          'Authorization': `Bearer ${this.config.caching.purgeKey}`,
         },
         body: JSON.stringify({
           files: paths || ['/*'], // 清除所有缓存如果没有指定路径
-          purge_everything: !paths
-        })
+          purge_everything: !paths,
+        }),
       });
 
       if (!response.ok) {
@@ -272,7 +272,7 @@ export class CDNManager {
 
       const result = await response.json();
       logger.info('CDN cache purged successfully', { paths, result });
-      
+
       return true;
 
     } catch (error) {
@@ -303,8 +303,8 @@ export class CDNManager {
       topAssets: [
         { path: '/images/hero.jpg', requests: 1500, bandwidth: 50 * 1024 * 1024 },
         { path: '/js/main.js', requests: 1200, bandwidth: 20 * 1024 * 1024 },
-        { path: '/css/styles.css', requests: 1100, bandwidth: 15 * 1024 * 1024 }
-      ]
+        { path: '/css/styles.css', requests: 1100, bandwidth: 15 * 1024 * 1024 },
+      ],
     };
   }
 
@@ -321,7 +321,7 @@ export class CDNManager {
    */
   private detectAssetType(path: string): AssetType {
     const extension = path.split('.').pop()?.toLowerCase();
-    
+
     const typeMap: Record<string, AssetType> = {
       // 图片
       'jpg': AssetType.IMAGE,
@@ -331,38 +331,38 @@ export class CDNManager {
       'webp': AssetType.IMAGE,
       'avif': AssetType.IMAGE,
       'svg': AssetType.IMAGE,
-      
+
       // 视频
       'mp4': AssetType.VIDEO,
       'webm': AssetType.VIDEO,
       'avi': AssetType.VIDEO,
       'mov': AssetType.VIDEO,
-      
+
       // 音频
       'mp3': AssetType.AUDIO,
       'wav': AssetType.AUDIO,
       'ogg': AssetType.AUDIO,
-      
+
       // 脚本
       'js': AssetType.SCRIPT,
       'mjs': AssetType.SCRIPT,
       'ts': AssetType.SCRIPT,
-      
+
       // 样式
       'css': AssetType.STYLESHEET,
       'scss': AssetType.STYLESHEET,
       'sass': AssetType.STYLESHEET,
-      
+
       // 字体
       'woff': AssetType.FONT,
       'woff2': AssetType.FONT,
       'ttf': AssetType.FONT,
       'otf': AssetType.FONT,
-      
+
       // 文档
       'pdf': AssetType.DOCUMENT,
       'doc': AssetType.DOCUMENT,
-      'docx': AssetType.DOCUMENT
+      'docx': AssetType.DOCUMENT,
     };
 
     return typeMap[extension || ''] || AssetType.OTHER;
@@ -372,8 +372,8 @@ export class CDNManager {
    * 查找匹配的分发规则
    */
   private findMatchingRule(path: string, assetType: AssetType): DistributionRule | undefined {
-    return this.distributionRules.find(rule => 
-      rule.pattern.test(path) && rule.assetType === assetType
+    return (this.distributionRules as any).find(rule =>
+      rule.pattern.test(path) && rule.assetType === assetType,
     );
   }
 
@@ -383,7 +383,7 @@ export class CDNManager {
   private selectCDNDomain(
     ruleDomain?: string,
     region?: string,
-    assetType?: AssetType
+    assetType?: AssetType,
   ): string {
     // 优先使用规则指定的域名
     if (ruleDomain) {
@@ -414,7 +414,7 @@ export class CDNManager {
     if (!transformations) return url;
 
     const params = new URLSearchParams();
-    
+
     // 图片转换
     if (transformations.resize) {
       if (transformations.resize.width) {
@@ -440,7 +440,6 @@ export class CDNManager {
       const separator = url.includes('?') ? '&' : '?';
       url += `${separator}${params.toString()}`;
     }
-
     return url;
   }
 
@@ -456,7 +455,7 @@ export class CDNManager {
       [AssetType.STYLESHEET]: 'style',
       [AssetType.FONT]: 'font',
       [AssetType.DOCUMENT]: 'document',
-      [AssetType.OTHER]: 'fetch'
+      [AssetType.OTHER]: 'fetch',
     };
 
     return asMap[assetType] || 'fetch';
@@ -472,8 +471,8 @@ export class CDNManager {
       assetType: AssetType.IMAGE,
       transformations: {
         compress: true,
-        format: 'webp'
-      }
+        format: 'webp',
+      },
     });
 
     this.addDistributionRule({
@@ -481,8 +480,8 @@ export class CDNManager {
       assetType: AssetType.SCRIPT,
       cacheStrategy: {
         maxAge: 31536000, // 1年
-        public: true
-      }
+        public: true,
+      },
     });
 
     this.addDistributionRule({
@@ -490,8 +489,8 @@ export class CDNManager {
       assetType: AssetType.STYLESHEET,
       cacheStrategy: {
         maxAge: 31536000, // 1年
-        public: true
-      }
+        public: true,
+      },
     });
 
     this.addDistributionRule({
@@ -499,8 +498,8 @@ export class CDNManager {
       assetType: AssetType.FONT,
       cacheStrategy: {
         maxAge: 31536000, // 1年
-        public: true
-      }
+        public: true,
+      },
     });
   }
 
@@ -513,21 +512,21 @@ export class CDNManager {
         'us': {
           cdnDomain: 'us-cdn.example.com',
           priority: 1,
-          fallbacks: ['global-cdn.example.com']
+          fallbacks: ['global-cdn.example.com'],
         },
         'eu': {
           cdnDomain: 'eu-cdn.example.com',
           priority: 1,
-          fallbacks: ['global-cdn.example.com']
+          fallbacks: ['global-cdn.example.com'],
         },
         'asia': {
           cdnDomain: 'asia-cdn.example.com',
           priority: 1,
-          fallbacks: ['global-cdn.example.com']
-        }
+          fallbacks: ['global-cdn.example.com'],
+        },
       },
       defaultRegion: 'us',
-      autoDetection: true
+      autoDetection: true,
     };
   }
 }
@@ -545,7 +544,7 @@ export class CDNUtils {
       const response = await fetch('https://cloudflare.com/cdn-cgi/trace');
       const text = await response.text();
       const lines = text.split('\n');
-      
+
       for (const line of lines) {
         if (line.startsWith('loc=')) {
           const country = line.split('=')[1];
@@ -555,7 +554,6 @@ export class CDNUtils {
     } catch (error) {
       logger.warn('Failed to detect user region', { error: error instanceof Error ? error.message : String(error) });
     }
-
     return 'us'; // 默认地区
   }
 
@@ -572,7 +570,7 @@ export class CDNUtils {
       'CN': 'asia',
       'JP': 'asia',
       'KR': 'asia',
-      'SG': 'asia'
+      'SG': 'asia',
     };
 
     return regionMap[country.toUpperCase()] || 'us';
@@ -583,7 +581,7 @@ export class CDNUtils {
    */
   static generateCacheKey(path: string, transformations?: any): string {
     let key = path;
-    
+
     if (transformations) {
       const params = new URLSearchParams();
       Object.entries(transformations).forEach(([k, v]) => {
@@ -595,12 +593,11 @@ export class CDNUtils {
           params.append(k, String(v));
         }
       });
-      
+
       if (params.toString()) {
         key += `?${params.toString()}`;
       }
     }
-
     return Buffer.from(key).toString('base64').replace(/[+/=]/g, '');
   }
 
@@ -630,7 +627,7 @@ export class CDNUtils {
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 }
@@ -642,71 +639,71 @@ export const DEFAULT_CDN_CONFIG: CDNConfig = {
   provider: CDNProvider.CLOUDFLARE,
   domains: {
     primary: 'cdn.example.com',
-    fallback: ['cdn2.example.com']
+    fallback: ['cdn2.example.com'],
   },
   ssl: {
     enabled: true,
-    minTlsVersion: '1.2'
+    minTlsVersion: '1.2',
   },
   compression: {
     enabled: true,
     algorithms: ['gzip', 'brotli'],
-    minSize: 1024
+    minSize: 1024,
   },
   caching: {
     strategies: {
       [AssetType.IMAGE]: {
         maxAge: 31536000, // 1年
-        public: true
+        public: true,
       },
       [AssetType.SCRIPT]: {
         maxAge: 31536000, // 1年
-        public: true
+        public: true,
       },
       [AssetType.STYLESHEET]: {
         maxAge: 31536000, // 1年
-        public: true
+        public: true,
       },
       [AssetType.FONT]: {
         maxAge: 31536000, // 1年
-        public: true
+        public: true,
       },
       [AssetType.VIDEO]: {
         maxAge: 86400, // 1天
-        public: true
+        public: true,
       },
       [AssetType.AUDIO]: {
         maxAge: 86400, // 1天
-        public: true
+        public: true,
       },
       [AssetType.DOCUMENT]: {
         maxAge: 3600, // 1小时
-        public: false
+        public: false,
       },
       [AssetType.OTHER]: {
         maxAge: 3600, // 1小时
-        public: true
-      }
-    }
+        public: true,
+      },
+    },
   },
   security: {
     hotlinkProtection: true,
-    allowedReferrers: ['*.example.com']
+    allowedReferrers: ['*.example.com'],
   },
   optimization: {
     imageOptimization: true,
     minification: true,
     http2Push: true,
-    preload: ['*.css', '*.js']
+    preload: ['*.css', '*.js'],
   },
   monitoring: {
     enabled: true,
     alertThresholds: {
       errorRate: 5, // 5%
       responseTime: 1000, // 1秒
-      bandwidth: 1024 * 1024 * 1024 // 1GB
-    }
-  }
+      bandwidth: 1024 * 1024 * 1024, // 1GB
+    },
+  },
 };
 
 export default CDNManager;

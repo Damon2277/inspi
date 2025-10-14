@@ -1,6 +1,6 @@
 /**
  * Test Error Handling System
- * 
+ *
  * This module provides comprehensive error handling for tests,
  * including error classification, recovery strategies, and
  * detailed error reporting.
@@ -50,7 +50,7 @@ export class TestError extends Error {
     type: TestErrorType,
     message: string,
     context: TestErrorContext = {},
-    recoverable: boolean = false
+    recoverable: boolean = false,
   ) {
     super(message);
     this.name = 'TestError';
@@ -121,7 +121,7 @@ export class TestError extends Error {
       {
         ...context,
         stackTrace: error.stack,
-      }
+      },
     );
   }
 }
@@ -165,7 +165,7 @@ export class TestErrorHandler {
               originalError: error.toJSON(),
               recoveryError: recoveryError.message,
             },
-          }
+          },
         );
         this.recordError(newError);
       }
@@ -184,7 +184,7 @@ export class TestErrorHandler {
     mostCommon: TestErrorType | null;
   } {
     const byType: Record<TestErrorType, number> = {} as any;
-    
+
     for (const error of this.errorHistory) {
       byType[error.type] = (byType[error.type] || 0) + 1;
     }
@@ -223,7 +223,7 @@ export class TestErrorHandler {
 
   private recordError(error: TestError): void {
     this.errorHistory.push(error);
-    
+
     // Maintain history size limit
     if (this.errorHistory.length > this.maxHistorySize) {
       this.errorHistory.shift();
@@ -325,14 +325,14 @@ export class ErrorAssertions {
     if (!(error instanceof TestError)) {
       throw new TestError(
         TestErrorType.ASSERTION_FAILED,
-        `Expected TestError, but got ${error?.constructor?.name || typeof error}`
+        `Expected TestError, but got ${error?.constructor?.name || typeof error}`,
       );
     }
 
     if (error.type !== expectedType) {
       throw new TestError(
         TestErrorType.ASSERTION_FAILED,
-        `Expected error type ${expectedType}, but got ${error.type}`
+        `Expected error type ${expectedType}, but got ${error.type}`,
       );
     }
   }
@@ -346,7 +346,7 @@ export class ErrorAssertions {
       if (actualValue !== expectedValue) {
         throw new TestError(
           TestErrorType.ASSERTION_FAILED,
-          `Expected error context.${key} to be ${expectedValue}, but got ${actualValue}`
+          `Expected error context.${key} to be ${expectedValue}, but got ${actualValue}`,
         );
       }
     }
@@ -359,7 +359,7 @@ export class ErrorAssertions {
     if (error.recoverable !== shouldBeRecoverable) {
       throw new TestError(
         TestErrorType.ASSERTION_FAILED,
-        `Expected error to be ${shouldBeRecoverable ? 'recoverable' : 'non-recoverable'}, but it was ${error.recoverable ? 'recoverable' : 'non-recoverable'}`
+        `Expected error to be ${shouldBeRecoverable ? 'recoverable' : 'non-recoverable'}, but it was ${error.recoverable ? 'recoverable' : 'non-recoverable'}`,
       );
     }
   }
@@ -373,20 +373,20 @@ export const globalTestErrorHandler = new TestErrorHandler();
 // Register default recovery strategies
 globalTestErrorHandler.registerStrategy(
   TestErrorType.TIMEOUT,
-  DefaultRecoveryStrategies.createTimeoutRecovery()
+  DefaultRecoveryStrategies.createTimeoutRecovery(),
 );
 
 globalTestErrorHandler.registerStrategy(
   TestErrorType.NETWORK_FAILED,
-  DefaultRecoveryStrategies.createNetworkRecovery()
+  DefaultRecoveryStrategies.createNetworkRecovery(),
 );
 
 globalTestErrorHandler.registerStrategy(
   TestErrorType.DATABASE_FAILED,
-  DefaultRecoveryStrategies.createDatabaseRecovery()
+  DefaultRecoveryStrategies.createDatabaseRecovery(),
 );
 
 globalTestErrorHandler.registerStrategy(
   TestErrorType.MOCK_FAILED,
-  DefaultRecoveryStrategies.createMockRecovery()
+  DefaultRecoveryStrategies.createMockRecovery(),
 );

@@ -3,8 +3,9 @@
  * 提供数据库操作的模拟功能，支持内存存储和查询
  */
 
-import { BaseMockService } from './BaseMockService';
 import { DatabaseUtils, CacheUtils, TransactionUtils } from '@/lib/db-utils';
+
+import { BaseMockService } from './BaseMockService';
 
 export interface MockDatabaseConfig {
   autoIncrement?: boolean;
@@ -52,7 +53,7 @@ export class MockDatabaseService extends BaseMockService {
     persistData: false,
     simulateLatency: true,
     defaultLatency: 10,
-    failureRate: 0
+    failureRate: 0,
   };
   private idCounters: Map<string, number> = new Map();
 
@@ -66,12 +67,12 @@ export class MockDatabaseService extends BaseMockService {
    */
   private initializeCollections(): void {
     const defaultCollections = ['users', 'works', 'knowledgeGraphs', 'sessions'];
-    
+
     defaultCollections.forEach(name => {
       this.collections.set(name, {
         name,
         documents: new Map(),
-        indexes: new Map()
+        indexes: new Map(),
       });
       this.idCounters.set(name, 1);
     });
@@ -92,12 +93,12 @@ export class MockDatabaseService extends BaseMockService {
 
     const coll = this.getOrCreateCollection(collection);
     const id = this.generateId(collection);
-    
+
     const document = {
       _id: id,
       ...data,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     } as T;
 
     coll.documents.set(id, document);
@@ -166,7 +167,7 @@ export class MockDatabaseService extends BaseMockService {
 
     const coll = this.getOrCreateCollection(collection);
     const document = coll.documents.get(id);
-    
+
     return document ? (document as T) : null;
   }
 
@@ -190,14 +191,14 @@ export class MockDatabaseService extends BaseMockService {
       const updatedDoc = {
         ...doc,
         ...update,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       } as T;
 
       const coll = this.getOrCreateCollection(collection);
       const id = (doc as any)._id;
       coll.documents.set(id, updatedDoc);
       this.updateIndexes(collection, id, updatedDoc);
-      
+
       updatedDocuments.push(updatedDoc);
 
       if (!options.multi) {
@@ -229,7 +230,7 @@ export class MockDatabaseService extends BaseMockService {
 
     await this.simulateLatency();
 
-    const documents = await this.find(collection, filter);
+    const documents = await (this.find as any)(collection, filter);
     const coll = this.getOrCreateCollection(collection);
     let deletedCount = 0;
 
@@ -268,7 +269,7 @@ export class MockDatabaseService extends BaseMockService {
 
     await this.simulateLatency();
 
-    const documents = await this.find(collection, filter);
+    const documents = await (this.find as any)(collection, filter);
     return documents.length;
   }
 
@@ -282,7 +283,7 @@ export class MockDatabaseService extends BaseMockService {
     const coll = this.getOrCreateCollection(collection);
     if (!coll.indexes.has(field)) {
       coll.indexes.set(field, new Set());
-      
+
       // 为现有文档建立索引
       for (const [id, doc] of coll.documents) {
         const value = this.getFieldValue(doc, field);
@@ -319,7 +320,7 @@ export class MockDatabaseService extends BaseMockService {
       name: collection,
       documentCount: coll.documents.size,
       indexCount: coll.indexes.size,
-      indexes: Array.from(coll.indexes.keys())
+      indexes: Array.from(coll.indexes.keys()),
     };
   }
 
@@ -369,7 +370,7 @@ export class MockDatabaseService extends BaseMockService {
     for (const [collectionName, documents] of Object.entries(data)) {
       const coll = this.getOrCreateCollection(collectionName);
       coll.documents.clear();
-      
+
       if (Array.isArray(documents)) {
         documents.forEach(doc => {
           const id = doc._id || this.generateId(collectionName);
@@ -387,7 +388,7 @@ export class MockDatabaseService extends BaseMockService {
       this.collections.set(name, {
         name,
         documents: new Map(),
-        indexes: new Map()
+        indexes: new Map(),
       });
       this.idCounters.set(name, 1);
     }
@@ -412,7 +413,7 @@ export class MockDatabaseService extends BaseMockService {
   private matchesFilter(document: any, filter: any): boolean {
     for (const [key, value] of Object.entries(filter)) {
       const docValue = this.getFieldValue(document, key);
-      
+
       if (typeof value === 'object' && value !== null) {
         // 处理操作符
         if (value.$eq !== undefined && docValue !== value.$eq) return false;
@@ -436,7 +437,7 @@ export class MockDatabaseService extends BaseMockService {
   private getFieldValue(document: any, field: string): any {
     const parts = field.split('.');
     let value = document;
-    
+
     for (const part of parts) {
       if (value && typeof value === 'object') {
         value = value[part];
@@ -444,7 +445,7 @@ export class MockDatabaseService extends BaseMockService {
         return undefined;
       }
     }
-    
+
     return value;
   }
 
@@ -456,13 +457,13 @@ export class MockDatabaseService extends BaseMockService {
       for (const [field, direction] of Object.entries(sort)) {
         const aValue = this.getFieldValue(a, field);
         const bValue = this.getFieldValue(b, field);
-        
+
         let comparison = 0;
         if (aValue < bValue) comparison = -1;
         else if (aValue > bValue) comparison = 1;
-        
+
         if (direction === -1) comparison *= -1;
-        
+
         if (comparison !== 0) return comparison;
       }
       return 0;
@@ -521,16 +522,16 @@ export class MockDatabaseService extends BaseMockService {
     try {
       // 验证基本CRUD操作
       const testCollection = 'test_verification';
-      
+
       // 创建测试
-      const created = await this.create(testCollection, { name: 'test', value: 123 });
+      const created = await (this.create as any)(testCollection, { name: 'test', value: 123 });
       if (!created._id) {
         this.addError('Create operation failed');
         return false;
       }
 
       // 查找测试
-      const found = await this.findById(testCollection, created._id);
+      const found = await (this.findById as any)(testCollection, created._id);
       if (!found || found.name !== 'test') {
         this.addError('Find operation failed');
         return false;
@@ -572,7 +573,7 @@ export class MockDatabaseService extends BaseMockService {
       persistData: false,
       simulateLatency: true,
       defaultLatency: 10,
-      failureRate: 0
+      failureRate: 0,
     };
     this.initializeCollections();
   }
@@ -586,7 +587,7 @@ export class MockDatabaseService extends BaseMockService {
       collections: this.getAllCollectionStats(),
       config: this.config,
       totalDocuments: Array.from(this.collections.values())
-        .reduce((sum, coll) => sum + coll.documents.size, 0)
+        .reduce((sum, coll) => sum + coll.documents.size, 0),
     };
   }
 }

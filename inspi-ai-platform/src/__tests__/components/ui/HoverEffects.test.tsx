@@ -1,7 +1,8 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
+
 import '@testing-library/jest-dom';
-import { HoverEffect, HoverCard, HoverButton } from '@/components/ui/HoverEffects';
+import { HoverEffect, HoverCard, HoverButton } from '@/shared/components/HoverEffects';
 
 // Mock CSS media queries
 Object.defineProperty(window, 'matchMedia', {
@@ -23,9 +24,9 @@ describe('HoverEffect', () => {
     render(
       <HoverEffect>
         <div>Test Content</div>
-      </HoverEffect>
+      </HoverEffect>,
     );
-    
+
     expect(screen.getByText('Test Content')).toBeInTheDocument();
   });
 
@@ -33,9 +34,9 @@ describe('HoverEffect', () => {
     const { container } = render(
       <HoverEffect effect="lift" intensity="medium">
         <div>Test Content</div>
-      </HoverEffect>
+      </HoverEffect>,
     );
-    
+
     const hoverElement = container.firstChild as HTMLElement;
     expect(hoverElement).toHaveClass('transition-all', 'duration-300', 'ease-out');
   });
@@ -44,9 +45,9 @@ describe('HoverEffect', () => {
     const { container } = render(
       <HoverEffect effect="scale" intensity="subtle">
         <div>Test Content</div>
-      </HoverEffect>
+      </HoverEffect>,
     );
-    
+
     const hoverElement = container.firstChild as HTMLElement;
     expect(hoverElement).toHaveClass('transition-all', 'duration-300', 'ease-out');
   });
@@ -55,9 +56,9 @@ describe('HoverEffect', () => {
     const { container } = render(
       <HoverEffect effect="lift" disabled>
         <div>Test Content</div>
-      </HoverEffect>
+      </HoverEffect>,
     );
-    
+
     const hoverElement = container.firstChild as HTMLElement;
     expect(hoverElement.className).toBe('');
   });
@@ -66,9 +67,9 @@ describe('HoverEffect', () => {
     const { container } = render(
       <HoverEffect className="custom-class">
         <div>Test Content</div>
-      </HoverEffect>
+      </HoverEffect>,
     );
-    
+
     const hoverElement = container.firstChild as HTMLElement;
     expect(hoverElement).toHaveClass('custom-class');
   });
@@ -79,9 +80,9 @@ describe('HoverCard', () => {
     const { container } = render(
       <HoverCard>
         <div>Card Content</div>
-      </HoverCard>
+      </HoverCard>,
     );
-    
+
     const cardElement = container.firstChild as HTMLElement;
     expect(cardElement).toHaveClass('rounded-lg', 'bg-white', 'border', 'border-gray-200');
   });
@@ -90,9 +91,9 @@ describe('HoverCard', () => {
     const { container } = render(
       <HoverCard className="custom-card">
         <div>Card Content</div>
-      </HoverCard>
+      </HoverCard>,
     );
-    
+
     const cardElement = container.firstChild as HTMLElement;
     expect(cardElement).toHaveClass('custom-card');
   });
@@ -101,9 +102,9 @@ describe('HoverCard', () => {
     const { container } = render(
       <HoverCard disabled>
         <div>Card Content</div>
-      </HoverCard>
+      </HoverCard>,
     );
-    
+
     expect(screen.getByText('Card Content')).toBeInTheDocument();
   });
 });
@@ -113,9 +114,9 @@ describe('HoverButton', () => {
     const { container } = render(
       <HoverButton>
         Click me
-      </HoverButton>
+      </HoverButton>,
     );
-    
+
     const buttonWrapper = container.firstChild as HTMLElement;
     expect(buttonWrapper).toHaveClass('bg-blue-600', 'text-white', 'border-blue-600');
   });
@@ -124,9 +125,9 @@ describe('HoverButton', () => {
     const { container } = render(
       <HoverButton variant="secondary">
         Click me
-      </HoverButton>
+      </HoverButton>,
     );
-    
+
     const buttonWrapper = container.firstChild as HTMLElement;
     expect(buttonWrapper).toHaveClass('bg-gray-100', 'text-gray-900', 'border-gray-300');
   });
@@ -135,9 +136,9 @@ describe('HoverButton', () => {
     const { container } = render(
       <HoverButton variant="ghost">
         Click me
-      </HoverButton>
+      </HoverButton>,
     );
-    
+
     const buttonWrapper = container.firstChild as HTMLElement;
     expect(buttonWrapper).toHaveClass('bg-transparent', 'text-gray-700', 'border-transparent');
   });
@@ -146,9 +147,9 @@ describe('HoverButton', () => {
     const { container } = render(
       <HoverButton size="lg">
         Large Button
-      </HoverButton>
+      </HoverButton>,
     );
-    
+
     const buttonWrapper = container.firstChild as HTMLElement;
     expect(buttonWrapper).toHaveClass('px-6', 'py-3', 'text-lg');
   });
@@ -158,9 +159,9 @@ describe('HoverButton', () => {
     render(
       <HoverButton onClick={handleClick}>
         Click me
-      </HoverButton>
+      </HoverButton>,
     );
-    
+
     const button = screen.getByRole('button');
     fireEvent.click(button);
     expect(handleClick).toHaveBeenCalledTimes(1);
@@ -171,12 +172,12 @@ describe('HoverButton', () => {
     render(
       <HoverButton onClick={handleClick} disabled>
         Disabled Button
-      </HoverButton>
+      </HoverButton>,
     );
-    
+
     const button = screen.getByRole('button');
     expect(button).toBeDisabled();
-    
+
     fireEvent.click(button);
     expect(handleClick).not.toHaveBeenCalled();
   });
@@ -185,9 +186,9 @@ describe('HoverButton', () => {
     const { container } = render(
       <HoverButton className="custom-button">
         Custom Button
-      </HoverButton>
+      </HoverButton>,
     );
-    
+
     const buttonWrapper = container.firstChild as HTMLElement;
     expect(buttonWrapper).toHaveClass('custom-button');
   });

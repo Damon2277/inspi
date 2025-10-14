@@ -3,7 +3,9 @@
  * 优化邀请系统前端组件的加载和渲染性能
  */
 
-import { logger } from '@/lib/utils/logger'
+import React from 'react';
+
+import { logger } from '@/shared/utils/logger';
 
 export interface PerformanceMetrics {
   loadTime: number
@@ -24,15 +26,15 @@ export interface OptimizationConfig {
 }
 
 export class FrontendOptimizer {
-  private config: OptimizationConfig
-  private performanceObserver?: PerformanceObserver
-  private metrics: PerformanceMetrics[] = []
-  private componentCache: Map<string, any> = new Map()
-  private preloadCache: Map<string, Promise<any>> = new Map()
+  private config: OptimizationConfig;
+  private performanceObserver?: PerformanceObserver;
+  private metrics: PerformanceMetrics[] = [];
+  private componentCache: Map<string, any> = new Map();
+  private preloadCache: Map<string, Promise<any>> = new Map();
 
   constructor(config: OptimizationConfig) {
-    this.config = config
-    this.initializePerformanceMonitoring()
+    this.config = config;
+    this.initializePerformanceMonitoring();
   }
 
   /**
@@ -41,13 +43,12 @@ export class FrontendOptimizer {
   private initializePerformanceMonitoring(): void {
     if (typeof window !== 'undefined' && 'PerformanceObserver' in window) {
       this.performanceObserver = new PerformanceObserver((list) => {
-        const entries = list.getEntries()
-        this.processPerformanceEntries(entries)
-      })
+        const entries = list.getEntries();
+        this.processPerformanceEntries(entries);
+      });
 
-      this.performanceObserver.observe({ 
-        entryTypes: ['navigation', 'paint', 'largest-contentful-paint', 'first-input'] 
-      })
+      this.performanceObserver.observe({
+        entryTypes: ['navigation', 'paint', 'largest-contentful-paint', 'first-input'] });
     }
   }
 
@@ -57,15 +58,15 @@ export class FrontendOptimizer {
   private processPerformanceEntries(entries: PerformanceEntry[]): void {
     entries.forEach(entry => {
       if (entry.entryType === 'navigation') {
-        const navEntry = entry as PerformanceNavigationTiming
+        const navEntry = entry as PerformanceNavigationTiming;
+        const domLoading = (navEntry as Partial<PerformanceNavigationTiming> & { domLoading?: number }).domLoading ?? navEntry.fetchStart;
         this.recordMetrics({
           loadTime: navEntry.loadEventEnd - navEntry.loadEventStart,
           renderTime: navEntry.domContentLoadedEventEnd - navEntry.domContentLoadedEventStart,
-          interactionTime: navEntry.domInteractive - navEntry.domLoading,
-          memoryUsage: this.getMemoryUsage()
-        })
+          interactionTime: navEntry.domInteractive - domLoading,
+          memoryUsage: this.getMemoryUsage() });
       }
-    })
+    });
   }
 
   /**
@@ -73,61 +74,66 @@ export class FrontendOptimizer {
    */
   private getMemoryUsage(): number {
     if (typeof window !== 'undefined' && 'performance' in window && 'memory' in (window.performance as any)) {
-      return (window.performance as any).memory.usedJSHeapSize
+      return (window.performance as any).memory.usedJSHeapSize;
     }
-    return 0
+    return 0;
   }
 
   /**
    * 记录性能指标
    */
   private recordMetrics(metrics: PerformanceMetrics): void {
-    this.metrics.push(metrics)
-    
+    this.metrics.push(metrics);
+
     // 保持最近100条记录
     if (this.metrics.length > 100) {
-      this.metrics.shift()
+      this.metrics.shift();
     }
 
     // 记录慢加载
     if (metrics.loadTime > 3000) {
-      logger.warn('Slow page load detected', { loadTime: metrics.loadTime })
+      logger.warn('Slow page load detected', { loadTime: metrics.loadTime });
     }
   }
 
   /**
    * 创建懒加载组件包装器
    */
-  createLazyComponent<T>(
-    importFn: () => Promise<{ default: T }>,
-    fallback?: React.ComponentType
-  ): React.ComponentType {
+  createLazyComponent<P = any>(
+    importFn: () => Promise<{ default: React.ComponentType<P> }>,
+    fallback?: React.ComponentType,
+  ): React.ComponentType<P> {
     if (!this.config.enableLazyLoading) {
       // 如果禁用懒加载，直接返回动态导入
-      const Component = React.lazy(importFn)
-      return Component as any
+      return React.lazy(importFn);
     }
 
     const LazyComponent = React.lazy(() => {
-      const startTime = performance.now()
-      
-      return importFn().then(module => {
-        const loadTime = performance.now() - startTime
-        logger.debug('Lazy component loaded', { loadTime })
-        
-        return module
-      }).catch(error => {
-        logger.error('Lazy component load failed', { error })
-        throw error
-      })
-    })
+      const startTime = performance.now();
 
-    return (props: any) => (
-      React.createElement(React.Suspense, 
-        { fallback: fallback ? React.createElement(fallback) : React.createElement('div', null, 'Loading...') },
-        React.createElement(LazyComponent, props)
-      )
-    )
+      return importFn().then(module => {
+        const loadTime = performance.now() - startTime;
+        logger.debug('Lazy component loaded', { loadTime });
+
+        return module;
+      }).catch(error => {
+        logger.error('Lazy component load failed', { error });
+        throw error;
+      });
+    });
+
+    const SuspenseWrapper = (props: P) => React.createElement(
+      React.Suspense,
+      { fallback: fallback ? React.createElement(fallback) : React.createElement('div', null, 'Loading...') },
+      React.createElement(LazyComponent, props),
+    );
+
+    const lazyComponentInfo = LazyComponent as unknown as { displayName?: string; name?: string };
+    const lazyComponentName = lazyComponentInfo.displayName ?? lazyComponentInfo.name ?? 'Component';
+
+    SuspenseWrapper.displayName = `LazyComponentWrapper(${lazyComponentName})`;
+
+    return SuspenseWrapper;
   }
 
   /**
@@ -138,8 +144,7 @@ export class FrontendOptimizer {
     itemHeight,
     containerHeight,
     renderItem,
-    overscan = 5
-  }: {
+    overscan = 5 }: {
     items: T[]
     itemHeight: number
     containerHeight: number
@@ -148,44 +153,45 @@ export class FrontendOptimizer {
   }): React.ComponentType {
     if (!this.config.enableVirtualization) {
       // 如果禁用虚拟化，渲染所有项目
-      return () => React.createElement('div', 
-        { style: { height: containerHeight, overflow: 'auto' } },
-        items.map((item, index) => 
-          React.createElement('div', 
-            { key: index, style: { height: itemHeight } },
-            renderItem(item, index)
-          )
-        )
-      )
+      return function Component() {
+        return React.createElement('div',
+          { style: { height: containerHeight, overflow: 'auto' } },
+          items.map((item, index) =>
+            React.createElement('div',
+              { key: index, style: { height: itemHeight } },
+              renderItem(item, index),
+            ),
+          ),
+        );
+      };
     }
 
-    return () => {
-      const [scrollTop, setScrollTop] = React.useState(0)
-      
-      const visibleStart = Math.floor(scrollTop / itemHeight)
+    return function Component() {
+      const [scrollTop, setScrollTop] = React.useState(0);
+
+      const visibleStart = Math.floor(scrollTop / itemHeight);
       const visibleEnd = Math.min(
         visibleStart + Math.ceil(containerHeight / itemHeight) + overscan,
-        items.length
-      )
-      
+        items.length,
+      );
+
       const visibleItems = items.slice(
         Math.max(0, visibleStart - overscan),
-        visibleEnd
-      )
+        visibleEnd,
+      );
 
       const handleScroll = React.useCallback((e: React.UIEvent<HTMLDivElement>) => {
-        setScrollTop(e.currentTarget.scrollTop)
-      }, [])
+        setScrollTop(e.currentTarget.scrollTop);
+      }, []);
 
       return React.createElement('div',
         {
           style: { height: containerHeight, overflow: 'auto' },
-          onScroll: handleScroll
-        },
-        React.createElement('div', 
+          onScroll: handleScroll },
+        React.createElement('div',
           { style: { height: items.length * itemHeight, position: 'relative' } },
           visibleItems.map((item, index) => {
-            const actualIndex = Math.max(0, visibleStart - overscan) + index
+            const actualIndex = Math.max(0, visibleStart - overscan) + index;
             return React.createElement('div',
               {
                 key: actualIndex,
@@ -193,15 +199,13 @@ export class FrontendOptimizer {
                   position: 'absolute',
                   top: actualIndex * itemHeight,
                   height: itemHeight,
-                  width: '100%'
-                }
-              },
-              renderItem(item, actualIndex)
-            )
-          })
-        )
-      )
-    }
+                  width: '100%' } },
+              renderItem(item, actualIndex),
+            );
+          }),
+        ),
+      );
+    };
   }
 
   /**
@@ -209,43 +213,40 @@ export class FrontendOptimizer {
    */
   createMemoizedComponent<P>(
     Component: React.ComponentType<P>,
-    areEqual?: (prevProps: P, nextProps: P) => boolean
+    areEqual?: (prevProps: P, nextProps: P) => boolean,
   ): React.ComponentType<P> {
     if (!this.config.enableMemoization) {
-      return Component
+      return Component;
     }
 
-    return React.memo(Component, areEqual)
+    return React.memo(Component, areEqual);
   }
 
   /**
    * 创建防抖钩子
    */
-  createDebouncedCallback<T extends (...args: any[]) => any>(
+  createDebouncedCallback<T extends(...args: any[]) => any>(
     callback: T,
-    delay?: number
+    delay?: number,
   ): T {
-    const actualDelay = delay || this.config.debounceDelay
-    
-    return React.useCallback(
-      this.debounce(callback, actualDelay),
-      [callback, actualDelay]
-    ) as T
+    const actualDelay = delay || this.config.debounceDelay;
+
+    return this.debounce(callback, actualDelay);
   }
 
   /**
    * 防抖函数
    */
-  private debounce<T extends (...args: any[]) => any>(
+  private debounce<T extends(...args: any[]) => any>(
     func: T,
-    delay: number
+    delay: number,
   ): T {
-    let timeoutId: NodeJS.Timeout
-    
+    let timeoutId: NodeJS.Timeout;
+
     return ((...args: any[]) => {
-      clearTimeout(timeoutId)
-      timeoutId = setTimeout(() => func.apply(this, args), delay)
-    }) as T
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func.apply(this, args), delay);
+    }) as T;
   }
 
   /**
@@ -254,35 +255,35 @@ export class FrontendOptimizer {
   async preloadData<T>(
     key: string,
     loadFn: () => Promise<T>,
-    force = false
+    force = false,
   ): Promise<T> {
     if (!this.config.enablePreloading && !force) {
-      return loadFn()
+      return loadFn();
     }
 
     if (this.preloadCache.has(key)) {
-      return this.preloadCache.get(key)!
+      return this.preloadCache.get(key)!;
     }
 
     const promise = loadFn().then(data => {
       // 缓存数据
-      this.componentCache.set(key, data)
-      return data
+      this.componentCache.set(key, data);
+      return data;
     }).catch(error => {
       // 移除失败的预加载
-      this.preloadCache.delete(key)
-      throw error
-    })
+      this.preloadCache.delete(key);
+      throw error;
+    });
 
-    this.preloadCache.set(key, promise)
-    return promise
+    this.preloadCache.set(key, promise);
+    return promise;
   }
 
   /**
    * 获取缓存数据
    */
   getCachedData<T>(key: string): T | null {
-    return this.componentCache.get(key) || null
+    return this.componentCache.get(key) || null;
   }
 
   /**
@@ -292,13 +293,13 @@ export class FrontendOptimizer {
     if (pattern) {
       for (const [key] of this.componentCache.entries()) {
         if (key.includes(pattern)) {
-          this.componentCache.delete(key)
-          this.preloadCache.delete(key)
+          this.componentCache.delete(key);
+          this.preloadCache.delete(key);
         }
       }
     } else {
-      this.componentCache.clear()
-      this.preloadCache.clear()
+      this.componentCache.clear();
+      this.preloadCache.clear();
     }
   }
 
@@ -318,39 +319,39 @@ export class FrontendOptimizer {
     className?: string
     [key: string]: any
   }): React.ComponentType {
-    return () => {
-      const [loaded, setLoaded] = React.useState(false)
-      const [inView, setInView] = React.useState(false)
-      const imgRef = React.useRef<HTMLImageElement>(null)
+    return function Component() {
+      const [loaded, setLoaded] = React.useState(false);
+      const [inView, setInView] = React.useState(false);
+      const imgRef = React.useRef<HTMLImageElement>(null);
 
       React.useEffect(() => {
         if (!this.config.enableLazyLoading) {
-          setInView(true)
-          return
+          setInView(true);
+          return null;
         }
 
         const observer = new IntersectionObserver(
           ([entry]) => {
             if (entry.isIntersecting) {
-              setInView(true)
-              observer.disconnect()
+              setInView(true);
+              observer.disconnect();
             }
           },
-          { threshold: 0.1 }
-        )
+          { threshold: 0.1 },
+        );
 
         if (imgRef.current) {
-          observer.observe(imgRef.current)
+          observer.observe(imgRef.current);
         }
 
-        return () => observer.disconnect()
-      }, [])
+        return () => observer.disconnect();
+      }, []);
 
       const handleLoad = React.useCallback(() => {
-        setLoaded(true)
-      }, [])
+        setLoaded(true);
+      }, []);
 
-      return React.createElement('div', 
+      return React.createElement('div',
         { className, ref: imgRef },
         inView && React.createElement('img', {
           src: loaded ? src : placeholder,
@@ -358,12 +359,10 @@ export class FrontendOptimizer {
           onLoad: handleLoad,
           style: {
             transition: 'opacity 0.3s',
-            opacity: loaded ? 1 : 0.5
-          },
-          ...props
-        })
-      )
-    }
+            opacity: loaded ? 1 : 0.5 },
+          ...props }),
+      );
+    };
   }
 
   /**
@@ -374,53 +373,51 @@ export class FrontendOptimizer {
     loadMore,
     hasMore,
     renderItem,
-    threshold = 200
-  }: {
+    threshold = 200 }: {
     items: T[]
     loadMore: () => Promise<void>
     hasMore: boolean
     renderItem: (item: T, index: number) => React.ReactNode
     threshold?: number
   }): React.ComponentType {
-    return () => {
-      const [loading, setLoading] = React.useState(false)
-      const containerRef = React.useRef<HTMLDivElement>(null)
+    return function Component() {
+      const [loading, setLoading] = React.useState(false);
+      const containerRef = React.useRef<HTMLDivElement>(null);
 
       const handleScroll = React.useCallback(async () => {
-        if (!containerRef.current || loading || !hasMore) return
+        if (!containerRef.current || loading || !hasMore) return null;
 
-        const { scrollTop, scrollHeight, clientHeight } = containerRef.current
-        
+        const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+
         if (scrollHeight - scrollTop - clientHeight < threshold) {
-          setLoading(true)
+          setLoading(true);
           try {
-            await loadMore()
+            await loadMore();
           } finally {
-            setLoading(false)
+            setLoading(false);
           }
         }
-      }, [loading, hasMore, loadMore, threshold])
+      }, [loading, hasMore, loadMore, threshold]);
 
       React.useEffect(() => {
-        const container = containerRef.current
+        const container = containerRef.current;
         if (container) {
-          container.addEventListener('scroll', handleScroll)
-          return () => container.removeEventListener('scroll', handleScroll)
+          container.addEventListener('scroll', handleScroll);
+          return () => container.removeEventListener('scroll', handleScroll);
         }
-      }, [handleScroll])
+      }, [handleScroll]);
 
       return React.createElement('div',
         {
           ref: containerRef,
-          style: { height: '100%', overflow: 'auto' }
-        },
+          style: { height: '100%', overflow: 'auto' } },
         items.map((item, index) => renderItem(item, index)),
-        loading && React.createElement('div', 
+        loading && React.createElement('div',
           { style: { padding: '20px', textAlign: 'center' } },
-          'Loading...'
-        )
-      )
-    }
+          'Loading...',
+        ),
+      );
+    };
   }
 
   /**
@@ -439,18 +436,17 @@ export class FrontendOptimizer {
           chunks: [
             { name: 'main', size: 1024 * 1024 * 1.2 },
             { name: 'vendor', size: 1024 * 1024 * 0.8 },
-            { name: 'invitation', size: 1024 * 1024 * 0.5 }
+            { name: 'invitation', size: 1024 * 1024 * 0.5 },
           ],
           recommendations: [
             '考虑使用动态导入拆分大型组件',
             '移除未使用的依赖项',
             '启用gzip压缩',
-            '使用CDN加载第三方库'
-          ]
-        }
-        resolve(analysis)
-      }, 1000)
-    })
+            '使用CDN加载第三方库',
+          ] };
+        resolve(analysis);
+      }, 1000);
+    });
   }
 
   /**
@@ -469,27 +465,26 @@ export class FrontendOptimizer {
         averageRenderTime: 0,
         averageMemoryUsage: 0,
         slowLoadCount: 0,
-        recommendations: ['需要更多数据来生成报告']
-      }
+        recommendations: ['需要更多数据来生成报告'] };
     }
 
-    const avgLoadTime = this.metrics.reduce((sum, m) => sum + m.loadTime, 0) / this.metrics.length
-    const avgRenderTime = this.metrics.reduce((sum, m) => sum + m.renderTime, 0) / this.metrics.length
-    const avgMemoryUsage = this.metrics.reduce((sum, m) => sum + m.memoryUsage, 0) / this.metrics.length
-    const slowLoadCount = this.metrics.filter(m => m.loadTime > 3000).length
+    const avgLoadTime = this.metrics.reduce((sum, m) => sum + m.loadTime, 0) / this.metrics.length;
+    const avgRenderTime = this.metrics.reduce((sum, m) => sum + m.renderTime, 0) / this.metrics.length;
+    const avgMemoryUsage = this.metrics.reduce((sum, m) => sum + m.memoryUsage, 0) / this.metrics.length;
+    const slowLoadCount = this.metrics.filter(m => m.loadTime > 3000).length;
 
-    const recommendations: string[] = []
-    
+    const recommendations: string[] = [];
+
     if (avgLoadTime > 2000) {
-      recommendations.push('页面加载时间较慢，考虑启用懒加载')
+      recommendations.push('页面加载时间较慢，考虑启用懒加载');
     }
-    
+
     if (avgMemoryUsage > 50 * 1024 * 1024) { // 50MB
-      recommendations.push('内存使用较高，考虑启用虚拟化')
+      recommendations.push('内存使用较高，考虑启用虚拟化');
     }
-    
+
     if (slowLoadCount > this.metrics.length * 0.1) {
-      recommendations.push('频繁出现慢加载，检查网络和资源优化')
+      recommendations.push('频繁出现慢加载，检查网络和资源优化');
     }
 
     return {
@@ -497,8 +492,7 @@ export class FrontendOptimizer {
       averageRenderTime: avgRenderTime,
       averageMemoryUsage: avgMemoryUsage,
       slowLoadCount,
-      recommendations
-    }
+      recommendations };
   }
 
   /**
@@ -506,26 +500,11 @@ export class FrontendOptimizer {
    */
   cleanup(): void {
     if (this.performanceObserver) {
-      this.performanceObserver.disconnect()
+      this.performanceObserver.disconnect();
     }
-    
-    this.componentCache.clear()
-    this.preloadCache.clear()
-    this.metrics.length = 0
-  }
-}
 
-// React hooks需要在实际的React环境中使用
-// 这里提供类型定义和接口
-declare global {
-  namespace React {
-    function useState<T>(initialState: T): [T, (value: T) => void]
-    function useEffect(effect: () => void | (() => void), deps?: any[]): void
-    function useCallback<T extends (...args: any[]) => any>(callback: T, deps: any[]): T
-    function useRef<T>(initialValue: T): { current: T }
-    function memo<P>(Component: React.ComponentType<P>, areEqual?: (prevProps: P, nextProps: P) => boolean): React.ComponentType<P>
-    function lazy<T>(importFn: () => Promise<{ default: T }>): React.ComponentType
-    function createElement(type: any, props?: any, ...children: any[]): any
-    const Suspense: React.ComponentType<{ fallback?: React.ReactNode; children: React.ReactNode }>
+    this.componentCache.clear();
+    this.preloadCache.clear();
+    this.metrics.length = 0;
   }
 }

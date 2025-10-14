@@ -1,0 +1,364 @@
+{
+  "timestamp": "2025-09-22T01:50:52.321Z",
+  "summary": {
+    "totalIssues": 45,
+    "byType": {
+      "params_error": 18,
+      "build_error": 27
+    }
+  },
+  "issues": [
+    {
+      "type": "params_error",
+      "file": "/src/app/api/activities/[id]/progress/[userId]/route.ts",
+      "line": 29,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/api/activities/[id]/progress/[userId]/route.ts",
+      "line": 62,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/api/activities/[id]/results/[userId]/route.ts",
+      "line": 53,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/api/activities/[id]/rewards/[userId]/claim/route.ts",
+      "line": 114,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/api/activities/[id]/rewards/[userId]/route.ts",
+      "line": 87,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/api/activities/[id]/route.ts",
+      "line": 37,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/api/admin/activities/[id]/complete/route.ts",
+      "line": 36,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/api/admin/activities/[id]/leaderboard/route.ts",
+      "line": 32,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/api/admin/activities/[id]/route.ts",
+      "line": 29,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/api/admin/activities/[id]/route.ts",
+      "line": 60,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/api/admin/activities/[id]/stats/route.ts",
+      "line": 29,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/api/works/[id]/like/route.ts",
+      "line": 10,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/api/works/[id]/route.ts",
+      "line": 12,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/api/works/[id]/route.ts",
+      "line": 34,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/api/works/[id]/route.ts",
+      "line": 64,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/case/[id]/page.tsx",
+      "line": 29,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/share/card/[id]/page.tsx",
+      "line": 54,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "params_error",
+      "file": "/src/app/share/card/[id]/page.tsx",
+      "line": 97,
+      "message": "Next.js 15中params是Promise，需要await",
+      "fix": "const { id } = await params"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "53",
+      "column": "19",
+      "message": "'>' expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "53",
+      "column": "28",
+      "message": "',' expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "53",
+      "column": "46",
+      "message": "':' expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "53",
+      "column": "50",
+      "message": "';' expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "53",
+      "column": "54",
+      "message": "Type expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "55",
+      "column": "1",
+      "message": "Declaration or statement expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "55",
+      "column": "2",
+      "message": "Declaration or statement expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "55",
+      "column": "4",
+      "message": "Unexpected keyword or identifier.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "55",
+      "column": "20",
+      "message": "Declaration or statement expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "58",
+      "column": "22",
+      "message": "'>' expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "58",
+      "column": "27",
+      "message": "')' expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "58",
+      "column": "33",
+      "message": "':' expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "58",
+      "column": "42",
+      "message": "';' expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "58",
+      "column": "49",
+      "message": "Property assignment expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "58",
+      "column": "52",
+      "message": "';' expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "58",
+      "column": "80",
+      "message": "Expression expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "59",
+      "column": "19",
+      "message": "'>' expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "59",
+      "column": "27",
+      "message": "';' expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "59",
+      "column": "38",
+      "message": "Expression expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "61",
+      "column": "10",
+      "message": "Unterminated regular expression literal.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "62",
+      "column": "8",
+      "message": "Unterminated regular expression literal.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "63",
+      "column": "5",
+      "message": "Declaration or statement expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "67",
+      "column": "15",
+      "message": "'>' expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "67",
+      "column": "23",
+      "message": "')' expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "69",
+      "column": "6",
+      "message": "Unterminated regular expression literal.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "70",
+      "column": "3",
+      "message": "Declaration or statement expected.",
+      "fix": "请手动检查并修复"
+    },
+    {
+      "type": "build_error",
+      "file": "src/core/performance/lazy-loading.ts",
+      "line": "71",
+      "column": "1",
+      "message": "Declaration or statement expected.",
+      "fix": "请手动检查并修复"
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "high",
+      "title": "修复构建错误",
+      "description": "存在TypeScript构建错误，阻止项目编译",
+      "files": [
+        "src/core/performance/lazy-loading.ts"
+      ]
+    }
+  ]
+}

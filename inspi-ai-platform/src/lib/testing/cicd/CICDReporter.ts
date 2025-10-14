@@ -5,6 +5,7 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
+
 import { CICDMetrics, PipelineOptimization, QualityGate } from './types';
 
 export class CICDReporter {
@@ -20,7 +21,7 @@ export class CICDReporter {
   async generateReport(
     metrics: CICDMetrics,
     optimization?: PipelineOptimization,
-    qualityGates?: QualityGate[]
+    qualityGates?: QualityGate[],
   ): Promise<CICDReport> {
     await this.ensureOutputDirectory();
 
@@ -30,7 +31,7 @@ export class CICDReporter {
       qualityGates: qualityGates ? this.analyzeQualityGates(qualityGates) : undefined,
       optimization: optimization ? this.summarizeOptimization(optimization) : undefined,
       recommendations: this.generateRecommendations(metrics, optimization),
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
     };
 
     // Generate different report formats
@@ -54,10 +55,10 @@ export class CICDReporter {
         total: metrics.stages.length,
         successful: metrics.stages.filter(s => s.status === 'success').length,
         failed: metrics.stages.filter(s => s.status === 'failure').length,
-        skipped: metrics.stages.filter(s => s.status === 'skipped').length
+        skipped: metrics.stages.filter(s => s.status === 'skipped').length,
       },
       tests: metrics.testResults,
-      artifacts: metrics.artifacts
+      artifacts: metrics.artifacts,
     };
   }
 
@@ -71,12 +72,12 @@ export class CICDReporter {
       duration: stage.duration,
       percentage: (stage.duration / totalDuration) * 100,
       status: stage.status,
-      bottleneck: stage.duration > totalDuration * 0.3 // More than 30% of total time
+      bottleneck: stage.duration > totalDuration * 0.3, // More than 30% of total time
     }));
 
     const bottlenecks = stageAnalysis.filter(s => s.bottleneck);
-    const longestStage = stageAnalysis.reduce((prev, current) => 
-      prev.duration > current.duration ? prev : current
+    const longestStage = stageAnalysis.reduce((prev, current) =>
+      prev.duration > current.duration ? prev : current,
     );
 
     return {
@@ -85,7 +86,7 @@ export class CICDReporter {
       bottlenecks: bottlenecks.map(b => b.name),
       longestStage: longestStage.name,
       parallelizationOpportunities: this.identifyParallelizationOpportunities(metrics.stages),
-      resourceUsage: metrics.performance.resourceUsage
+      resourceUsage: metrics.performance.resourceUsage,
     };
   }
 
@@ -105,8 +106,8 @@ export class CICDReporter {
         status: gate.status,
         value: gate.value,
         threshold: gate.threshold,
-        blocking: gate.blocking
-      }))
+        blocking: gate.blocking,
+      })),
     };
   }
 
@@ -120,7 +121,7 @@ export class CICDReporter {
       estimatedCostReduction: optimization.estimatedImprovement.costReduction,
       reliabilityImprovement: optimization.estimatedImprovement.reliabilityImprovement,
       implementationSteps: optimization.implementationPlan.length,
-      highPriorityItems: optimization.recommendations.filter(r => r.priority === 'high').length
+      highPriorityItems: optimization.recommendations.filter(r => r.priority === 'high').length,
     };
   }
 
@@ -129,7 +130,7 @@ export class CICDReporter {
    */
   private generateRecommendations(
     metrics: CICDMetrics,
-    optimization?: PipelineOptimization
+    optimization?: PipelineOptimization,
   ): string[] {
     const recommendations: string[] = [];
 
@@ -168,10 +169,10 @@ export class CICDReporter {
    */
   private identifyParallelizationOpportunities(stages: any[]): string[] {
     const opportunities: string[] = [];
-    
+
     // Look for sequential stages that could run in parallel
-    const independentStages = stages.filter(stage => 
-      !stage.dependencies || stage.dependencies.length === 0
+    const independentStages = stages.filter(stage =>
+      !stage.dependencies || stage.dependencies.length === 0,
     );
 
     if (independentStages.length > 1) {
@@ -179,8 +180,8 @@ export class CICDReporter {
     }
 
     // Look for test stages that could be parallelized
-    const testStages = stages.filter(stage => 
-      stage.name.toLowerCase().includes('test')
+    const testStages = stages.filter(stage =>
+      stage.name.toLowerCase().includes('test'),
     );
 
     if (testStages.length > 1) {
@@ -349,8 +350,8 @@ export class CICDReporter {
 
 | Stage | Status | Duration | % of Total |
 |-------|--------|----------|------------|
-${report.pipeline.stages.map(stage => 
-  `| ${stage.name} | ${stage.status} | ${Math.round(stage.duration / 1000)}s | ${stage.percentage.toFixed(1)}% |`
+${report.pipeline.stages.map(stage =>
+  `| ${stage.name} | ${stage.status} | ${Math.round(stage.duration / 1000)}s | ${stage.percentage.toFixed(1)}% |`,
 ).join('\n')}
 
 ${report.pipeline.bottlenecks.length > 0 ? `

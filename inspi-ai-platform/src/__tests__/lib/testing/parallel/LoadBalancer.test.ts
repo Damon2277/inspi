@@ -1,10 +1,10 @@
-import { 
-  LoadBalancer, 
-  RoundRobinStrategy, 
-  WeightedStrategy, 
+import {
+  LoadBalancer,
+  RoundRobinStrategy,
+  WeightedStrategy,
   DynamicStrategy,
   WorkerNode,
-  Task 
+  Task,
 } from '../../../../lib/testing/parallel/LoadBalancer';
 
 describe('LoadBalancer', () => {
@@ -36,9 +36,9 @@ describe('LoadBalancer', () => {
     it('should unregister workers correctly', () => {
       loadBalancer.registerWorker(1);
       loadBalancer.registerWorker(2);
-      
+
       expect(loadBalancer.getAllWorkerStats()).toHaveLength(2);
-      
+
       loadBalancer.unregisterWorker(1);
       expect(loadBalancer.getAllWorkerStats()).toHaveLength(1);
       expect(loadBalancer.getAllWorkerStats()[0].id).toBe(2);
@@ -59,7 +59,7 @@ describe('LoadBalancer', () => {
         complexity: 1,
         dependencies: [],
         retryCount: 0,
-        maxRetries: 2
+        maxRetries: 2,
       };
 
       const assignedWorkerId = loadBalancer.assignTask(task);
@@ -82,7 +82,7 @@ describe('LoadBalancer', () => {
         complexity: 1,
         dependencies: [],
         retryCount: 0,
-        maxRetries: 2
+        maxRetries: 2,
       };
 
       const assignedWorkerId = loadBalancer.assignTask(task);
@@ -107,7 +107,7 @@ describe('LoadBalancer', () => {
         complexity: 1,
         dependencies: [],
         retryCount: 0,
-        maxRetries: 2
+        maxRetries: 2,
       };
 
       // Task should be queued
@@ -136,7 +136,7 @@ describe('LoadBalancer', () => {
         complexity: 1,
         dependencies: [],
         retryCount: 0,
-        maxRetries: 2
+        maxRetries: 2,
       };
 
       loadBalancer.assignTask(task);
@@ -157,7 +157,7 @@ describe('LoadBalancer', () => {
         complexity: 1,
         dependencies: [],
         retryCount: 0,
-        maxRetries: 2
+        maxRetries: 2,
       };
 
       loadBalancer.assignTask(task);
@@ -185,7 +185,7 @@ describe('LoadBalancer', () => {
         complexity: 1,
         dependencies: [],
         retryCount: 0,
-        maxRetries: 2
+        maxRetries: 2,
       };
 
       const task2: Task = {
@@ -195,12 +195,12 @@ describe('LoadBalancer', () => {
         complexity: 1,
         dependencies: [],
         retryCount: 0,
-        maxRetries: 2
+        maxRetries: 2,
       };
 
       loadBalancer.assignTask(task1);
       loadBalancer.assignTask(task2);
-      
+
       loadBalancer.onTaskCompleted('task-1', 1000, true);
       loadBalancer.onTaskCompleted('task-2', 800, false);
 
@@ -219,11 +219,11 @@ describe('LoadBalancer', () => {
         complexity: 1,
         dependencies: [],
         retryCount: 0,
-        maxRetries: 2
+        maxRetries: 2,
       };
 
       loadBalancer.assignTask(task);
-      
+
       const metrics = loadBalancer.getMetrics();
       expect(metrics.workerUtilization).toHaveLength(2);
       expect(metrics.loadDistribution).toHaveLength(2);
@@ -247,7 +247,7 @@ describe('RoundRobinStrategy', () => {
         totalDuration: 5000,
         errors: 0,
         averageTaskTime: 1000,
-        successRate: 1.0
+        successRate: 1.0,
       },
       {
         id: 2,
@@ -258,8 +258,8 @@ describe('RoundRobinStrategy', () => {
         totalDuration: 4500,
         errors: 1,
         averageTaskTime: 1500,
-        successRate: 0.67
-      }
+        successRate: 0.67,
+      },
     ];
   });
 
@@ -271,7 +271,7 @@ describe('RoundRobinStrategy', () => {
       complexity: 1,
       dependencies: [],
       retryCount: 0,
-      maxRetries: 2
+      maxRetries: 2,
     };
 
     const worker1 = strategy.selectWorker(workers, task);
@@ -292,7 +292,7 @@ describe('RoundRobinStrategy', () => {
       complexity: 1,
       dependencies: [],
       retryCount: 0,
-      maxRetries: 2
+      maxRetries: 2,
     };
 
     const selectedWorker = strategy.selectWorker(unavailableWorkers, task);
@@ -320,7 +320,7 @@ describe('WeightedStrategy', () => {
         totalDuration: 5000,
         errors: 0,
         averageTaskTime: 1000,
-        successRate: 1.0
+        successRate: 1.0,
       },
       {
         id: 2,
@@ -331,8 +331,8 @@ describe('WeightedStrategy', () => {
         totalDuration: 4500,
         errors: 1,
         averageTaskTime: 1500,
-        successRate: 0.67
-      }
+        successRate: 0.67,
+      },
     ];
   });
 
@@ -344,11 +344,11 @@ describe('WeightedStrategy', () => {
       complexity: 1,
       dependencies: [],
       retryCount: 0,
-      maxRetries: 2
+      maxRetries: 2,
     };
 
     const selectedWorker = strategy.selectWorker(workers, task);
-    
+
     // Worker 1 should be selected (lower load, better performance)
     expect(selectedWorker?.id).toBe(1);
   });
@@ -361,7 +361,7 @@ describe('WeightedStrategy', () => {
       complexity: 1,
       dependencies: [],
       retryCount: 0,
-      maxRetries: 2
+      maxRetries: 2,
     };
 
     const p2Task: Task = {
@@ -371,7 +371,7 @@ describe('WeightedStrategy', () => {
       complexity: 1,
       dependencies: [],
       retryCount: 0,
-      maxRetries: 2
+      maxRetries: 2,
     };
 
     const p0Worker = strategy.selectWorker(workers, p0Task);
@@ -384,7 +384,7 @@ describe('WeightedStrategy', () => {
   it('should require rebalancing when load variance is high', () => {
     const imbalancedWorkers: WorkerNode[] = [
       { ...workers[0], currentLoad: 10, maxLoad: 100 }, // 10% load
-      { ...workers[1], currentLoad: 90, maxLoad: 100 }  // 90% load
+      { ...workers[1], currentLoad: 90, maxLoad: 100 },  // 90% load
     ];
 
     expect(strategy.shouldRebalance(imbalancedWorkers)).toBe(true);
@@ -393,7 +393,7 @@ describe('WeightedStrategy', () => {
   it('should not require rebalancing when load is balanced', () => {
     const balancedWorkers: WorkerNode[] = [
       { ...workers[0], currentLoad: 45, maxLoad: 100 },
-      { ...workers[1], currentLoad: 55, maxLoad: 100 }
+      { ...workers[1], currentLoad: 55, maxLoad: 100 },
     ];
 
     expect(strategy.shouldRebalance(balancedWorkers)).toBe(false);
@@ -417,7 +417,7 @@ describe('DynamicStrategy', () => {
         errors: 0,
         averageTaskTime: 1000,
         successRate: 1.0,
-        lastTaskTime: Date.now() - 30000 // 30 seconds ago
+        lastTaskTime: Date.now() - 30000, // 30 seconds ago
       },
       {
         id: 2,
@@ -429,8 +429,8 @@ describe('DynamicStrategy', () => {
         errors: 1,
         averageTaskTime: 1500,
         successRate: 0.67,
-        lastTaskTime: Date.now() - 10000 // 10 seconds ago
-      }
+        lastTaskTime: Date.now() - 10000, // 10 seconds ago
+      },
     ];
   });
 
@@ -442,11 +442,11 @@ describe('DynamicStrategy', () => {
       complexity: 1,
       dependencies: [],
       retryCount: 0,
-      maxRetries: 2
+      maxRetries: 2,
     };
 
     const selectedWorker = strategy.selectWorker(workers, task);
-    
+
     // Should select based on predicted completion time
     expect(selectedWorker).toBeDefined();
     expect([1, 2]).toContain(selectedWorker!.id);
@@ -475,14 +475,14 @@ describe('DynamicStrategy', () => {
     // Set up workers with recent activity
     const recentWorkers = workers.map(w => ({
       ...w,
-      lastTaskTime: Date.now() - 30000 // Recent activity
+      lastTaskTime: Date.now() - 30000, // Recent activity
     }));
 
     // Mock high load variation
     strategy.updateLoadHistory(1, 500);
     strategy.updateLoadHistory(1, 2000);
     strategy.updateLoadHistory(1, 1000);
-    
+
     strategy.updateLoadHistory(2, 1500);
     strategy.updateLoadHistory(2, 3000);
     strategy.updateLoadHistory(2, 1200);
@@ -493,7 +493,7 @@ describe('DynamicStrategy', () => {
   it('should not require rebalancing with stable load', () => {
     const recentWorkers = workers.map(w => ({
       ...w,
-      lastTaskTime: Date.now() - 30000
+      lastTaskTime: Date.now() - 30000,
     }));
 
     // Mock stable load

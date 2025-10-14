@@ -1,14 +1,14 @@
 /**
  * Test Stability System
- * 
+ *
  * Main orchestrator for test stability monitoring, flaky test detection,
  * retry management, and environment consistency verification.
  */
 
-import { TestStabilityMonitor, TestExecutionRecord, TestStabilityMetrics } from './TestStabilityMonitor';
 import { FlakyTestDetector, FlakyTestAnalysis } from './FlakyTestDetector';
-import { TestRetryManager, TestRetryContext, RetryResult } from './TestRetryManager';
 import { TestEnvironmentVerifier, EnvironmentConsistencyReport } from './TestEnvironmentVerifier';
+import { TestRetryManager, TestRetryContext, RetryResult } from './TestRetryManager';
+import { TestStabilityMonitor, TestExecutionRecord, TestStabilityMetrics } from './TestStabilityMonitor';
 
 export interface StabilitySystemConfig {
   monitoring: {
@@ -64,42 +64,42 @@ export class TestStabilitySystem {
         enabled: true,
         persistHistory: true,
         analysisWindowDays: 30,
-        ...config.monitoring
+        ...config.monitoring,
       },
       flakyDetection: {
         enabled: true,
         minRunsForAnalysis: 10,
         flakinessThreshold: 0.1,
-        ...config.flakyDetection
+        ...config.flakyDetection,
       },
       retryManagement: {
         enabled: true,
         maxRetries: 3,
         retryOnlyFlaky: true,
-        ...config.retryManagement
+        ...config.retryManagement,
       },
       environmentVerification: {
         enabled: true,
         autoCapture: true,
         verifyBeforeTests: false,
-        ...config.environmentVerification
-      }
+        ...config.environmentVerification,
+      },
     };
 
     this.monitor = new TestStabilityMonitor(
       {
         minRunsForAnalysis: this.config.flakyDetection.minRunsForAnalysis,
         flakinessThreshold: this.config.flakyDetection.flakinessThreshold,
-        analysisWindowDays: this.config.monitoring.analysisWindowDays
+        analysisWindowDays: this.config.monitoring.analysisWindowDays,
       },
-      this.config.monitoring.persistHistory
+      this.config.monitoring.persistHistory,
     );
 
     this.detector = new FlakyTestDetector();
 
     this.retryManager = new TestRetryManager({
       maxRetries: this.config.retryManagement.maxRetries,
-      retryOnlyFlaky: this.config.retryManagement.retryOnlyFlaky
+      retryOnlyFlaky: this.config.retryManagement.retryOnlyFlaky,
     });
 
     this.environmentVerifier = new TestEnvironmentVerifier();
@@ -113,7 +113,7 @@ export class TestStabilitySystem {
   async executeTest<T>(
     testFunction: () => Promise<T>,
     testName: string,
-    testFile: string
+    testFile: string,
   ): Promise<T> {
     // Verify environment if enabled
     if (this.config.environmentVerification.enabled && this.config.environmentVerification.verifyBeforeTests) {
@@ -134,7 +134,7 @@ export class TestStabilitySystem {
         testName,
         testFile,
         isFlaky,
-        flakinessScore
+        flakinessScore,
       };
 
       // Execute with retry if enabled
@@ -154,7 +154,7 @@ export class TestStabilitySystem {
           status: 'passed',
           duration: Date.now() - startTime,
           timestamp: new Date(),
-          environment: await this.getCurrentEnvironmentInfo()
+          environment: await this.getCurrentEnvironmentInfo(),
         });
       }
 
@@ -172,9 +172,9 @@ export class TestStabilitySystem {
           error: {
             message: (error as Error).message,
             stack: (error as Error).stack,
-            type: (error as Error).constructor.name
+            type: (error as Error).constructor.name,
           },
-          environment: await this.getCurrentEnvironmentInfo()
+          environment: await this.getCurrentEnvironmentInfo(),
         });
       }
 
@@ -210,7 +210,7 @@ export class TestStabilitySystem {
         testMetrics.testName,
         '', // testFile would need to be tracked separately
         [], // history would need to be retrieved
-        testMetrics
+        testMetrics,
       );
       analyses.push(analysis);
     }
@@ -225,18 +225,18 @@ export class TestStabilitySystem {
     const summary = this.monitor.getStabilitySummary();
     const flakyTests = await this.analyzeTestStability();
     const environmentConsistency = await this.environmentVerifier.verifyEnvironment();
-    
+
     // Calculate retry statistics
-    let totalRetries = 0;
-    let successfulRetries = 0;
-    
+    const totalRetries = 0;
+    const successfulRetries = 0;
+
     // This would need to be implemented based on retry manager's internal tracking
     const retrySuccessRate = totalRetries > 0 ? successfulRetries / totalRetries : 1;
 
     const recommendations = this.generateSystemRecommendations(
       summary,
       flakyTests,
-      environmentConsistency
+      environmentConsistency,
     );
 
     return {
@@ -247,9 +247,9 @@ export class TestStabilitySystem {
       retryStatistics: {
         totalRetries,
         successfulRetries,
-        retrySuccessRate
+        retrySuccessRate,
       },
-      recommendations
+      recommendations,
     };
   }
 
@@ -270,7 +270,7 @@ export class TestStabilitySystem {
         score: 1,
         differences: [],
         riskLevel: 'low',
-        recommendations: ['Environment verification disabled']
+        recommendations: ['Environment verification disabled'],
       };
     }
 
@@ -303,7 +303,7 @@ export class TestStabilitySystem {
       monitoring: { ...this.config.monitoring, ...newConfig.monitoring },
       flakyDetection: { ...this.config.flakyDetection, ...newConfig.flakyDetection },
       retryManagement: { ...this.config.retryManagement, ...newConfig.retryManagement },
-      environmentVerification: { ...this.config.environmentVerification, ...newConfig.environmentVerification }
+      environmentVerification: { ...this.config.environmentVerification, ...newConfig.environmentVerification },
     };
   }
 
@@ -321,7 +321,7 @@ export class TestStabilitySystem {
   } {
     const summary = this.monitor.getStabilitySummary();
     const stabilityScore = summary.overallStabilityScore;
-    
+
     const issues: string[] = [];
     let status: 'healthy' | 'warning' | 'critical' = 'healthy';
 
@@ -344,8 +344,8 @@ export class TestStabilitySystem {
       metrics: {
         stabilityScore,
         environmentScore: 1, // Would be calculated from environment verifier
-        retrySuccessRate: 1 // Would be calculated from retry manager
-      }
+        retrySuccessRate: 1, // Would be calculated from retry manager
+      },
     };
   }
 
@@ -364,14 +364,14 @@ export class TestStabilitySystem {
       nodeVersion: process.version,
       platform: process.platform,
       ci: process.env.CI === 'true' || process.env.CI === '1',
-      worker: undefined // Would be set if running in parallel
+      worker: undefined, // Would be set if running in parallel
     };
   }
 
   private generateSystemRecommendations(
     summary: any,
     flakyTests: FlakyTestAnalysis[],
-    environmentConsistency: EnvironmentConsistencyReport
+    environmentConsistency: EnvironmentConsistencyReport,
   ): string[] {
     const recommendations: string[] = [];
 

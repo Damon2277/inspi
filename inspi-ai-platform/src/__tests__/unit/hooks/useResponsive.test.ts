@@ -1,5 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
-import { useResponsive } from '@/hooks/useResponsive';
+
+import { useResponsive } from '@/shared/hooks/useResponsive';
 
 // Mock window.matchMedia
 const mockMatchMedia = (matches: boolean) => ({
@@ -45,7 +46,7 @@ describe('useResponsive', () => {
         isLarge: false,
         breakpoint: 'tablet',
         width: expect.any(Number),
-        height: expect.any(Number)
+        height: expect.any(Number),
       });
     });
 
@@ -103,7 +104,7 @@ describe('useResponsive', () => {
       // Arrange
       const mockAddEventListener = jest.fn();
       const mockRemoveEventListener = jest.fn();
-      
+
       mockMediaQueryList.addEventListener = mockAddEventListener;
       mockMediaQueryList.removeEventListener = mockRemoveEventListener;
 
@@ -194,7 +195,7 @@ describe('useResponsive', () => {
       const customBreakpoints = {
         small: '(max-width: 480px)',
         medium: '(min-width: 481px) and (max-width: 768px)',
-        large: '(min-width: 769px)'
+        large: '(min-width: 769px)',
       };
 
       window.matchMedia = jest.fn()
@@ -270,7 +271,7 @@ describe('useResponsive', () => {
       // Arrange
       Object.defineProperty(window, 'ontouchstart', {
         value: () => {},
-        configurable: true
+        configurable: true,
       });
 
       // Act
@@ -284,7 +285,7 @@ describe('useResponsive', () => {
       // Arrange
       Object.defineProperty(window, 'ontouchstart', {
         value: undefined,
-        configurable: true
+        configurable: true,
       });
 
       // Act
@@ -307,10 +308,10 @@ describe('useResponsive', () => {
       act(() => {
         Object.defineProperty(window, 'innerWidth', { value: 800 });
         window.dispatchEvent(new Event('resize'));
-        
+
         Object.defineProperty(window, 'innerWidth', { value: 900 });
         window.dispatchEvent(new Event('resize'));
-        
+
         Object.defineProperty(window, 'innerWidth', { value: 1000 });
         window.dispatchEvent(new Event('resize'));
       });
@@ -378,7 +379,7 @@ describe('useResponsive', () => {
         width: 1024, // Default width
         height: 768, // Default height
         orientation: 'landscape',
-        isTouchDevice: false
+        isTouchDevice: false,
       });
 
       // Cleanup
@@ -460,7 +461,7 @@ describe('useResponsive', () => {
       // Arrange
       Object.defineProperty(navigator, 'userAgent', {
         value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)',
-        configurable: true
+        configurable: true,
       });
 
       // Act

@@ -1,11 +1,12 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { 
-  DesktopCard, 
-  DesktopCardHeader, 
-  DesktopCardTitle, 
-  DesktopCardContent, 
-  DesktopCardFooter 
+import React from 'react';
+
+import {
+  DesktopCard,
+  DesktopCardHeader,
+  DesktopCardTitle,
+  DesktopCardContent,
+  DesktopCardFooter,
 } from '@/components/desktop/DesktopCard';
 
 describe('DesktopCard', () => {
@@ -45,7 +46,7 @@ describe('DesktopCard', () => {
   it('handles onClick', () => {
     const handleClick = jest.fn();
     render(<DesktopCard onClick={handleClick}>Clickable card</DesktopCard>);
-    
+
     fireEvent.click(screen.getByText('Clickable card'));
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
@@ -121,7 +122,7 @@ describe('DesktopCard composition', () => {
         <DesktopCardFooter>
           Footer actions
         </DesktopCardFooter>
-      </DesktopCard>
+      </DesktopCard>,
     );
 
     expect(screen.getByText('Test Card')).toBeInTheDocument();

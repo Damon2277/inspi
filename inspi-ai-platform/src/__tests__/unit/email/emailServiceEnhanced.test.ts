@@ -3,20 +3,21 @@
  * 专注于邮件服务的核心功能测试，避免复杂依赖
  */
 
+import nodemailer from 'nodemailer';
+
 import { EmailService, EmailOptions, EmailResult } from '@/lib/email/service';
 import { MockEmailService } from '@/lib/testing/mocks/MockEmailService';
-import nodemailer from 'nodemailer';
 
 // Mock nodemailer
 jest.mock('nodemailer', () => ({
-  createTransporter: jest.fn()
+  createTransporter: jest.fn(),
 }));
 jest.mock('@/lib/utils/logger', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
-    warn: jest.fn()
-  }
+    warn: jest.fn(),
+  },
 }));
 
 describe('Enhanced Email Service Tests', () => {
@@ -30,7 +31,7 @@ describe('Enhanced Email Service Tests', () => {
     email: 'test@example.com',
     name: 'Test User',
     isEmailVerified: false,
-    ...overrides
+    ...overrides,
   });
 
   const createEmailOptions = (overrides: Partial<EmailOptions> = {}): EmailOptions => ({
@@ -38,7 +39,7 @@ describe('Enhanced Email Service Tests', () => {
     subject: 'Test Email',
     html: '<p>Test content</p>',
     text: 'Test content',
-    ...overrides
+    ...overrides,
   });
 
   beforeEach(() => {
@@ -49,7 +50,7 @@ describe('Enhanced Email Service Tests', () => {
     mockTransporter = {
       sendMail: jest.fn(),
       verify: jest.fn(),
-      close: jest.fn()
+      close: jest.fn(),
     };
 
     (nodemailer.createTransporter as jest.Mock).mockReturnValue(mockTransporter);
@@ -69,7 +70,7 @@ describe('Enhanced Email Service Tests', () => {
   afterEach(() => {
     jest.useRealTimers();
     jest.clearAllMocks();
-    
+
     // Clean up environment variables
     delete process.env.EMAIL_SMTP_HOST;
     delete process.env.EMAIL_SMTP_PORT;
@@ -95,8 +96,8 @@ describe('Enhanced Email Service Tests', () => {
         expect.objectContaining({
           to: emailOptions.to,
           subject: emailOptions.subject,
-          html: emailOptions.html
-        })
+          html: emailOptions.html,
+        }),
       );
     });
 
@@ -116,7 +117,7 @@ describe('Enhanced Email Service Tests', () => {
     it('应该验证邮件地址格式', async () => {
       // Arrange
       const invalidEmailOptions = createEmailOptions({
-        to: 'invalid-email'
+        to: 'invalid-email',
       });
 
       // Act
@@ -130,7 +131,7 @@ describe('Enhanced Email Service Tests', () => {
     it('应该处理多个收件人', async () => {
       // Arrange
       const emailOptions = createEmailOptions({
-        to: ['user1@example.com', 'user2@example.com']
+        to: ['user1@example.com', 'user2@example.com'],
       });
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'multi-test' });
 
@@ -141,8 +142,8 @@ describe('Enhanced Email Service Tests', () => {
       expect(result.success).toBe(true);
       expect(mockTransporter.sendMail).toHaveBeenCalledWith(
         expect.objectContaining({
-          to: 'user1@example.com, user2@example.com'
-        })
+          to: 'user1@example.com, user2@example.com',
+        }),
       );
     });
 
@@ -151,8 +152,8 @@ describe('Enhanced Email Service Tests', () => {
       const emailOptions = createEmailOptions({
         attachments: [{
           filename: 'test.txt',
-          content: 'Test attachment content'
-        }]
+          content: 'Test attachment content',
+        }],
       });
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'attachment-test' });
 
@@ -166,10 +167,10 @@ describe('Enhanced Email Service Tests', () => {
           attachments: expect.arrayContaining([
             expect.objectContaining({
               filename: 'test.txt',
-              content: 'Test attachment content'
-            })
-          ])
-        })
+              content: 'Test attachment content',
+            }),
+          ]),
+        }),
       );
     });
   });
@@ -229,16 +230,16 @@ describe('Enhanced Email Service Tests', () => {
       const testCases = [
         {
           error: Object.assign(new Error('Authentication failed'), { code: 'EAUTH' }),
-          expectedInError: 'Authentication failed'
+          expectedInError: 'Authentication failed',
         },
         {
           error: Object.assign(new Error('Connection timeout'), { code: 'ETIMEDOUT' }),
-          expectedInError: 'Connection timeout'
+          expectedInError: 'Connection timeout',
         },
         {
           error: Object.assign(new Error('Invalid recipient'), { responseCode: 550 }),
-          expectedInError: 'Invalid recipient'
-        }
+          expectedInError: 'Invalid recipient',
+        },
       ];
 
       for (const testCase of testCases) {
@@ -285,7 +286,7 @@ describe('Enhanced Email Service Tests', () => {
       // Assert - 结果结构应该一致
       expect(realResult).toHaveProperty('success');
       expect(mockResult).toHaveProperty('success');
-      
+
       if (realResult.success && mockResult.success) {
         expect(realResult).toHaveProperty('messageId');
         expect(mockResult).toHaveProperty('messageId');
@@ -296,7 +297,7 @@ describe('Enhanced Email Service Tests', () => {
       // Arrange
       const testEmails = [
         createEmailOptions({ to: 'test1@example.com', subject: 'Test Email 1' }),
-        createEmailOptions({ to: 'test2@example.com', subject: 'Test Email 2' })
+        createEmailOptions({ to: 'test2@example.com', subject: 'Test Email 2' }),
       ];
 
       // Act
@@ -358,10 +359,10 @@ describe('Enhanced Email Service Tests', () => {
     it('应该在合理时间内发送邮件', async () => {
       // Arrange
       const emailOptions = createEmailOptions();
-      mockTransporter.sendMail.mockImplementation(() => 
-        new Promise(resolve => 
-          setTimeout(() => resolve({ messageId: 'perf-test' }), 100)
-        )
+      mockTransporter.sendMail.mockImplementation(() =>
+        new Promise(resolve =>
+          setTimeout(() => resolve({ messageId: 'perf-test' }), 100),
+        ),
       );
 
       // Act
@@ -377,20 +378,20 @@ describe('Enhanced Email Service Tests', () => {
     it('应该处理并发邮件发送', async () => {
       // Arrange
       const emailCount = 10;
-      const emails = Array.from({ length: emailCount }, (_, i) => 
+      const emails = Array.from({ length: emailCount }, (_, i) =>
         createEmailOptions({
           to: `concurrent${i}@example.com`,
-          subject: `Concurrent Email ${i}`
-        })
+          subject: `Concurrent Email ${i}`,
+        }),
       );
 
-      mockTransporter.sendMail.mockImplementation(() => 
-        Promise.resolve({ messageId: `concurrent-${Date.now()}` })
+      mockTransporter.sendMail.mockImplementation(() =>
+        Promise.resolve({ messageId: `concurrent-${Date.now()}` }),
       );
 
       // Act
       const results = await Promise.all(
-        emails.map(email => emailService.sendEmail(email))
+        emails.map(email => emailService.sendEmail(email)),
       );
 
       // Assert
@@ -402,7 +403,7 @@ describe('Enhanced Email Service Tests', () => {
         .filter(r => r.success)
         .map(r => r.messageId)
         .filter(Boolean);
-      
+
       const uniqueMessageIds = new Set(messageIds);
       expect(uniqueMessageIds.size).toBe(emailCount);
     });
@@ -434,8 +435,8 @@ describe('Enhanced Email Service Tests', () => {
       expect(nodemailer.createTransporter).toHaveBeenCalledWith(
         expect.objectContaining({
           port: 465,
-          secure: true
-        })
+          secure: true,
+        }),
       );
     });
   });
@@ -452,8 +453,8 @@ describe('Enhanced Email Service Tests', () => {
       // Assert
       expect(mockTransporter.sendMail).toHaveBeenCalledWith(
         expect.objectContaining({
-          from: 'Inspi.AI <noreply@inspi.ai>'
-        })
+          from: 'Inspi.AI <noreply@inspi.ai>',
+        }),
       );
     });
 
@@ -461,7 +462,7 @@ describe('Enhanced Email Service Tests', () => {
       // Arrange
       const emailOptions = createEmailOptions({
         html: '<h1>HTML Content</h1>',
-        text: 'Text Content'
+        text: 'Text Content',
       });
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'content-test' });
 
@@ -472,8 +473,8 @@ describe('Enhanced Email Service Tests', () => {
       expect(mockTransporter.sendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           html: '<h1>HTML Content</h1>',
-          text: 'Text Content'
-        })
+          text: 'Text Content',
+        }),
       );
     });
 
@@ -482,7 +483,7 @@ describe('Enhanced Email Service Tests', () => {
       const testCases = [
         { to: '', subject: 'Test', html: '<p>Test</p>' }, // 空收件人
         { to: 'test@example.com', subject: '', html: '<p>Test</p>' }, // 空主题
-        { to: 'test@example.com', subject: 'Test', html: '', text: '' } // 空内容
+        { to: 'test@example.com', subject: 'Test', html: '', text: '' }, // 空内容
       ];
 
       for (const testCase of testCases) {
@@ -507,7 +508,7 @@ describe('Enhanced Email Service Tests', () => {
       mockLogger.logger = {
         info: jest.fn(),
         error: jest.fn(),
-        warn: jest.fn()
+        warn: jest.fn(),
       };
 
       // Act
@@ -519,8 +520,8 @@ describe('Enhanced Email Service Tests', () => {
         expect.objectContaining({
           to: emailOptions.to,
           subject: emailOptions.subject,
-          messageId: 'log-test'
-        })
+          messageId: 'log-test',
+        }),
       );
     });
 
@@ -535,7 +536,7 @@ describe('Enhanced Email Service Tests', () => {
       mockLogger.logger = {
         info: jest.fn(),
         error: jest.fn(),
-        warn: jest.fn()
+        warn: jest.fn(),
       };
 
       // Act
@@ -547,8 +548,8 @@ describe('Enhanced Email Service Tests', () => {
         expect.objectContaining({
           to: emailOptions.to,
           subject: emailOptions.subject,
-          error: error.message
-        })
+          error: error.message,
+        }),
       );
     });
   });

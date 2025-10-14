@@ -3,14 +3,15 @@
  * 提供所有Mock服务的通用功能
  */
 
+import { logger } from '@/shared/utils/logger';
+
 import { MockService, MockServiceStatus } from '../MockServiceManager';
-import { logger } from '@/lib/utils/logger';
 
 export abstract class BaseMockService implements MockService {
   public readonly name: string;
   public readonly version: string;
   public isActive: boolean = true;
-  
+
   protected callCount: number = 0;
   protected lastCalled?: Date;
   protected errors: string[] = [];
@@ -32,9 +33,9 @@ export abstract class BaseMockService implements MockService {
     this.mockData.clear();
     this.responses.clear();
     this.isActive = true;
-    
+
     this.onReset();
-    
+
     logger.debug(`Mock service reset: ${this.name}`);
   }
 
@@ -44,11 +45,11 @@ export abstract class BaseMockService implements MockService {
   async verify(): Promise<boolean> {
     try {
       const isValid = await this.onVerify();
-      
+
       if (!isValid) {
         this.addError('Verification failed');
       }
-      
+
       return isValid;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown verification error';
@@ -67,7 +68,7 @@ export abstract class BaseMockService implements MockService {
       isActive: this.isActive,
       callCount: this.callCount,
       lastCalled: this.lastCalled,
-      errors: [...this.errors]
+      errors: [...this.errors],
     };
   }
 
@@ -114,10 +115,10 @@ export abstract class BaseMockService implements MockService {
   protected recordCall(method: string, args?: any[]): void {
     this.callCount++;
     this.lastCalled = new Date();
-    
+
     logger.debug(`Mock service call: ${this.name}.${method}`, {
       callCount: this.callCount,
-      args: args ? JSON.stringify(args).substring(0, 200) : undefined
+      args: args ? JSON.stringify(args).substring(0, 200) : undefined,
     });
   }
 
@@ -126,12 +127,12 @@ export abstract class BaseMockService implements MockService {
    */
   protected addError(error: string): void {
     this.errors.push(error);
-    
+
     // 限制错误数量
     if (this.errors.length > 100) {
       this.errors.shift();
     }
-    
+
     logger.warn(`Mock service error: ${this.name} - ${error}`);
   }
 
@@ -182,15 +183,15 @@ export abstract class BaseMockService implements MockService {
     return args.every((arg, index) => {
       const expectedType = expectedTypes[index];
       const actualType = typeof arg;
-      
+
       if (expectedType === 'array') {
         return Array.isArray(arg);
       }
-      
+
       if (expectedType === 'object') {
         return actualType === 'object' && arg !== null && !Array.isArray(arg);
       }
-      
+
       return actualType === expectedType;
     });
   }

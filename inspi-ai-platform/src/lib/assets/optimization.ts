@@ -1,8 +1,8 @@
 /**
  * 静态资源优化系统
  */
-import { logger } from '@/lib/logging/logger';
 import { AssetType } from '@/lib/cdn/config';
+import { logger } from '@/lib/logging/logger';
 
 /**
  * 优化配置
@@ -59,6 +59,7 @@ export interface OptimizationResult {
   processingTime: number;
   success: boolean;
   error?: string;
+  [key: string]: unknown;
 }
 
 /**
@@ -91,34 +92,34 @@ export class AssetOptimizer {
         responsive: true,
         lazyLoading: true,
         placeholder: 'blur',
-        sizes: [320, 640, 768, 1024, 1280, 1920]
+        sizes: [320, 640, 768, 1024, 1280, 1920],
       },
       videos: {
         formats: ['mp4', 'webm'],
         quality: 80,
         compression: true,
         streaming: true,
-        thumbnail: true
+        thumbnail: true,
       },
       scripts: {
         minify: true,
         treeshake: true,
         splitting: true,
-        compression: true
+        compression: true,
       },
       styles: {
         minify: true,
         autoprefixer: true,
         purgeCSS: true,
-        compression: true
+        compression: true,
       },
       fonts: {
         preload: true,
         display: 'swap',
         subset: true,
-        formats: ['woff2', 'woff']
+        formats: ['woff2', 'woff'],
       },
-      ...config
+      ...config,
     };
   }
 
@@ -133,14 +134,14 @@ export class AssetOptimizer {
       width?: number;
       height?: number;
       progressive?: boolean;
-    }
+    },
   ): Promise<OptimizationResult> {
     const startTime = Date.now();
-    
+
     try {
       // 获取原始大小
-      const originalSize = typeof input === 'string' 
-        ? Buffer.from(input, 'base64').length 
+      const originalSize = typeof input === 'string'
+        ? Buffer.from(input, 'base64').length
         : input.length;
 
       // 这里应该使用实际的图片处理库，如 sharp
@@ -155,11 +156,11 @@ export class AssetOptimizer {
         compressionRatio: (originalSize - optimizedSize) / originalSize,
         format,
         quality,
-        dimensions: options?.width && options?.height 
+        dimensions: options?.width && options?.height
           ? { width: options.width, height: options.height }
           : undefined,
         processingTime: Date.now() - startTime,
-        success: true
+        success: true,
       };
 
       logger.debug('Image optimized', result);
@@ -167,16 +168,16 @@ export class AssetOptimizer {
 
     } catch (error) {
       logger.error('Image optimization failed', error instanceof Error ? error : new Error(String(error)));
-      
+
       return {
-        originalSize: typeof input === 'string' 
-          ? Buffer.from(input, 'base64').length 
+        originalSize: typeof input === 'string'
+          ? Buffer.from(input, 'base64').length
           : input.length,
         optimizedSize: 0,
         compressionRatio: 0,
         processingTime: Date.now() - startTime,
         success: false,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -190,7 +191,7 @@ export class AssetOptimizer {
       sizes?: number[];
       formats?: string[];
       quality?: number;
-    }
+    },
   ): Promise<Array<{
     size: number;
     format: string;
@@ -215,7 +216,7 @@ export class AssetOptimizer {
             format,
             quality,
             width: size,
-            height: Math.floor(size * 0.75) // 假设4:3比例
+            height: Math.floor(size * 0.75), // 假设4:3比例
           });
 
           if (optimized.success) {
@@ -223,14 +224,14 @@ export class AssetOptimizer {
               size,
               format,
               url: `optimized-${size}w.${format}`,
-              dimensions: optimized.dimensions || { width: size, height: Math.floor(size * 0.75) }
+              dimensions: optimized.dimensions || { width: size, height: Math.floor(size * 0.75) },
             });
           }
         } catch (error) {
           logger.warn('Failed to generate responsive image', {
             size,
             format,
-            error: error instanceof Error ? error.message : String(error)
+            error: error instanceof Error ? error.message : String(error),
           });
         }
       }
@@ -249,13 +250,13 @@ export class AssetOptimizer {
       quality?: number;
       bitrate?: number;
       resolution?: string;
-    }
+    },
   ): Promise<OptimizationResult> {
     const startTime = Date.now();
-    
+
     try {
-      const originalSize = typeof input === 'string' 
-        ? Buffer.from(input, 'base64').length 
+      const originalSize = typeof input === 'string'
+        ? Buffer.from(input, 'base64').length
         : input.length;
 
       // 模拟视频优化
@@ -269,7 +270,7 @@ export class AssetOptimizer {
         format,
         quality: options?.quality || this.config.videos.quality,
         processingTime: Date.now() - startTime,
-        success: true
+        success: true,
       };
 
       logger.debug('Video optimized', result);
@@ -277,16 +278,16 @@ export class AssetOptimizer {
 
     } catch (error) {
       logger.error('Video optimization failed', error instanceof Error ? error : new Error(String(error)));
-      
+
       return {
-        originalSize: typeof input === 'string' 
-          ? Buffer.from(input, 'base64').length 
+        originalSize: typeof input === 'string'
+          ? Buffer.from(input, 'base64').length
           : input.length,
         optimizedSize: 0,
         compressionRatio: 0,
         processingTime: Date.now() - startTime,
         success: false,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -300,7 +301,7 @@ export class AssetOptimizer {
       minify?: boolean;
       treeshake?: boolean;
       target?: string;
-    }
+    },
   ): Promise<OptimizationResult> {
     const startTime = Date.now();
     const originalSize = Buffer.from(code, 'utf8').length;
@@ -330,7 +331,7 @@ export class AssetOptimizer {
         optimizedSize,
         compressionRatio: (originalSize - optimizedSize) / originalSize,
         processingTime: Date.now() - startTime,
-        success: true
+        success: true,
       };
 
       logger.debug('Script optimized', result);
@@ -338,14 +339,14 @@ export class AssetOptimizer {
 
     } catch (error) {
       logger.error('Script optimization failed', error instanceof Error ? error : new Error(String(error)));
-      
+
       return {
         originalSize,
         optimizedSize: 0,
         compressionRatio: 0,
         processingTime: Date.now() - startTime,
         success: false,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -360,7 +361,7 @@ export class AssetOptimizer {
       autoprefixer?: boolean;
       purge?: boolean;
       usedClasses?: string[];
-    }
+    },
   ): Promise<OptimizationResult> {
     const startTime = Date.now();
     const originalSize = Buffer.from(css, 'utf8').length;
@@ -396,7 +397,7 @@ export class AssetOptimizer {
         optimizedSize,
         compressionRatio: (originalSize - optimizedSize) / originalSize,
         processingTime: Date.now() - startTime,
-        success: true
+        success: true,
       };
 
       logger.debug('Stylesheet optimized', result);
@@ -404,14 +405,14 @@ export class AssetOptimizer {
 
     } catch (error) {
       logger.error('Stylesheet optimization failed', error instanceof Error ? error : new Error(String(error)));
-      
+
       return {
         originalSize,
         optimizedSize: 0,
         compressionRatio: 0,
         processingTime: Date.now() - startTime,
         success: false,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -425,7 +426,7 @@ export class AssetOptimizer {
       content: Buffer | string;
       type: AssetType;
       options?: any;
-    }>
+    }>,
   ): Promise<Map<string, OptimizationResult>> {
     const results = new Map<string, OptimizationResult>();
     const batchSize = 5; // 并发处理数量
@@ -433,7 +434,7 @@ export class AssetOptimizer {
     // 分批处理
     for (let i = 0; i < assets.length; i += batchSize) {
       const batch = assets.slice(i, i + batchSize);
-      
+
       const batchPromises = batch.map(async (asset) => {
         try {
           let result: OptimizationResult;
@@ -448,46 +449,46 @@ export class AssetOptimizer {
             case AssetType.SCRIPT:
               result = await this.optimizeScript(
                 typeof asset.content === 'string' ? asset.content : asset.content.toString(),
-                asset.options
+                asset.options,
               );
               break;
             case AssetType.STYLESHEET:
               result = await this.optimizeStylesheet(
                 typeof asset.content === 'string' ? asset.content : asset.content.toString(),
-                asset.options
+                asset.options,
               );
               break;
             default:
               result = {
-                originalSize: typeof asset.content === 'string' 
-                  ? Buffer.from(asset.content).length 
+                originalSize: typeof asset.content === 'string'
+                  ? Buffer.from(asset.content).length
                   : asset.content.length,
                 optimizedSize: 0,
                 compressionRatio: 0,
                 processingTime: 0,
                 success: false,
-                error: 'Unsupported asset type'
+                error: 'Unsupported asset type',
               };
           }
 
           results.set(asset.path, result);
-          
+
           // 缓存结果
           this.optimizationCache.set(asset.path, result);
 
         } catch (error) {
           logger.error('Asset optimization failed', error instanceof Error ? error : new Error(String(error)), {
             path: asset.path,
-            type: asset.type
+            type: asset.type,
           });
-          
+
           results.set(asset.path, {
             originalSize: 0,
             optimizedSize: 0,
             compressionRatio: 0,
             processingTime: 0,
             success: false,
-            error: error instanceof Error ? error.message : String(error)
+            error: error instanceof Error ? error.message : String(error),
           });
         }
       });
@@ -532,7 +533,7 @@ export class AssetOptimizer {
       totalSavings,
       averageCompressionRatio,
       successRate: results.length > 0 ? (successful.length / results.length) * 100 : 0,
-      typeBreakdown: {} // 这里可以按类型统计
+      typeBreakdown: {}, // 这里可以按类型统计
     };
   }
 
@@ -561,7 +562,7 @@ export class AssetAnalyzer {
       path,
       type,
       size,
-      mimeType
+      mimeType,
     };
 
     // 如果是图片，获取尺寸信息
@@ -577,7 +578,7 @@ export class AssetAnalyzer {
    */
   static getMimeType(path: string): string {
     const extension = path.split('.').pop()?.toLowerCase();
-    
+
     const mimeMap: Record<string, string> = {
       'jpg': 'image/jpeg',
       'jpeg': 'image/jpeg',
@@ -595,7 +596,7 @@ export class AssetAnalyzer {
       'woff': 'font/woff',
       'woff2': 'font/woff2',
       'ttf': 'font/ttf',
-      'pdf': 'application/pdf'
+      'pdf': 'application/pdf',
     };
 
     return mimeMap[extension || ''] || 'application/octet-stream';
@@ -612,7 +613,7 @@ export class AssetAnalyzer {
     if (mimeType === 'application/javascript' || mimeType === 'text/javascript') return AssetType.SCRIPT;
     if (mimeType === 'text/css') return AssetType.STYLESHEET;
     if (mimeType === 'application/pdf') return AssetType.DOCUMENT;
-    
+
     return AssetType.OTHER;
   }
 
@@ -643,7 +644,7 @@ export class AssetAnalyzer {
       [AssetType.FONT]: 100 * 1024, // 100KB
       [AssetType.AUDIO]: 500 * 1024, // 500KB
       [AssetType.DOCUMENT]: 100 * 1024, // 100KB
-      [AssetType.OTHER]: 50 * 1024 // 50KB
+      [AssetType.OTHER]: 50 * 1024, // 50KB
     };
 
     const threshold = sizeThresholds[info.type];

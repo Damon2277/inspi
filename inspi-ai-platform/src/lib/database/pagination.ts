@@ -83,20 +83,20 @@ export class PaginationOptimizer {
   async paginateWithOffset<T>(
     collection: string,
     query: Record<string, any>,
-    params: PaginationParams
+    params: PaginationParams,
   ): Promise<PaginationResult<T>> {
     const startTime = Date.now();
-    
+
     try {
       // 验证和规范化参数
       const normalizedParams = this.normalizeOffsetParams(params);
-      
+
       // 检查是否适合偏移分页
       if (normalizedParams.page > 100) {
         logger.warn('Large offset pagination detected, consider using cursor pagination', {
           collection,
           page: normalizedParams.page,
-          offset: (normalizedParams.page - 1) * normalizedParams.limit
+          offset: (normalizedParams.page - 1) * normalizedParams.limit,
         });
       }
 
@@ -106,7 +106,7 @@ export class PaginationOptimizer {
       // 构建查询选项
       const options: any = {
         limit: normalizedParams.limit,
-        skip
+        skip,
       };
 
       if (normalizedParams.sort) {
@@ -115,8 +115,8 @@ export class PaginationOptimizer {
 
       // 并行执行数据查询和总数统计
       const [data, total] = await Promise.all([
-        coll.find(query, options).toArray(),
-        this.getOptimizedCount(coll, query, skip)
+        (coll.find as any)(query, options).toArray(),
+        this.getOptimizedCount(coll, query, skip),
       ]);
 
       const executionTime = Date.now() - startTime;
@@ -130,20 +130,20 @@ export class PaginationOptimizer {
           total,
           totalPages,
           hasNext: normalizedParams.page < totalPages,
-          hasPrev: normalizedParams.page > 1
+          hasPrev: normalizedParams.page > 1,
         },
         performance: {
           executionTime,
           documentsExamined: skip + data.length,
-          indexUsed: true // 需要从explain结果获取
-        }
+          indexUsed: true, // 需要从explain结果获取
+        },
       };
 
     } catch (error) {
       logger.error('Offset pagination failed', error instanceof Error ? error : new Error(String(error)), {
         collection,
         query: JSON.stringify(query),
-        params
+        params,
       });
       throw error;
     }
@@ -155,26 +155,26 @@ export class PaginationOptimizer {
   async paginateWithCursor<T>(
     collection: string,
     query: Record<string, any>,
-    params: CursorPaginationParams
+    params: CursorPaginationParams,
   ): Promise<CursorPaginationResult<T>> {
     const startTime = Date.now();
-    
+
     try {
       const normalizedParams = this.normalizeCursorParams(params);
       const coll = this.db.collection(collection);
 
       // 构建游标查询
       const cursorQuery = this.buildCursorQuery(query, normalizedParams);
-      
+
       // 获取比限制多一条记录以判断是否有下一页
       const limit = normalizedParams.limit + 1;
-      
+
       const options: any = {
         limit,
-        sort: normalizedParams.sort
+        sort: normalizedParams.sort,
       };
 
-      const data = await coll.find(cursorQuery, options).toArray();
+      const data = await (coll.find as any)(cursorQuery, options).toArray();
       const executionTime = Date.now() - startTime;
 
       // 检查是否有更多数据
@@ -184,7 +184,7 @@ export class PaginationOptimizer {
       }
 
       // 生成游标
-      const nextCursor = hasNext && data.length > 0 
+      const nextCursor = hasNext && data.length > 0
         ? this.generateCursor(data[data.length - 1], normalizedParams.sort)
         : undefined;
 
@@ -199,20 +199,20 @@ export class PaginationOptimizer {
           hasNext,
           hasPrev: !!normalizedParams.cursor,
           nextCursor,
-          prevCursor
+          prevCursor,
         },
         performance: {
           executionTime,
           documentsExamined: data.length,
-          indexUsed: true
-        }
+          indexUsed: true,
+        },
       };
 
     } catch (error) {
       logger.error('Cursor pagination failed', error instanceof Error ? error : new Error(String(error)), {
         collection,
         query: JSON.stringify(query),
-        params
+        params,
       });
       throw error;
     }
@@ -224,16 +224,16 @@ export class PaginationOptimizer {
   async smartPaginate<T>(
     collection: string,
     query: Record<string, any>,
-    params: PaginationParams
+    params: PaginationParams,
   ): Promise<PaginationResult<T> | CursorPaginationResult<T>> {
     // 如果有游标或页数较大，使用游标分页
     if (params.cursor || (params.page && params.page > 50)) {
       const cursorParams: CursorPaginationParams = {
         limit: params.limit,
         cursor: params.cursor,
-        sort: params.sort || { _id: 1 }
+        sort: params.sort || { _id: 1 },
       };
-      
+
       return await this.paginateWithCursor(collection, query, cursorParams);
     }
 
@@ -247,17 +247,17 @@ export class PaginationOptimizer {
   async paginateAggregation<T>(
     collection: string,
     pipeline: any[],
-    params: PaginationParams
+    params: PaginationParams,
   ): Promise<PaginationResult<T>> {
     const startTime = Date.now();
-    
+
     try {
       const normalizedParams = this.normalizeOffsetParams(params);
       const coll = this.db.collection(collection);
 
       // 构建分页管道
       const paginationPipeline = [...pipeline];
-      
+
       // 添加排序
       if (normalizedParams.sort) {
         paginationPipeline.push({ $sort: normalizedParams.sort });
@@ -270,19 +270,19 @@ export class PaginationOptimizer {
           $facet: {
             data: [
               { $skip: (normalizedParams.page - 1) * normalizedParams.limit },
-              { $limit: normalizedParams.limit }
+              { $limit: normalizedParams.limit },
             ],
             count: [
-              { $count: 'total' }
-            ]
-          }
-        }
+              { $count: 'total' },
+            ],
+          },
+        },
       ];
 
-      const [result] = await coll.aggregate(facetPipeline).toArray();
+      const [result] = await (coll.aggregate as any)(facetPipeline).toArray();
       const data = result.data || [];
       const total = result.count[0]?.total || 0;
-      
+
       const executionTime = Date.now() - startTime;
       const totalPages = Math.ceil(total / normalizedParams.limit);
 
@@ -294,20 +294,20 @@ export class PaginationOptimizer {
           total,
           totalPages,
           hasNext: normalizedParams.page < totalPages,
-          hasPrev: normalizedParams.page > 1
+          hasPrev: normalizedParams.page > 1,
         },
         performance: {
           executionTime,
           documentsExamined: total,
-          indexUsed: true
-        }
+          indexUsed: true,
+        },
       };
 
     } catch (error) {
       logger.error('Aggregation pagination failed', error instanceof Error ? error : new Error(String(error)), {
         collection,
         pipeline: JSON.stringify(pipeline),
-        params
+        params,
       });
       throw error;
     }
@@ -320,7 +320,7 @@ export class PaginationOptimizer {
     return {
       page: Math.max(1, params.page || 1),
       limit: Math.min(this.maxLimit, Math.max(1, params.limit || this.defaultLimit)),
-      sort: params.sort || { _id: 1 }
+      sort: params.sort || { _id: 1 },
     };
   }
 
@@ -332,7 +332,7 @@ export class PaginationOptimizer {
       limit: Math.min(this.maxLimit, Math.max(1, params.limit || this.defaultLimit)),
       cursor: params.cursor,
       sort: params.sort,
-      direction: params.direction || 'forward'
+      direction: params.direction || 'forward',
     };
   }
 
@@ -341,7 +341,7 @@ export class PaginationOptimizer {
    */
   private buildCursorQuery(
     baseQuery: Record<string, any>,
-    params: Required<CursorPaginationParams>
+    params: Required<CursorPaginationParams>,
   ): Record<string, any> {
     if (!params.cursor) {
       return baseQuery;
@@ -357,7 +357,7 @@ export class PaginationOptimizer {
         const field = sortFields[0];
         const direction = params.sort[field];
         const operator = direction === 1 ? '$gt' : '$lt';
-        
+
         if (params.direction === 'backward') {
           cursorQuery[field] = { [direction === 1 ? '$lt' : '$gt']: cursorData[field] };
         } else {
@@ -384,31 +384,31 @@ export class PaginationOptimizer {
   private buildMultiFieldCursorConditions(
     cursorData: Record<string, any>,
     sort: Record<string, 1 | -1>,
-    direction: 'forward' | 'backward'
+    direction: 'forward' | 'backward',
   ): any[] {
     const conditions: any[] = [];
     const sortFields = Object.keys(sort);
 
     for (let i = 0; i < sortFields.length; i++) {
       const condition: Record<string, any> = {};
-      
+
       // 添加前面字段的等值条件
       for (let j = 0; j < i; j++) {
         const field = sortFields[j];
         condition[field] = cursorData[field];
       }
-      
+
       // 添加当前字段的比较条件
       const currentField = sortFields[i];
       const sortDirection = sort[currentField];
       let operator: string;
-      
+
       if (direction === 'forward') {
         operator = sortDirection === 1 ? '$gt' : '$lt';
       } else {
         operator = sortDirection === 1 ? '$lt' : '$gt';
       }
-      
+
       condition[currentField] = { [operator]: cursorData[currentField] };
       conditions.push(condition);
     }
@@ -422,10 +422,10 @@ export class PaginationOptimizer {
   private generateCursor(
     document: any,
     sort: Record<string, 1 | -1>,
-    reverse: boolean = false
+    reverse: boolean = false,
   ): string {
     const cursorData: Record<string, any> = {};
-    
+
     Object.keys(sort).forEach(field => {
       cursorData[field] = document[field];
     });
@@ -454,7 +454,7 @@ export class PaginationOptimizer {
   private async getOptimizedCount(
     collection: any,
     query: Record<string, any>,
-    skip: number
+    skip: number,
   ): Promise<number> {
     // 对于大偏移量，使用估算计数
     if (skip > 10000) {
@@ -463,12 +463,12 @@ export class PaginationOptimizer {
         return Math.max(stats.count - skip, 0);
       } catch {
         // 如果stats失败，回退到精确计数
-        return await collection.countDocuments(query);
+        return await (collection.countDocuments as any)(query);
       }
     }
 
     // 小偏移量使用精确计数
-    return await collection.countDocuments(query);
+    return await (collection.countDocuments as any)(query);
   }
 
   /**
@@ -541,8 +541,8 @@ export class PaginationUtils {
         page: params.page || 1,
         limit: params.limit || 20,
         sort: params.sort,
-        cursor: params.cursor
-      }
+        cursor: params.cursor,
+      },
     };
   }
 
@@ -552,7 +552,7 @@ export class PaginationUtils {
   static calculatePaginationInfo(
     page: number,
     limit: number,
-    total: number
+    total: number,
   ): {
     totalPages: number;
     hasNext: boolean;
@@ -569,7 +569,7 @@ export class PaginationUtils {
       hasNext: page < totalPages,
       hasPrev: page > 1,
       startIndex,
-      endIndex
+      endIndex,
     };
   }
 
@@ -579,7 +579,7 @@ export class PaginationUtils {
   static generatePaginationLinks(
     currentPage: number,
     totalPages: number,
-    maxLinks: number = 5
+    maxLinks: number = 5,
   ): {
     first: number;
     last: number;
@@ -589,7 +589,7 @@ export class PaginationUtils {
   } {
     const half = Math.floor(maxLinks / 2);
     let start = Math.max(1, currentPage - half);
-    let end = Math.min(totalPages, start + maxLinks - 1);
+    const end = Math.min(totalPages, start + maxLinks - 1);
 
     // 调整起始位置
     if (end - start + 1 < maxLinks) {
@@ -606,7 +606,7 @@ export class PaginationUtils {
       last: totalPages,
       prev: currentPage > 1 ? currentPage - 1 : undefined,
       next: currentPage < totalPages ? currentPage + 1 : undefined,
-      pages
+      pages,
     };
   }
 
@@ -641,7 +641,7 @@ export class PaginationUtils {
   static fromQueryParams(queryParams: Record<string, string>): PaginationParams {
     const params: PaginationParams = {
       page: 1,
-      limit: 20
+      limit: 20,
     };
 
     if (queryParams.page) {

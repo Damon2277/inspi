@@ -4,8 +4,9 @@
  */
 
 import mongoose from 'mongoose';
-import { logger } from '@/lib/utils/logger';
-import { env } from '@/config/environment';
+
+import { env } from '@/shared/config/environment';
+import { logger } from '@/shared/utils/logger';
 
 interface ConnectionResult {
   success: boolean;
@@ -44,7 +45,7 @@ class DatabaseManager {
     this.connectionPromise = this.attemptConnection();
     const result = await this.connectionPromise;
     this.connectionPromise = null;
-    
+
     return result;
   }
 
@@ -54,14 +55,14 @@ class DatabaseManager {
   private async attemptConnection(): Promise<ConnectionResult> {
     try {
       const mongoUri = env.DATABASE?.MONGODB_URI || process.env.MONGODB_URI;
-      
+
       if (!mongoUri) {
         // 开发环境下使用内存数据库
         if (process.env.NODE_ENV === 'development') {
           logger.warn('MongoDB URI not configured, using in-memory fallback');
           return this.setupInMemoryFallback();
         }
-        
+
         throw new Error('MongoDB URI not configured');
       }
 
@@ -74,41 +75,41 @@ class DatabaseManager {
         bufferMaxEntries: 0,
       };
 
-      logger.info('Attempting to connect to MongoDB', { 
+      logger.info('Attempting to connect to MongoDB', {
         uri: mongoUri.replace(/\/\/.*@/, '//***:***@'), // 隐藏密码
-        attempt: this.retryCount + 1 
+        attempt: this.retryCount + 1,
       });
 
       await mongoose.connect(mongoUri, options);
-      
+
       this.isConnected = true;
       this.retryCount = 0;
-      
+
       logger.info('Successfully connected to MongoDB');
-      
+
       // 设置连接事件监听器
       this.setupEventListeners();
-      
+
       return { success: true };
 
     } catch (error) {
       this.isConnected = false;
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      
-      logger.error('Failed to connect to MongoDB', { 
+
+      logger.error('Failed to connect to MongoDB', {
         error: errorMessage,
         attempt: this.retryCount + 1,
-        maxRetries: this.maxRetries
+        maxRetries: this.maxRetries,
       });
 
       // 如果还有重试次数，进行重试
       if (this.retryCount < this.maxRetries) {
         this.retryCount++;
-        logger.info(`Retrying connection in ${this.retryDelay}ms`, { 
+        logger.info(`Retrying connection in ${this.retryDelay}ms`, {
           attempt: this.retryCount,
-          maxRetries: this.maxRetries 
+          maxRetries: this.maxRetries,
         });
-        
+
         await new Promise(resolve => setTimeout(resolve, this.retryDelay));
         return this.attemptConnection();
       }
@@ -119,9 +120,9 @@ class DatabaseManager {
         return this.setupInMemoryFallback();
       }
 
-      return { 
-        success: false, 
-        error: `Failed to connect after ${this.maxRetries} attempts: ${errorMessage}` 
+      return {
+        success: false,
+        error: `Failed to connect after ${this.maxRetries} attempts: ${errorMessage}`,
       };
     }
   }
@@ -133,16 +134,16 @@ class DatabaseManager {
     try {
       // 在开发环境中，我们可以使用一个简单的内存存储
       logger.info('Setting up in-memory database fallback');
-      
+
       // 这里可以集成 mongodb-memory-server 或其他内存数据库
       // 暂时返回成功状态，让应用继续运行
       this.isConnected = true;
-      
+
       return { success: true };
     } catch (error) {
-      return { 
-        success: false, 
-        error: `Failed to setup in-memory fallback: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      return {
+        success: false,
+        error: `Failed to setup in-memory fallback: ${error instanceof Error ? error.message : 'Unknown error'}`,
       };
     }
   }
@@ -184,8 +185,8 @@ class DatabaseManager {
       }
       this.isConnected = false;
     } catch (error) {
-      logger.error('Error disconnecting from MongoDB', { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      logger.error('Error disconnecting from MongoDB', {
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -220,8 +221,8 @@ class DatabaseManager {
       await mongoose.connection.db.admin().ping();
       return true;
     } catch (error) {
-      logger.error('Database health check failed', { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      logger.error('Database health check failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return false;
     }

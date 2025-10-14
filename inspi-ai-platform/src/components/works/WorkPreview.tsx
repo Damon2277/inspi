@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
+
 import { WorkDocument } from '@/lib/models/Work';
-import { TeachingCard } from '@/types/teaching';
+import { TeachingCard } from '@/shared/types/teaching';
 
 interface WorkPreviewProps {
   work: WorkDocument;
@@ -15,16 +16,16 @@ interface WorkPreviewProps {
 
 const CARD_TYPE_NAMES: Record<string, string> = {
   visualization: '可视化卡',
-  analogy: '类比延展卡', 
+  analogy: '类比延展卡',
   thinking: '启发思考卡',
-  interaction: '互动氛围卡'
+  interaction: '互动氛围卡',
 };
 
 const CARD_TYPE_COLORS: Record<string, string> = {
   visualization: 'bg-purple-100 text-purple-800 border-purple-200',
   analogy: 'bg-green-100 text-green-800 border-green-200',
   thinking: 'bg-orange-100 text-orange-800 border-orange-200',
-  interaction: 'bg-blue-100 text-blue-800 border-blue-200'
+  interaction: 'bg-blue-100 text-blue-800 border-blue-200',
 };
 
 const CARD_TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -48,22 +49,22 @@ const CARD_TYPE_ICONS: Record<string, React.ReactNode> = {
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
     </svg>
-  )
+  ),
 };
 
-export default function WorkPreview({ 
-  work, 
+export default function WorkPreview({
+  work,
   showActions = false,
   onEdit,
   onDelete,
   onReuse,
-  className = ''
+  className = '',
 }: WorkPreviewProps) {
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleDateString('zh-CN', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -71,13 +72,13 @@ export default function WorkPreview({
     const badges: Record<string, string> = {
       draft: 'bg-yellow-100 text-yellow-800',
       published: 'bg-green-100 text-green-800',
-      archived: 'bg-gray-100 text-gray-800'
+      archived: 'bg-gray-100 text-gray-800',
     };
-    
+
     const labels: Record<string, string> = {
       draft: '草稿',
       published: '已发布',
-      archived: '已归档'
+      archived: '已归档',
     };
 
     return (
@@ -100,7 +101,7 @@ export default function WorkPreview({
               知识点：{work.knowledgePoint}
             </p>
           </div>
-          
+
           <div className="ml-4 flex items-center space-x-2">
             {getStatusBadge(work.status)}
             {showActions && (

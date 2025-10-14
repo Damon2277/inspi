@@ -3,8 +3,8 @@
  * 提供各种邀请数据报表的生成和导出功能
  */
 
-import { DatabaseService } from '../database'
-import { TimePeriod, LeaderboardEntry, SharePlatform } from '../types'
+import { DatabaseService } from '../database';
+import { TimePeriod, LeaderboardEntry, SharePlatform } from '../types';
 
 export interface ReportData {
   title: string
@@ -40,33 +40,69 @@ export interface ChartData {
   datasets: Array<{
     label: string
     data: number[]
-    backgroundColor?: string
+    backgroundColor?: string | string[]
     borderColor?: string
   }>
+}
+
+type NumberLike = number | string | null | undefined
+
+interface InviteSummaryRow {
+  total_invites: NumberLike
+  total_registrations: NumberLike
+  total_activations: NumberLike
+}
+
+interface TopPerformerRow {
+  id: string
+  name: string
+  invite_count: NumberLike
+  total_credits: NumberLike
+  user_id?: string
+  user_name?: string
+}
+
+interface TrendRow {
+  date: string
+  invites: NumberLike
+  registrations: NumberLike
+}
+
+interface UserInfoRow {
+  id: string
+  name: string
+  email: string
+}
+
+interface UserStatsRow {
+  total_invites: NumberLike
+  successful_registrations: NumberLike
+  active_invitees: NumberLike
+  total_rewards_earned: NumberLike
 }
 
 export interface ReportGenerationService {
   // 生成月度邀请报告
   generateMonthlyReport(year: number, month: number): Promise<ReportData>
-  
+
   // 生成用户个人报告
   generateUserReport(userId: string, period: TimePeriod): Promise<ReportData>
-  
+
   // 生成平台统计报告
   generatePlatformReport(period: TimePeriod): Promise<ReportData>
-  
+
   // 生成转化率分析报告
   generateConversionReport(period: TimePeriod): Promise<ReportData>
-  
+
   // 导出报告为PDF
   exportReportToPDF(reportData: ReportData): Promise<Buffer>
-  
+
   // 导出报告为Excel
   exportReportToExcel(reportData: ReportData): Promise<Buffer>
-  
+
   // 导出数据为CSV
   exportDataToCSV(data: any[], filename: string): Promise<string>
-  
+
   // 获取报告模板
   getReportTemplates(): Promise<Array<{
     id: string
@@ -74,7 +110,7 @@ export interface ReportGenerationService {
     description: string
     type: 'monthly' | 'user' | 'platform' | 'conversion'
   }>>
-  
+
   // 调度自动报告生成
   scheduleAutomaticReports(): Promise<void>
 }
@@ -87,18 +123,18 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
    */
   async generateMonthlyReport(year: number, month: number): Promise<ReportData> {
     try {
-      const startDate = new Date(year, month - 1, 1)
-      const endDate = new Date(year, month, 0, 23, 59, 59)
-      const period: TimePeriod = { start: startDate, end: endDate }
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0, 23, 59, 59);
+      const period: TimePeriod = { start: startDate, end: endDate };
 
       // 获取基础统计数据
-      const summary = await this.getReportSummary(period)
-      
+      const summary = await this.getReportSummary(period);
+
       // 生成各个报告部分
-      const sections: ReportSection[] = []
+      const sections: ReportSection[] = [];
 
       // 1. 邀请趋势图
-      const trendData = await this.getInviteTrendData(period)
+      const trendData = await this.getInviteTrendData(period);
       sections.push({
         title: '邀请趋势',
         type: 'chart',
@@ -110,21 +146,21 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
               label: '邀请数',
               data: trendData.map(d => d.invites),
               borderColor: '#3b82f6',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)'
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
             },
             {
               label: '注册数',
               data: trendData.map(d => d.registrations),
               borderColor: '#10b981',
-              backgroundColor: 'rgba(16, 185, 129, 0.1)'
-            }
-          ]
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            },
+          ],
         } as ChartData,
-        description: '显示每日邀请和注册数量变化趋势'
-      })
+        description: '显示每日邀请和注册数量变化趋势',
+      });
 
       // 2. 排行榜
-      const leaderboard = await this.getTopPerformers(period, 10)
+      const leaderboard = await this.getTopPerformers(period, 10);
       sections.push({
         title: '邀请排行榜',
         type: 'table',
@@ -135,14 +171,14 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
             entry.userName,
             entry.inviteCount,
             entry.inviteCount, // 简化处理
-            entry.rewards.totalCredits
-          ])
+            entry.rewards.totalCredits,
+          ]),
         },
-        description: '本月邀请表现最佳的用户'
-      })
+        description: '本月邀请表现最佳的用户',
+      });
 
       // 3. 平台分析
-      const platformData = await this.getPlatformAnalysis(period)
+      const platformData = await this.getPlatformAnalysis(period);
       sections.push({
         title: '分享平台分析',
         type: 'chart',
@@ -153,15 +189,15 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
             label: '分享次数',
             data: platformData.map(p => p.shareCount),
             backgroundColor: [
-              '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'
-            ]
-          }]
+              '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4',
+            ],
+          }],
         } as ChartData,
-        description: '各分享平台的使用情况分布'
-      })
+        description: '各分享平台的使用情况分布',
+      });
 
       // 4. 转化率分析
-      const conversionData = await this.getConversionAnalysis(period)
+      const conversionData = await this.getConversionAnalysis(period);
       sections.push({
         title: '转化率分析',
         type: 'metric',
@@ -170,22 +206,22 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
             { label: '邀请到点击', value: `${conversionData.inviteToClick.toFixed(1)}%` },
             { label: '点击到注册', value: `${conversionData.clickToRegister.toFixed(1)}%` },
             { label: '注册到激活', value: `${conversionData.registerToActivate.toFixed(1)}%` },
-            { label: '整体转化率', value: `${conversionData.overallConversion.toFixed(1)}%` }
-          ]
+            { label: '整体转化率', value: `${conversionData.overallConversion.toFixed(1)}%` },
+          ],
         },
-        description: '邀请流程各环节的转化率表现'
-      })
+        description: '邀请流程各环节的转化率表现',
+      });
 
       return {
         title: `${year}年${month}月邀请系统月度报告`,
         generatedAt: new Date(),
         period,
         summary,
-        sections
-      }
+        sections,
+      };
     } catch (error) {
-      console.error('Failed to generate monthly report:', error)
-      throw new Error('Failed to generate monthly report')
+      console.error('Failed to generate monthly report:', error);
+      throw new Error('Failed to generate monthly report');
     }
   }
 
@@ -195,13 +231,13 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
   async generateUserReport(userId: string, period: TimePeriod): Promise<ReportData> {
     try {
       // 获取用户基本信息
-      const userInfo = await this.getUserInfo(userId)
-      
+      const userInfo = await this.getUserInfo(userId);
+
       // 获取用户统计数据
-      const userStats = await this.getUserStats(userId, period)
-      
+      const userStats = await this.getUserStats(userId, period);
+
       // 生成报告部分
-      const sections: ReportSection[] = []
+      const sections: ReportSection[] = [];
 
       // 1. 个人成就概览
       sections.push({
@@ -212,13 +248,13 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
             { label: '总邀请数', value: userStats.totalInvites.toString() },
             { label: '成功注册', value: userStats.successfulRegistrations.toString() },
             { label: '活跃用户', value: userStats.activeInvitees.toString() },
-            { label: '获得奖励', value: `${userStats.totalRewardsEarned} 积分` }
-          ]
-        }
-      })
+            { label: '获得奖励', value: `${userStats.totalRewardsEarned} 积分` },
+          ],
+        },
+      });
 
       // 2. 邀请历史
-      const inviteHistory = await this.getUserInviteHistory(userId, period)
+      const inviteHistory = await this.getUserInviteHistory(userId, period);
       sections.push({
         title: '邀请历史',
         type: 'table',
@@ -228,13 +264,13 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
             h.inviteCode,
             h.inviteeName || h.inviteeEmail || '未知',
             h.registeredAt?.toLocaleDateString() || '-',
-            h.isActivated ? '已激活' : '未激活'
-          ])
-        }
-      })
+            h.isActivated ? '已激活' : '未激活',
+          ]),
+        },
+      });
 
       // 3. 个人趋势
-      const personalTrend = await this.getUserTrendData(userId, period)
+      const personalTrend = await this.getUserTrendData(userId, period);
       sections.push({
         title: '邀请趋势',
         type: 'chart',
@@ -245,10 +281,10 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
             label: '累计邀请',
             data: personalTrend.map(d => d.cumulativeInvites),
             backgroundColor: 'rgba(59, 130, 246, 0.2)',
-            borderColor: '#3b82f6'
-          }]
-        } as ChartData
-      })
+            borderColor: '#3b82f6',
+          }],
+        } as ChartData,
+      });
 
       const summary: ReportSummary = {
         totalInvites: userStats.totalInvites,
@@ -258,21 +294,21 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
         topPerformer: {
           userId: userInfo.id,
           userName: userInfo.name,
-          inviteCount: userStats.totalInvites
+          inviteCount: userStats.totalInvites,
         },
-        growthRate: 0 // 需要计算
-      }
+        growthRate: 0, // 需要计算
+      };
 
       return {
         title: `${userInfo.name} 的邀请报告`,
         generatedAt: new Date(),
         period,
         summary,
-        sections
-      }
+        sections,
+      };
     } catch (error) {
-      console.error('Failed to generate user report:', error)
-      throw new Error('Failed to generate user report')
+      console.error('Failed to generate user report:', error);
+      throw new Error('Failed to generate user report');
     }
   }
 
@@ -281,11 +317,11 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
    */
   async generatePlatformReport(period: TimePeriod): Promise<ReportData> {
     try {
-      const summary = await this.getReportSummary(period)
-      const sections: ReportSection[] = []
+      const summary = await this.getReportSummary(period);
+      const sections: ReportSection[] = [];
 
       // 1. 平台概览
-      const platformOverview = await this.getPlatformOverview(period)
+      const platformOverview = await this.getPlatformOverview(period);
       sections.push({
         title: '平台概览',
         type: 'metric',
@@ -294,13 +330,13 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
             { label: '总用户数', value: platformOverview.totalUsers.toString() },
             { label: '活跃邀请者', value: platformOverview.activeInviters.toString() },
             { label: '平均邀请数', value: platformOverview.averageInvites.toFixed(1) },
-            { label: '参与率', value: `${platformOverview.participationRate.toFixed(1)}%` }
-          ]
-        }
-      })
+            { label: '参与率', value: `${platformOverview.participationRate.toFixed(1)}%` },
+          ],
+        },
+      });
 
       // 2. 增长趋势
-      const growthTrend = await this.getGrowthTrendData(period)
+      const growthTrend = await this.getGrowthTrendData(period);
       sections.push({
         title: '增长趋势',
         type: 'chart',
@@ -311,19 +347,19 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
             {
               label: '新增邀请者',
               data: growthTrend.map(d => d.newInviters),
-              borderColor: '#10b981'
+              borderColor: '#10b981',
             },
             {
               label: '新增注册',
               data: growthTrend.map(d => d.newRegistrations),
-              borderColor: '#3b82f6'
-            }
-          ]
-        } as ChartData
-      })
+              borderColor: '#3b82f6',
+            },
+          ],
+        } as ChartData,
+      });
 
       // 3. 地区分布（如果有地区数据）
-      const regionData = await this.getRegionDistribution(period)
+      const regionData = await this.getRegionDistribution(period);
       if (regionData.length > 0) {
         sections.push({
           title: '地区分布',
@@ -334,10 +370,10 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
             datasets: [{
               label: '邀请数',
               data: regionData.map(r => r.inviteCount),
-              backgroundColor: '#3b82f6'
-            }]
-          } as ChartData
-        })
+              backgroundColor: '#3b82f6',
+            }],
+          } as ChartData,
+        });
       }
 
       return {
@@ -345,11 +381,11 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
         generatedAt: new Date(),
         period,
         summary,
-        sections
-      }
+        sections,
+      };
     } catch (error) {
-      console.error('Failed to generate platform report:', error)
-      throw new Error('Failed to generate platform report')
+      console.error('Failed to generate platform report:', error);
+      throw new Error('Failed to generate platform report');
     }
   }
 
@@ -358,11 +394,11 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
    */
   async generateConversionReport(period: TimePeriod): Promise<ReportData> {
     try {
-      const summary = await this.getReportSummary(period)
-      const sections: ReportSection[] = []
+      const summary = await this.getReportSummary(period);
+      const sections: ReportSection[] = [];
 
       // 1. 转化漏斗
-      const funnelData = await this.getConversionFunnelData(period)
+      const funnelData = await this.getConversionFunnelData(period);
       sections.push({
         title: '转化漏斗',
         type: 'chart',
@@ -372,14 +408,14 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
           datasets: [{
             label: '用户数',
             data: funnelData.map(f => f.count),
-            backgroundColor: '#3b82f6'
-          }]
+            backgroundColor: '#3b82f6',
+          }],
         } as ChartData,
-        description: '展示用户从邀请到激活的完整转化路径'
-      })
+        description: '展示用户从邀请到激活的完整转化路径',
+      });
 
       // 2. 平台转化率对比
-      const platformConversion = await this.getPlatformConversionData(period)
+      const platformConversion = await this.getPlatformConversionData(period);
       sections.push({
         title: '平台转化率对比',
         type: 'chart',
@@ -389,13 +425,13 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
           datasets: [{
             label: '转化率 (%)',
             data: platformConversion.map(p => p.conversionRate),
-            backgroundColor: '#10b981'
-          }]
-        } as ChartData
-      })
+            backgroundColor: '#10b981',
+          }],
+        } as ChartData,
+      });
 
       // 3. 时间段转化率
-      const timeConversion = await this.getTimeBasedConversion(period)
+      const timeConversion = await this.getTimeBasedConversion(period);
       sections.push({
         title: '时间段转化率分析',
         type: 'table',
@@ -405,21 +441,21 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
             t.timeRange,
             t.invites,
             t.registrations,
-            `${t.conversionRate.toFixed(1)}%`
-          ])
-        }
-      })
+            `${t.conversionRate.toFixed(1)}%`,
+          ]),
+        },
+      });
 
       return {
         title: '邀请转化率分析报告',
         generatedAt: new Date(),
         period,
         summary,
-        sections
-      }
+        sections,
+      };
     } catch (error) {
-      console.error('Failed to generate conversion report:', error)
-      throw new Error('Failed to generate conversion report')
+      console.error('Failed to generate conversion report:', error);
+      throw new Error('Failed to generate conversion report');
     }
   }
 
@@ -430,11 +466,11 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
     try {
       // 这里应该使用PDF生成库（如puppeteer或jsPDF）
       // 暂时返回空Buffer
-      console.log('Exporting report to PDF:', reportData.title)
-      return Buffer.from('PDF content placeholder')
+      console.log('Exporting report to PDF:', reportData.title);
+      return Buffer.from('PDF content placeholder');
     } catch (error) {
-      console.error('Failed to export report to PDF:', error)
-      throw new Error('Failed to export report to PDF')
+      console.error('Failed to export report to PDF:', error);
+      throw new Error('Failed to export report to PDF');
     }
   }
 
@@ -445,11 +481,11 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
     try {
       // 这里应该使用Excel生成库（如exceljs）
       // 暂时返回空Buffer
-      console.log('Exporting report to Excel:', reportData.title)
-      return Buffer.from('Excel content placeholder')
+      console.log('Exporting report to Excel:', reportData.title);
+      return Buffer.from('Excel content placeholder');
     } catch (error) {
-      console.error('Failed to export report to Excel:', error)
-      throw new Error('Failed to export report to Excel')
+      console.error('Failed to export report to Excel:', error);
+      throw new Error('Failed to export report to Excel');
     }
   }
 
@@ -459,28 +495,28 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
   async exportDataToCSV(data: any[], filename: string): Promise<string> {
     try {
       if (data.length === 0) {
-        return ''
+        return '';
       }
 
-      const headers = Object.keys(data[0])
+      const headers = Object.keys(data[0]);
       const csvContent = [
         headers.join(','),
-        ...data.map(row => 
+        ...data.map(row =>
           headers.map(header => {
-            const value = row[header]
+            const value = row[header];
             // 处理包含逗号的值
-            return typeof value === 'string' && value.includes(',') 
-              ? `"${value}"` 
-              : value
-          }).join(',')
-        )
-      ].join('\n')
+            return typeof value === 'string' && value.includes(',')
+              ? `"${value}"`
+              : value;
+          }).join(','),
+        ),
+      ].join('\n');
 
-      console.log(`CSV exported: ${filename}, ${data.length} rows`)
-      return csvContent
+      console.log(`CSV exported: ${filename}, ${data.length} rows`);
+      return csvContent;
     } catch (error) {
-      console.error('Failed to export data to CSV:', error)
-      throw new Error('Failed to export data to CSV')
+      console.error('Failed to export data to CSV:', error);
+      throw new Error('Failed to export data to CSV');
     }
   }
 
@@ -498,27 +534,27 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
         id: 'monthly',
         name: '月度邀请报告',
         description: '包含月度邀请统计、排行榜和趋势分析',
-        type: 'monthly'
+        type: 'monthly',
       },
       {
         id: 'user',
         name: '用户个人报告',
         description: '个人邀请成就和历史记录',
-        type: 'user'
+        type: 'user',
       },
       {
         id: 'platform',
         name: '平台统计报告',
         description: '整体平台邀请数据和增长分析',
-        type: 'platform'
+        type: 'platform',
       },
       {
         id: 'conversion',
         name: '转化率分析报告',
         description: '详细的转化漏斗和优化建议',
-        type: 'conversion'
-      }
-    ]
+        type: 'conversion',
+      },
+    ];
   }
 
   /**
@@ -528,10 +564,10 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
     try {
       // 这里应该实现定时任务调度
       // 例如每月1号生成上月报告
-      console.log('Automatic report generation scheduled')
+      console.log('Automatic report generation scheduled');
     } catch (error) {
-      console.error('Failed to schedule automatic reports:', error)
-      throw new Error('Failed to schedule automatic reports')
+      console.error('Failed to schedule automatic reports:', error);
+      throw new Error('Failed to schedule automatic reports');
     }
   }
 
@@ -546,14 +582,14 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
       FROM invite_codes ic
       LEFT JOIN invite_registrations ir ON ic.id = ir.invite_code_id
       WHERE ic.created_at BETWEEN ? AND ?
-    `
+    `;
 
-    const result = await this.db.queryOne(query, [period.start, period.end])
-    
-    const totalInvites = parseInt(result?.total_invites) || 0
-    const totalRegistrations = parseInt(result?.total_registrations) || 0
-    const totalActivations = parseInt(result?.total_activations) || 0
-    const conversionRate = totalInvites > 0 ? (totalRegistrations / totalInvites) * 100 : 0
+    const result = await this.db.queryOne<InviteSummaryRow>(query, [period.start, period.end]);
+
+    const totalInvites = this.toNumber(result?.total_invites);
+    const totalRegistrations = this.toNumber(result?.total_registrations);
+    const totalActivations = this.toNumber(result?.total_activations);
+    const conversionRate = totalInvites > 0 ? (totalRegistrations / totalInvites) * 100 : 0;
 
     // 获取最佳表现者
     const topPerformerQuery = `
@@ -565,9 +601,9 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
       GROUP BY u.id, u.name
       ORDER BY invite_count DESC
       LIMIT 1
-    `
+    `;
 
-    const topPerformer = await this.db.queryOne(topPerformerQuery, [period.start, period.end])
+    const topPerformer = await this.db.queryOne<TopPerformerRow>(topPerformerQuery, [period.start, period.end]);
 
     return {
       totalInvites,
@@ -577,10 +613,10 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
       topPerformer: {
         userId: topPerformer?.id || '',
         userName: topPerformer?.name || '无',
-        inviteCount: parseInt(topPerformer?.invite_count) || 0
+        inviteCount: this.toNumber(topPerformer?.invite_count),
       },
-      growthRate: 0 // 需要与上期对比计算
-    }
+      growthRate: 0, // 需要与上期对比计算
+    };
   }
 
   private async getInviteTrendData(period: TimePeriod): Promise<Array<{
@@ -598,15 +634,15 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
       WHERE ic.created_at BETWEEN ? AND ?
       GROUP BY DATE(ic.created_at)
       ORDER BY date
-    `
+    `;
 
-    const results = await this.db.query(query, [period.start, period.end])
-    
-    return results.map((row: any) => ({
+    const results = await this.db.query<TrendRow>(query, [period.start, period.end]);
+
+    return results.map((row) => ({
       date: row.date,
-      invites: parseInt(row.invites) || 0,
-      registrations: parseInt(row.registrations) || 0
-    }))
+      invites: this.toNumber(row.invites),
+      registrations: this.toNumber(row.registrations),
+    }));
   }
 
   private async getTopPerformers(period: TimePeriod, limit: number): Promise<LeaderboardEntry[]> {
@@ -624,22 +660,22 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
       GROUP BY u.id, u.name
       ORDER BY invite_count DESC
       LIMIT ?
-    `
+    `;
 
-    const results = await this.db.query(query, [period.start, period.end, limit])
-    
-    return results.map((row: any, index: number) => ({
-      userId: row.user_id,
-      userName: row.user_name,
-      inviteCount: parseInt(row.invite_count) || 0,
+    const results = await this.db.query<TopPerformerRow>(query, [period.start, period.end, limit]);
+
+    return results.map((row, index: number) => ({
+      userId: row.user_id || row.id,
+      userName: row.user_name || row.name,
+      inviteCount: this.toNumber(row.invite_count),
       rank: index + 1,
       rewards: {
-        totalCredits: parseInt(row.total_credits) || 0,
+        totalCredits: this.toNumber(row.total_credits),
         badges: [],
         titles: [],
-        premiumDays: 0
-      }
-    }))
+        premiumDays: 0,
+      },
+    }));
   }
 
   // 其他私有方法的占位实现
@@ -648,8 +684,8 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
       { platform: '微信', shareCount: 45 },
       { platform: 'QQ', shareCount: 23 },
       { platform: '邮件', shareCount: 18 },
-      { platform: '链接', shareCount: 14 }
-    ]
+      { platform: '链接', shareCount: 14 },
+    ];
   }
 
   private async getConversionAnalysis(period: TimePeriod): Promise<{
@@ -662,14 +698,14 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
       inviteToClick: 25.5,
       clickToRegister: 35.2,
       registerToActivate: 68.7,
-      overallConversion: 15.8
-    }
+      overallConversion: 15.8,
+    };
   }
 
   private async getUserInfo(userId: string): Promise<{ id: string; name: string; email: string }> {
-    const query = 'SELECT id, name, email FROM users WHERE id = ?'
-    const result = await this.db.queryOne(query, [userId])
-    return result || { id: userId, name: '未知用户', email: '' }
+    const query = 'SELECT id, name, email FROM users WHERE id = ?';
+    const result = await this.db.queryOne<UserInfoRow>(query, [userId]);
+    return result || { id: userId, name: '未知用户', email: '' };
   }
 
   private async getUserStats(userId: string, period: TimePeriod): Promise<{
@@ -688,25 +724,36 @@ export class ReportGenerationServiceImpl implements ReportGenerationService {
       LEFT JOIN invite_registrations ir ON ic.id = ir.invite_code_id
       LEFT JOIN rewards r ON ? = r.user_id
       WHERE ic.inviter_id = ? AND ic.created_at BETWEEN ? AND ?
-    `
+    `;
 
-    const result = await this.db.queryOne(query, [userId, userId, period.start, period.end])
-    
+    const result = await this.db.queryOne<UserStatsRow>(query, [userId, userId, period.start, period.end]);
+
     return {
-      totalInvites: parseInt(result?.total_invites) || 0,
-      successfulRegistrations: parseInt(result?.successful_registrations) || 0,
-      activeInvitees: parseInt(result?.active_invitees) || 0,
-      totalRewardsEarned: parseInt(result?.total_rewards_earned) || 0
-    }
+      totalInvites: this.toNumber(result?.total_invites),
+      successfulRegistrations: this.toNumber(result?.successful_registrations),
+      activeInvitees: this.toNumber(result?.active_invitees),
+      totalRewardsEarned: this.toNumber(result?.total_rewards_earned),
+    };
   }
 
   // 其他辅助方法的简化实现
-  private async getUserInviteHistory(userId: string, period: TimePeriod): Promise<any[]> { return [] }
-  private async getUserTrendData(userId: string, period: TimePeriod): Promise<any[]> { return [] }
-  private async getPlatformOverview(period: TimePeriod): Promise<any> { return {} }
-  private async getGrowthTrendData(period: TimePeriod): Promise<any[]> { return [] }
-  private async getRegionDistribution(period: TimePeriod): Promise<any[]> { return [] }
-  private async getConversionFunnelData(period: TimePeriod): Promise<any[]> { return [] }
-  private async getPlatformConversionData(period: TimePeriod): Promise<any[]> { return [] }
-  private async getTimeBasedConversion(period: TimePeriod): Promise<any[]> { return [] }
+  private async getUserInviteHistory(userId: string, period: TimePeriod): Promise<any[]> { return []; }
+  private async getUserTrendData(userId: string, period: TimePeriod): Promise<any[]> { return []; }
+  private async getPlatformOverview(period: TimePeriod): Promise<any> { return {}; }
+  private async getGrowthTrendData(period: TimePeriod): Promise<any[]> { return []; }
+  private async getRegionDistribution(period: TimePeriod): Promise<any[]> { return []; }
+  private async getConversionFunnelData(period: TimePeriod): Promise<any[]> { return []; }
+  private async getPlatformConversionData(period: TimePeriod): Promise<any[]> { return []; }
+  private async getTimeBasedConversion(period: TimePeriod): Promise<any[]> { return []; }
+
+  private toNumber(value: NumberLike): number {
+    if (typeof value === 'number') {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value);
+      return Number.isNaN(parsed) ? 0 : parsed;
+    }
+    return 0;
+  }
 }

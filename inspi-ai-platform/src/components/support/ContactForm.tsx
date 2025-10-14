@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+
 import { EmailType, EmailPriority } from '@/lib/email/config';
 
 interface ContactFormProps {
@@ -32,7 +33,7 @@ export default function ContactForm({ onSuccess, onError, className = '' }: Cont
     subject: '',
     message: '',
     type: 'general',
-    priority: 'normal'
+    priority: 'normal',
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -67,21 +68,21 @@ export default function ContactForm({ onSuccess, onError, className = '' }: Cont
 
   // 处理输入变化
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
+    setFormData({ ...formData, [name]: value });
+
     // 清除对应字段的错误
     if (errors[name as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
+      setErrors({ ...errors, [name]: undefined  });
     }
   };
 
   // 提交表单
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -103,7 +104,7 @@ export default function ContactForm({ onSuccess, onError, className = '' }: Cont
       if (result.success) {
         setSubmitStatus('success');
         setSubmitMessage(result.message);
-        
+
         // 重置表单
         setFormData({
           name: '',
@@ -111,14 +112,14 @@ export default function ContactForm({ onSuccess, onError, className = '' }: Cont
           subject: '',
           message: '',
           type: 'general',
-          priority: 'normal'
+          priority: 'normal',
         });
-        
-        onSuccess?.();
+
+        onSuccess && onSuccess();
       } else {
         setSubmitStatus('error');
         setSubmitMessage(result.message || '提交失败，请重试');
-        
+
         if (result.errors) {
           const fieldErrors: FormErrors = {};
           result.errors.forEach((error: string) => {
@@ -129,14 +130,14 @@ export default function ContactForm({ onSuccess, onError, className = '' }: Cont
           });
           setErrors(fieldErrors);
         }
-        
-        onError?.(result.message);
+
+        onError && onError(result.message);
       }
     } catch (error) {
       console.error('提交联系表单时出错:', error);
       setSubmitStatus('error');
       setSubmitMessage('网络错误，请检查连接后重试');
-      onError?.('网络错误');
+      onError && onError('网络错误');
     } finally {
       setIsSubmitting(false);
     }
@@ -147,14 +148,14 @@ export default function ContactForm({ onSuccess, onError, className = '' }: Cont
     { value: 'feedback', label: '用户反馈' },
     { value: 'bug', label: 'Bug报告' },
     { value: 'feature', label: '功能建议' },
-    { value: 'contact', label: '其他联系' }
+    { value: 'contact', label: '其他联系' },
   ];
 
   const priorityOptions = [
     { value: 'low', label: '低优先级' },
     { value: 'normal', label: '普通' },
     { value: 'high', label: '高优先级' },
-    { value: 'urgent', label: '紧急' }
+    { value: 'urgent', label: '紧急' },
   ];
 
   return (
@@ -298,8 +299,8 @@ export default function ContactForm({ onSuccess, onError, className = '' }: Cont
         {/* 提交状态消息 */}
         {submitStatus !== 'idle' && (
           <div className={`p-4 rounded-lg ${
-            submitStatus === 'success' 
-              ? 'bg-green-50 border border-green-200 text-green-800' 
+            submitStatus === 'success'
+              ? 'bg-green-50 border border-green-200 text-green-800'
               : 'bg-red-50 border border-red-200 text-red-800'
           }`}>
             <div className="flex items-center">

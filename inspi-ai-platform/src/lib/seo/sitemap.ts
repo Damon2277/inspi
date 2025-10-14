@@ -16,44 +16,44 @@ export interface SitemapUrl {
  */
 export function getStaticSitemapUrls(): SitemapUrl[] {
   const baseUrl = SEO_CONFIG.SITE_URL;
-  
+
   return [
     {
       url: `${baseUrl}/`,
       lastModified: new Date(),
       changeFrequency: 'daily',
-      priority: 1.0
+      priority: 1.0,
     },
     {
       url: `${baseUrl}/create`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
-      priority: 0.9
+      priority: 0.9,
     },
     {
       url: `${baseUrl}/square`,
       lastModified: new Date(),
       changeFrequency: 'hourly',
-      priority: 0.9
+      priority: 0.9,
     },
     {
       url: `${baseUrl}/leaderboard`,
       lastModified: new Date(),
       changeFrequency: 'daily',
-      priority: 0.8
+      priority: 0.8,
     },
     {
       url: `${baseUrl}/subscription`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
-      priority: 0.7
+      priority: 0.7,
     },
     {
       url: `${baseUrl}/contact`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
-      priority: 0.6
-    }
+      priority: 0.6,
+    },
   ];
 }
 
@@ -65,12 +65,12 @@ export async function getWorksSitemapUrls(): Promise<SitemapUrl[]> {
     // 这里应该从数据库获取所有已发布的作品
     // 为了演示，我们使用模拟数据
     const works = await getPublishedWorks();
-    
+
     return works.map(work => ({
       url: `${SEO_CONFIG.SITE_URL}/works/${work.id}`,
       lastModified: work.updatedAt || work.createdAt,
       changeFrequency: 'weekly' as const,
-      priority: 0.7
+      priority: 0.7,
     }));
   } catch (error) {
     console.error('Error generating works sitemap:', error);
@@ -85,12 +85,12 @@ export async function getUserProfilesSitemapUrls(): Promise<SitemapUrl[]> {
   try {
     // 这里应该从数据库获取所有公开的用户档案
     const users = await getPublicUserProfiles();
-    
+
     return users.map(user => ({
-      url: `${SEO_CONFIG.SITE_URL}/profile/${user.id}`,
+      url: `${SEO_CONFIG.SITE_URL}/profile/${(user.id || (user as any)._id)}`,
       lastModified: user.updatedAt || user.createdAt,
       changeFrequency: 'weekly' as const,
-      priority: 0.6
+      priority: 0.6,
     }));
   } catch (error) {
     console.error('Error generating user profiles sitemap:', error);
@@ -103,15 +103,15 @@ export async function getUserProfilesSitemapUrls(): Promise<SitemapUrl[]> {
  */
 export function getSubjectSitemapUrls(): SitemapUrl[] {
   const subjects = [
-    '数学', '语文', '英语', '物理', '化学', '生物', 
-    '历史', '地理', '政治', '音乐', '美术', '体育'
+    '数学', '语文', '英语', '物理', '化学', '生物',
+    '历史', '地理', '政治', '音乐', '美术', '体育',
   ];
-  
+
   return subjects.map(subject => ({
     url: `${SEO_CONFIG.SITE_URL}/square?subject=${encodeURIComponent(subject)}`,
     lastModified: new Date(),
     changeFrequency: 'daily' as const,
-    priority: 0.8
+    priority: 0.8,
   }));
 }
 
@@ -123,24 +123,24 @@ export async function generateSitemapXML(): Promise<string> {
   const worksUrls = await getWorksSitemapUrls();
   const userUrls = await getUserProfilesSitemapUrls();
   const subjectUrls = getSubjectSitemapUrls();
-  
+
   const allUrls = [...staticUrls, ...worksUrls, ...userUrls, ...subjectUrls];
-  
+
   const xmlHeader = '<?xml version="1.0" encoding="UTF-8"?>';
   const urlsetOpen = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
   const urlsetClose = '</urlset>';
-  
+
   const urlEntries = allUrls.map(entry => {
-    const lastmod = entry.lastModified 
+    const lastmod = entry.lastModified
       ? `<lastmod>${entry.lastModified.toISOString().split('T')[0]}</lastmod>`
       : '';
-    const changefreq = entry.changeFrequency 
+    const changefreq = entry.changeFrequency
       ? `<changefreq>${entry.changeFrequency}</changefreq>`
       : '';
-    const priority = entry.priority 
+    const priority = entry.priority
       ? `<priority>${entry.priority}</priority>`
       : '';
-    
+
     return `  <url>
     <loc>${entry.url}</loc>
     ${lastmod}
@@ -148,7 +148,7 @@ export async function generateSitemapXML(): Promise<string> {
     ${priority}
   </url>`;
   }).join('\n');
-  
+
   return `${xmlHeader}
 ${urlsetOpen}
 ${urlEntries}
@@ -160,7 +160,7 @@ ${urlsetClose}`;
  */
 export function generateRobotsTxt(): string {
   const sitemapUrl = `${SEO_CONFIG.SITE_URL}/sitemap.xml`;
-  
+
   return `User-agent: *
 Allow: /
 
@@ -233,7 +233,7 @@ async function getPublicUserProfiles(): Promise<Array<{
 export async function updateSitemap(): Promise<void> {
   try {
     const sitemapXML = await generateSitemapXML();
-    
+
     // 这里应该将sitemap写入到public目录或CDN
     // 在Next.js中，可以通过API路由来动态生成sitemap
     console.log('Sitemap updated successfully');
@@ -260,23 +260,23 @@ export function validateSitemapUrl(url: string): boolean {
  */
 export function calculatePriority(
   pageType: 'home' | 'category' | 'content' | 'profile' | 'other',
-  popularity?: number
+  popularity?: number,
 ): number {
   const basePriorities = {
     home: 1.0,
     category: 0.8,
     content: 0.7,
     profile: 0.6,
-    other: 0.5
+    other: 0.5,
   };
-  
+
   let priority = basePriorities[pageType];
-  
+
   // 根据受欢迎程度调整优先级
   if (popularity && popularity > 0) {
     const popularityBoost = Math.min(popularity / 100, 0.2);
     priority = Math.min(priority + popularityBoost, 1.0);
   }
-  
+
   return Math.round(priority * 10) / 10; // 保留一位小数
 }

@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
 import Link from 'next/link';
+import React, { useState } from 'react';
+
+import { AppLayout } from '@/components/layout';
 
 // 用户作品接口
 interface UserWork {
@@ -33,8 +35,8 @@ export default function ProfilePage() {
       works: 12,
       reuses: 39,
       likes: 156,
-      followers: 28
-    }
+      followers: 28,
+    },
   });
 
   const [activeTab, setActiveTab] = useState<'works' | 'drafts' | 'liked'>('works');
@@ -51,7 +53,7 @@ export default function ProfilePage() {
       likes: 45,
       uses: 23,
       createdAt: '2024-01-15',
-      status: 'published'
+      status: 'published',
     },
     {
       id: 2,
@@ -63,7 +65,7 @@ export default function ProfilePage() {
       likes: 32,
       uses: 18,
       createdAt: '2024-01-12',
-      status: 'published'
+      status: 'published',
     },
     {
       id: 3,
@@ -75,8 +77,8 @@ export default function ProfilePage() {
       likes: 28,
       uses: 15,
       createdAt: '2024-01-10',
-      status: 'draft'
-    }
+      status: 'draft',
+    },
   ];
 
   const quickActions = [
@@ -86,7 +88,7 @@ export default function ProfilePage() {
       description: '开始创作你的教学魔法',
       icon: '✨',
       href: '/create',
-      color: 'from-orange-500 to-pink-500'
+      color: 'from-orange-500 to-pink-500',
     },
     {
       id: 'explore',
@@ -94,7 +96,7 @@ export default function ProfilePage() {
       description: '发现更多优秀作品',
       icon: '🌟',
       href: '/square',
-      color: 'from-blue-500 to-purple-500'
+      color: 'from-blue-500 to-purple-500',
     },
     {
       id: 'settings',
@@ -102,8 +104,8 @@ export default function ProfilePage() {
       description: '管理个人信息和偏好',
       icon: '⚙️',
       href: '/settings',
-      color: 'from-green-500 to-teal-500'
-    }
+      color: 'from-green-500 to-teal-500',
+    },
   ];
 
   const handleTabChange = (tab: 'works' | 'drafts' | 'liked') => {
@@ -118,35 +120,9 @@ export default function ProfilePage() {
     }
   };
 
-  const handleLogout = () => {
-    if (confirm('确定要退出登录吗？')) {
-      console.log('Logout');
-      // 这里可以添加退出登录逻辑
-    }
-  };
-
   return (
-    <div className="modern-layout">
-      {/* 导航栏 */}
-      <nav className="modern-nav">
-        <div className="modern-container">
-          <div className="modern-nav-content">
-            <div className="modern-logo">Inspi.AI</div>
-            <div className="modern-nav-links mobile-hidden">
-              <Link href="/" className="modern-nav-link">首页</Link>
-              <Link href="/create" className="modern-nav-link">创作</Link>
-              <Link href="/square" className="modern-nav-link">广场</Link>
-              <Link href="/profile" className="modern-nav-link active">我的</Link>
-            </div>
-            <div className="flex gap-4">
-              <Link href="/create" className="modern-btn modern-btn-primary modern-btn-sm">
-                开启魔法
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <AppLayout>
+      <div className="modern-layout">
       {/* 个人资料头部 */}
       <section style={{ padding: '60px 0 40px', background: 'var(--gradient-hero)' }}>
         <div className="modern-container">
@@ -155,24 +131,24 @@ export default function ProfilePage() {
             <div className="modern-card modern-card-elevated">
               <div className="modern-card-body" style={{ padding: '40px' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '24px' }}>
-                  <div style={{ 
-                    width: '80px', 
-                    height: '80px', 
-                    borderRadius: '50%', 
+                  <div style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '50%',
                     background: 'var(--gradient-primary)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '36px'
+                    fontSize: '36px',
                   }}>
                     {user.avatar}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                      <h1 style={{ 
-                        fontSize: '28px', 
-                        fontWeight: '700', 
-                        color: 'var(--gray-900)' 
+                      <h1 style={{
+                        fontSize: '28px',
+                        fontWeight: '700',
+                        color: 'var(--gray-900)',
                       }}>
                         {user.name}
                       </h1>
@@ -182,28 +158,28 @@ export default function ProfilePage() {
                         color: 'white',
                         borderRadius: 'var(--radius-full)',
                         fontSize: '12px',
-                        fontWeight: '600'
+                        fontWeight: '600',
                       }}>
                         {user.level} 用户
                       </span>
                     </div>
-                    <p style={{ 
-                      color: 'var(--gray-600)', 
+                    <p style={{
+                      color: 'var(--gray-600)',
                       marginBottom: '12px',
-                      fontSize: '16px'
+                      fontSize: '16px',
                     }}>
                       {user.email}
                     </p>
-                    <p style={{ 
-                      color: 'var(--gray-700)', 
+                    <p style={{
+                      color: 'var(--gray-700)',
                       lineHeight: '1.6',
-                      marginBottom: '16px'
+                      marginBottom: '16px',
                     }}>
                       {user.bio}
                     </p>
-                    <p style={{ 
-                      color: 'var(--gray-500)', 
-                      fontSize: '14px' 
+                    <p style={{
+                      color: 'var(--gray-500)',
+                      fontSize: '14px',
                     }}>
                       加入于 {new Date(user.joinDate).toLocaleDateString('zh-CN')}
                     </p>
@@ -216,54 +192,54 @@ export default function ProfilePage() {
             <div>
               <div className="modern-card" style={{ marginBottom: '24px' }}>
                 <div className="modern-card-body">
-                  <h3 style={{ 
-                    fontSize: '18px', 
-                    fontWeight: '600', 
+                  <h3 style={{
+                    fontSize: '18px',
+                    fontWeight: '600',
                     marginBottom: '20px',
-                    color: 'var(--gray-900)'
+                    color: 'var(--gray-900)',
                   }}>
                     我的数据
                   </h3>
                   <div className="modern-grid modern-grid-2" style={{ gap: '16px' }}>
                     <div style={{ textAlign: 'center' }}>
-                      <div style={{ 
-                        fontSize: '24px', 
-                        fontWeight: '700', 
+                      <div style={{
+                        fontSize: '24px',
+                        fontWeight: '700',
                         color: 'var(--primary-600)',
-                        marginBottom: '4px'
+                        marginBottom: '4px',
                       }}>
                         {user.stats.works}
                       </div>
                       <div style={{ fontSize: '14px', color: 'var(--gray-600)' }}>作品</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                      <div style={{ 
-                        fontSize: '24px', 
-                        fontWeight: '700', 
+                      <div style={{
+                        fontSize: '24px',
+                        fontWeight: '700',
                         color: 'var(--primary-600)',
-                        marginBottom: '4px'
+                        marginBottom: '4px',
                       }}>
                         {user.stats.reuses}
                       </div>
                       <div style={{ fontSize: '14px', color: 'var(--gray-600)' }}>复用</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                      <div style={{ 
-                        fontSize: '24px', 
-                        fontWeight: '700', 
+                      <div style={{
+                        fontSize: '24px',
+                        fontWeight: '700',
                         color: 'var(--primary-600)',
-                        marginBottom: '4px'
+                        marginBottom: '4px',
                       }}>
                         {user.stats.likes}
                       </div>
                       <div style={{ fontSize: '14px', color: 'var(--gray-600)' }}>点赞</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                      <div style={{ 
-                        fontSize: '24px', 
-                        fontWeight: '700', 
+                      <div style={{
+                        fontSize: '24px',
+                        fontWeight: '700',
                         color: 'var(--primary-600)',
-                        marginBottom: '4px'
+                        marginBottom: '4px',
                       }}>
                         {user.stats.followers}
                       </div>
@@ -276,11 +252,11 @@ export default function ProfilePage() {
               {/* 快捷操作 */}
               <div className="modern-card">
                 <div className="modern-card-body">
-                  <h3 style={{ 
-                    fontSize: '18px', 
-                    fontWeight: '600', 
+                  <h3 style={{
+                    fontSize: '18px',
+                    fontWeight: '600',
                     marginBottom: '16px',
-                    color: 'var(--gray-900)'
+                    color: 'var(--gray-900)',
                   }}>
                     快捷操作
                   </h3>
@@ -290,10 +266,10 @@ export default function ProfilePage() {
                         key={action.id}
                         href={action.href}
                         className="modern-btn modern-btn-ghost"
-                        style={{ 
+                        style={{
                           justifyContent: 'flex-start',
                           padding: '12px 16px',
-                          textAlign: 'left'
+                          textAlign: 'left',
                         }}
                       >
                         <span style={{ fontSize: '20px', marginRight: '12px' }}>
@@ -322,15 +298,15 @@ export default function ProfilePage() {
         <div className="modern-container">
           {/* 标签页导航 */}
           <div style={{ marginBottom: '32px' }}>
-            <div style={{ 
-              display: 'flex', 
-              gap: '32px', 
-              borderBottom: '2px solid var(--gray-200)' 
+            <div style={{
+              display: 'flex',
+              gap: '32px',
+              borderBottom: '2px solid var(--gray-200)',
             }}>
               {[
                 { key: 'works', label: '我的作品', count: user.stats.works },
                 { key: 'drafts', label: '草稿箱', count: 3 },
-                { key: 'liked', label: '我的收藏', count: 8 }
+                { key: 'liked', label: '我的收藏', count: 8 },
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -344,7 +320,7 @@ export default function ProfilePage() {
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
-                    transition: 'all var(--transition-base)'
+                    transition: 'all var(--transition-base)',
                   }}
                 >
                   {tab.label} ({tab.count})
@@ -362,21 +338,21 @@ export default function ProfilePage() {
                 return true; // liked 暂时显示所有
               })
               .map((work) => (
-                <div 
-                  key={work.id} 
+                <div
+                  key={work.id}
                   className="modern-card modern-card-elevated case-card"
                   onClick={() => handleWorkClick(work)}
                   style={{
                     cursor: 'pointer',
-                    transition: 'all var(--transition-base)'
+                    transition: 'all var(--transition-base)',
                   }}
                 >
                   <div className="modern-card-body">
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'flex-start', 
-                      justifyContent: 'space-between', 
-                      marginBottom: '16px' 
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'space-between',
+                      marginBottom: '16px',
                     }}>
                       <div style={{ fontSize: '48px' }}>{work.thumbnail}</div>
                       <div style={{ display: 'flex', gap: '8px' }}>
@@ -386,7 +362,7 @@ export default function ProfilePage() {
                           color: 'var(--primary-700)',
                           borderRadius: 'var(--radius-sm)',
                           fontSize: '12px',
-                          fontWeight: '500'
+                          fontWeight: '500',
                         }}>
                           {work.subject}
                         </span>
@@ -395,7 +371,7 @@ export default function ProfilePage() {
                           background: work.status === 'published' ? 'var(--success-100)' : 'var(--gray-100)',
                           color: work.status === 'published' ? 'var(--success-700)' : 'var(--gray-600)',
                           borderRadius: 'var(--radius-sm)',
-                          fontSize: '12px'
+                          fontSize: '12px',
                         }}>
                           {work.status === 'published' ? '已发布' : '草稿'}
                         </span>
@@ -407,30 +383,30 @@ export default function ProfilePage() {
                       fontWeight: '600',
                       color: 'var(--gray-900)',
                       marginBottom: '8px',
-                      lineHeight: '1.3'
+                      lineHeight: '1.3',
                     }}>
                       {work.title}
                     </h3>
 
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between', 
-                      paddingTop: '16px', 
-                      borderTop: '1px solid var(--gray-200)' 
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      paddingTop: '16px',
+                      borderTop: '1px solid var(--gray-200)',
                     }}>
-                      <div style={{ 
-                        fontSize: '14px', 
-                        color: 'var(--gray-500)' 
+                      <div style={{
+                        fontSize: '14px',
+                        color: 'var(--gray-500)',
                       }}>
                         {new Date(work.createdAt).toLocaleDateString('zh-CN')}
                       </div>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '16px', 
-                        fontSize: '14px', 
-                        color: 'var(--gray-500)' 
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '16px',
+                        fontSize: '14px',
+                        color: 'var(--gray-500)',
                       }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           ❤️ {work.likes}
@@ -451,10 +427,10 @@ export default function ProfilePage() {
             if (activeTab === 'drafts') return work.status === 'draft';
             return true;
           }).length === 0 && (
-            <div style={{ 
-              textAlign: 'center', 
+            <div style={{
+              textAlign: 'center',
               padding: '60px 20px',
-              color: 'var(--gray-500)'
+              color: 'var(--gray-500)',
             }}>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
               <h3 style={{ fontSize: '18px', marginBottom: '8px' }}>
@@ -476,11 +452,11 @@ export default function ProfilePage() {
       </section>
 
       {/* 页脚 */}
-      <footer style={{ 
-        background: 'var(--gray-900)', 
-        color: 'var(--gray-300)', 
+      <footer style={{
+        background: 'var(--gray-900)',
+        color: 'var(--gray-300)',
         padding: '40px 0',
-        textAlign: 'center'
+        textAlign: 'center',
       }}>
         <div className="modern-container">
           <div className="modern-logo" style={{ color: 'white', marginBottom: '16px' }}>
@@ -489,6 +465,7 @@ export default function ProfilePage() {
           <p>© 2024 Inspi.AI. 让AI激发教学创意.</p>
         </div>
       </footer>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

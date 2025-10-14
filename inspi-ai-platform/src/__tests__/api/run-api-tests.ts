@@ -3,9 +3,9 @@
  * 提供统一的API测试执行入口
  */
 
-import { execSync } from 'child_process'
-import { existsSync, writeFileSync } from 'fs'
-import path from 'path'
+import { execSync } from 'child_process';
+import { existsSync, writeFileSync } from 'fs';
+import path from 'path';
 
 interface TestSuite {
   name: string
@@ -96,64 +96,64 @@ class ApiTestRunner {
       description: 'API集成测试',
       timeout: 120000,
     },
-  ]
+  ];
 
-  private results: TestResults[] = []
+  private results: TestResults[] = [];
 
   async runAllTests(): Promise<void> {
-    console.log('🚀 开始运行API测试套件...\n')
+    console.log('🚀 开始运行API测试套件...\n');
 
-    const startTime = Date.now()
+    const startTime = Date.now();
 
     for (const suite of this.testSuites) {
-      await this.runTestSuite(suite)
+      await this.runTestSuite(suite);
     }
 
-    const totalTime = Date.now() - startTime
-    this.generateReport(totalTime)
+    const totalTime = Date.now() - startTime;
+    this.generateReport(totalTime);
   }
 
   async runTestSuite(suite: TestSuite): Promise<void> {
-    console.log(`📋 运行测试套件: ${suite.name} - ${suite.description}`)
-    
-    const startTime = Date.now()
-    
+    console.log(`📋 运行测试套件: ${suite.name} - ${suite.description}`);
+
+    const startTime = Date.now();
+
     try {
-      const command = this.buildJestCommand(suite)
-      const output = execSync(command, { 
+      const command = this.buildJestCommand(suite);
+      const output = execSync(command, {
         encoding: 'utf8',
         timeout: suite.timeout || 60000,
         env: {
           ...process.env,
           NODE_ENV: 'test',
           JEST_TIMEOUT: (suite.timeout || 60000).toString(),
-        }
-      })
+        },
+      });
 
-      const result = this.parseJestOutput(output, suite.name)
-      result.duration = Date.now() - startTime
-      this.results.push(result)
+      const result = this.parseJestOutput(output, suite.name);
+      result.duration = Date.now() - startTime;
+      this.results.push(result);
 
-      console.log(`✅ ${suite.name}: ${result.passed} passed, ${result.failed} failed, ${result.skipped} skipped (${result.duration}ms)\n`)
+      console.log(`✅ ${suite.name}: ${result.passed} passed, ${result.failed} failed, ${result.skipped} skipped (${result.duration}ms)\n`);
 
     } catch (error: any) {
-      const duration = Date.now() - startTime
-      console.error(`❌ ${suite.name} 测试失败:`, error.message)
-      
+      const duration = Date.now() - startTime;
+      console.error(`❌ ${suite.name} 测试失败:`, error.message);
+
       this.results.push({
         suite: suite.name,
         passed: 0,
         failed: 1,
         skipped: 0,
         duration,
-      })
+      });
     }
   }
 
   private buildJestCommand(suite: TestSuite): string {
-    const baseCommand = 'npx jest'
-    const configFile = '--config=jest.config.integration.js'
-    const pattern = `--testPathPattern="${suite.pattern}"`
+    const baseCommand = 'npx jest';
+    const configFile = '--config=jest.config.integration.js';
+    const pattern = `--testPathPattern="${suite.pattern}"`;
     const options = [
       '--verbose',
       '--detectOpenHandles',
@@ -162,9 +162,9 @@ class ApiTestRunner {
       '--coverage',
       '--coverageDirectory=coverage/api',
       `--testTimeout=${suite.timeout || 60000}`,
-    ]
+    ];
 
-    return `${baseCommand} ${configFile} ${pattern} ${options.join(' ')}`
+    return `${baseCommand} ${configFile} ${pattern} ${options.join(' ')}`;
   }
 
   private parseJestOutput(output: string, suiteName: string): TestResults {
@@ -174,80 +174,80 @@ class ApiTestRunner {
       failed: 0,
       skipped: 0,
       duration: 0,
-    }
+    };
 
     // 解析Jest输出
-    const testResultMatch = output.match(/Tests:\\s+(\\d+) failed,\\s+(\\d+) passed,\\s+(\\d+) total/)
+    const testResultMatch = output.match(/Tests:\\s+(\\d+) failed,\\s+(\\d+) passed,\\s+(\\d+) total/);
     if (testResultMatch) {
-      result.failed = parseInt(testResultMatch[1])
-      result.passed = parseInt(testResultMatch[2])
+      result.failed = parseInt(testResultMatch[1], 10);
+      result.passed = parseInt(testResultMatch[2], 10);
     }
 
-    const skippedMatch = output.match(/(\\d+) skipped/)
+    const skippedMatch = output.match(/(\\d+) skipped/);
     if (skippedMatch) {
-      result.skipped = parseInt(skippedMatch[1])
+      result.skipped = parseInt(skippedMatch[1], 10);
     }
 
     // 解析覆盖率
-    const coverageMatch = output.match(/All files\\s+\\|\\s+(\\d+\\.\\d+)\\s+\\|\\s+(\\d+\\.\\d+)\\s+\\|\\s+(\\d+\\.\\d+)\\s+\\|\\s+(\\d+\\.\\d+)/)
+    const coverageMatch = output.match(/All files\\s+\\|\\s+(\\d+\\.\\d+)\\s+\\|\\s+(\\d+\\.\\d+)\\s+\\|\\s+(\\d+\\.\\d+)\\s+\\|\\s+(\\d+\\.\\d+)/);
     if (coverageMatch) {
       result.coverage = {
         statements: parseFloat(coverageMatch[1]),
         branches: parseFloat(coverageMatch[2]),
         functions: parseFloat(coverageMatch[3]),
         lines: parseFloat(coverageMatch[4]),
-      }
+      };
     }
 
-    return result
+    return result;
   }
 
   private generateReport(totalTime: number): void {
-    console.log('📊 生成测试报告...\n')
+    console.log('📊 生成测试报告...\n');
 
-    const totalPassed = this.results.reduce((sum, r) => sum + r.passed, 0)
-    const totalFailed = this.results.reduce((sum, r) => sum + r.failed, 0)
-    const totalSkipped = this.results.reduce((sum, r) => sum + r.skipped, 0)
-    const totalTests = totalPassed + totalFailed + totalSkipped
+    const totalPassed = this.results.reduce((sum, r) => sum + r.passed, 0);
+    const totalFailed = this.results.reduce((sum, r) => sum + r.failed, 0);
+    const totalSkipped = this.results.reduce((sum, r) => sum + r.skipped, 0);
+    const totalTests = totalPassed + totalFailed + totalSkipped;
 
     // 控制台报告
-    console.log('=' .repeat(80))
-    console.log('🎯 API测试总结报告')
-    console.log('=' .repeat(80))
-    console.log(`总测试数: ${totalTests}`)
-    console.log(`通过: ${totalPassed} (${((totalPassed / totalTests) * 100).toFixed(1)}%)`)
-    console.log(`失败: ${totalFailed} (${((totalFailed / totalTests) * 100).toFixed(1)}%)`)
-    console.log(`跳过: ${totalSkipped} (${((totalSkipped / totalTests) * 100).toFixed(1)}%)`)
-    console.log(`总耗时: ${(totalTime / 1000).toFixed(2)}s`)
-    console.log()
+    console.log('=' .repeat(80));
+    console.log('🎯 API测试总结报告');
+    console.log('=' .repeat(80));
+    console.log(`总测试数: ${totalTests}`);
+    console.log(`通过: ${totalPassed} (${((totalPassed / totalTests) * 100).toFixed(1)}%)`);
+    console.log(`失败: ${totalFailed} (${((totalFailed / totalTests) * 100).toFixed(1)}%)`);
+    console.log(`跳过: ${totalSkipped} (${((totalSkipped / totalTests) * 100).toFixed(1)}%)`);
+    console.log(`总耗时: ${(totalTime / 1000).toFixed(2)}s`);
+    console.log();
 
     // 各套件详情
-    console.log('📋 各测试套件详情:')
-    console.log('-'.repeat(80))
+    console.log('📋 各测试套件详情:');
+    console.log('-'.repeat(80));
     this.results.forEach(result => {
-      const suite = this.testSuites.find(s => s.name === result.suite)
-      const status = result.failed > 0 ? '❌' : '✅'
-      const duration = (result.duration / 1000).toFixed(2)
-      
-      console.log(`${status} ${result.suite.padEnd(15)} | ${result.passed.toString().padStart(3)} passed | ${result.failed.toString().padStart(3)} failed | ${duration}s | ${suite?.description || ''}`)
-      
+      const suite = this.testSuites.find(s => s.name === result.suite);
+      const status = result.failed > 0 ? '❌' : '✅';
+      const duration = (result.duration / 1000).toFixed(2);
+
+      console.log(`${status} ${result.suite.padEnd(15)} | ${result.passed.toString().padStart(3)} passed | ${result.failed.toString().padStart(3)} failed | ${duration}s | ${suite?.description || ''}`);
+
       if (result.coverage) {
-        console.log(`   覆盖率: 语句 ${result.coverage.statements}% | 分支 ${result.coverage.branches}% | 函数 ${result.coverage.functions}% | 行 ${result.coverage.lines}%`)
+        console.log(`   覆盖率: 语句 ${result.coverage.statements}% | 分支 ${result.coverage.branches}% | 函数 ${result.coverage.functions}% | 行 ${result.coverage.lines}%`);
       }
-    })
+    });
 
     // 生成JSON报告
-    this.generateJsonReport(totalTime)
+    this.generateJsonReport(totalTime);
 
     // 生成HTML报告
-    this.generateHtmlReport(totalTime)
+    this.generateHtmlReport(totalTime);
 
-    console.log()
+    console.log();
     if (totalFailed > 0) {
-      console.log('❌ 部分测试失败，请检查详细日志')
-      process.exit(1)
+      console.log('❌ 部分测试失败，请检查详细日志');
+      process.exit(1);
     } else {
-      console.log('✅ 所有API测试通过！')
+      console.log('✅ 所有API测试通过！');
     }
   }
 
@@ -262,25 +262,25 @@ class ApiTestRunner {
         skipped: this.results.reduce((sum, r) => sum + r.skipped, 0),
       },
       suites: this.results,
-    }
+    };
 
-    const reportPath = path.join(process.cwd(), 'coverage/api/test-report.json')
-    writeFileSync(reportPath, JSON.stringify(report, null, 2))
-    console.log(`📄 JSON报告已生成: ${reportPath}`)
+    const reportPath = path.join(process.cwd(), 'coverage/api/test-report.json');
+    writeFileSync(reportPath, JSON.stringify(report, null, 2));
+    console.log(`📄 JSON报告已生成: ${reportPath}`);
   }
 
   private generateHtmlReport(totalTime: number): void {
-    const html = this.generateHtmlContent(totalTime)
-    const reportPath = path.join(process.cwd(), 'coverage/api/test-report.html')
-    writeFileSync(reportPath, html)
-    console.log(`🌐 HTML报告已生成: ${reportPath}`)
+    const html = this.generateHtmlContent(totalTime);
+    const reportPath = path.join(process.cwd(), 'coverage/api/test-report.html');
+    writeFileSync(reportPath, html);
+    console.log(`🌐 HTML报告已生成: ${reportPath}`);
   }
 
   private generateHtmlContent(totalTime: number): string {
-    const totalPassed = this.results.reduce((sum, r) => sum + r.passed, 0)
-    const totalFailed = this.results.reduce((sum, r) => sum + r.failed, 0)
-    const totalSkipped = this.results.reduce((sum, r) => sum + r.skipped, 0)
-    const totalTests = totalPassed + totalFailed + totalSkipped
+    const totalPassed = this.results.reduce((sum, r) => sum + r.passed, 0);
+    const totalFailed = this.results.reduce((sum, r) => sum + r.failed, 0);
+    const totalSkipped = this.results.reduce((sum, r) => sum + r.skipped, 0);
+    const totalTests = totalPassed + totalFailed + totalSkipped;
 
     return `
 <!DOCTYPE html>
@@ -346,8 +346,8 @@ class ApiTestRunner {
         <div class="suites">
             <h2>📋 测试套件详情</h2>
             ${this.results.map(result => {
-              const suite = this.testSuites.find(s => s.name === result.suite)
-              const total = result.passed + result.failed + result.skipped
+              const suite = this.testSuites.find(s => s.name === result.suite);
+              const total = result.passed + result.failed + result.skipped;
               return `
                 <div class="suite">
                     <div class="suite-header">
@@ -389,7 +389,7 @@ class ApiTestRunner {
                     </div>
                     ` : ''}
                 </div>
-              `
+              `;
             }).join('')}
         </div>
         
@@ -399,58 +399,58 @@ class ApiTestRunner {
     </div>
 </body>
 </html>
-    `
+    `;
   }
 
   async runSpecificSuite(suiteName: string): Promise<void> {
-    const suite = this.testSuites.find(s => s.name === suiteName)
+    const suite = this.testSuites.find(s => s.name === suiteName);
     if (!suite) {
-      console.error(`❌ 未找到测试套件: ${suiteName}`)
-      console.log('可用的测试套件:')
-      this.testSuites.forEach(s => console.log(`  - ${s.name}: ${s.description}`))
-      return
+      console.error(`❌ 未找到测试套件: ${suiteName}`);
+      console.log('可用的测试套件:');
+      this.testSuites.forEach(s => console.log(`  - ${s.name}: ${s.description}`));
+      return;
     }
 
-    console.log(`🎯 运行指定测试套件: ${suiteName}\n`)
-    await this.runTestSuite(suite)
-    this.generateReport(this.results[0]?.duration || 0)
+    console.log(`🎯 运行指定测试套件: ${suiteName}\n`);
+    await this.runTestSuite(suite);
+    this.generateReport(this.results[0]?.duration || 0);
   }
 
   listSuites(): void {
-    console.log('📋 可用的API测试套件:\n')
+    console.log('📋 可用的API测试套件:\n');
     this.testSuites.forEach(suite => {
-      console.log(`🔹 ${suite.name.padEnd(15)} - ${suite.description}`)
-      console.log(`   模式: ${suite.pattern}`)
-      console.log(`   超时: ${(suite.timeout || 60000) / 1000}s\n`)
-    })
+      console.log(`🔹 ${suite.name.padEnd(15)} - ${suite.description}`);
+      console.log(`   模式: ${suite.pattern}`);
+      console.log(`   超时: ${(suite.timeout || 60000) / 1000}s\n`);
+    });
   }
 }
 
 // CLI接口
 async function main() {
-  const args = process.argv.slice(2)
-  const runner = new ApiTestRunner()
+  const args = process.argv.slice(2);
+  const runner = new ApiTestRunner();
 
   if (args.length === 0) {
-    await runner.runAllTests()
+    await runner.runAllTests();
   } else if (args[0] === 'list') {
-    runner.listSuites()
+    runner.listSuites();
   } else if (args[0] === 'suite' && args[1]) {
-    await runner.runSpecificSuite(args[1])
+    await runner.runSpecificSuite(args[1]);
   } else {
-    console.log('用法:')
-    console.log('  npm run test:api              # 运行所有API测试')
-    console.log('  npm run test:api list          # 列出所有测试套件')
-    console.log('  npm run test:api suite <name>  # 运行指定测试套件')
-    console.log()
-    console.log('示例:')
-    console.log('  npm run test:api suite auth    # 只运行认证API测试')
-    console.log('  npm run test:api suite works   # 只运行作品API测试')
+    console.log('用法:');
+    console.log('  npm run test:api              # 运行所有API测试');
+    console.log('  npm run test:api list          # 列出所有测试套件');
+    console.log('  npm run test:api suite <name>  # 运行指定测试套件');
+    console.log();
+    console.log('示例:');
+    console.log('  npm run test:api suite auth    # 只运行认证API测试');
+    console.log('  npm run test:api suite works   # 只运行作品API测试');
   }
 }
 
 if (require.main === module) {
-  main().catch(console.error)
+  main().catch(console.error);
 }
 
-export { ApiTestRunner }
+export { ApiTestRunner };

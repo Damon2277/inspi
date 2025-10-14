@@ -1,6 +1,6 @@
 /**
  * State Consistency Tester Tests
- * 
+ *
  * Tests for state consistency validation including
  * invariant checking, transition validation, and concurrency testing.
  */
@@ -11,7 +11,7 @@ import {
   StateTestUtils,
   type StateInvariant,
   type StateTransition,
-  type ConsistencyTestConfig
+  type ConsistencyTestConfig,
 } from '../../../../lib/testing/state';
 
 describe('StateConsistencyTester', () => {
@@ -26,7 +26,7 @@ describe('StateConsistencyTester', () => {
       count: 0,
       loading: false,
       data: null,
-      user: { name: 'test', age: 25 }
+      user: { name: 'test', age: 25 },
     });
   });
 
@@ -41,7 +41,7 @@ describe('StateConsistencyTester', () => {
         description: 'Count should never be negative',
         check: (state) => state.count >= 0,
         severity: 'high',
-        message: 'Count cannot be negative'
+        message: 'Count cannot be negative',
       };
 
       expect(() => tester.registerInvariant(invariant)).not.toThrow();
@@ -53,7 +53,7 @@ describe('StateConsistencyTester', () => {
         description: 'Count should never be negative',
         check: (state) => state.count >= 0,
         severity: 'high',
-        message: 'Count cannot be negative'
+        message: 'Count cannot be negative',
       };
 
       tester.registerInvariant(invariant);
@@ -81,7 +81,7 @@ describe('StateConsistencyTester', () => {
           throw new Error('Invariant check error');
         },
         severity: 'medium',
-        message: 'This invariant has a bug'
+        message: 'This invariant has a bug',
       };
 
       tester.registerInvariant(faultyInvariant);
@@ -106,7 +106,7 @@ describe('StateConsistencyTester', () => {
         to: (state) => state.loading,
         action: 'startLoading',
         validate: (from, to) => !from.loading && to.loading,
-        message: 'Invalid loading transition'
+        message: 'Invalid loading transition',
       };
 
       expect(() => tester.registerTransition(transition)).not.toThrow();
@@ -122,7 +122,7 @@ describe('StateConsistencyTester', () => {
           // Invalid if data is still null after loading completes
           return from.loading && !to.loading && to.data !== null;
         },
-        message: 'Loading completed but no data was set'
+        message: 'Loading completed but no data was set',
       };
 
       tester.registerTransition(transition);
@@ -151,7 +151,7 @@ describe('StateConsistencyTester', () => {
         validate: () => {
           throw new Error('Transition validation error');
         },
-        message: 'This transition has a bug'
+        message: 'This transition has a bug',
       };
 
       tester.registerTransition(faultyTransition);
@@ -178,7 +178,7 @@ describe('StateConsistencyTester', () => {
 
     it('should prevent multiple monitoring sessions', () => {
       const stopMonitoring = tester.startMonitoring(mockStore);
-      
+
       expect(() => {
         tester.startMonitoring(mockStore);
       }).toThrow('Already monitoring a store');
@@ -223,7 +223,7 @@ describe('StateConsistencyTester', () => {
       const operations = [
         () => mockStore.setState({ count: 1 }),
         () => mockStore.setState({ count: 2 }),
-        () => mockStore.setState({ count: 3 })
+        () => mockStore.setState({ count: 3 }),
       ];
 
       const result = await tester.testConcurrency(mockStore, operations, 'Test Concurrency');
@@ -241,7 +241,7 @@ describe('StateConsistencyTester', () => {
         () => {
           throw new Error('Concurrent operation error');
         },
-        () => mockStore.setState({ count: 3 })
+        () => mockStore.setState({ count: 3 }),
       ];
 
       let errorEmitted = false;
@@ -271,7 +271,7 @@ describe('StateConsistencyTester', () => {
         async () => {
           await new Promise(resolve => setTimeout(resolve, 15));
           mockStore.setState({ value: 'A' }); // Back to A - potential race condition
-        }
+        },
       ];
 
       const result = await tester.testConcurrency(mockStore, operations);
@@ -289,7 +289,7 @@ describe('StateConsistencyTester', () => {
         description: 'Test invariant',
         check: () => true,
         severity: 'low',
-        message: 'Test message'
+        message: 'Test message',
       };
 
       tester.registerInvariant(invariant);
@@ -315,7 +315,7 @@ describe('StateConsistencyTester', () => {
         description: 'An invariant that always fails',
         check: () => false,
         severity: 'critical',
-        message: 'Always fails'
+        message: 'Always fails',
       };
 
       tester.registerInvariant(invariant);
@@ -352,7 +352,7 @@ describe('StateConsistencyTester', () => {
 
     it('should validate common invariants correctly', () => {
       const invariants = StateConsistencyTester.createCommonInvariants();
-      
+
       // Test state not null invariant
       expect(invariants[0].check({ count: 0 })).toBe(true);
       expect(invariants[0].check(null)).toBe(false);
@@ -372,7 +372,7 @@ describe('StateConsistencyTester', () => {
         description: 'Test',
         check: () => true,
         severity: 'low',
-        message: 'Test'
+        message: 'Test',
       };
 
       tester.registerInvariant(invariant);
@@ -397,7 +397,7 @@ describe('StateConsistencyTester', () => {
         description: 'Test',
         check: () => true,
         severity: 'low',
-        message: 'Test'
+        message: 'Test',
       };
 
       tester.registerInvariant(invariant);
@@ -423,7 +423,7 @@ describe('StateConsistencyTester', () => {
         invariantChecks: true,
         transitionValidation: true,
         concurrencyTesting: true,
-        performanceMonitoring: true
+        performanceMonitoring: true,
       };
 
       const customTester = createConsistencyTester(config);
@@ -437,7 +437,7 @@ describe('StateConsistencyTester', () => {
       });
 
       const stopMonitoring = customTester.startMonitoring(mockStore);
-      
+
       // Should take periodic snapshots
       setTimeout(() => {
         stopMonitoring();
@@ -454,7 +454,7 @@ describe('StateConsistencyTester', () => {
         invariantChecks: true,
         transitionValidation: true,
         concurrencyTesting: true,
-        performanceMonitoring: true
+        performanceMonitoring: true,
       };
 
       const customTester = createConsistencyTester(config);

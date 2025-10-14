@@ -52,13 +52,15 @@ const securityDeepTests = [
       const content = fs.readFileSync(filePath, 'utf8');
       
       // 检查是否包含基础敏感词
-      const hasBasicWords = content.includes('白痴') || content.includes('垃圾') || content.includes('傻逼');
+      const hasBasicWords = content.includes('白痴') || content.includes('垃圾') ||
+        content.includes('傻逼');
       if (!hasBasicWords) {
         throw new Error('敏感词库可能为空或不完整');
       }
       
       // 检查是否有分类
-      const hasCategories = content.includes('PROFANITY') || content.includes('VIOLENCE') || content.includes('POLITICAL');
+      const hasCategories = content.includes('PROFANITY') ||
+        content.includes('VIOLENCE') || content.includes('POLITICAL');
       if (!hasCategories) {
         throw new Error('敏感词分类缺失');
       }
@@ -103,7 +105,8 @@ const securityDeepTests = [
       }
       
       // 检查是否有多维度分析
-      const hasMultiDimensional = content.includes('toxicity') || content.includes('harassment') || content.includes('violence');
+      const hasMultiDimensional = content.includes('toxicity') ||
+        content.includes('harassment') || content.includes('violence');
       if (!hasMultiDimensional) {
         throw new Error('缺少多维度内容分析');
       }
@@ -183,7 +186,8 @@ const securityDeepTests = [
       const componentContent = fs.readFileSync(componentPath, 'utf8');
       
       // 检查Hook是否有实时验证
-      const hasRealTimeValidation = hookContent.includes('debounce') || hookContent.includes('useEffect');
+      const hasRealTimeValidation = hookContent.includes('debounce') ||
+        hookContent.includes('useEffect');
       if (!hasRealTimeValidation) {
         throw new Error('Hook缺少实时验证功能');
       }
@@ -217,7 +221,8 @@ const securityDeepTests = [
       }
       
       // 检查是否有速率限制考虑
-      const hasRateLimit = content.includes('rate') || content.includes('limit') || content.includes('throttle');
+      const hasRateLimit = content.includes('rate') ||
+        content.includes('limit') || content.includes('throttle');
       
       return `API安全性良好${hasRateLimit ? '，包含速率限制' : ''}`;
     }
@@ -274,7 +279,8 @@ const invitationDeepTests = [
       const content = fs.readFileSync(filePath, 'utf8');
       
       // 检查是否有多层级奖励
-      const hasMultiLevel = content.includes('level') || content.includes('tier') || content.includes('milestone');
+      const hasMultiLevel = content.includes('level') ||
+        content.includes('tier') || content.includes('milestone');
       if (!hasMultiLevel) {
         throw new Error('缺少多层级奖励机制');
       }
@@ -330,7 +336,8 @@ const invitationDeepTests = [
       const content = fs.readFileSync(filePath, 'utf8');
       
       // 检查是否有多种徽章类型
-      const hasBadgeTypes = content.includes('BadgeCategory') || content.includes('BadgeRarity') || content.includes('badge_type');
+      const hasBadgeTypes = content.includes('BadgeCategory') ||
+        content.includes('BadgeRarity') || content.includes('badge_type');
       if (!hasBadgeTypes) {
         throw new Error('缺少徽章类型定义');
       }
@@ -354,12 +361,14 @@ const invitationDeepTests = [
   {
     name: '反欺诈系统检测能力',
     test: () => {
-      const filePath = path.join(__dirname, '../src/lib/invitation/services/FraudDetectionService.ts');
+      const filePath = path.join(__dirname,
+        '../src/lib/invitation/services/FraudDetectionService.ts');
       const content = fs.readFileSync(filePath, 'utf8');
       
       // 检查多维度检测
       const hasIPCheck = content.includes('checkIPFrequency') || content.includes('ip');
-      const hasDeviceCheck = content.includes('checkDeviceFingerprint') || content.includes('device');
+      const hasDeviceCheck = content.includes('checkDeviceFingerprint') ||
+        content.includes('device');
       const hasBatchCheck = content.includes('checkBatchRegistration') || content.includes('batch');
       
       if (!hasIPCheck || !hasDeviceCheck || !hasBatchCheck) {
@@ -367,7 +376,8 @@ const invitationDeepTests = [
       }
       
       // 检查风险评估
-      const hasRiskAssessment = content.includes('assessRegistrationRisk') || content.includes('risk');
+      const hasRiskAssessment = content.includes('assessRegistrationRisk') ||
+        content.includes('risk');
       if (!hasRiskAssessment) {
         throw new Error('缺少综合风险评估');
       }
@@ -379,7 +389,8 @@ const invitationDeepTests = [
   {
     name: '通知系统多渠道支持',
     test: () => {
-      const filePath = path.join(__dirname, '../src/lib/invitation/services/NotificationService.ts');
+      const filePath = path.join(__dirname,
+        '../src/lib/invitation/services/NotificationService.ts');
       const content = fs.readFileSync(filePath, 'utf8');
       
       // 检查多渠道支持
@@ -463,7 +474,8 @@ const invitationDeepTests = [
           if (content.includes('error') || content.includes('Error')) {
             hasErrorHandling = true;
           }
-          if (content.includes('responsive') || content.includes('mobile') || content.includes('sm:') || content.includes('md:')) {
+          if (content.includes('responsive') || content.includes('mobile') ||
+            content.includes('sm:') || content.includes('md:')) {
             hasResponsiveDesign = true;
           }
         }
@@ -516,7 +528,8 @@ const invitationDeepTests = [
         }
       });
       
-      const methodCount = [hasGetMethod, hasPostMethod, hasPutMethod, hasDeleteMethod].filter(Boolean).length;
+      const methodCount = [hasGetMethod, hasPostMethod, hasPutMethod,
+        hasDeleteMethod].filter(Boolean).length;
       if (methodCount < 2) {
         throw new Error('API路由HTTP方法支持不足');
       }

@@ -1,6 +1,8 @@
 /**
  * Web Vitals 性能监控
  */
+import { useEffect, useMemo, useState } from 'react';
+
 import { logger } from '@/lib/logging/logger';
 
 /**
@@ -41,6 +43,25 @@ export interface WebVitalsConfig {
   onMetric?: (metric: WebVitalsMetric) => void;
 }
 
+type LayoutShiftEntry = PerformanceEntry & {
+  value?: number;
+  hadRecentInput?: boolean;
+};
+
+type EventTimingEntry = PerformanceEventTiming | (PerformanceEntry & {
+  processingStart?: number;
+  processingEnd?: number;
+  duration?: number;
+});
+
+const isLayoutShiftEntry = (entry: PerformanceEntry): entry is LayoutShiftEntry =>
+  typeof (entry as LayoutShiftEntry).value === 'number';
+
+const isEventTimingEntry = (entry: PerformanceEntry): entry is EventTimingEntry =>
+  typeof (entry as EventTimingEntry).processingStart === 'number' ||
+  typeof (entry as EventTimingEntry).processingEnd === 'number' ||
+  typeof entry.duration === 'number';
+
 /**
  * Web Vitals 监控器
  */
@@ -62,10 +83,10 @@ export class WebVitalsMonitor {
         FCP: { good: 1800, poor: 3000 },
         LCP: { good: 2500, poor: 4000 },
         TTFB: { good: 800, poor: 1800 },
-        INP: { good: 200, poor: 500 }
+        INP: { good: 200, poor: 500 },
       },
       onMetric: () => {},
-      ...config
+      ...config,
     };
 
     this.isSupported = this.checkSupport();
@@ -104,7 +125,7 @@ export class WebVitalsMonitor {
 
     logger.info('Web Vitals monitoring started', {
       sampleRate: this.config.sampleRate,
-      debug: this.config.debug
+      debug: this.config.debug,
     });
   }
 
@@ -129,24 +150,25 @@ export class WebVitalsMonitor {
   private observeCLS(): void {
     try {
       let clsValue = 0;
-      let clsEntries: PerformanceEntry[] = [];
+      const clsEntries: PerformanceEntry[] = [];
 
       const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          if (!(entry as any).hadRecentInput) {
-            clsValue += (entry as any).value;
+        list.getEntries().forEach((entry) => {
+          if (isLayoutShiftEntry(entry) && !entry.hadRecentInput) {
+            const delta = entry.value ?? 0;
+            clsValue += delta;
             clsEntries.push(entry);
-          }
-        }
 
-        this.reportMetric({
-          name: 'CLS',
-          value: clsValue,
-          delta: (entry as any).value || 0,
-          id: this.generateId(),
-          entries: clsEntries,
-          navigationType: this.getNavigationType(),
-          rating: this.getRating('CLS', clsValue)
+            this.reportMetric({
+              name: 'CLS',
+              value: clsValue,
+              delta,
+              id: this.generateId(),
+              entries: [...clsEntries],
+              navigationType: this.getNavigationType(),
+              rating: this.getRating('CLS', clsValue),
+            });
+          }
         });
       });
 
@@ -163,9 +185,14 @@ export class WebVitalsMonitor {
   private observeFID(): void {
     try {
       const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          const fidValue = entry.processingStart - entry.startTime;
-          
+        list.getEntries().forEach((entry) => {
+          if (!isEventTimingEntry(entry)) {
+            return;
+          }
+
+          const processingStart = entry.processingStart ?? (entry.duration ?? 0) + entry.startTime;
+          const fidValue = Math.max(0, processingStart - entry.startTime);
+
           this.reportMetric({
             name: 'FID',
             value: fidValue,
@@ -173,9 +200,9 @@ export class WebVitalsMonitor {
             id: this.generateId(),
             entries: [entry],
             navigationType: this.getNavigationType(),
-            rating: this.getRating('FID', fidValue)
+            rating: this.getRating('FID', fidValue),
           });
-        }
+        });
       });
 
       observer.observe({ type: 'first-input', buffered: true });
@@ -200,7 +227,7 @@ export class WebVitalsMonitor {
               id: this.generateId(),
               entries: [entry],
               navigationType: this.getNavigationType(),
-              rating: this.getRating('FCP', entry.startTime)
+              rating: this.getRating('FCP', entry.startTime),
             });
           }
         }
@@ -224,7 +251,7 @@ export class WebVitalsMonitor {
       const observer = new PerformanceObserver((list) => {
         const entries = list.getEntries();
         const lastEntry = entries[entries.length - 1];
-        
+
         if (lastEntry) {
           lcpValue = lastEntry.startTime;
           lcpEntries = [lastEntry];
@@ -236,7 +263,7 @@ export class WebVitalsMonitor {
             id: this.generateId(),
             entries: lcpEntries,
             navigationType: this.getNavigationType(),
-            rating: this.getRating('LCP', lcpValue)
+            rating: this.getRating('LCP', lcpValue),
           });
         }
       });
@@ -266,7 +293,7 @@ export class WebVitalsMonitor {
               id: this.generateId(),
               entries: [entry],
               navigationType: this.getNavigationType(),
-              rating: this.getRating('TTFB', ttfbValue)
+              rating: this.getRating('TTFB', ttfbValue),
             });
           }
         }
@@ -288,9 +315,14 @@ export class WebVitalsMonitor {
       let inpEntries: PerformanceEntry[] = [];
 
       const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          const inpValue = entry.processingEnd - entry.startTime;
-          
+        list.getEntries().forEach((entry) => {
+          if (!isEventTimingEntry(entry)) {
+            return;
+          }
+
+          const processingEnd = entry.processingEnd ?? (entry.duration ?? 0) + entry.startTime;
+          const inpValue = Math.max(0, processingEnd - entry.startTime);
+
           if (inpValue > maxINP) {
             maxINP = inpValue;
             inpEntries = [entry];
@@ -302,10 +334,10 @@ export class WebVitalsMonitor {
               id: this.generateId(),
               entries: inpEntries,
               navigationType: this.getNavigationType(),
-              rating: this.getRating('INP', maxINP)
+              rating: this.getRating('INP', maxINP),
             });
           }
-        }
+        });
       });
 
       observer.observe({ type: 'event', buffered: true });
@@ -325,7 +357,7 @@ export class WebVitalsMonitor {
       console.log(`[Web Vitals] ${metric.name}:`, {
         value: Math.round(metric.value),
         rating: metric.rating,
-        delta: Math.round(metric.delta)
+        delta: Math.round(metric.delta),
       });
     }
 
@@ -338,7 +370,7 @@ export class WebVitalsMonitor {
     logger.debug('Web Vitals metric reported', {
       name: metric.name,
       value: metric.value,
-      rating: metric.rating
+      rating: metric.rating,
     });
   }
 
@@ -360,7 +392,7 @@ export class WebVitalsMonitor {
         navigationType: metric.navigationType,
         url: window.location.href,
         userAgent: navigator.userAgent,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // 使用 sendBeacon 或 fetch
@@ -371,7 +403,7 @@ export class WebVitalsMonitor {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body,
-          keepalive: true
+          keepalive: true,
         }).catch(error => {
           logger.warn('Failed to send Web Vitals metric', { error });
         });
@@ -398,7 +430,7 @@ export class WebVitalsMonitor {
    */
   private getNavigationType(): WebVitalsMetric['navigationType'] {
     if (typeof window === 'undefined') return 'navigate';
-    
+
     const navEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
     if (!navEntry) return 'navigate';
 
@@ -428,14 +460,14 @@ export class WebVitalsMonitor {
    */
   getMetricsSummary(): Record<string, { value: number; rating: string }> {
     const summary: Record<string, { value: number; rating: string }> = {};
-    
+
     for (const [name, metric] of this.metrics) {
       summary[name] = {
         value: Math.round(metric.value),
-        rating: metric.rating
+        rating: metric.rating,
       };
     }
-    
+
     return summary;
   }
 
@@ -460,16 +492,20 @@ export const globalWebVitalsMonitor = new WebVitalsMonitor();
  * Web Vitals Hook
  */
 export function useWebVitals(config?: WebVitalsConfig) {
-  const [metrics, setMetrics] = React.useState<Map<string, WebVitalsMetric>>(new Map());
-  const [isSupported, setIsSupported] = React.useState(false);
+  const [metrics, setMetrics] = useState<Map<string, WebVitalsMetric>>(new Map());
+  const [isSupported, setIsSupported] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const monitor = new WebVitalsMonitor({
       ...config,
       onMetric: (metric) => {
-        setMetrics(prev => new Map(prev.set(metric.name, metric)));
+        setMetrics(prev => {
+          const next = new Map(prev);
+          next.set(metric.name, metric);
+          return next;
+        });
         config?.onMetric?.(metric);
-      }
+      },
     });
 
     setIsSupported(monitor['isSupported']);
@@ -483,20 +519,17 @@ export function useWebVitals(config?: WebVitalsConfig) {
   return {
     metrics,
     isSupported,
-    summary: React.useMemo(() => {
+    summary: useMemo(() => {
       const summary: Record<string, { value: number; rating: string }> = {};
       for (const [name, metric] of metrics) {
         summary[name] = {
           value: Math.round(metric.value),
-          rating: metric.rating
+          rating: metric.rating,
         };
       }
       return summary;
-    }, [metrics])
+    }, [metrics]),
   };
 }
-
-// 导入 React（如果在 React 环境中使用）
-declare const React: any;
 
 export default WebVitalsMonitor;

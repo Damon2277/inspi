@@ -1,14 +1,15 @@
 /**
  * Type Regression Tester
- * 
+ *
  * Detects breaking changes in TypeScript type definitions
  * and provides regression testing for type safety.
  */
 
-import * as ts from 'typescript';
+import { createHash } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
-import { createHash } from 'crypto';
+
+import * as ts from 'typescript';
 
 export interface TypeSnapshot {
   version: string;
@@ -94,7 +95,7 @@ export class TypeRegressionTester {
    */
   async initialize(): Promise<void> {
     const sourceFiles = await this.getSourceFiles();
-    
+
     this.program = ts.createProgram(sourceFiles, this.config.compilerOptions);
     this.typeChecker = this.program.getTypeChecker();
   }
@@ -115,7 +116,7 @@ export class TypeRegressionTester {
       timestamp: new Date(),
       checksum,
       types,
-      compilerOptions: this.config.compilerOptions
+      compilerOptions: this.config.compilerOptions,
     };
 
     // Save snapshot to file
@@ -160,7 +161,7 @@ export class TypeRegressionTester {
       removedTypes: changes.filter(c => c.type === 'removed').length,
       modifiedTypes: changes.filter(c => c.type === 'modified').length,
       breakingChanges: breakingChanges.length,
-      impactLevel: this.calculateImpactLevel(changes)
+      impactLevel: this.calculateImpactLevel(changes),
     };
 
     const recommendations = this.generateRecommendations(changes);
@@ -171,7 +172,7 @@ export class TypeRegressionTester {
       changes,
       breakingChanges,
       summary,
-      recommendations
+      recommendations,
     };
   }
 
@@ -272,7 +273,7 @@ export class TypeRegressionTester {
     const location: SourceLocation = {
       file: sourceFile.fileName,
       line: position.line + 1,
-      column: position.character + 1
+      column: position.character + 1,
     };
 
     // Get dependencies (simplified)
@@ -286,7 +287,7 @@ export class TypeRegressionTester {
       dependencies,
       exported,
       generic,
-      accessibility
+      accessibility,
     };
   }
 
@@ -347,7 +348,7 @@ export class TypeRegressionTester {
           after: type,
           impact: this.calculateAddedTypeImpact(type),
           description: `Added ${type.kind} '${name}'`,
-          breakingChange: false
+          breakingChange: false,
         });
       }
     }
@@ -361,7 +362,7 @@ export class TypeRegressionTester {
           before: type,
           impact: this.calculateRemovedTypeImpact(type),
           description: `Removed ${type.kind} '${name}'`,
-          breakingChange: type.exported
+          breakingChange: type.exported,
         });
       }
     }
@@ -378,7 +379,7 @@ export class TypeRegressionTester {
           after: currentType,
           impact,
           description: `Modified ${currentType.kind} '${name}'`,
-          breakingChange: impact.level === 'major'
+          breakingChange: impact.level === 'major',
         });
       }
     }
@@ -403,7 +404,7 @@ export class TypeRegressionTester {
     return {
       level: 'patch',
       affectedTypes: [],
-      migrationRequired: false
+      migrationRequired: false,
     };
   }
 
@@ -415,7 +416,7 @@ export class TypeRegressionTester {
       level: type.exported ? 'major' : 'patch',
       affectedTypes: type.dependencies,
       migrationRequired: type.exported,
-      migrationGuide: type.exported ? `Replace usage of '${type.name}' with alternative implementation` : undefined
+      migrationGuide: type.exported ? `Replace usage of '${type.name}' with alternative implementation` : undefined,
     };
   }
 
@@ -425,7 +426,7 @@ export class TypeRegressionTester {
   private calculateModifiedTypeImpact(before: TypeDefinition, after: TypeDefinition): ChangeImpact {
     // Simplified impact calculation
     let level: ChangeImpact['level'] = 'patch';
-    
+
     if (before.exported !== after.exported) {
       level = 'major';
     } else if (before.kind !== after.kind) {
@@ -438,7 +439,7 @@ export class TypeRegressionTester {
       level,
       affectedTypes: before.dependencies,
       migrationRequired: level === 'major',
-      migrationGuide: level === 'major' ? `Update usage of '${before.name}' to match new signature` : undefined
+      migrationGuide: level === 'major' ? `Update usage of '${before.name}' to match new signature` : undefined,
     };
   }
 
@@ -495,8 +496,8 @@ export class TypeRegressionTester {
     }
 
     // Check if breaking changes are allowed
-    const disallowedBreakingChanges = breakingChanges.filter(change => 
-      !this.config.allowedBreakingChanges.includes(change.typeName)
+    const disallowedBreakingChanges = breakingChanges.filter(change =>
+      !this.config.allowedBreakingChanges.includes(change.typeName),
     );
 
     return disallowedBreakingChanges.length === 0;
@@ -536,14 +537,14 @@ export class TypeRegressionTester {
    */
   private async getSourceFiles(): Promise<string[]> {
     const files: string[] = [];
-    
+
     const walkDir = (dir: string) => {
       try {
         const entries = fs.readdirSync(dir, { withFileTypes: true });
-        
+
         for (const entry of entries) {
           const fullPath = path.join(dir, entry.name);
-          
+
           if (entry.isDirectory() && !entry.name.includes('node_modules')) {
             walkDir(fullPath);
           } else if (entry.isFile() && this.shouldAnalyzeFile(fullPath)) {
@@ -574,13 +575,13 @@ export class TypeRegressionTester {
     }
 
     // Check include patterns
-    const included = this.config.includePatterns.some(pattern => 
-      fileName.includes(pattern)
+    const included = this.config.includePatterns.some(pattern =>
+      fileName.includes(pattern),
     );
 
     // Check exclude patterns
-    const excluded = this.config.excludePatterns.some(pattern => 
-      fileName.includes(pattern)
+    const excluded = this.config.excludePatterns.some(pattern =>
+      fileName.includes(pattern),
     );
 
     return included && !excluded;
@@ -590,11 +591,11 @@ export class TypeRegressionTester {
    * Generate regression report
    */
   generateReport(result: RegressionTestResult): string {
-    let report = `# Type Regression Test Report\n\n`;
-    
+    let report = '# Type Regression Test Report\n\n';
+
     report += `**Status:** ${result.passed ? '✅ PASSED' : '❌ FAILED'}\n\n`;
-    
-    report += `## Summary\n\n`;
+
+    report += '## Summary\n\n';
     report += `- Total Changes: ${result.summary.totalChanges}\n`;
     report += `- Added Types: ${result.summary.addedTypes}\n`;
     report += `- Removed Types: ${result.summary.removedTypes}\n`;
@@ -603,7 +604,7 @@ export class TypeRegressionTester {
     report += `- Impact Level: ${result.summary.impactLevel.toUpperCase()}\n\n`;
 
     if (result.breakingChanges.length > 0) {
-      report += `## Breaking Changes\n\n`;
+      report += '## Breaking Changes\n\n';
       for (const change of result.breakingChanges) {
         report += `- **${change.typeName}** (${change.type}): ${change.description}\n`;
         if (change.impact.migrationGuide) {
@@ -614,7 +615,7 @@ export class TypeRegressionTester {
     }
 
     if (result.recommendations.length > 0) {
-      report += `## Recommendations\n\n`;
+      report += '## Recommendations\n\n';
       for (const recommendation of result.recommendations) {
         report += `- ${recommendation}\n`;
       }
@@ -622,7 +623,7 @@ export class TypeRegressionTester {
     }
 
     if (result.changes.length > 0) {
-      report += `## All Changes\n\n`;
+      report += '## All Changes\n\n';
       for (const change of result.changes) {
         const icon = change.type === 'added' ? '➕' : change.type === 'removed' ? '➖' : '🔄';
         report += `${icon} **${change.typeName}** (${change.type}): ${change.description}\n`;

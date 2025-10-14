@@ -1,12 +1,12 @@
 /**
  * Interaction Simulator
- * 
+ *
  * Advanced user interaction simulation for comprehensive component testing.
  * Supports complex user flows, touch gestures, keyboard navigation,
  * and accessibility interactions.
  */
-import userEvent from '@testing-library/user-event';
 import { fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 export interface InteractionConfig {
   delay?: number;
@@ -78,7 +78,7 @@ export class InteractionSimulator {
       skipClick: false,
       pointerEventsCheck: true,
       advanceTimers: false,
-      ...config
+      ...config,
     };
 
     this.user = userEvent.setup({
@@ -86,7 +86,7 @@ export class InteractionSimulator {
       skipHover: this.config.skipHover,
       skipClick: this.config.skipClick,
       pointerEventsCheck: this.config.pointerEventsCheck,
-      advanceTimers: this.config.advanceTimers
+      advanceTimers: this.config.advanceTimers,
     });
   }
 
@@ -104,12 +104,12 @@ export class InteractionSimulator {
 
         try {
           await this.executeStep(step);
-          
+
           stepResults.push({
             stepIndex: i,
             type: step.type,
             success: true,
-            duration: performance.now() - stepStartTime
+            duration: performance.now() - stepStartTime,
           });
         } catch (error) {
           stepResults.push({
@@ -117,7 +117,7 @@ export class InteractionSimulator {
             type: step.type,
             success: false,
             duration: performance.now() - stepStartTime,
-            error: error instanceof Error ? error.message : String(error)
+            error: error instanceof Error ? error.message : String(error),
           });
           throw error;
         }
@@ -136,14 +136,14 @@ export class InteractionSimulator {
       return {
         success: true,
         duration: performance.now() - startTime,
-        steps: stepResults
+        steps: stepResults,
       };
     } catch (error) {
       return {
         success: false,
         duration: performance.now() - startTime,
         steps: stepResults,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -182,7 +182,7 @@ export class InteractionSimulator {
    */
   private async executeMouseInteraction(
     element: HTMLElement | null,
-    interaction: MouseInteraction
+    interaction: MouseInteraction,
   ): Promise<void> {
     if (!element) throw new Error('Element not found for mouse interaction');
 
@@ -214,19 +214,19 @@ export class InteractionSimulator {
    */
   private async executeKeyboardInteraction(
     element: HTMLElement | null,
-    sequence: KeyboardSequence
+    sequence: KeyboardSequence,
   ): Promise<void> {
     if (element) {
       await this.user.click(element); // Focus element first
     }
 
     for (const key of sequence.keys) {
-      const modifiedKey = sequence.modifiers 
+      const modifiedKey = sequence.modifiers
         ? `{${sequence.modifiers.join('+')}}${key}`
         : key;
-      
+
       await this.user.keyboard(modifiedKey);
-      
+
       if (sequence.delay) {
         await this.wait(sequence.delay);
       }
@@ -238,7 +238,7 @@ export class InteractionSimulator {
    */
   private async executeTouchInteraction(
     element: HTMLElement | null,
-    gesture: TouchGesture
+    gesture: TouchGesture,
   ): Promise<void> {
     if (!element) throw new Error('Element not found for touch interaction');
 
@@ -268,15 +268,15 @@ export class InteractionSimulator {
    */
   private async simulateTap(element: HTMLElement, gesture: TouchGesture): Promise<void> {
     const { x, y } = gesture.startPoint;
-    
+
     fireEvent.touchStart(element, {
-      touches: [{ clientX: x, clientY: y, force: gesture.force || 1 }]
+      touches: [{ clientX: x, clientY: y, force: gesture.force || 1 }],
     });
 
     await this.wait(50); // Brief touch duration
 
     fireEvent.touchEnd(element, {
-      changedTouches: [{ clientX: x, clientY: y, force: gesture.force || 1 }]
+      changedTouches: [{ clientX: x, clientY: y, force: gesture.force || 1 }],
     });
   }
 
@@ -292,7 +292,7 @@ export class InteractionSimulator {
     const steps = 10;
 
     fireEvent.touchStart(element, {
-      touches: [{ clientX: startX, clientY: startY }]
+      touches: [{ clientX: startX, clientY: startY }],
     });
 
     // Simulate movement
@@ -302,14 +302,14 @@ export class InteractionSimulator {
       const currentY = startY + (endY - startY) * progress;
 
       fireEvent.touchMove(element, {
-        touches: [{ clientX: currentX, clientY: currentY }]
+        touches: [{ clientX: currentX, clientY: currentY }],
       });
 
       await this.wait(duration / steps);
     }
 
     fireEvent.touchEnd(element, {
-      changedTouches: [{ clientX: endX, clientY: endY }]
+      changedTouches: [{ clientX: endX, clientY: endY }],
     });
   }
 
@@ -324,13 +324,13 @@ export class InteractionSimulator {
     fireEvent.touchStart(element, {
       touches: [
         { clientX: x - 10, clientY: y },
-        { clientX: x + 10, clientY: y }
-      ]
+        { clientX: x + 10, clientY: y },
+      ],
     });
 
     // Move fingers apart (zoom in) or together (zoom out)
     const steps = 10;
-    const spread = gesture.endPoint ? 
+    const spread = gesture.endPoint ?
       Math.abs(gesture.endPoint.x - gesture.startPoint.x) : 50;
 
     for (let i = 1; i <= steps; i++) {
@@ -340,8 +340,8 @@ export class InteractionSimulator {
       fireEvent.touchMove(element, {
         touches: [
           { clientX: x - currentSpread, clientY: y },
-          { clientX: x + currentSpread, clientY: y }
-        ]
+          { clientX: x + currentSpread, clientY: y },
+        ],
       });
 
       await this.wait(duration / steps);
@@ -350,8 +350,8 @@ export class InteractionSimulator {
     fireEvent.touchEnd(element, {
       changedTouches: [
         { clientX: x - spread, clientY: y },
-        { clientX: x + spread, clientY: y }
-      ]
+        { clientX: x + spread, clientY: y },
+      ],
     });
   }
 
@@ -363,13 +363,13 @@ export class InteractionSimulator {
     const duration = gesture.duration || 800;
 
     fireEvent.touchStart(element, {
-      touches: [{ clientX: x, clientY: y }]
+      touches: [{ clientX: x, clientY: y }],
     });
 
     await this.wait(duration);
 
     fireEvent.touchEnd(element, {
-      changedTouches: [{ clientX: x, clientY: y }]
+      changedTouches: [{ clientX: x, clientY: y }],
     });
   }
 
@@ -387,7 +387,7 @@ export class InteractionSimulator {
    */
   private async dragElement(
     element: HTMLElement,
-    target: { x: number; y: number }
+    target: { x: number; y: number },
   ): Promise<void> {
     const rect = element.getBoundingClientRect();
     const startX = rect.left + rect.width / 2;
@@ -416,7 +416,7 @@ export class InteractionSimulator {
    */
   private resolveElement(target?: string | HTMLElement): HTMLElement | null {
     if (!target) return null;
-    
+
     if (typeof target === 'string') {
       // Try different selectors
       return document.querySelector(target) ||
@@ -424,7 +424,7 @@ export class InteractionSimulator {
              document.querySelector(`[aria-label="${target}"]`) ||
              document.querySelector(`[role="${target}"]`);
     }
-    
+
     return target;
   }
 
@@ -446,8 +446,8 @@ export class InteractionSimulator {
         steps: Object.entries(formData).map(([field, value]) => ({
           type: 'keyboard' as const,
           target: `[name="${field}"]`,
-          action: { keys: [value] }
-        }))
+          action: { keys: [value] },
+        })),
       }),
 
       // Navigation interactions
@@ -457,13 +457,13 @@ export class InteractionSimulator {
           {
             type: 'mouse' as const,
             target: selector,
-            action: { type: 'click' }
+            action: { type: 'click' },
           },
           ...(waitFor ? [{
             type: 'wait' as const,
-            action: 1000
-          }] : [])
-        ]
+            action: 1000,
+          }] : []),
+        ],
       }),
 
       // Accessibility interactions
@@ -472,8 +472,8 @@ export class InteractionSimulator {
         steps: selectors.map(selector => ({
           type: 'keyboard' as const,
           target: selector,
-          action: { keys: ['Tab'] }
-        }))
+          action: { keys: ['Tab'] },
+        })),
       }),
 
       // Mobile interactions
@@ -485,9 +485,9 @@ export class InteractionSimulator {
           action: {
             type: 'swipe',
             startPoint: { x: 200, y: 100 },
-            endPoint: { x: 50, y: 100 }
-          }
-        }]
+            endPoint: { x: 50, y: 100 },
+          },
+        }],
       }),
 
       swipeRight: (selector: string) => ({
@@ -498,10 +498,10 @@ export class InteractionSimulator {
           action: {
             type: 'swipe',
             startPoint: { x: 50, y: 100 },
-            endPoint: { x: 200, y: 100 }
-          }
-        }]
-      })
+            endPoint: { x: 200, y: 100 },
+          },
+        }],
+      }),
     };
   }
 
@@ -510,7 +510,7 @@ export class InteractionSimulator {
    */
   async testAccessibilityInteraction(
     element: HTMLElement,
-    interaction: 'keyboard' | 'screenReader' | 'voiceControl'
+    interaction: 'keyboard' | 'screenReader' | 'voiceControl',
   ): Promise<boolean> {
     try {
       switch (interaction) {
@@ -595,12 +595,12 @@ export function createInteractionSimulator(config?: InteractionConfig): Interact
 export function createInteractionSequence(
   name: string,
   steps: InteractionStep[],
-  options?: { timeout?: number; cleanup?: () => Promise<void> }
+  options?: { timeout?: number; cleanup?: () => Promise<void> },
 ): InteractionSequence {
   return {
     name,
     steps,
     timeout: options?.timeout,
-    cleanup: options?.cleanup
+    cleanup: options?.cleanup,
   };
 }

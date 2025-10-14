@@ -1,6 +1,6 @@
 /**
  * Type Assertions
- * 
+ *
  * Compile-time type assertion utilities for testing TypeScript types.
  * These functions help verify type relationships and constraints at compile time.
  */
@@ -133,7 +133,7 @@ export namespace TypeTests {
     type Test1 = Expect<Equal<string, string>>;
     type Test2 = Expect<Equal<number, number>>;
     type Test3 = Expect<Equal<{ a: string }, { a: string }>>;
-    
+
     // Test unequal types
     type Test4 = Expect<Equal<Equal<string, number>, false>>;
     type Test5 = Expect<Equal<Equal<{ a: string }, { a: number }>, false>>;
@@ -147,7 +147,7 @@ export namespace TypeTests {
     expectAssignable<string, string | number>();
     expectAssignable<'hello', string>();
     expectAssignable<{ a: string; b: number }, { a: string }>();
-    
+
     // Test non-assignable types (these should cause compile errors)
     // expectAssignable<string, number>(); // Should error
     // expectAssignable<{ a: string }, { a: string; b: number }>(); // Should error
@@ -160,11 +160,11 @@ export namespace TypeTests {
     interface Base {
       id: string;
     }
-    
+
     interface Extended extends Base {
       name: string;
     }
-    
+
     expectExtends<Extended, Base>();
     expectNotExtends<Base, Extended>();
   }
@@ -191,7 +191,7 @@ export namespace TypeTests {
       optional?: number;
       readonly readonly: boolean;
     }
-    
+
     type Test1 = Expect<HasProperty<TestInterface, 'required'>>;
     type Test2 = Expect<HasProperty<TestInterface, 'optional'>>;
     type Test3 = Expect<Equal<HasProperty<TestInterface, 'nonexistent'>, false>>;
@@ -207,7 +207,7 @@ export namespace TypeTests {
   export function testUnionTypes(): void {
     type StringOrNumber = string | number;
     type StringAndNumber = string & number;
-    
+
     type Test1 = Expect<IsUnion<StringOrNumber>>;
     type Test2 = Expect<Equal<IsUnion<string>, false>>;
     type Test3 = Expect<Equal<IsUnion<StringAndNumber>, false>>;
@@ -220,14 +220,14 @@ export namespace TypeTests {
     function testConstraint<T extends string>(value: T): T {
       return value;
     }
-    
+
     // These should work
     const result1 = testConstraint('hello');
     const result2 = testConstraint('world' as const);
-    
+
     // This should error
     // const result3 = testConstraint(42); // Should error
-    
+
     expectType<string>()(result1);
     expectType<'world'>()(result2);
   }
@@ -238,7 +238,7 @@ export namespace TypeTests {
   export function testConditionalTypes(): void {
     type IsString<T> = T extends string ? true : false;
     type IsArray<T> = T extends any[] ? true : false;
-    
+
     type Test1 = Expect<Equal<IsString<string>, true>>;
     type Test2 = Expect<Equal<IsString<number>, false>>;
     type Test3 = Expect<Equal<IsArray<string[]>, true>>;
@@ -254,18 +254,18 @@ export namespace TypeTests {
       b: number;
       c: boolean;
     }
-    
+
     type Optional<T> = {
       [K in keyof T]?: T[K];
     };
-    
+
     type Readonly<T> = {
       readonly [K in keyof T]: T[K];
     };
-    
+
     type OptionalOriginal = Optional<Original>;
     type ReadonlyOriginal = Readonly<Original>;
-    
+
     type Test1 = Expect<IsOptional<OptionalOriginal, 'a'>>;
     type Test2 = Expect<IsOptional<OptionalOriginal, 'b'>>;
     type Test3 = Expect<IsReadonly<ReadonlyOriginal, 'a'>>;
@@ -278,7 +278,7 @@ export namespace TypeTests {
   export function testTemplateLiteralTypes(): void {
     type EventName<T extends string> = `on${Capitalize<T>}`;
     type CSSProperty<T extends string> = `--${T}`;
-    
+
     type Test1 = Expect<Equal<EventName<'click'>, 'onClick'>>;
     type Test2 = Expect<Equal<EventName<'change'>, 'onChange'>>;
     type Test3 = Expect<Equal<CSSProperty<'primary-color'>, '--primary-color'>>;
@@ -288,14 +288,14 @@ export namespace TypeTests {
    * Test recursive types
    */
   export function testRecursiveTypes(): void {
-    type JSONValue = 
-      | string 
-      | number 
-      | boolean 
-      | null 
-      | JSONValue[] 
+    type JSONValue =
+      | string
+      | number
+      | boolean
+      | null
+      | JSONValue[]
       | { [key: string]: JSONValue };
-    
+
     const validJSON: JSONValue = {
       name: 'test',
       age: 25,
@@ -304,11 +304,11 @@ export namespace TypeTests {
       metadata: {
         created: '2023-01-01',
         nested: {
-          deep: true
-        }
-      }
+          deep: true,
+        },
+      },
     };
-    
+
     expectType<JSONValue>()(validJSON);
   }
 }
@@ -322,7 +322,7 @@ export namespace RuntimeAssertions {
    */
   export function assertType<T>(value: unknown, validator: (value: unknown) => value is T): asserts value is T {
     if (!validator(value)) {
-      throw new Error(`Type assertion failed: value does not match expected type`);
+      throw new Error('Type assertion failed: value does not match expected type');
     }
   }
 
@@ -379,7 +379,7 @@ export namespace RuntimeAssertions {
    * Create a type guard for an interface
    */
   export function createTypeGuard<T>(
-    validator: (value: unknown) => boolean
+    validator: (value: unknown) => boolean,
   ): (value: unknown) => value is T {
     return (value: unknown): value is T => validator(value);
   }
@@ -389,7 +389,7 @@ export namespace RuntimeAssertions {
    */
   export function hasProperty<K extends PropertyKey>(
     obj: unknown,
-    key: K
+    key: K,
   ): obj is Record<K, unknown> {
     return isObject(obj) && key in obj;
   }
@@ -399,10 +399,10 @@ export namespace RuntimeAssertions {
    */
   export function hasRequiredProperties<T extends Record<string, unknown>>(
     obj: unknown,
-    keys: (keyof T)[]
+    keys: (keyof T)[],
   ): obj is T {
     if (!isObject(obj)) return false;
-    
+
     return keys.every(key => key in obj);
   }
 }
@@ -423,5 +423,5 @@ export {
   IsTuple,
   IsUnion,
   IsOptional,
-  IsReadonly
+  IsReadonly,
 };

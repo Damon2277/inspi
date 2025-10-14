@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
-import * as path from 'path';
 import * as fs from 'fs';
+import * as path from 'path';
 
 export interface GitChange {
   type: 'added' | 'modified' | 'deleted' | 'renamed';
@@ -36,7 +36,7 @@ export class GitChangeDetector {
   constructor(workingDirectory: string = process.cwd()) {
     this.workingDirectory = workingDirectory;
     this.gitCommand = 'git';
-    
+
     if (!this.isGitRepository()) {
       throw new Error('Not a git repository');
     }
@@ -49,7 +49,7 @@ export class GitChangeDetector {
     try {
       execSync(`${this.gitCommand} rev-parse --git-dir`, {
         cwd: this.workingDirectory,
-        stdio: 'ignore'
+        stdio: 'ignore',
       });
       return true;
     } catch {
@@ -64,7 +64,7 @@ export class GitChangeDetector {
     try {
       const result = execSync(`${this.gitCommand} branch --show-current`, {
         cwd: this.workingDirectory,
-        encoding: 'utf8'
+        encoding: 'utf8',
       });
       return result.trim();
     } catch (error) {
@@ -79,7 +79,7 @@ export class GitChangeDetector {
     try {
       const result = execSync(`${this.gitCommand} rev-parse HEAD`, {
         cwd: this.workingDirectory,
-        encoding: 'utf8'
+        encoding: 'utf8',
       });
       return result.trim();
     } catch (error) {
@@ -97,13 +97,13 @@ export class GitChangeDetector {
       try {
         result = execSync(`${this.gitCommand} rev-parse origin/${baseBranch}`, {
           cwd: this.workingDirectory,
-          encoding: 'utf8'
+          encoding: 'utf8',
         });
       } catch {
         // 如果远程分支不存在，使用本地分支
         result = execSync(`${this.gitCommand} rev-parse ${baseBranch}`, {
           cwd: this.workingDirectory,
-          encoding: 'utf8'
+          encoding: 'utf8',
         });
       }
       return result.trim();
@@ -121,8 +121,8 @@ export class GitChangeDetector {
         `${this.gitCommand} diff --name-status ${baseCommit}..${targetCommit}`,
         {
           cwd: this.workingDirectory,
-          encoding: 'utf8'
-        }
+          encoding: 'utf8',
+        },
       );
 
       return this.parseGitDiffOutput(result);
@@ -138,7 +138,7 @@ export class GitChangeDetector {
     try {
       const result = execSync(`${this.gitCommand} status --porcelain`, {
         cwd: this.workingDirectory,
-        encoding: 'utf8'
+        encoding: 'utf8',
       });
 
       return this.parseGitStatusOutput(result);
@@ -154,7 +154,7 @@ export class GitChangeDetector {
     try {
       const result = execSync(`${this.gitCommand} diff --cached --name-status`, {
         cwd: this.workingDirectory,
-        encoding: 'utf8'
+        encoding: 'utf8',
       });
 
       return this.parseGitDiffOutput(result);
@@ -197,7 +197,7 @@ export class GitChangeDetector {
         type,
         filePath,
         oldFilePath,
-        status
+        status,
       };
     });
   }
@@ -239,7 +239,7 @@ export class GitChangeDetector {
       return {
         type,
         filePath,
-        status
+        status,
       };
     });
   }
@@ -253,17 +253,17 @@ export class GitChangeDetector {
         `${this.gitCommand} show --format="%H|%an|%ad|%s" --no-patch ${commitHash}`,
         {
           cwd: this.workingDirectory,
-          encoding: 'utf8'
-        }
+          encoding: 'utf8',
+        },
       );
 
       const [hash, author, dateStr, message] = result.trim().split('|');
-      
+
       return {
         hash,
         author,
         date: new Date(dateStr),
-        message
+        message,
       };
     } catch (error) {
       throw new Error(`Failed to get commit info: ${error.message}`);
@@ -276,9 +276,9 @@ export class GitChangeDetector {
   analyzeChanges(baseBranch: string = 'main', includeWorkingDirectory: boolean = true): ChangeAnalysis {
     const baseCommit = this.getBaseCommit(baseBranch);
     const currentCommit = this.getCurrentCommit();
-    
+
     let changes = this.getChangesBetweenCommits(baseCommit, currentCommit);
-    
+
     // 包含工作区变更
     if (includeWorkingDirectory) {
       const workingChanges = this.getWorkingDirectoryChanges();
@@ -288,7 +288,7 @@ export class GitChangeDetector {
 
     // 去重
     const uniqueChanges = this.deduplicateChanges(changes);
-    
+
     // 分类文件
     const affectedFiles = uniqueChanges.map(change => change.filePath);
     const testFiles = affectedFiles.filter(file => this.isTestFile(file));
@@ -300,7 +300,7 @@ export class GitChangeDetector {
       currentCommit,
       affectedFiles,
       testFiles,
-      sourceFiles
+      sourceFiles,
     };
   }
 
@@ -328,7 +328,7 @@ export class GitChangeDetector {
       /\.spec\.(ts|tsx|js|jsx)$/,
       /\/__tests__\//,
       /\/test\//,
-      /\/tests\//
+      /\/tests\//,
     ];
 
     return testPatterns.some(pattern => pattern.test(filePath));
@@ -343,8 +343,8 @@ export class GitChangeDetector {
         `${this.gitCommand} log -1 --format="%H" -- "${filePath}"`,
         {
           cwd: this.workingDirectory,
-          encoding: 'utf8'
-        }
+          encoding: 'utf8',
+        },
       );
       return result.trim();
     } catch (error) {
@@ -361,8 +361,8 @@ export class GitChangeDetector {
         `${this.gitCommand} diff --name-only ${sinceCommit}..HEAD -- "${filePath}"`,
         {
           cwd: this.workingDirectory,
-          encoding: 'utf8'
-        }
+          encoding: 'utf8',
+        },
       );
       return result.trim().length > 0;
     } catch (error) {
@@ -379,8 +379,8 @@ export class GitChangeDetector {
         `${this.gitCommand} log --format="%H|%an|%ad|%s" -${maxCount} -- "${filePath}"`,
         {
           cwd: this.workingDirectory,
-          encoding: 'utf8'
-        }
+          encoding: 'utf8',
+        },
       );
 
       if (!result.trim()) return [];
@@ -391,7 +391,7 @@ export class GitChangeDetector {
           hash,
           author,
           date: new Date(dateStr),
-          message
+          message,
         };
       });
     } catch (error) {
@@ -406,7 +406,7 @@ export class GitChangeDetector {
     try {
       const result = execSync(`${this.gitCommand} status --porcelain`, {
         cwd: this.workingDirectory,
-        encoding: 'utf8'
+        encoding: 'utf8',
       });
       return result.trim().length === 0;
     } catch (error) {
@@ -421,11 +421,11 @@ export class GitChangeDetector {
     try {
       const result = execSync(`${this.gitCommand} ls-files --others --ignored --exclude-standard`, {
         cwd: this.workingDirectory,
-        encoding: 'utf8'
+        encoding: 'utf8',
       });
-      
+
       if (!result.trim()) return [];
-      
+
       return result.trim().split('\n');
     } catch (error) {
       return [];

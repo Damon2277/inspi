@@ -1,6 +1,6 @@
 /**
  * Historical Analysis System Integration Tests
- * 
+ *
  * Comprehensive integration tests for the complete historical data analysis system,
  * testing the interaction between all components and end-to-end workflows.
  */
@@ -16,7 +16,7 @@ describe('HistoricalAnalysisSystem', () => {
         maxAge: 30,
         maxRecords: 1000,
         compressionThreshold: 7,
-        archiveThreshold: 14
+        archiveThreshold: 14,
       },
       context: {
         teamSize: 5,
@@ -24,8 +24,8 @@ describe('HistoricalAnalysisSystem', () => {
         testingMaturity: 'intermediate',
         availableResources: 'moderate',
         timeConstraints: 'moderate',
-        riskTolerance: 'medium'
-      }
+        riskTolerance: 'medium',
+      },
     });
   });
 
@@ -55,7 +55,7 @@ describe('HistoricalAnalysisSystem', () => {
 
     it('should initialize with sample data', async () => {
       await analysisSystem.initializeWithSampleData();
-      
+
       const stats = analysisSystem.getDataManager().getStorageStats();
       expect(stats.totalSuiteRecords).toBeGreaterThan(0);
     });
@@ -64,9 +64,9 @@ describe('HistoricalAnalysisSystem', () => {
   describe('Data Storage and Analysis Workflow', () => {
     it('should store test execution and trigger analysis', async () => {
       const record = createSampleTestSuiteRecord();
-      
+
       await analysisSystem.storeTestExecution(record);
-      
+
       const stats = analysisSystem.getDataManager().getStorageStats();
       expect(stats.totalSuiteRecords).toBe(1);
     });
@@ -74,20 +74,20 @@ describe('HistoricalAnalysisSystem', () => {
     it('should emit data stored events', async () => {
       const dataStored = jest.fn();
       analysisSystem.on('dataStored', dataStored);
-      
+
       const record = createSampleTestSuiteRecord();
       await analysisSystem.storeTestExecution(record);
-      
+
       expect(dataStored).toHaveBeenCalledWith(record);
     });
 
     it('should trigger background analysis', async () => {
       const record = createSampleTestSuiteRecord();
       await analysisSystem.storeTestExecution(record);
-      
+
       // Wait for background analysis to complete
       await new Promise(resolve => setTimeout(resolve, 200));
-      
+
       // Analysis should have been triggered (no errors thrown)
       expect(true).toBe(true);
     });
@@ -100,19 +100,19 @@ describe('HistoricalAnalysisSystem', () => {
       for (let i = 0; i < 15; i++) {
         const date = new Date('2024-01-01');
         date.setDate(date.getDate() + i);
-        
+
         records.push(createSampleTestSuiteRecord(date, {
           coverage: {
             statements: 80 + Math.sin(i * 0.2) * 10,
             branches: 75 + Math.sin(i * 0.2) * 10,
             functions: 85 + Math.sin(i * 0.2) * 8,
-            lines: 78 + Math.sin(i * 0.2) * 9
+            lines: 78 + Math.sin(i * 0.2) * 9,
           },
           duration: 30 + i * 0.5 + Math.random() * 5,
           performance: { peakMemory: 128 + i * 2 },
           totalTests: 100 + i,
           passedTests: 95 + i - Math.floor(Math.random() * 3),
-          failedTests: Math.floor(Math.random() * 5)
+          failedTests: Math.floor(Math.random() * 5),
         }));
       }
 
@@ -171,7 +171,7 @@ describe('HistoricalAnalysisSystem', () => {
 
       expect(report.predictions).toBeDefined();
       expect(Array.isArray(report.predictions)).toBe(true);
-      
+
       for (const prediction of report.predictions) {
         expect(prediction.metric).toBeDefined();
         expect(prediction.currentValue).toBeGreaterThanOrEqual(0);
@@ -199,7 +199,7 @@ describe('HistoricalAnalysisSystem', () => {
 
       expect(report.insights).toBeDefined();
       expect(Array.isArray(report.insights)).toBe(true);
-      
+
       for (const insight of report.insights) {
         expect(['improvement', 'degradation', 'anomaly', 'pattern']).toContain(insight.type);
         expect(['low', 'medium', 'high']).toContain(insight.severity);
@@ -215,7 +215,7 @@ describe('HistoricalAnalysisSystem', () => {
 
       expect(report.anomalies).toBeDefined();
       expect(Array.isArray(report.anomalies)).toBe(true);
-      
+
       for (const anomaly of report.anomalies) {
         expect(anomaly.timestamp).toBeInstanceOf(Date);
         expect(anomaly.metric).toBeDefined();
@@ -273,7 +273,7 @@ describe('HistoricalAnalysisSystem', () => {
 
       expect(Array.isArray(dashboardData.topRecommendations)).toBe(true);
       expect(dashboardData.topRecommendations.length).toBeLessThanOrEqual(5);
-      
+
       for (const recommendation of dashboardData.topRecommendations) {
         expect(recommendation.id).toBeDefined();
         expect(recommendation.title).toBeDefined();
@@ -344,7 +344,7 @@ describe('HistoricalAnalysisSystem', () => {
       expect(health.components.trendAnalyzer).toBeDefined();
       expect(health.components.qualityPredictor).toBeDefined();
       expect(health.components.recommendationEngine).toBeDefined();
-      
+
       for (const [component, status] of Object.entries(health.components)) {
         expect(['ok', 'warning', 'error']).toContain(status);
       }
@@ -361,7 +361,7 @@ describe('HistoricalAnalysisSystem', () => {
 
     it('should show healthy status with sample data', async () => {
       await analysisSystem.initializeWithSampleData();
-      
+
       const health = analysisSystem.getSystemHealth();
       expect(['healthy', 'warning']).toContain(health.status);
     });
@@ -371,22 +371,22 @@ describe('HistoricalAnalysisSystem', () => {
     it('should forward data storage events', async () => {
       const dataStored = jest.fn();
       analysisSystem.on('dataStored', dataStored);
-      
+
       const record = createSampleTestSuiteRecord();
       await analysisSystem.storeTestExecution(record);
-      
+
       expect(dataStored).toHaveBeenCalledWith(record);
     });
 
     it('should forward recommendation generation events', async () => {
       const recommendationsGenerated = jest.fn();
       analysisSystem.on('recommendationsGenerated', recommendationsGenerated);
-      
+
       await analysisSystem.initializeWithSampleData();
-      
+
       // Wait for background analysis
       await new Promise(resolve => setTimeout(resolve, 200));
-      
+
       // Event should have been emitted during background analysis
       expect(recommendationsGenerated).toHaveBeenCalled();
     });
@@ -394,23 +394,23 @@ describe('HistoricalAnalysisSystem', () => {
     it('should forward model training events', async () => {
       const modelsRetrained = jest.fn();
       analysisSystem.on('modelsRetrained', modelsRetrained);
-      
+
       await analysisSystem.initializeWithSampleData();
-      
+
       expect(modelsRetrained).toHaveBeenCalled();
     });
 
     it('should handle analysis errors', async () => {
       const analysisError = jest.fn();
       analysisSystem.on('analysisError', analysisError);
-      
+
       // This should trigger background analysis which might emit errors
       const record = createSampleTestSuiteRecord();
       await analysisSystem.storeTestExecution(record);
-      
+
       // Wait for background analysis
       await new Promise(resolve => setTimeout(resolve, 200));
-      
+
       // No errors should occur with valid data
       expect(analysisError).not.toHaveBeenCalled();
     });
@@ -422,28 +422,28 @@ describe('HistoricalAnalysisSystem', () => {
       for (let i = 0; i < 10; i++) {
         records.push(createSampleTestSuiteRecord());
       }
-      
+
       const startTime = Date.now();
-      
+
       const promises = records.map(record => analysisSystem.storeTestExecution(record));
       await Promise.all(promises);
-      
+
       const endTime = Date.now();
       const duration = endTime - startTime;
-      
+
       expect(duration).toBeLessThan(5000); // Should complete within 5 seconds
-      
+
       const stats = analysisSystem.getDataManager().getStorageStats();
       expect(stats.totalSuiteRecords).toBe(10);
     });
 
     it('should generate analysis report efficiently', async () => {
       await analysisSystem.initializeWithSampleData();
-      
+
       const startTime = Date.now();
       const report = await analysisSystem.getAnalysisReport(30);
       const endTime = Date.now();
-      
+
       const duration = endTime - startTime;
       expect(duration).toBeLessThan(10000); // Should complete within 10 seconds
       expect(report).toBeDefined();
@@ -451,11 +451,11 @@ describe('HistoricalAnalysisSystem', () => {
 
     it('should provide dashboard data quickly', async () => {
       await analysisSystem.initializeWithSampleData();
-      
+
       const startTime = Date.now();
       const dashboardData = await analysisSystem.getDashboardData();
       const endTime = Date.now();
-      
+
       const duration = endTime - startTime;
       expect(duration).toBeLessThan(2000); // Should complete within 2 seconds
       expect(dashboardData).toBeDefined();
@@ -465,12 +465,12 @@ describe('HistoricalAnalysisSystem', () => {
   describe('Resource Management', () => {
     it('should clean up resources', async () => {
       await analysisSystem.initializeWithSampleData();
-      
+
       const statsBefore = analysisSystem.getDataManager().getStorageStats();
       expect(statsBefore.totalSuiteRecords).toBeGreaterThan(0);
-      
+
       await analysisSystem.cleanup();
-      
+
       const statsAfter = analysisSystem.getDataManager().getStorageStats();
       expect(statsAfter.totalSuiteRecords).toBe(0);
     });
@@ -489,9 +489,9 @@ describe('HistoricalAnalysisSystem', () => {
     it('should handle invalid data gracefully', async () => {
       const invalidRecord = {
         ...createSampleTestSuiteRecord(),
-        coverage: null as any
+        coverage: null as any,
       };
-      
+
       await expect(analysisSystem.storeTestExecution(invalidRecord)).resolves.not.toThrow();
     });
 
@@ -509,11 +509,11 @@ describe('HistoricalAnalysisSystem', () => {
 // Helper function to create sample test suite records
 function createSampleTestSuiteRecord(
   timestamp: Date = new Date(),
-  overrides: any = {}
+  overrides: any = {},
 ): TestSuiteRecord {
   const coverage = overrides.coverage || {};
   const performance = overrides.performance || {};
-  
+
   return {
     id: `test_${timestamp.getTime()}_${Math.random()}`,
     timestamp,
@@ -527,20 +527,20 @@ function createSampleTestSuiteRecord(
       statements: coverage.statements || 85,
       branches: coverage.branches || 80,
       functions: coverage.functions || 90,
-      lines: coverage.lines || 83
+      lines: coverage.lines || 83,
     },
     performance: {
       totalMemory: performance.totalMemory || 128,
       peakMemory: performance.peakMemory || 256,
-      averageExecutionTime: performance.averageExecutionTime || 1.5
+      averageExecutionTime: performance.averageExecutionTime || 1.5,
     },
     environment: {
       nodeVersion: '18.0.0',
       platform: 'linux',
       ci: true,
       branch: 'main',
-      commit: 'abc123'
+      commit: 'abc123',
     },
-    tests: []
+    tests: [],
   };
 }

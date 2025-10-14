@@ -21,12 +21,12 @@ describe('PrivacyTestingIntegration', () => {
         user: {
           email: 'test@example.com',
           phone: '123-456-7890',
-          name: 'Test User'
+          name: 'Test User',
         },
         sensitive: {
           ssn: '123-45-6789',
-          creditCard: '1234 5678 9012 3456'
-        }
+          creditCard: '1234 5678 9012 3456',
+        },
       };
 
       const complianceContext = {
@@ -35,38 +35,38 @@ describe('PrivacyTestingIntegration', () => {
             {
               path: 'src/api/user.ts',
               content: 'export function getUser() { return user; }',
-              type: 'typescript' as const
-            }
-          ]
+              type: 'typescript' as const,
+            },
+          ],
         },
         dataModels: [
           {
             name: 'User',
             fields: [
               { name: 'email', type: 'string', sensitive: true, pii: true },
-              { name: 'name', type: 'string', sensitive: false, pii: true }
-            ]
-          }
+              { name: 'name', type: 'string', sensitive: false, pii: true },
+            ],
+          },
         ],
         apiEndpoints: [
           {
             path: '/api/user',
             method: 'GET',
             collectsPersonalData: true,
-            requiresConsent: false
-          }
+            requiresConsent: false,
+          },
         ],
         configuration: {
           dataRetentionPeriods: { User: 365 },
           encryptionSettings: { 'User.email': false },
-          auditingEnabled: false
-        }
+          auditingEnabled: false,
+        },
       };
 
       const results = await framework.runFullPrivacyTestSuite({
         testData,
         complianceContext,
-        generateReports: true
+        generateReports: true,
       });
 
       expect(results).toBeDefined();
@@ -78,7 +78,7 @@ describe('PrivacyTestingIntegration', () => {
     it('应该正确计算总体评分', async () => {
       const results = await framework.runFullPrivacyTestSuite({
         testData: { test: 'data' },
-        generateReports: false
+        generateReports: false,
       });
 
       expect(typeof results.overallScore).toBe('number');
@@ -88,7 +88,7 @@ describe('PrivacyTestingIntegration', () => {
 
     it('应该生成详细的测试摘要', async () => {
       const results = await framework.runFullPrivacyTestSuite({
-        testData: { email: 'test@example.com' }
+        testData: { email: 'test@example.com' },
       });
 
       expect(results.summary).toContain('隐私保护测试摘要');
@@ -111,9 +111,9 @@ describe('PrivacyTestingIntegration', () => {
 
     it('应该能够独立使用各个测试组件', async () => {
       const maskingTester = framework.getMaskingTester();
-      
+
       const results = await maskingTester.testDataMasking({
-        email: 'test@example.com'
+        email: 'test@example.com',
       });
 
       expect(results).toBeDefined();
@@ -131,12 +131,12 @@ describe('PrivacyTestingIntegration', () => {
         configuration: {
           dataRetentionPeriods: {},
           encryptionSettings: {},
-          auditingEnabled: false
-        }
+          auditingEnabled: false,
+        },
       };
 
       await expect(framework.runFullPrivacyTestSuite({
-        complianceContext: invalidContext
+        complianceContext: invalidContext,
       })).resolves.toBeDefined();
     });
 
@@ -151,11 +151,11 @@ describe('PrivacyTestingIntegration', () => {
   describe('性能测试', () => {
     it('应该在合理时间内完成隐私测试套件', async () => {
       const startTime = Date.now();
-      
+
       await framework.runFullPrivacyTestSuite({
-        testData: { email: 'test@example.com' }
+        testData: { email: 'test@example.com' },
       });
-      
+
       const endTime = Date.now();
       const executionTime = endTime - startTime;
 

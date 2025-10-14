@@ -4,9 +4,10 @@
  */
 'use client';
 
-import React from 'react';
 import Image from 'next/image';
-import { LeaderboardEntry } from '@/types/contribution';
+import React from 'react';
+
+import { LeaderboardEntry } from '@/shared/types/contribution';
 
 interface LeaderboardCardProps {
   entry: LeaderboardEntry;
@@ -15,11 +16,11 @@ interface LeaderboardCardProps {
   className?: string;
 }
 
-export function LeaderboardCard({ 
-  entry, 
-  showRankChange = false, 
+export function LeaderboardCard({
+  entry,
+  showRankChange = false,
   isCurrentUser = false,
-  className = '' 
+  className = '',
 }: LeaderboardCardProps) {
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -87,7 +88,7 @@ export function LeaderboardCard({
             </span>
           </div>
         )}
-        
+
         {/* 当前用户标识 */}
         {isCurrentUser && (
           <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
@@ -108,7 +109,7 @@ export function LeaderboardCard({
             </span>
           )}
         </div>
-        
+
         <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
           <span className="flex items-center">
             <span className="mr-1">🏆</span>

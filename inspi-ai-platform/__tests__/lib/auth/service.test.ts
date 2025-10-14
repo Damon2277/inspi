@@ -1,8 +1,10 @@
-import { registerUser, loginUser, getUserProfile, updateUserProfile, changePassword } from '@/lib/auth/service';
-import { User } from '@/lib/models/User';
 import { ContributionLog } from '@/lib/models/ContributionLog';
-import { hashPassword, comparePassword } from '@/lib/auth/password';
+import { User } from '@/lib/models/User';
 import connectDB from '@/lib/mongodb';
+
+import { hashPassword, comparePassword } from '@/lib/auth/password';
+import { registerUser, loginUser, getUserProfile, updateUserProfile,
+  changePassword } from '@/lib/auth/service';
 
 // Mock dependencies
 jest.mock('@/lib/mongodb');
@@ -36,7 +38,7 @@ describe('Auth Service', () => {
       mockConnectDB.mockResolvedValue(undefined);
       mockUser.findOne.mockResolvedValue(null);
       mockHashPassword.mockResolvedValue('hashed-password');
-      
+
       const mockSavedUser = {
         _id: 'user-id',
         email: 'test@example.com',
@@ -100,7 +102,7 @@ describe('Auth Service', () => {
 
     it('should login user successfully', async () => {
       mockConnectDB.mockResolvedValue(undefined);
-      
+
       const mockUserDoc = {
         _id: 'user-id',
         email: 'test@example.com',
@@ -139,7 +141,7 @@ describe('Auth Service', () => {
 
     it('should fail with invalid password', async () => {
       mockConnectDB.mockResolvedValue(undefined);
-      
+
       const mockUserDoc = {
         email: 'test@example.com',
         password: 'hashed-password',
@@ -167,7 +169,7 @@ describe('Auth Service', () => {
   describe('getUserProfile', () => {
     it('should get user profile successfully', async () => {
       mockConnectDB.mockResolvedValue(undefined);
-      
+
       const mockUserDoc = {
         _id: 'user-id',
         email: 'test@example.com',
@@ -208,7 +210,7 @@ describe('Auth Service', () => {
   describe('updateUserProfile', () => {
     it('should update user profile successfully', async () => {
       mockConnectDB.mockResolvedValue(undefined);
-      
+
       const mockUpdatedUser = {
         _id: 'user-id',
         email: 'test@example.com',
@@ -246,7 +248,7 @@ describe('Auth Service', () => {
   describe('changePassword', () => {
     it('should change password successfully', async () => {
       mockConnectDB.mockResolvedValue(undefined);
-      
+
       const mockUserDoc = {
         _id: 'user-id',
         password: 'old-hashed-password',
@@ -266,7 +268,7 @@ describe('Auth Service', () => {
 
     it('should fail with incorrect current password', async () => {
       mockConnectDB.mockResolvedValue(undefined);
-      
+
       const mockUserDoc = {
         password: 'hashed-password',
       };

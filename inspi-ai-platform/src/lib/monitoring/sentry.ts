@@ -86,9 +86,9 @@ class SentryManager {
       error: {
         name: error.name,
         message: error.message,
-        stack: error.stack
+        stack: error.stack,
       },
-      context
+      context,
     });
   }
 
@@ -189,7 +189,7 @@ class SentryManager {
     return {
       setTag: (key: string, value: string) => console.log(`Transaction setTag: ${key} = ${value}`),
       setData: (key: string, value: any) => console.log(`Transaction setData: ${key}`, value),
-      finish: () => console.log('Transaction finished')
+      finish: () => console.log('Transaction finished'),
     };
   }
 
@@ -210,7 +210,7 @@ class SentryManager {
       setUser: this.setUser.bind(this),
       setTag: this.setTag.bind(this),
       setContext: this.setContext.bind(this),
-      addBreadcrumb: this.addBreadcrumb.bind(this)
+      addBreadcrumb: this.addBreadcrumb.bind(this),
     };
 
     callback(mockScope);
@@ -233,7 +233,7 @@ export function getSentryConfig(): SentryConfig {
       // 过滤敏感信息
       if (event.exception) {
         const exception = event.exception.values?.[0];
-        if (exception?.value?.includes('password') || 
+        if (exception?.value?.includes('password') ||
             exception?.value?.includes('token') ||
             exception?.value?.includes('secret')) {
           return null; // 不发送包含敏感信息的错误
@@ -243,12 +243,12 @@ export function getSentryConfig(): SentryConfig {
     },
     beforeSendTransaction: (event) => {
       // 过滤不需要的事务
-      if (event.transaction?.includes('/_next/') || 
+      if (event.transaction?.includes('/_next/') ||
           event.transaction?.includes('/api/health')) {
         return null;
       }
       return event;
-    }
+    },
   };
 }
 
@@ -257,7 +257,7 @@ export function getSentryConfig(): SentryConfig {
  */
 export function initSentry() {
   const config = getSentryConfig();
-  
+
   if (!config.dsn && process.env.NODE_ENV === 'production') {
     console.warn('Sentry DSN not configured for production');
     return;
@@ -277,13 +277,13 @@ export function shouldReportError(error: Error): boolean {
     'Loading CSS chunk',
     'ResizeObserver loop limit exceeded',
     'Non-Error promise rejection captured',
-    'Network request failed'
+    'Network request failed',
   ];
 
   const errorMessage = error.message || error.toString();
-  
-  return !ignoredErrors.some(ignored => 
-    errorMessage.includes(ignored)
+
+  return !ignoredErrors.some(ignored =>
+    errorMessage.includes(ignored),
   );
 }
 
@@ -296,10 +296,10 @@ export function setSentryUser(user: {
   username?: string;
 }) {
   sentry.setUser({
-    id: user.id,
+    id: (user.id || (user as any)._id),
     email: user.email,
     username: user.username,
-    ip_address: '{{auto}}' // Sentry自动获取IP
+    ip_address: '{{auto}}', // Sentry自动获取IP
   });
 }
 
@@ -318,8 +318,8 @@ export function setSentryRequestContext(req: {
     headers: {
       'user-agent': req.userAgent,
       'accept-language': req.headers?.['accept-language'],
-      'referer': req.headers?.['referer']
-    }
+      'referer': req.headers?.['referer'],
+    },
   });
 }
 
@@ -358,17 +358,17 @@ export function reportError(error: Error, context?: {
 /**
  * 性能监控装饰器
  */
-export function withSentryPerformance<T extends (...args: any[]) => any>(
+export function withSentryPerformance<T extends(...args: any[]) => any>(
   fn: T,
   transactionName: string,
-  op: string = 'function'
+  op: string = 'function',
 ): T {
   return ((...args: any[]) => {
     const transaction = sentry.startTransaction(transactionName, op);
-    
+
     try {
       const result = fn(...args);
-      
+
       if (result instanceof Promise) {
         return result
           .then((res) => {
@@ -381,7 +381,7 @@ export function withSentryPerformance<T extends (...args: any[]) => any>(
             throw error;
           });
       }
-      
+
       transaction?.finish();
       return result;
     } catch (error) {

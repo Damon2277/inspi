@@ -1,6 +1,6 @@
 /**
  * UI Testing Framework - Main Export
- * 
+ *
  * Comprehensive UI component testing framework that provides
  * all necessary tools for testing React components including
  * rendering, interactions, styles, and accessibility.
@@ -12,7 +12,7 @@ export {
   createComponentTestFramework,
   withComponentTest,
   ComponentTestSuiteBuilder,
-  createTestSuite
+  createTestSuite,
 } from './ComponentTestFramework';
 
 export type {
@@ -25,14 +25,14 @@ export type {
   InteractionResult,
   ComponentTestSuite,
   ComponentVariant,
-  ComponentInteraction
+  ComponentInteraction,
 } from './ComponentTestFramework';
 
 // Interaction simulator exports
 export {
   InteractionSimulator,
   createInteractionSimulator,
-  createInteractionSequence
+  createInteractionSequence,
 } from './InteractionSimulator';
 
 export type {
@@ -43,13 +43,13 @@ export type {
   InteractionSequence,
   InteractionStep,
   InteractionResult,
-  StepResult
+  StepResult,
 } from './InteractionSimulator';
 
 // Style regression tester exports
 export {
   StyleRegressionTester,
-  createStyleRegressionTester
+  createStyleRegressionTester,
 } from './StyleRegressionTester';
 
 export type {
@@ -62,13 +62,13 @@ export type {
   StyleTestConfig,
   StyleTolerances,
   ResponsiveTestResult,
-  ResponsiveIssue
+  ResponsiveIssue,
 } from './StyleRegressionTester';
 
 // Accessibility tester exports
 export {
   AccessibilityTester,
-  createAccessibilityTester
+  createAccessibilityTester,
 } from './AccessibilityTester';
 
 export type {
@@ -84,18 +84,18 @@ export type {
   ColorContrastResult,
   ColorContrastIssue,
   FocusManagementResult,
-  FocusIssue
+  FocusIssue,
 } from './AccessibilityTester';
 
 // Utility exports from existing files
 export {
   ComponentMatchers,
-  createComponentMatchers
+  createComponentMatchers,
 } from './ComponentMatchers';
 
 export {
   ComponentTestUtils,
-  createComponentTestUtils
+  createComponentTestUtils,
 } from './ComponentTestUtils';
 
 /**
@@ -127,7 +127,7 @@ export class UITestingSuite {
       component: null as any,
       interactions: [] as any[],
       styles: null as any,
-      accessibility: null as any
+      accessibility: null as any,
     };
 
     try {
@@ -142,8 +142,8 @@ export class UITestingSuite {
             [{
               type: 'mouse',
               action: interaction.action,
-              assertion: interaction.assertions
-            }]
+              assertion: interaction.assertions,
+            }],
           );
           const result = await this.interactionSimulator.executeSequence(sequence);
           results.interactions.push(result);
@@ -152,12 +152,12 @@ export class UITestingSuite {
 
       // Run style regression tests
       const { container } = this.componentFramework.renderComponent(
-        React.createElement(suite.component, suite.props || {})
+        React.createElement(suite.component, suite.props || {}),
       );
-      
+
       results.styles = await this.styleRegressionTester.testResponsive(
         container,
-        suite.name
+        suite.name,
       );
 
       // Run accessibility tests
@@ -173,11 +173,11 @@ export class UITestingSuite {
    * Generate comprehensive test report
    */
   generateReport(results: any): string {
-    let report = `# UI Component Test Report\n\n`;
+    let report = '# UI Component Test Report\n\n';
 
     // Component test results
     if (results.component) {
-      report += `## Component Tests\n`;
+      report += '## Component Tests\n';
       report += `- Render Time: ${results.component.renderTime}ms\n`;
       report += `- Memory Usage: ${results.component.memoryUsage} bytes\n`;
       report += `- Re-render Count: ${results.component.reRenderCount}\n\n`;
@@ -185,7 +185,7 @@ export class UITestingSuite {
 
     // Interaction test results
     if (results.interactions.length > 0) {
-      report += `## Interaction Tests\n`;
+      report += '## Interaction Tests\n';
       results.interactions.forEach((result: any, index: number) => {
         report += `### Interaction ${index + 1}\n`;
         report += `- Success: ${result.success}\n`;
@@ -193,25 +193,25 @@ export class UITestingSuite {
         if (result.error) {
           report += `- Error: ${result.error}\n`;
         }
-        report += `\n`;
+        report += '\n';
       });
     }
 
     // Style test results
     if (results.styles) {
-      report += `## Style Tests\n`;
+      report += '## Style Tests\n';
       results.styles.forEach((result: any) => {
         report += `- Breakpoint ${result.breakpoint}px: ${result.passed ? 'PASSED' : 'FAILED'}\n`;
         if (result.issues.length > 0) {
           report += `  Issues: ${result.issues.length}\n`;
         }
       });
-      report += `\n`;
+      report += '\n';
     }
 
     // Accessibility test results
     if (results.accessibility) {
-      report += `## Accessibility Tests\n`;
+      report += '## Accessibility Tests\n';
       report += `- Overall Score: ${results.accessibility.score}/100\n`;
       report += `- Status: ${results.accessibility.passed ? 'PASSED' : 'FAILED'}\n`;
       report += `- Violations: ${results.accessibility.violations.length}\n\n`;
@@ -248,7 +248,7 @@ export function createUITestingSuite(config?: {
  */
 export function createBasicComponentTest(
   component: React.ComponentType<any>,
-  props?: Record<string, any>
+  props?: Record<string, any>,
 ) {
   return createTestSuite()
     .component(component)
@@ -262,7 +262,7 @@ export function createBasicComponentTest(
  */
 export function createAccessibilityTest(
   component: React.ComponentType<any>,
-  props?: Record<string, any>
+  props?: Record<string, any>,
 ) {
   return createTestSuite()
     .component(component)
@@ -271,7 +271,7 @@ export function createAccessibilityTest(
     .config({
       accessibility: { enabled: true },
       performance: { enabled: false },
-      styles: { enabled: false }
+      styles: { enabled: false },
     })
     .build();
 }
@@ -281,18 +281,18 @@ export function createAccessibilityTest(
  */
 export function createResponsiveTest(
   component: React.ComponentType<any>,
-  props?: Record<string, any>
+  props?: Record<string, any>,
 ) {
   return createTestSuite()
     .component(component)
     .name(`${component.name || 'Component'} Responsive`)
     .props(props || {})
     .config({
-      styles: { 
-        enabled: true, 
+      styles: {
+        enabled: true,
         checkResponsive: true,
-        breakpoints: [320, 768, 1024, 1440]
-      }
+        breakpoints: [320, 768, 1024, 1440],
+      },
     })
     .build();
 }
@@ -303,7 +303,7 @@ export function createResponsiveTest(
 export function createInteractionTest(
   component: React.ComponentType<any>,
   interactions: ComponentInteraction[],
-  props?: Record<string, any>
+  props?: Record<string, any>,
 ) {
   const suite = createTestSuite()
     .component(component)
@@ -315,7 +315,7 @@ export function createInteractionTest(
       interaction.name,
       interaction.action,
       interaction.assertions,
-      interaction.timeout
+      interaction.timeout,
     );
   });
 

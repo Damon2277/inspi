@@ -45,7 +45,7 @@ describe('MockDatabaseService', () => {
         const userData = {
           name: 'Test User',
           email: 'test@example.com',
-          age: 25
+          age: 25,
         };
 
         // Act
@@ -208,7 +208,7 @@ describe('MockDatabaseService', () => {
         const users = await Promise.all([
           mockService.create('users', { name: 'User 1', age: 25 }),
           mockService.create('users', { name: 'User 2', age: 30 }),
-          mockService.create('users', { name: 'User 3', age: 25 })
+          mockService.create('users', { name: 'User 3', age: 25 }),
         ]);
         userIds = users.map(u => u._id);
       });
@@ -219,7 +219,7 @@ describe('MockDatabaseService', () => {
 
         // Assert
         expect(deletedCount).toBe(1); // 默认只删除第一个匹配的
-        
+
         const remaining = await mockService.find('users');
         expect(remaining).toHaveLength(2);
       });
@@ -230,7 +230,7 @@ describe('MockDatabaseService', () => {
 
         // Assert
         expect(deleted).toBe(true);
-        
+
         const found = await mockService.findById('users', userIds[0]);
         expect(found).toBeNull();
       });
@@ -241,7 +241,7 @@ describe('MockDatabaseService', () => {
 
         // Assert
         expect(deletedCount).toBe(2);
-        
+
         const remaining = await mockService.find('users');
         expect(remaining).toHaveLength(1);
         expect(remaining[0].age).toBe(30);
@@ -338,7 +338,7 @@ describe('MockDatabaseService', () => {
       const config: Partial<MockDatabaseConfig> = {
         autoIncrement: false,
         simulateLatency: false,
-        failureRate: 0.1
+        failureRate: 0.1,
       };
 
       // Act
@@ -383,11 +383,11 @@ describe('MockDatabaseService', () => {
       const importData = {
         users: [
           { _id: 'user1', name: 'Imported User 1', age: 35 },
-          { _id: 'user2', name: 'Imported User 2', age: 40 }
+          { _id: 'user2', name: 'Imported User 2', age: 40 },
         ],
         products: [
-          { name: 'Product 1', price: 100 }
-        ]
+          { name: 'Product 1', price: 100 },
+        ],
       };
 
       // Act
@@ -396,7 +396,7 @@ describe('MockDatabaseService', () => {
       // Assert
       const users = mockService.exportData().users;
       const products = mockService.exportData().products;
-      
+
       expect(users).toHaveLength(2);
       expect(products).toHaveLength(1);
       expect(users.find(u => u.name === 'Imported User 1')).toBeDefined();
@@ -521,9 +521,9 @@ describe('MockDatabaseService', () => {
 
     it('应该处理嵌套字段查询', async () => {
       // Arrange
-      await mockService.create('users', { 
-        name: 'Test', 
-        profile: { age: 25, city: 'New York' } 
+      await mockService.create('users', {
+        name: 'Test',
+        profile: { age: 25, city: 'New York' },
       });
 
       // Act
@@ -539,7 +539,7 @@ describe('MockDatabaseService', () => {
     it('应该能够处理大量数据', async () => {
       // Arrange
       const promises = Array.from({ length: 100 }, (_, i) =>
-        mockService.create('users', { name: `User ${i}`, index: i })
+        mockService.create('users', { name: `User ${i}`, index: i }),
       );
 
       // Act

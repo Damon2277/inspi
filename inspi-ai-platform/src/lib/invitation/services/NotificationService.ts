@@ -3,8 +3,43 @@
  * 提供邀请系统相关的通知功能
  */
 
-import { DatabaseService } from '../database'
-import { InviteEventType, InviteCode } from '../types'
+import { DatabaseService } from '../database';
+import { InviteEventType, InviteCode } from '../types';
+
+interface NotificationMessageRow {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  content: string;
+  channel: string;
+  status: string;
+  metadata: string | null;
+  scheduled_at: Date | string | null;
+  sent_at: Date | string | null;
+  read_at: Date | string | null;
+  created_at: Date | string;
+}
+
+interface NotificationPreferenceRow {
+  user_id: string;
+  type: NotificationType;
+  channels: string | null;
+  frequency: NotificationFrequency;
+  is_enabled: number;
+  quiet_hours_start: string | null;
+  quiet_hours_end: string | null;
+}
+
+interface NotificationTemplateRow {
+  id: string;
+  type: NotificationType;
+  title: string;
+  content: string;
+  variables: string | null;
+  channels: string | null;
+  is_active: number;
+}
 
 export interface NotificationTemplate {
   id: string
@@ -80,10 +115,10 @@ export enum NotificationFrequency {
 export interface NotificationService {
   // 发送通知
   sendNotification(notification: Omit<NotificationMessage, 'id' | 'createdAt'>): Promise<string>
-  
+
   // 批量发送通知
   sendBulkNotifications(notifications: Omit<NotificationMessage, 'id' | 'createdAt'>[]): Promise<string[]>
-  
+
   // 获取用户通知
   getUserNotifications(userId: string, options?: {
     channel?: NotificationChannel
@@ -91,34 +126,34 @@ export interface NotificationService {
     limit?: number
     offset?: number
   }): Promise<NotificationMessage[]>
-  
+
   // 标记通知为已读
   markAsRead(notificationId: string): Promise<void>
-  
+
   // 批量标记为已读
   markMultipleAsRead(notificationIds: string[]): Promise<void>
-  
+
   // 获取未读通知数量
   getUnreadCount(userId: string, channel?: NotificationChannel): Promise<number>
-  
+
   // 获取用户通知偏好
   getUserPreferences(userId: string): Promise<NotificationPreference[]>
-  
+
   // 更新用户通知偏好
   updateUserPreferences(userId: string, preferences: Partial<NotificationPreference>[]): Promise<void>
-  
+
   // 获取通知模板
   getNotificationTemplate(type: NotificationType): Promise<NotificationTemplate | null>
-  
+
   // 创建或更新通知模板
   upsertNotificationTemplate(template: NotificationTemplate): Promise<void>
-  
+
   // 处理邀请事件通知
   handleInviteEvent(eventType: InviteEventType, data: any): Promise<void>
-  
+
   // 调度定期通知
   schedulePeriodicNotifications(): Promise<void>
-  
+
   // 清理过期通知
   cleanupExpiredNotifications(daysToKeep: number): Promise<number>
 }
@@ -132,41 +167,47 @@ export class NotificationServiceImpl implements NotificationService {
   async sendNotification(notification: Omit<NotificationMessage, 'id' | 'createdAt'>): Promise<string> {
     try {
       // 检查用户通知偏好
-      const preferences = await this.getUserPreferences(notification.userId)
-      const typePreference = preferences.find(p => p.type === notification.type)
-      
+      const preferences = await this.getUserPreferences(notification.userId);
+      const typePreference = preferences.find(p => p.type === notification.type);
+
       if (!typePreference || !typePreference.isEnabled) {
-        console.log(`Notification ${notification.type} disabled for user ${notification.userId}`)
-        return ''
+        console.log(`Notification ${notification.type} disabled for user ${notification.userId}`);
+        return '';
       }
 
       // 检查渠道是否允许
       if (!typePreference.channels.includes(notification.channel)) {
-        console.log(`Channel ${notification.channel} not allowed for ${notification.type}`)
-        return ''
+        console.log(`Channel ${notification.channel} not allowed for ${notification.type}`);
+        return '';
       }
 
       // 检查静默时间
-      if (this.isInQuietHours(typePreference.quietHours)) {
-        // 延迟发送到静默时间结束后
-        notification.scheduledAt = this.getNextAvailableTime(typePreference.quietHours)
-      }
+      const scheduledAt = notification.scheduledAt
+        ?? (this.isInQuietHours(typePreference.quietHours)
+          ? this.getNextAvailableTime(typePreference.quietHours)
+          : undefined);
 
-      // 保存通知到数据库
-      const notificationId = await this.saveNotification({
+      const message: NotificationMessage = {
         ...notification,
-        createdAt: new Date()
-      })
+        scheduledAt,
+        createdAt: new Date(),
+      };
+
+      const notificationId = await this.saveNotification(message);
+      const storedMessage: NotificationMessage = {
+        ...message,
+        id: notificationId,
+      };
 
       // 立即发送或调度发送
-      if (!notification.scheduledAt) {
-        await this.deliverNotification(notificationId, notification)
+      if (!storedMessage.scheduledAt) {
+        await this.deliverNotification(notificationId, storedMessage);
       }
 
-      return notificationId
+      return notificationId;
     } catch (error) {
-      console.error('Failed to send notification:', error)
-      throw new Error('Failed to send notification')
+      console.error('Failed to send notification:', error);
+      throw new Error('Failed to send notification');
     }
   }
 
@@ -174,19 +215,19 @@ export class NotificationServiceImpl implements NotificationService {
    * 批量发送通知
    */
   async sendBulkNotifications(notifications: Omit<NotificationMessage, 'id' | 'createdAt'>[]): Promise<string[]> {
-    const results: string[] = []
-    
+    const results: string[] = [];
+
     for (const notification of notifications) {
       try {
-        const id = await this.sendNotification(notification)
-        results.push(id)
+        const id = await this.sendNotification(notification);
+        results.push(id);
       } catch (error) {
-        console.error('Failed to send bulk notification:', error)
-        results.push('')
+        console.error('Failed to send bulk notification:', error);
+        results.push('');
       }
     }
-    
-    return results
+
+    return results;
   }
 
   /**
@@ -199,33 +240,33 @@ export class NotificationServiceImpl implements NotificationService {
     offset?: number
   } = {}): Promise<NotificationMessage[]> {
     try {
-      const { channel, status, limit = 50, offset = 0 } = options
-      
+      const { channel, status, limit = 50, offset = 0 } = options;
+
       let query = `
         SELECT * FROM notifications 
         WHERE user_id = ?
-      `
-      const params: any[] = [userId]
+      `;
+      const params: Array<string | NotificationChannel | NotificationStatus | number> = [userId];
 
       if (channel) {
-        query += ' AND channel = ?'
-        params.push(channel)
+        query += ' AND channel = ?';
+        params.push(channel);
       }
 
       if (status) {
-        query += ' AND status = ?'
-        params.push(status)
+        query += ' AND status = ?';
+        params.push(status);
       }
 
-      query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?'
-      params.push(limit, offset)
+      query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+      params.push(limit, offset);
 
-      const results = await this.db.query(query, params)
-      
-      return results.map(this.mapToNotificationMessage)
+      const results = await this.db.query<NotificationMessageRow>(query, params);
+
+      return results.map(row => this.mapToNotificationMessage(row));
     } catch (error) {
-      console.error('Failed to get user notifications:', error)
-      throw new Error('Failed to get user notifications')
+      console.error('Failed to get user notifications:', error);
+      throw new Error('Failed to get user notifications');
     }
   }
 
@@ -238,16 +279,16 @@ export class NotificationServiceImpl implements NotificationService {
         UPDATE notifications 
         SET status = ?, read_at = NOW() 
         WHERE id = ? AND status != ?
-      `
-      
+      `;
+
       await this.db.execute(query, [
         NotificationStatus.READ,
         notificationId,
-        NotificationStatus.READ
-      ])
+        NotificationStatus.READ,
+      ]);
     } catch (error) {
-      console.error('Failed to mark notification as read:', error)
-      throw new Error('Failed to mark notification as read')
+      console.error('Failed to mark notification as read:', error);
+      throw new Error('Failed to mark notification as read');
     }
   }
 
@@ -255,24 +296,24 @@ export class NotificationServiceImpl implements NotificationService {
    * 批量标记为已读
    */
   async markMultipleAsRead(notificationIds: string[]): Promise<void> {
-    if (notificationIds.length === 0) return
+    if (notificationIds.length === 0) return;
 
     try {
-      const placeholders = notificationIds.map(() => '?').join(',')
+      const placeholders = notificationIds.map(() => '?').join(',');
       const query = `
         UPDATE notifications 
         SET status = ?, read_at = NOW() 
         WHERE id IN (${placeholders}) AND status != ?
-      `
-      
+      `;
+
       await this.db.execute(query, [
         NotificationStatus.READ,
         ...notificationIds,
-        NotificationStatus.READ
-      ])
+        NotificationStatus.READ,
+      ]);
     } catch (error) {
-      console.error('Failed to mark multiple notifications as read:', error)
-      throw new Error('Failed to mark multiple notifications as read')
+      console.error('Failed to mark multiple notifications as read:', error);
+      throw new Error('Failed to mark multiple notifications as read');
     }
   }
 
@@ -285,19 +326,19 @@ export class NotificationServiceImpl implements NotificationService {
         SELECT COUNT(*) as count 
         FROM notifications 
         WHERE user_id = ? AND status != ?
-      `
-      const params: any[] = [userId, NotificationStatus.READ]
+      `;
+      const params: Array<string | NotificationChannel | NotificationStatus> = [userId, NotificationStatus.READ];
 
       if (channel) {
-        query += ' AND channel = ?'
-        params.push(channel)
+        query += ' AND channel = ?';
+        params.push(channel);
       }
 
-      const result = await this.db.queryOne(query, params)
-      return parseInt(result?.count) || 0
+      const result = await this.db.queryOne<{ count: number | string }>(query, params);
+      return Number(result?.count) || 0;
     } catch (error) {
-      console.error('Failed to get unread count:', error)
-      return 0
+      console.error('Failed to get unread count:', error);
+      return 0;
     }
   }
 
@@ -309,19 +350,19 @@ export class NotificationServiceImpl implements NotificationService {
       const query = `
         SELECT * FROM notification_preferences 
         WHERE user_id = ?
-      `
-      
-      const results = await this.db.query(query, [userId])
-      
+      `;
+
+      const results = await this.db.query<NotificationPreferenceRow>(query, [userId]);
+
       if (results.length === 0) {
         // 返回默认偏好设置
-        return this.getDefaultPreferences(userId)
+        return this.getDefaultPreferences(userId);
       }
-      
-      return results.map(this.mapToNotificationPreference)
+
+      return results.map(this.mapToNotificationPreference);
     } catch (error) {
-      console.error('Failed to get user preferences:', error)
-      return this.getDefaultPreferences(userId)
+      console.error('Failed to get user preferences:', error);
+      return this.getDefaultPreferences(userId);
     }
   }
 
@@ -341,8 +382,8 @@ export class NotificationServiceImpl implements NotificationService {
             is_enabled = VALUES(is_enabled),
             quiet_hours_start = VALUES(quiet_hours_start),
             quiet_hours_end = VALUES(quiet_hours_end)
-        `
-        
+        `;
+
         await this.db.execute(query, [
           userId,
           pref.type,
@@ -350,12 +391,12 @@ export class NotificationServiceImpl implements NotificationService {
           pref.frequency || NotificationFrequency.IMMEDIATE,
           pref.isEnabled !== undefined ? pref.isEnabled : true,
           pref.quietHours?.start || null,
-          pref.quietHours?.end || null
-        ])
+          pref.quietHours?.end || null,
+        ]);
       }
     } catch (error) {
-      console.error('Failed to update user preferences:', error)
-      throw new Error('Failed to update user preferences')
+      console.error('Failed to update user preferences:', error);
+      throw new Error('Failed to update user preferences');
     }
   }
 
@@ -367,18 +408,18 @@ export class NotificationServiceImpl implements NotificationService {
       const query = `
         SELECT * FROM notification_templates 
         WHERE type = ? AND is_active = 1
-      `
-      
-      const result = await this.db.queryOne(query, [type])
-      
+      `;
+
+      const result = await this.db.queryOne<NotificationTemplateRow>(query, [type]);
+
       if (!result) {
-        return this.getDefaultTemplate(type)
+        return this.getDefaultTemplate(type);
       }
-      
-      return this.mapToNotificationTemplate(result)
+
+      return this.mapToNotificationTemplate(result);
     } catch (error) {
-      console.error('Failed to get notification template:', error)
-      return this.getDefaultTemplate(type)
+      console.error('Failed to get notification template:', error);
+      return this.getDefaultTemplate(type);
     }
   }
 
@@ -397,8 +438,8 @@ export class NotificationServiceImpl implements NotificationService {
           variables = VALUES(variables),
           channels = VALUES(channels),
           is_active = VALUES(is_active)
-      `
-      
+      `;
+
       await this.db.execute(query, [
         template.id,
         template.type,
@@ -406,11 +447,11 @@ export class NotificationServiceImpl implements NotificationService {
         template.content,
         JSON.stringify(template.variables),
         JSON.stringify(template.channels),
-        template.isActive
-      ])
+        template.isActive,
+      ]);
     } catch (error) {
-      console.error('Failed to upsert notification template:', error)
-      throw new Error('Failed to upsert notification template')
+      console.error('Failed to upsert notification template:', error);
+      throw new Error('Failed to upsert notification template');
     }
   }
 
@@ -421,22 +462,22 @@ export class NotificationServiceImpl implements NotificationService {
     try {
       switch (eventType) {
         case InviteEventType.USER_REGISTERED:
-          await this.handleInviteSuccessNotification(data)
-          break
-          
+          await this.handleInviteSuccessNotification(data);
+          break;
+
         case InviteEventType.REWARD_GRANTED:
-          await this.handleRewardReceivedNotification(data)
-          break
-          
+          await this.handleRewardReceivedNotification(data);
+          break;
+
         case InviteEventType.USER_ACTIVATED:
-          await this.handleInviteProgressNotification(data)
-          break
-          
+          await this.handleInviteProgressNotification(data);
+          break;
+
         default:
-          console.log(`No notification handler for event type: ${eventType}`)
+          console.log(`No notification handler for event type: ${eventType}`);
       }
     } catch (error) {
-      console.error('Failed to handle invite event notification:', error)
+      console.error('Failed to handle invite event notification:', error);
     }
   }
 
@@ -446,15 +487,15 @@ export class NotificationServiceImpl implements NotificationService {
   async schedulePeriodicNotifications(): Promise<void> {
     try {
       // 发送周度总结
-      await this.scheduleWeeklySummary()
-      
+      await this.scheduleWeeklySummary();
+
       // 发送月度报告
-      await this.scheduleMonthlyReport()
-      
+      await this.scheduleMonthlyReport();
+
       // 检查邀请码过期提醒
-      await this.checkInviteCodeExpiration()
+      await this.checkInviteCodeExpiration();
     } catch (error) {
-      console.error('Failed to schedule periodic notifications:', error)
+      console.error('Failed to schedule periodic notifications:', error);
     }
   }
 
@@ -463,39 +504,39 @@ export class NotificationServiceImpl implements NotificationService {
    */
   async cleanupExpiredNotifications(daysToKeep: number = 30): Promise<number> {
     try {
-      const cutoffDate = new Date()
-      cutoffDate.setDate(cutoffDate.getDate() - daysToKeep)
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
       const query = `
         DELETE FROM notifications 
         WHERE created_at < ? AND status IN (?, ?)
-      `
-      
+      `;
+
       const result = await this.db.execute(query, [
         cutoffDate,
         NotificationStatus.READ,
-        NotificationStatus.DELIVERED
-      ])
-      
-      return result.affectedRows || 0
+        NotificationStatus.DELIVERED,
+      ]);
+
+      return result.affectedRows || 0;
     } catch (error) {
-      console.error('Failed to cleanup expired notifications:', error)
-      return 0
+      console.error('Failed to cleanup expired notifications:', error);
+      return 0;
     }
   }
 
   // 私有辅助方法
 
   private async saveNotification(notification: NotificationMessage): Promise<string> {
-    const id = this.generateId()
-    
+    const id = this.generateId();
+
     const query = `
       INSERT INTO notifications (
         id, user_id, type, title, content, channel, status, 
         metadata, scheduled_at, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `
-    
+    `;
+
     await this.db.execute(query, [
       id,
       notification.userId,
@@ -506,10 +547,10 @@ export class NotificationServiceImpl implements NotificationService {
       notification.status,
       notification.metadata ? JSON.stringify(notification.metadata) : null,
       notification.scheduledAt,
-      notification.createdAt
-    ])
-    
-    return id
+      notification.createdAt,
+    ]);
+
+    return id;
   }
 
   private async deliverNotification(notificationId: string, notification: NotificationMessage): Promise<void> {
@@ -517,29 +558,29 @@ export class NotificationServiceImpl implements NotificationService {
       switch (notification.channel) {
         case NotificationChannel.IN_APP:
           // 应用内通知已保存到数据库，无需额外处理
-          break
-          
+          break;
+
         case NotificationChannel.EMAIL:
-          await this.sendEmailNotification(notification)
-          break
-          
+          await this.sendEmailNotification(notification);
+          break;
+
         case NotificationChannel.PUSH:
-          await this.sendPushNotification(notification)
-          break
-          
+          await this.sendPushNotification(notification);
+          break;
+
         case NotificationChannel.SMS:
-          await this.sendSMSNotification(notification)
-          break
-          
+          await this.sendSMSNotification(notification);
+          break;
+
         default:
-          console.log(`Unsupported notification channel: ${notification.channel}`)
+          console.log(`Unsupported notification channel: ${notification.channel}`);
       }
 
       // 更新状态为已发送
-      await this.updateNotificationStatus(notificationId, NotificationStatus.SENT)
+      await this.updateNotificationStatus(notificationId, NotificationStatus.SENT);
     } catch (error) {
-      console.error('Failed to deliver notification:', error)
-      await this.updateNotificationStatus(notificationId, NotificationStatus.FAILED)
+      console.error('Failed to deliver notification:', error);
+      await this.updateNotificationStatus(notificationId, NotificationStatus.FAILED);
     }
   }
 
@@ -548,30 +589,30 @@ export class NotificationServiceImpl implements NotificationService {
       UPDATE notifications 
       SET status = ?, sent_at = CASE WHEN ? = 'sent' THEN NOW() ELSE sent_at END
       WHERE id = ?
-    `
-    
-    await this.db.execute(query, [status, status, notificationId])
+    `;
+
+    await this.db.execute(query, [status, status, notificationId]);
   }
 
   private isInQuietHours(quietHours?: { start: string; end: string }): boolean {
-    if (!quietHours) return false
-    
-    const now = new Date()
-    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
-    
-    return currentTime >= quietHours.start && currentTime <= quietHours.end
+    if (!quietHours) return false;
+
+    const now = new Date();
+    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+    return currentTime >= quietHours.start && currentTime <= quietHours.end;
   }
 
   private getNextAvailableTime(quietHours?: { start: string; end: string }): Date {
-    if (!quietHours) return new Date()
-    
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    
-    const [endHour, endMinute] = quietHours.end.split(':').map(Number)
-    tomorrow.setHours(endHour, endMinute, 0, 0)
-    
-    return tomorrow
+    if (!quietHours) return new Date();
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const [endHour, endMinute] = quietHours.end.split(':').map(Number);
+    tomorrow.setHours(endHour, endMinute, 0, 0);
+
+    return tomorrow;
   }
 
   private getDefaultPreferences(userId: string): NotificationPreference[] {
@@ -583,9 +624,9 @@ export class NotificationServiceImpl implements NotificationService {
       isEnabled: true,
       quietHours: {
         start: '22:00',
-        end: '08:00'
-      }
-    }))
+        end: '08:00',
+      },
+    }));
   }
 
   private getDefaultTemplate(type: NotificationType): NotificationTemplate | null {
@@ -597,7 +638,7 @@ export class NotificationServiceImpl implements NotificationService {
         content: '恭喜！{{inviteeName}} 通过您的邀请成功注册了 Inspi.AI，您获得了 {{rewardAmount}} 次AI生成次数奖励！',
         variables: ['inviteeName', 'rewardAmount'],
         channels: [NotificationChannel.IN_APP, NotificationChannel.EMAIL],
-        isActive: true
+        isActive: true,
       },
       [NotificationType.REWARD_RECEIVED]: {
         id: 'reward_received',
@@ -606,7 +647,7 @@ export class NotificationServiceImpl implements NotificationService {
         content: '您获得了新的奖励：{{rewardType}} {{rewardAmount}}，快去查看吧！',
         variables: ['rewardType', 'rewardAmount'],
         channels: [NotificationChannel.IN_APP, NotificationChannel.PUSH],
-        isActive: true
+        isActive: true,
       },
       [NotificationType.INVITE_PROGRESS]: {
         id: 'invite_progress',
@@ -615,7 +656,7 @@ export class NotificationServiceImpl implements NotificationService {
         content: '您已成功邀请 {{inviteCount}} 人注册，距离下一个里程碑还需要 {{remainingCount}} 人！',
         variables: ['inviteCount', 'remainingCount'],
         channels: [NotificationChannel.IN_APP],
-        isActive: true
+        isActive: true,
       },
       [NotificationType.INVITE_CODE_EXPIRING]: {
         id: 'invite_code_expiring',
@@ -624,7 +665,7 @@ export class NotificationServiceImpl implements NotificationService {
         content: '您的邀请码 {{inviteCode}} 将在 {{daysLeft}} 天后过期，请及时分享给朋友！',
         variables: ['inviteCode', 'daysLeft'],
         channels: [NotificationChannel.IN_APP, NotificationChannel.EMAIL],
-        isActive: true
+        isActive: true,
       },
       [NotificationType.MILESTONE_ACHIEVED]: {
         id: 'milestone_achieved',
@@ -633,7 +674,7 @@ export class NotificationServiceImpl implements NotificationService {
         content: '恭喜您达成了 {{milestoneName}} 里程碑！获得了 {{rewardDescription}} 奖励！',
         variables: ['milestoneName', 'rewardDescription'],
         channels: [NotificationChannel.IN_APP, NotificationChannel.EMAIL, NotificationChannel.PUSH],
-        isActive: true
+        isActive: true,
       },
       [NotificationType.WEEKLY_SUMMARY]: {
         id: 'weekly_summary',
@@ -642,7 +683,7 @@ export class NotificationServiceImpl implements NotificationService {
         content: '本周您邀请了 {{weeklyInvites}} 人，累计获得 {{weeklyRewards}} 奖励。继续加油！',
         variables: ['weeklyInvites', 'weeklyRewards'],
         channels: [NotificationChannel.EMAIL],
-        isActive: true
+        isActive: true,
       },
       [NotificationType.MONTHLY_REPORT]: {
         id: 'monthly_report',
@@ -651,14 +692,14 @@ export class NotificationServiceImpl implements NotificationService {
         content: '您的月度邀请报告已生成，本月排名第 {{monthlyRank}} 位，共邀请 {{monthlyInvites}} 人！',
         variables: ['monthlyRank', 'monthlyInvites'],
         channels: [NotificationChannel.EMAIL],
-        isActive: true
-      }
-    }
+        isActive: true,
+      },
+    };
 
-    return templates[type] || null
+    return templates[type] || null;
   }
 
-  private mapToNotificationMessage(row: any): NotificationMessage {
+  private mapToNotificationMessage(row: NotificationMessageRow): NotificationMessage {
     return {
       id: row.id,
       userId: row.user_id,
@@ -671,11 +712,11 @@ export class NotificationServiceImpl implements NotificationService {
       scheduledAt: row.scheduled_at ? new Date(row.scheduled_at) : undefined,
       sentAt: row.sent_at ? new Date(row.sent_at) : undefined,
       readAt: row.read_at ? new Date(row.read_at) : undefined,
-      createdAt: new Date(row.created_at)
-    }
+      createdAt: new Date(row.created_at),
+    };
   }
 
-  private mapToNotificationPreference(row: any): NotificationPreference {
+  private mapToNotificationPreference(row: NotificationPreferenceRow): NotificationPreference {
     return {
       userId: row.user_id,
       type: row.type as NotificationType,
@@ -684,12 +725,12 @@ export class NotificationServiceImpl implements NotificationService {
       isEnabled: Boolean(row.is_enabled),
       quietHours: row.quiet_hours_start && row.quiet_hours_end ? {
         start: row.quiet_hours_start,
-        end: row.quiet_hours_end
-      } : undefined
-    }
+        end: row.quiet_hours_end,
+      } : undefined,
+    };
   }
 
-  private mapToNotificationTemplate(row: any): NotificationTemplate {
+  private mapToNotificationTemplate(row: NotificationTemplateRow): NotificationTemplate {
     return {
       id: row.id,
       type: row.type as NotificationType,
@@ -697,12 +738,12 @@ export class NotificationServiceImpl implements NotificationService {
       content: row.content,
       variables: JSON.parse(row.variables || '[]'),
       channels: JSON.parse(row.channels || '[]'),
-      isActive: Boolean(row.is_active)
-    }
+      isActive: Boolean(row.is_active),
+    };
   }
 
   private generateId(): string {
-    return `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    return `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   // 具体通知处理方法的实现
@@ -718,18 +759,18 @@ export class NotificationServiceImpl implements NotificationService {
     rewardAmount: number
   }): Promise<void> {
     try {
-      const template = await this.getNotificationTemplate(NotificationType.INVITE_SUCCESS)
-      if (!template) return
+      const template = await this.getNotificationTemplate(NotificationType.INVITE_SUCCESS);
+      if (!template) return;
 
       const content = this.renderNotificationContent(template.content, {
         inviteeName: data.inviteeName,
-        rewardAmount: data.rewardAmount
-      })
+        rewardAmount: data.rewardAmount,
+      });
 
       const title = this.renderNotificationContent(template.title, {
         inviteeName: data.inviteeName,
-        rewardAmount: data.rewardAmount
-      })
+        rewardAmount: data.rewardAmount,
+      });
 
       // 发送应用内通知
       await this.sendNotification({
@@ -742,9 +783,9 @@ export class NotificationServiceImpl implements NotificationService {
         metadata: {
           inviteeId: data.inviteeId,
           inviteeName: data.inviteeName,
-          rewardAmount: data.rewardAmount
-        }
-      })
+          rewardAmount: data.rewardAmount,
+        },
+      });
 
       // 发送邮件通知
       await this.sendNotification({
@@ -758,13 +799,13 @@ export class NotificationServiceImpl implements NotificationService {
           inviteeId: data.inviteeId,
           inviteeName: data.inviteeName,
           inviteeEmail: data.inviteeEmail,
-          rewardAmount: data.rewardAmount
-        }
-      })
+          rewardAmount: data.rewardAmount,
+        },
+      });
 
-      console.log(`Invite success notification sent for inviter ${data.inviterId}`)
+      console.log(`Invite success notification sent for inviter ${data.inviterId}`);
     } catch (error) {
-      console.error('Failed to handle invite success notification:', error)
+      console.error('Failed to handle invite success notification:', error);
     }
   }
 
@@ -780,18 +821,18 @@ export class NotificationServiceImpl implements NotificationService {
     sourceId: string
   }): Promise<void> {
     try {
-      const template = await this.getNotificationTemplate(NotificationType.REWARD_RECEIVED)
-      if (!template) return
+      const template = await this.getNotificationTemplate(NotificationType.REWARD_RECEIVED);
+      if (!template) return;
 
       const content = this.renderNotificationContent(template.content, {
         rewardType: data.rewardType,
-        rewardAmount: data.rewardAmount
-      })
+        rewardAmount: data.rewardAmount,
+      });
 
       const title = this.renderNotificationContent(template.title, {
         rewardType: data.rewardType,
-        rewardAmount: data.rewardAmount
-      })
+        rewardAmount: data.rewardAmount,
+      });
 
       // 发送应用内通知
       await this.sendNotification({
@@ -806,9 +847,9 @@ export class NotificationServiceImpl implements NotificationService {
           rewardAmount: data.rewardAmount,
           description: data.description,
           sourceType: data.sourceType,
-          sourceId: data.sourceId
-        }
-      })
+          sourceId: data.sourceId,
+        },
+      });
 
       // 发送推送通知
       await this.sendNotification({
@@ -821,13 +862,13 @@ export class NotificationServiceImpl implements NotificationService {
         metadata: {
           rewardType: data.rewardType,
           rewardAmount: data.rewardAmount,
-          description: data.description
-        }
-      })
+          description: data.description,
+        },
+      });
 
-      console.log(`Reward received notification sent for user ${data.userId}`)
+      console.log(`Reward received notification sent for user ${data.userId}`);
     } catch (error) {
-      console.error('Failed to handle reward received notification:', error)
+      console.error('Failed to handle reward received notification:', error);
     }
   }
 
@@ -842,20 +883,20 @@ export class NotificationServiceImpl implements NotificationService {
     milestoneName?: string
   }): Promise<void> {
     try {
-      const template = await this.getNotificationTemplate(NotificationType.INVITE_PROGRESS)
-      if (!template) return
+      const template = await this.getNotificationTemplate(NotificationType.INVITE_PROGRESS);
+      if (!template) return;
 
       const content = this.renderNotificationContent(template.content, {
         inviteCount: data.inviteCount,
         remainingCount: data.remainingCount,
         nextMilestone: data.nextMilestone,
-        milestoneName: data.milestoneName || `${data.nextMilestone}人邀请`
-      })
+        milestoneName: data.milestoneName || `${data.nextMilestone}人邀请`,
+      });
 
       const title = this.renderNotificationContent(template.title, {
         inviteCount: data.inviteCount,
-        remainingCount: data.remainingCount
-      })
+        remainingCount: data.remainingCount,
+      });
 
       // 只发送应用内通知，避免过于频繁的外部通知
       await this.sendNotification({
@@ -869,13 +910,13 @@ export class NotificationServiceImpl implements NotificationService {
           inviteCount: data.inviteCount,
           nextMilestone: data.nextMilestone,
           remainingCount: data.remainingCount,
-          milestoneName: data.milestoneName
-        }
-      })
+          milestoneName: data.milestoneName,
+        },
+      });
 
-      console.log(`Invite progress notification sent for user ${data.userId}`)
+      console.log(`Invite progress notification sent for user ${data.userId}`);
     } catch (error) {
-      console.error('Failed to handle invite progress notification:', error)
+      console.error('Failed to handle invite progress notification:', error);
     }
   }
 
@@ -885,23 +926,23 @@ export class NotificationServiceImpl implements NotificationService {
   private async scheduleWeeklySummary(): Promise<void> {
     try {
       // 获取所有活跃用户
-      const activeUsers = await this.getActiveInviters(7) // 过去7天有邀请活动的用户
-      
+      const activeUsers = await this.getActiveInviters(7); // 过去7天有邀请活动的用户
+
       for (const user of activeUsers) {
-        const weeklyStats = await this.getWeeklyInviteStats(user.userId)
-        
+        const weeklyStats = await this.getWeeklyInviteStats(user.userId);
+
         if (weeklyStats.inviteCount > 0) {
-          const template = await this.getNotificationTemplate(NotificationType.WEEKLY_SUMMARY)
-          if (!template) continue
+          const template = await this.getNotificationTemplate(NotificationType.WEEKLY_SUMMARY);
+          if (!template) continue;
 
           const content = this.renderNotificationContent(template.content, {
             weeklyInvites: weeklyStats.inviteCount,
-            weeklyRewards: weeklyStats.rewardCount
-          })
+            weeklyRewards: weeklyStats.rewardCount,
+          });
 
           const title = this.renderNotificationContent(template.title, {
-            weeklyInvites: weeklyStats.inviteCount
-          })
+            weeklyInvites: weeklyStats.inviteCount,
+          });
 
           await this.sendNotification({
             userId: user.userId,
@@ -912,15 +953,15 @@ export class NotificationServiceImpl implements NotificationService {
             status: NotificationStatus.PENDING,
             metadata: {
               weeklyStats,
-              period: 'weekly'
-            }
-          })
+              period: 'weekly',
+            },
+          });
         }
       }
 
-      console.log(`Weekly summary scheduled for ${activeUsers.length} users`)
+      console.log(`Weekly summary scheduled for ${activeUsers.length} users`);
     } catch (error) {
-      console.error('Failed to schedule weekly summary:', error)
+      console.error('Failed to schedule weekly summary:', error);
     }
   }
 
@@ -930,24 +971,24 @@ export class NotificationServiceImpl implements NotificationService {
   private async scheduleMonthlyReport(): Promise<void> {
     try {
       // 获取所有有邀请记录的用户
-      const users = await this.getAllInviters()
-      
+      const users = await this.getAllInviters();
+
       for (const user of users) {
-        const monthlyStats = await this.getMonthlyInviteStats(user.userId)
-        const monthlyRank = await this.getUserMonthlyRank(user.userId)
-        
-        const template = await this.getNotificationTemplate(NotificationType.MONTHLY_REPORT)
-        if (!template) continue
+        const monthlyStats = await this.getMonthlyInviteStats(user.userId);
+        const monthlyRank = await this.getUserMonthlyRank(user.userId);
+
+        const template = await this.getNotificationTemplate(NotificationType.MONTHLY_REPORT);
+        if (!template) continue;
 
         const content = this.renderNotificationContent(template.content, {
           monthlyRank: monthlyRank,
-          monthlyInvites: monthlyStats.inviteCount
-        })
+          monthlyInvites: monthlyStats.inviteCount,
+        });
 
         const title = this.renderNotificationContent(template.title, {
           monthlyRank: monthlyRank,
-          monthlyInvites: monthlyStats.inviteCount
-        })
+          monthlyInvites: monthlyStats.inviteCount,
+        });
 
         await this.sendNotification({
           userId: user.userId,
@@ -959,14 +1000,14 @@ export class NotificationServiceImpl implements NotificationService {
           metadata: {
             monthlyStats,
             monthlyRank,
-            period: 'monthly'
-          }
-        })
+            period: 'monthly',
+          },
+        });
       }
 
-      console.log(`Monthly report scheduled for ${users.length} users`)
+      console.log(`Monthly report scheduled for ${users.length} users`);
     } catch (error) {
-      console.error('Failed to schedule monthly report:', error)
+      console.error('Failed to schedule monthly report:', error);
     }
   }
 
@@ -976,24 +1017,24 @@ export class NotificationServiceImpl implements NotificationService {
   private async checkInviteCodeExpiration(): Promise<void> {
     try {
       // 查找即将过期的邀请码（7天内过期）
-      const expiringCodes = await this.getExpiringInviteCodes(7)
-      
+      const expiringCodes = await this.getExpiringInviteCodes(7);
+
       for (const code of expiringCodes) {
-        const daysLeft = Math.ceil((code.expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-        
+        const daysLeft = Math.ceil((code.expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
         if (daysLeft > 0 && daysLeft <= 7) {
-          const template = await this.getNotificationTemplate(NotificationType.INVITE_CODE_EXPIRING)
-          if (!template) continue
+          const template = await this.getNotificationTemplate(NotificationType.INVITE_CODE_EXPIRING);
+          if (!template) continue;
 
           const content = this.renderNotificationContent(template.content, {
             inviteCode: code.code,
-            daysLeft: daysLeft
-          })
+            daysLeft: daysLeft,
+          });
 
           const title = this.renderNotificationContent(template.title, {
             inviteCode: code.code,
-            daysLeft: daysLeft
-          })
+            daysLeft: daysLeft,
+          });
 
           // 发送应用内通知
           await this.sendNotification({
@@ -1007,9 +1048,9 @@ export class NotificationServiceImpl implements NotificationService {
               inviteCodeId: code.id,
               inviteCode: code.code,
               daysLeft: daysLeft,
-              expiresAt: code.expiresAt
-            }
-          })
+              expiresAt: code.expiresAt,
+            },
+          });
 
           // 如果只剩1天，发送邮件提醒
           if (daysLeft === 1) {
@@ -1024,16 +1065,16 @@ export class NotificationServiceImpl implements NotificationService {
                 inviteCodeId: code.id,
                 inviteCode: code.code,
                 daysLeft: daysLeft,
-                expiresAt: code.expiresAt
-              }
-            })
+                expiresAt: code.expiresAt,
+              },
+            });
           }
         }
       }
 
-      console.log(`Checked ${expiringCodes.length} expiring invite codes`)
+      console.log(`Checked ${expiringCodes.length} expiring invite codes`);
     } catch (error) {
-      console.error('Failed to check invite code expiration:', error)
+      console.error('Failed to check invite code expiration:', error);
     }
   }
 
@@ -1043,32 +1084,32 @@ export class NotificationServiceImpl implements NotificationService {
   private async sendEmailNotification(notification: NotificationMessage): Promise<void> {
     try {
       // 获取用户邮箱
-      const userEmail = await this.getUserEmail(notification.userId)
+      const userEmail = await this.getUserEmail(notification.userId);
       if (!userEmail) {
-        throw new Error('User email not found')
+        throw new Error('User email not found');
       }
 
       // 生成邮件模板
-      const emailTemplate = this.generateEmailTemplate(notification)
-      
+      const emailTemplate = this.generateEmailTemplate(notification);
+
       // 使用邮件服务发送
-      const { emailService } = await import('@/lib/email/service')
-      
+      const { emailService } = await import('@/lib/email/service');
+
       const result = await emailService.sendEmail({
         to: userEmail,
         subject: emailTemplate.subject,
         html: emailTemplate.html,
-        text: emailTemplate.text
-      })
+        text: emailTemplate.text,
+      });
 
       if (!result.success) {
-        throw new Error(result.error || 'Failed to send email')
+        throw new Error(result.error || 'Failed to send email');
       }
 
-      console.log(`Email notification sent to ${userEmail}`)
+      console.log(`Email notification sent to ${userEmail}`);
     } catch (error) {
-      console.error('Failed to send email notification:', error)
-      throw error
+      console.error('Failed to send email notification:', error);
+      throw error;
     }
   }
 
@@ -1078,11 +1119,11 @@ export class NotificationServiceImpl implements NotificationService {
   private async sendPushNotification(notification: NotificationMessage): Promise<void> {
     try {
       // 获取用户的推送令牌
-      const pushTokens = await this.getUserPushTokens(notification.userId)
-      
+      const pushTokens = await this.getUserPushTokens(notification.userId);
+
       if (pushTokens.length === 0) {
-        console.log(`No push tokens found for user ${notification.userId}`)
-        return
+        console.log(`No push tokens found for user ${notification.userId}`);
+        return;
       }
 
       // 构建推送消息
@@ -1092,20 +1133,20 @@ export class NotificationServiceImpl implements NotificationService {
         data: {
           type: notification.type,
           userId: notification.userId,
-          metadata: JSON.stringify(notification.metadata || {})
-        }
-      }
+          metadata: JSON.stringify(notification.metadata || {}),
+        },
+      };
 
       // 这里应该集成实际的推送服务（如 Firebase Cloud Messaging）
       // 目前只是记录日志
-      console.log(`Push notification would be sent to ${pushTokens.length} devices:`, pushMessage)
-      
+      console.log(`Push notification would be sent to ${pushTokens.length} devices:`, pushMessage);
+
       // TODO: 实现实际的推送发送逻辑
       // await pushService.sendToTokens(pushTokens, pushMessage)
-      
+
     } catch (error) {
-      console.error('Failed to send push notification:', error)
-      throw error
+      console.error('Failed to send push notification:', error);
+      throw error;
     }
   }
 
@@ -1115,24 +1156,24 @@ export class NotificationServiceImpl implements NotificationService {
   private async sendSMSNotification(notification: NotificationMessage): Promise<void> {
     try {
       // 获取用户手机号
-      const phoneNumber = await this.getUserPhoneNumber(notification.userId)
+      const phoneNumber = await this.getUserPhoneNumber(notification.userId);
       if (!phoneNumber) {
-        throw new Error('User phone number not found')
+        throw new Error('User phone number not found');
       }
 
       // 构建短信内容
-      const smsContent = `【Inspi.AI】${notification.title}: ${notification.content}`
-      
+      const smsContent = `【Inspi.AI】${notification.title}: ${notification.content}`;
+
       // 这里应该集成实际的短信服务
       // 目前只是记录日志
-      console.log(`SMS would be sent to ${phoneNumber}: ${smsContent}`)
-      
+      console.log(`SMS would be sent to ${phoneNumber}: ${smsContent}`);
+
       // TODO: 实现实际的短信发送逻辑
       // await smsService.send(phoneNumber, smsContent)
-      
+
     } catch (error) {
-      console.error('Failed to send SMS notification:', error)
-      throw error
+      console.error('Failed to send SMS notification:', error);
+      throw error;
     }
   }
 
@@ -1142,14 +1183,14 @@ export class NotificationServiceImpl implements NotificationService {
    * 渲染通知内容
    */
   private renderNotificationContent(template: string, variables: Record<string, any>): string {
-    let rendered = template
-    
-    Object.entries(variables).forEach(([key, value]) => {
-      const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
-      rendered = rendered.replace(regex, String(value))
-    })
+    let rendered = template;
 
-    return rendered
+    Object.entries(variables).forEach(([key, value]) => {
+      const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
+      rendered = rendered.replace(regex, String(value));
+    });
+
+    return rendered;
   }
 
   /**
@@ -1160,8 +1201,8 @@ export class NotificationServiceImpl implements NotificationService {
     html: string
     text: string
   } {
-    const subject = notification.title
-    
+    const subject = notification.title;
+
     const html = `
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -1235,7 +1276,7 @@ export class NotificationServiceImpl implements NotificationService {
         </div>
     </div>
 </body>
-</html>`
+</html>`;
 
     const text = `
 【Inspi.AI】${notification.title}
@@ -1246,9 +1287,9 @@ ${notification.content}
 如有疑问，请联系我们：support@inspi-ai.com
 
 © 2024 Inspi.AI. All rights reserved.
-`
+`;
 
-    return { subject, html, text }
+    return { subject, html, text };
   }
 
   /**
@@ -1256,12 +1297,12 @@ ${notification.content}
    */
   private async getUserEmail(userId: string): Promise<string | null> {
     try {
-      const query = 'SELECT email FROM users WHERE id = ?'
-      const result = await this.db.queryOne(query, [userId])
-      return result?.email || null
+      const query = 'SELECT email FROM users WHERE id = ?';
+      const result = await this.db.queryOne<{ email: string | null }>(query, [userId]);
+      return result?.email || null;
     } catch (error) {
-      console.error('Failed to get user email:', error)
-      return null
+      console.error('Failed to get user email:', error);
+      return null;
     }
   }
 
@@ -1270,12 +1311,12 @@ ${notification.content}
    */
   private async getUserPushTokens(userId: string): Promise<string[]> {
     try {
-      const query = 'SELECT token FROM push_tokens WHERE user_id = ? AND is_active = 1'
-      const results = await this.db.query(query, [userId])
-      return results.map((row: any) => row.token)
+      const query = 'SELECT token FROM push_tokens WHERE user_id = ? AND is_active = 1';
+      const results = await this.db.query<{ token: string }>(query, [userId]);
+      return results.map(row => row.token);
     } catch (error) {
-      console.error('Failed to get user push tokens:', error)
-      return []
+      console.error('Failed to get user push tokens:', error);
+      return [];
     }
   }
 
@@ -1284,12 +1325,12 @@ ${notification.content}
    */
   private async getUserPhoneNumber(userId: string): Promise<string | null> {
     try {
-      const query = 'SELECT phone FROM users WHERE id = ?'
-      const result = await this.db.queryOne(query, [userId])
-      return result?.phone || null
+      const query = 'SELECT phone FROM users WHERE id = ?';
+      const result = await this.db.queryOne<{ phone: string | null }>(query, [userId]);
+      return result?.phone || null;
     } catch (error) {
-      console.error('Failed to get user phone number:', error)
-      return null
+      console.error('Failed to get user phone number:', error);
+      return null;
     }
   }
 
@@ -1298,19 +1339,19 @@ ${notification.content}
    */
   private async getActiveInviters(days: number): Promise<{ userId: string }[]> {
     try {
-      const cutoffDate = new Date()
-      cutoffDate.setDate(cutoffDate.getDate() - days)
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
 
       const query = `
         SELECT DISTINCT inviter_id as userId
         FROM invite_registrations 
         WHERE registered_at >= ?
-      `
-      
-      return await this.db.query(query, [cutoffDate])
+      `;
+
+      return await this.db.query(query, [cutoffDate]);
     } catch (error) {
-      console.error('Failed to get active inviters:', error)
-      return []
+      console.error('Failed to get active inviters:', error);
+      return [];
     }
   }
 
@@ -1322,12 +1363,12 @@ ${notification.content}
       const query = `
         SELECT DISTINCT inviter_id as userId
         FROM invite_registrations
-      `
-      
-      return await this.db.query(query)
+      `;
+
+      return await this.db.query(query);
     } catch (error) {
-      console.error('Failed to get all inviters:', error)
-      return []
+      console.error('Failed to get all inviters:', error);
+      return [];
     }
   }
 
@@ -1339,33 +1380,33 @@ ${notification.content}
     rewardCount: number
   }> {
     try {
-      const weekAgo = new Date()
-      weekAgo.setDate(weekAgo.getDate() - 7)
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
 
       const inviteQuery = `
         SELECT COUNT(*) as count
         FROM invite_registrations 
         WHERE inviter_id = ? AND registered_at >= ?
-      `
-      
+      `;
+
       const rewardQuery = `
         SELECT COUNT(*) as count
         FROM rewards 
         WHERE user_id = ? AND granted_at >= ?
-      `
+      `;
 
       const [inviteResult, rewardResult] = await Promise.all([
-        this.db.queryOne(inviteQuery, [userId, weekAgo]),
-        this.db.queryOne(rewardQuery, [userId, weekAgo])
-      ])
+        this.db.queryOne<{ count: number | string }>(inviteQuery, [userId, weekAgo]),
+        this.db.queryOne<{ count: number | string }>(rewardQuery, [userId, weekAgo]),
+      ]);
 
       return {
-        inviteCount: parseInt(inviteResult?.count) || 0,
-        rewardCount: parseInt(rewardResult?.count) || 0
-      }
+        inviteCount: parseInt((inviteResult?.count ?? 0, 10).toString(), 10) || 0,
+        rewardCount: parseInt((rewardResult?.count ?? 0, 10).toString(), 10) || 0,
+      };
     } catch (error) {
-      console.error('Failed to get weekly invite stats:', error)
-      return { inviteCount: 0, rewardCount: 0 }
+      console.error('Failed to get weekly invite stats:', error);
+      return { inviteCount: 0, rewardCount: 0 };
     }
   }
 
@@ -1377,33 +1418,33 @@ ${notification.content}
     rewardCount: number
   }> {
     try {
-      const monthAgo = new Date()
-      monthAgo.setMonth(monthAgo.getMonth() - 1)
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
 
       const inviteQuery = `
         SELECT COUNT(*) as count
         FROM invite_registrations 
         WHERE inviter_id = ? AND registered_at >= ?
-      `
-      
+      `;
+
       const rewardQuery = `
         SELECT COUNT(*) as count
         FROM rewards 
         WHERE user_id = ? AND granted_at >= ?
-      `
+      `;
 
       const [inviteResult, rewardResult] = await Promise.all([
-        this.db.queryOne(inviteQuery, [userId, monthAgo]),
-        this.db.queryOne(rewardQuery, [userId, monthAgo])
-      ])
+        this.db.queryOne<{ count: number | string }>(inviteQuery, [userId, monthAgo]),
+        this.db.queryOne<{ count: number | string }>(rewardQuery, [userId, monthAgo]),
+      ]);
 
       return {
-        inviteCount: parseInt(inviteResult?.count) || 0,
-        rewardCount: parseInt(rewardResult?.count) || 0
-      }
+        inviteCount: parseInt((inviteResult?.count ?? 0, 10).toString(), 10) || 0,
+        rewardCount: parseInt((rewardResult?.count ?? 0, 10).toString(), 10) || 0,
+      };
     } catch (error) {
-      console.error('Failed to get monthly invite stats:', error)
-      return { inviteCount: 0, rewardCount: 0 }
+      console.error('Failed to get monthly invite stats:', error);
+      return { inviteCount: 0, rewardCount: 0 };
     }
   }
 
@@ -1412,8 +1453,8 @@ ${notification.content}
    */
   private async getUserMonthlyRank(userId: string): Promise<number> {
     try {
-      const monthAgo = new Date()
-      monthAgo.setMonth(monthAgo.getMonth() - 1)
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
 
       const query = `
         SELECT 
@@ -1424,13 +1465,13 @@ ${notification.content}
         WHERE registered_at >= ?
         GROUP BY inviter_id
         HAVING inviter_id = ?
-      `
+      `;
 
-      const result = await this.db.queryOne(query, [monthAgo, userId])
-      return parseInt(result?.rank) || 0
+      const result = await this.db.queryOne<{ rank: number | string }>(query, [monthAgo, userId]);
+      return parseInt((result?.rank ?? 0, 10).toString(), 10) || 0;
     } catch (error) {
-      console.error('Failed to get user monthly rank:', error)
-      return 0
+      console.error('Failed to get user monthly rank:', error);
+      return 0;
     }
   }
 
@@ -1439,8 +1480,8 @@ ${notification.content}
    */
   private async getExpiringInviteCodes(daysAhead: number): Promise<InviteCode[]> {
     try {
-      const futureDate = new Date()
-      futureDate.setDate(futureDate.getDate() + daysAhead)
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + daysAhead);
 
       const query = `
         SELECT * FROM invite_codes 
@@ -1448,10 +1489,10 @@ ${notification.content}
         AND expires_at <= ? 
         AND expires_at > NOW()
         ORDER BY expires_at ASC
-      `
+      `;
 
-      const results = await this.db.query(query, [futureDate])
-      
+      const results = await this.db.query(query, [futureDate]);
+
       return results.map((row: any) => ({
         id: row.id,
         code: row.code,
@@ -1460,11 +1501,11 @@ ${notification.content}
         expiresAt: new Date(row.expires_at),
         isActive: Boolean(row.is_active),
         usageCount: row.usage_count,
-        maxUsage: row.max_usage
-      }))
+        maxUsage: row.max_usage,
+      }));
     } catch (error) {
-      console.error('Failed to get expiring invite codes:', error)
-      return []
+      console.error('Failed to get expiring invite codes:', error);
+      return [];
     }
   }
 }

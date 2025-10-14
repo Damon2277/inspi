@@ -41,19 +41,22 @@ ${version} 版本包含了重要的功能更新和问题修复，提升了系统
 
 ## 🚀 新功能
 
-${features.map(f => `- ${f.emoji} **${f.scope ? `${f.scope}: ` : ''}${f.description}**${f.details ? `\n  ${f.details}` : ''}`).join('\n')}` : '',
+${features.map(f => `- ${f.emoji} **${f.scope ?
+  `${f.scope}: ` : ''}${f.description}**${f.details ? `\n  ${f.details}` : ''}`).join('\n')}` : '',
 
   fixes: (fixes) => fixes.length > 0 ? `
 
 ## 🐛 问题修复
 
-${fixes.map(f => `- ${f.emoji} **${f.scope ? `${f.scope}: ` : ''}${f.description}**${f.details ? `\n  ${f.details}` : ''}`).join('\n')}` : '',
+${fixes.map(f => `- ${f.emoji} **${f.scope ?
+  `${f.scope}: ` : ''}${f.description}**${f.details ? `\n  ${f.details}` : ''}`).join('\n')}` : '',
 
   improvements: (improvements) => improvements.length > 0 ? `
 
 ## 🔧 改进优化
 
-${improvements.map(i => `- ${i.emoji} **${i.scope ? `${i.scope}: ` : ''}${i.description}**${i.details ? `\n  ${i.details}` : ''}`).join('\n')}` : '',
+${improvements.map(i => `- ${i.emoji} **${i.scope ?
+  `${i.scope}: ` : ''}${i.description}**${i.details ? `\n  ${i.details}` : ''}`).join('\n')}` : '',
 
   breaking: (breaking) => breaking.length > 0 ? `
 
@@ -93,7 +96,8 @@ npm test
 
 ## 🔗 相关链接
 
-- [完整变更日志](https://github.com/your-org/inspi-ai-platform/compare/v${stats.previousVersion}...${version})
+- [完整变更日志](https:
+  //github.com/your-org/inspi-ai-platform/compare/v${stats.previousVersion}...${version})
 - [问题反馈](https://github.com/your-org/inspi-ai-platform/issues)
 - [项目文档](https://github.com/your-org/inspi-ai-platform/docs)
 
@@ -123,12 +127,14 @@ class ReleaseDocGenerator {
     try {
       let command;
       if (fromTag) {
-        command = `git log ${fromTag}..${toTag} --oneline --no-merges --format="%H|%s|%an|%ad" --date=short`;
+        command = `git log ${fromTag}..${toTag} --oneline --no-merges --
+          format="%H|%s|%an|%ad" --date=short`;
       } else {
         // 如果没有起始标签，获取最近的标签
         try {
           const lastTag = execSync('git describe --tags --abbrev=0', { encoding: 'utf8' }).trim();
-          command = `git log ${lastTag}..${toTag} --oneline --no-merges --format="%H|%s|%an|%ad" --date=short`;
+          command = `git log ${lastTag}..${toTag} --oneline --no-merges --
+            format="%H|%s|%an|%ad" --date=short`;
         } catch {
           // 如果没有任何标签，获取所有提交
           command = `git log ${toTag} --oneline --no-merges --format="%H|%s|%an|%ad" --date=short`;
@@ -180,9 +186,11 @@ class ReleaseDocGenerator {
     const lowerMessage = message.toLowerCase();
     let type = 'chore';
     
-    if (lowerMessage.includes('feat') || lowerMessage.includes('add') || lowerMessage.includes('新增')) {
+    if (lowerMessage.includes('feat') || lowerMessage.includes('add') ||
+      lowerMessage.includes('新增')) {
       type = 'feat';
-    } else if (lowerMessage.includes('fix') || lowerMessage.includes('修复') || lowerMessage.includes('bug')) {
+    } else if (lowerMessage.includes('fix') || lowerMessage.includes('修复') ||
+      lowerMessage.includes('bug')) {
       type = 'fix';
     } else if (lowerMessage.includes('doc') || lowerMessage.includes('文档')) {
       type = 'docs';
@@ -331,7 +339,8 @@ class ReleaseDocGenerator {
    */
   getPreviousVersion() {
     try {
-      return execSync('git describe --tags --abbrev=0', { encoding: 'utf8' }).trim().replace('v', '');
+      return execSync('git describe --tags --abbrev=0',
+        { encoding: 'utf8' }).trim().replace('v', '');
     } catch {
       return '0.0.0';
     }
@@ -372,7 +381,8 @@ class ReleaseDocGenerator {
     if (categories.breaking.length > 0) {
       changelog += `### ⚠️ BREAKING CHANGES\n\n`;
       categories.breaking.forEach(item => {
-        changelog += `- **${item.scope ? `${item.scope}: ` : ''}${item.description}** (${item.hash})\n`;
+        changelog += `- **${item.scope ?
+          `${item.scope}: ` : ''}${item.description}** (${item.hash})\n`;
       });
       changelog += '\n';
     }
@@ -380,7 +390,8 @@ class ReleaseDocGenerator {
     if (categories.features.length > 0) {
       changelog += `### 🚀 Features\n\n`;
       categories.features.forEach(item => {
-        changelog += `- **${item.scope ? `${item.scope}: ` : ''}${item.description}** (${item.hash})\n`;
+        changelog += `- **${item.scope ?
+          `${item.scope}: ` : ''}${item.description}** (${item.hash})\n`;
       });
       changelog += '\n';
     }
@@ -388,7 +399,8 @@ class ReleaseDocGenerator {
     if (categories.fixes.length > 0) {
       changelog += `### 🐛 Bug Fixes\n\n`;
       categories.fixes.forEach(item => {
-        changelog += `- **${item.scope ? `${item.scope}: ` : ''}${item.description}** (${item.hash})\n`;
+        changelog += `- **${item.scope ?
+          `${item.scope}: ` : ''}${item.description}** (${item.hash})\n`;
       });
       changelog += '\n';
     }
@@ -396,7 +408,8 @@ class ReleaseDocGenerator {
     if (categories.improvements.length > 0) {
       changelog += `### 🔧 Improvements\n\n`;
       categories.improvements.forEach(item => {
-        changelog += `- **${item.scope ? `${item.scope}: ` : ''}${item.description}** (${item.hash})\n`;
+        changelog += `- **${item.scope ?
+          `${item.scope}: ` : ''}${item.description}** (${item.hash})\n`;
       });
       changelog += '\n';
     }
@@ -432,7 +445,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
     // 在现有changelog前插入新版本
     const changelogLines = existingChangelog.split('\n');
-    const insertIndex = changelogLines.findIndex(line => line.startsWith('## [')) || changelogLines.length;
+    const insertIndex = changelogLines.findIndex(line =
+      > line.startsWith('## [')) || changelogLines.length;
     
     changelogLines.splice(insertIndex, 0, newChangelog);
     

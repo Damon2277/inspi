@@ -1,11 +1,11 @@
+import { SEO_CONFIG } from '@/lib/seo/config';
 import {
   getStaticSitemapUrls,
   generateSitemapXML,
   generateRobotsTxt,
   validateSitemapUrl,
-  calculatePriority
+  calculatePriority,
 } from '@/lib/seo/sitemap';
-import { SEO_CONFIG } from '@/lib/seo/config';
 
 // Mock fetch for testing
 global.fetch = jest.fn();
@@ -18,12 +18,12 @@ describe('Sitemap Utils', () => {
   describe('getStaticSitemapUrls', () => {
     it('应该返回静态页面的sitemap条目', () => {
       const urls = getStaticSitemapUrls();
-      
+
       expect(urls).toHaveLength(6);
       expect(urls[0].url).toBe(`${SEO_CONFIG.SITE_URL}/`);
       expect(urls[0].priority).toBe(1.0);
       expect(urls[0].changeFrequency).toBe('daily');
-      
+
       const createPageUrl = urls.find(url => url.url.includes('/create'));
       expect(createPageUrl).toBeDefined();
       expect(createPageUrl?.priority).toBe(0.9);
@@ -32,7 +32,7 @@ describe('Sitemap Utils', () => {
     it('应该包含所有重要页面', () => {
       const urls = getStaticSitemapUrls();
       const urlStrings = urls.map(u => u.url);
-      
+
       expect(urlStrings).toContain(`${SEO_CONFIG.SITE_URL}/`);
       expect(urlStrings).toContain(`${SEO_CONFIG.SITE_URL}/create`);
       expect(urlStrings).toContain(`${SEO_CONFIG.SITE_URL}/square`);
@@ -45,7 +45,7 @@ describe('Sitemap Utils', () => {
   describe('generateSitemapXML', () => {
     it('应该生成有效的XML sitemap', async () => {
       const xml = await generateSitemapXML();
-      
+
       expect(xml).toContain('<?xml version="1.0" encoding="UTF-8"?>');
       expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
       expect(xml).toContain('</urlset>');
@@ -57,7 +57,7 @@ describe('Sitemap Utils', () => {
 
     it('应该包含所有静态页面', async () => {
       const xml = await generateSitemapXML();
-      
+
       expect(xml).toContain(`<loc>${SEO_CONFIG.SITE_URL}/</loc>`);
       expect(xml).toContain(`<loc>${SEO_CONFIG.SITE_URL}/create</loc>`);
       expect(xml).toContain(`<loc>${SEO_CONFIG.SITE_URL}/square</loc>`);
@@ -67,7 +67,7 @@ describe('Sitemap Utils', () => {
   describe('generateRobotsTxt', () => {
     it('应该生成有效的robots.txt', () => {
       const robotsTxt = generateRobotsTxt();
-      
+
       expect(robotsTxt).toContain('User-agent: *');
       expect(robotsTxt).toContain('Allow: /');
       expect(robotsTxt).toContain('Disallow: /api/');
@@ -77,7 +77,7 @@ describe('Sitemap Utils', () => {
 
     it('应该包含搜索引擎特定规则', () => {
       const robotsTxt = generateRobotsTxt();
-      
+
       expect(robotsTxt).toContain('User-agent: Googlebot');
       expect(robotsTxt).toContain('User-agent: Bingbot');
       expect(robotsTxt).toContain('User-agent: Baiduspider');
@@ -86,7 +86,7 @@ describe('Sitemap Utils', () => {
 
     it('应该允许访问公开内容', () => {
       const robotsTxt = generateRobotsTxt();
-      
+
       expect(robotsTxt).toContain('Allow: /square');
       expect(robotsTxt).toContain('Allow: /leaderboard');
       expect(robotsTxt).toContain('Allow: /works/');
@@ -95,7 +95,7 @@ describe('Sitemap Utils', () => {
 
     it('应该禁止访问私人页面', () => {
       const robotsTxt = generateRobotsTxt();
-      
+
       expect(robotsTxt).toContain('Disallow: /api/');
       expect(robotsTxt).toContain('Disallow: /admin/');
       expect(robotsTxt).toContain('Disallow: /dashboard/');
@@ -131,7 +131,7 @@ describe('Sitemap Utils', () => {
     it('应该根据受欢迎程度调整优先级', () => {
       const basePriority = calculatePriority('content');
       const popularPriority = calculatePriority('content', 50);
-      
+
       expect(popularPriority).toBeGreaterThan(basePriority);
     });
 

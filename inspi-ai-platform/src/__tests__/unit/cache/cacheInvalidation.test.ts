@@ -17,9 +17,9 @@ describe('Cache Invalidation Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
-    
+
     mockRedisManager = redisManager as jest.Mocked<typeof redisManager>;
-    
+
     // Mock Redis client
     mockClient = {
       get: jest.fn(),
@@ -31,7 +31,7 @@ describe('Cache Invalidation Tests', () => {
       exists: jest.fn(),
       keys: jest.fn(),
       scan: jest.fn(),
-      eval: jest.fn()
+      eval: jest.fn(),
     };
 
     mockRedisManager.getClient.mockReturnValue(mockClient);
@@ -80,13 +80,13 @@ describe('Cache Invalidation Tests', () => {
 
       // Act
       await redis.set(key, value, { ttl });
-      
+
       // 立即获取，应该存在
       const immediateResult = await redis.get(key);
-      
+
       // 模拟时间过去
       jest.advanceTimersByTime(2000); // 2秒后
-      
+
       // 再次获取，应该已过期
       const expiredResult = await redis.get(key);
 
@@ -100,7 +100,7 @@ describe('Cache Invalidation Tests', () => {
       const testCases = [
         { key: 'short', ttl: 60, value: 'short-lived' },
         { key: 'medium', ttl: 3600, value: 'medium-lived' },
-        { key: 'long', ttl: 86400, value: 'long-lived' }
+        { key: 'long', ttl: 86400, value: 'long-lived' },
       ];
 
       mockClient.setex.mockResolvedValue('OK');
@@ -108,11 +108,11 @@ describe('Cache Invalidation Tests', () => {
       // Act & Assert
       for (const testCase of testCases) {
         await redis.set(testCase.key, testCase.value, { ttl: testCase.ttl });
-        
+
         expect(mockClient.setex).toHaveBeenCalledWith(
           `inspi:${testCase.key}`,
           testCase.ttl,
-          testCase.value
+          testCase.value,
         );
       }
     });
@@ -129,7 +129,7 @@ describe('Cache Invalidation Tests', () => {
 
       // Act
       await redis.set(key, value, { ttl: initialTTL });
-      
+
       // 更新TTL（通过重新设置）
       await redis.set(key, value, { ttl: newTTL });
 
@@ -169,7 +169,7 @@ describe('Cache Invalidation Tests', () => {
       // Act
       await redis.set(key, value);
       const beforeDelete = await redis.get(key);
-      
+
       await redis.del(key);
       const afterDelete = await redis.get(key);
 
@@ -225,7 +225,7 @@ describe('Cache Invalidation Tests', () => {
       const matchingKeys = [
         'inspi:pattern:1',
         'inspi:pattern:2',
-        'inspi:pattern:test'
+        'inspi:pattern:test',
       ];
 
       mockClient.keys.mockResolvedValue(matchingKeys);
@@ -308,12 +308,12 @@ describe('Cache Invalidation Tests', () => {
       // Arrange
       const parentKey = 'parent:data';
       const childKeys = ['child:1', 'child:2', 'child:3'];
-      
+
       const parentData = { id: 'parent', children: ['child:1', 'child:2', 'child:3'] };
-      const childData = childKeys.map((key, i) => ({ 
-        id: key, 
+      const childData = childKeys.map((key, i) => ({
+        id: key,
         parent: 'parent:data',
-        data: `child data ${i + 1}` 
+        data: `child data ${i + 1}`,
       }));
 
       mockClient.set.mockResolvedValue('OK');
@@ -328,7 +328,7 @@ describe('Cache Invalidation Tests', () => {
 
       // 删除父数据时，应该级联删除子数据
       await redis.del(parentKey);
-      
+
       // 模拟级联删除
       for (const childKey of childKeys) {
         await redis.del(childKey);
@@ -347,7 +347,7 @@ describe('Cache Invalidation Tests', () => {
       // Arrange
       const dataKey = 'data:user:123';
       const indexKeys = ['index:users:active', 'index:users:by-name'];
-      
+
       const userData = { id: 123, name: 'John', active: true };
       const updatedUserData = { id: 123, name: 'John Doe', active: false };
 
@@ -362,7 +362,7 @@ describe('Cache Invalidation Tests', () => {
 
       // 更新数据时，失效相关缓存
       await redis.setJSON(dataKey, updatedUserData);
-      
+
       // 失效相关索引缓存
       for (const indexKey of indexKeys) {
         await redis.del(indexKey);
@@ -371,9 +371,9 @@ describe('Cache Invalidation Tests', () => {
       // Assert
       expect(mockClient.set).toHaveBeenCalledWith(
         'inspi:data:user:123',
-        JSON.stringify(updatedUserData)
+        JSON.stringify(updatedUserData),
       );
-      
+
       indexKeys.forEach(indexKey => {
         expect(mockClient.del).toHaveBeenCalledWith(`inspi:${indexKey}`);
       });
@@ -418,7 +418,7 @@ describe('Cache Invalidation Tests', () => {
       const mockMulti = {
         set: jest.fn().mockReturnThis(),
         del: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue(['OK', 'OK', 'OK'])
+        exec: jest.fn().mockResolvedValue(['OK', 'OK', 'OK']),
       };
 
       mockClient.multi.mockReturnValue(mockMulti);
@@ -426,18 +426,18 @@ describe('Cache Invalidation Tests', () => {
       // Act
       // 模拟事务性操作
       const multi = mockClient.multi();
-      
+
       for (let i = 0; i < keys.length; i++) {
         multi.set(`inspi:${keys[i]}`, values[i]);
       }
-      
+
       const results = await multi.exec();
 
       // Assert
       expect(mockClient.multi).toHaveBeenCalled();
       expect(mockMulti.exec).toHaveBeenCalled();
       expect(results).toEqual(['OK', 'OK', 'OK']);
-      
+
       keys.forEach((key, i) => {
         expect(mockMulti.set).toHaveBeenCalledWith(`inspi:${key}`, values[i]);
       });
@@ -532,7 +532,7 @@ describe('Cache Invalidation Tests', () => {
       expect(accessCounts.get('freq:high')).toBe(10);
       expect(accessCounts.get('freq:medium')).toBe(5);
       expect(accessCounts.get('freq:low')).toBe(1);
-      
+
       // 低频访问的键应该被删除
       expect(mockClient.del).toHaveBeenCalledWith('inspi:freq:low');
     });
@@ -551,9 +551,9 @@ describe('Cache Invalidation Tests', () => {
 
       for (const key of keys) {
         await redis.set(key, largeValue);
-        
+
         const currentMemory = process.memoryUsage().heapUsed;
-        
+
         // 如果内存使用超过阈值，开始清理
         if (currentMemory - initialMemory > memoryThreshold) {
           // 删除一些较旧的缓存项
@@ -568,7 +568,7 @@ describe('Cache Invalidation Tests', () => {
       // Assert
       const finalMemory = process.memoryUsage().heapUsed;
       const memoryIncrease = finalMemory - initialMemory;
-      
+
       // 内存增长应该被控制在合理范围内
       expect(memoryIncrease).toBeLessThan(memoryThreshold * 1.5);
     });

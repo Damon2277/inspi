@@ -1,10 +1,11 @@
 /**
  * State Consistency Tester
- * 
+ *
  * Specialized testing utilities for state consistency validation including
  * state transition validation, invariant checking, and consistency monitoring.
  */
 import { EventEmitter } from 'events';
+
 import { StateStore } from './StateTestFramework';
 
 export interface ConsistencyTestConfig {
@@ -185,8 +186,8 @@ export class StateConsistencyTester<T> extends EventEmitter {
         memoryUsage: this.getMemoryUsage(),
         subscriptionCount: this.getSubscriptionCount(),
         operationId: this.generateOperationId(),
-        threadId: this.getThreadId()
-      }
+        threadId: this.getThreadId(),
+      },
     };
 
     this.snapshots.push(snapshot);
@@ -206,7 +207,7 @@ export class StateConsistencyTester<T> extends EventEmitter {
     for (const invariant of this.invariants) {
       try {
         const isValid = invariant.check(state);
-        
+
         if (!isValid) {
           const violation: ConsistencyViolation<T> = {
             type: 'invariant',
@@ -215,16 +216,16 @@ export class StateConsistencyTester<T> extends EventEmitter {
             timestamp: new Date(),
             state: JSON.parse(JSON.stringify(state)),
             invariant,
-            context: { invariantName: invariant.name }
+            context: { invariantName: invariant.name },
           };
 
           this.violations.push(violation);
           this.emit('invariantViolation', { violation });
         }
       } catch (error) {
-        this.emit('invariantCheckError', { 
-          invariant: invariant.name, 
-          error: error instanceof Error ? error.message : String(error)
+        this.emit('invariantCheckError', {
+          invariant: invariant.name,
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     }
@@ -241,7 +242,7 @@ export class StateConsistencyTester<T> extends EventEmitter {
 
         if (fromMatches && toMatches) {
           const isValidTransition = transition.validate(fromState, toState);
-          
+
           if (!isValidTransition) {
             const violation: ConsistencyViolation<T> = {
               type: 'transition',
@@ -251,7 +252,7 @@ export class StateConsistencyTester<T> extends EventEmitter {
               state: JSON.parse(JSON.stringify(toState)),
               previousState: JSON.parse(JSON.stringify(fromState)),
               transition,
-              context: { transitionName: transition.name }
+              context: { transitionName: transition.name },
             };
 
             this.violations.push(violation);
@@ -259,9 +260,9 @@ export class StateConsistencyTester<T> extends EventEmitter {
           }
         }
       } catch (error) {
-        this.emit('transitionCheckError', { 
-          transition: transition.name, 
-          error: error instanceof Error ? error.message : String(error)
+        this.emit('transitionCheckError', {
+          transition: transition.name,
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     }
@@ -283,7 +284,7 @@ export class StateConsistencyTester<T> extends EventEmitter {
   async testConcurrency(
     store: StateStore<T>,
     operations: Array<() => Promise<void> | void>,
-    testName: string = 'Concurrency Test'
+    testName: string = 'Concurrency Test',
   ): Promise<ConcurrencyTestResult<T>> {
     const startTime = Date.now();
     const initialState = store.getState();
@@ -306,9 +307,9 @@ export class StateConsistencyTester<T> extends EventEmitter {
         try {
           await operation();
         } catch (error) {
-          this.emit('concurrentOperationError', { 
-            operationIndex: index, 
-            error: error instanceof Error ? error.message : String(error)
+          this.emit('concurrentOperationError', {
+            operationIndex: index,
+            error: error instanceof Error ? error.message : String(error),
           });
         }
       });
@@ -336,7 +337,7 @@ export class StateConsistencyTester<T> extends EventEmitter {
       consistencyViolations: [...this.violations],
       finalState,
       stateHistory,
-      raceConditionsDetected
+      raceConditionsDetected,
     };
   }
 
@@ -353,7 +354,7 @@ export class StateConsistencyTester<T> extends EventEmitter {
       const next = stateHistory[i + 1];
 
       // Check for state oscillation (A -> B -> A pattern)
-      if (JSON.stringify(prev) === JSON.stringify(next) && 
+      if (JSON.stringify(prev) === JSON.stringify(next) &&
           JSON.stringify(prev) !== JSON.stringify(current)) {
         raceConditions++;
       }
@@ -369,9 +370,9 @@ export class StateConsistencyTester<T> extends EventEmitter {
     const totalSnapshots = this.snapshots.length;
     const violationsFound = this.violations.length;
     const criticalViolations = this.violations.filter(v => v.severity === 'critical').length;
-    
+
     // Calculate consistency score (0-100)
-    const consistencyScore = totalSnapshots > 0 
+    const consistencyScore = totalSnapshots > 0
       ? Math.max(0, 100 - (violationsFound / totalSnapshots) * 100)
       : 100;
 
@@ -382,11 +383,11 @@ export class StateConsistencyTester<T> extends EventEmitter {
         totalSnapshots,
         violationsFound,
         criticalViolations,
-        consistencyScore
+        consistencyScore,
       },
       violations: [...this.violations],
       snapshots: [...this.snapshots],
-      recommendations
+      recommendations,
     };
   }
 
@@ -435,15 +436,15 @@ export class StateConsistencyTester<T> extends EventEmitter {
         description: 'State should never be null or undefined',
         check: (state: T) => state != null,
         severity: 'critical',
-        message: 'State is null or undefined'
+        message: 'State is null or undefined',
       },
       {
         name: 'State Is Object',
         description: 'State should be an object',
         check: (state: T) => typeof state === 'object',
         severity: 'high',
-        message: 'State is not an object'
-      }
+        message: 'State is not an object',
+      },
     ];
   }
 
@@ -460,7 +461,7 @@ export class StateConsistencyTester<T> extends EventEmitter {
         validate: (from: any, to: any) => {
           return from.loading === true && to.loading === false && to.data != null;
         },
-        message: 'Invalid transition from loading to success state'
+        message: 'Invalid transition from loading to success state',
       },
       {
         name: 'Loading to Error',
@@ -470,8 +471,8 @@ export class StateConsistencyTester<T> extends EventEmitter {
         validate: (from: any, to: any) => {
           return from.loading === true && to.loading === false && to.error != null;
         },
-        message: 'Invalid transition from loading to error state'
-      }
+        message: 'Invalid transition from loading to error state',
+      },
     ];
   }
 
@@ -539,7 +540,7 @@ export class StateConsistencyTester<T> extends EventEmitter {
       snapshots: [...this.snapshots],
       violations: [...this.violations],
       invariants: [...this.invariants],
-      transitions: [...this.transitions]
+      transitions: [...this.transitions],
     };
   }
 }

@@ -1,11 +1,12 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { useAuthStore } from '@/stores/authStore';
+
+import { useAuthStore } from '@/shared/stores/authStore';
 
 class APIClient {
   private client: AxiosInstance;
 
   constructor() {
-    this.client = axios.create({
+    this.client = (axios.create as any)({
       baseURL: process.env.NEXT_PUBLIC_API_URL || '',
       timeout: 30000,
       headers: {
@@ -28,7 +29,7 @@ class APIClient {
       },
       (error) => {
         return Promise.reject(error);
-      }
+      },
     );
 
     // Response interceptor to handle errors
@@ -42,9 +43,9 @@ class APIClient {
           useAuthStore.getState().logout();
           window.location.href = '/';
         }
-        
+
         return Promise.reject(error);
-      }
+      },
     );
   }
 

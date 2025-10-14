@@ -1,10 +1,11 @@
 /**
  * Compile-Time Test Utilities
- * 
+ *
  * Utilities for testing TypeScript types at compile time including
  * type assertion helpers, compilation testing, and type compatibility validation.
  */
 import * as ts from 'typescript';
+
 import { CompileTimeTest, ExpectedError, ExpectedWarning } from './TypeTestFramework';
 
 export class CompileTimeTestUtils {
@@ -18,7 +19,7 @@ export class CompileTimeTestUtils {
       sourceCode,
       expectedErrors: [],
       expectedWarnings: [],
-      shouldCompile: true
+      shouldCompile: true,
     };
   }
 
@@ -26,9 +27,9 @@ export class CompileTimeTestUtils {
    * Create a compile-time test that should fail
    */
   static createFailingTest(
-    name: string, 
-    sourceCode: string, 
-    expectedErrors: ExpectedError[]
+    name: string,
+    sourceCode: string,
+    expectedErrors: ExpectedError[],
   ): CompileTimeTest {
     return {
       name,
@@ -36,7 +37,7 @@ export class CompileTimeTestUtils {
       sourceCode,
       expectedErrors,
       expectedWarnings: [],
-      shouldCompile: false
+      shouldCompile: false,
     };
   }
 
@@ -62,12 +63,12 @@ export class CompileTimeTestUtils {
           };
           
           // This should work
-          const userId: number = user.id;
+          const userId: number = (user.id || (user as any)._id);
           const userName: string = user.name;
         `,
         expectedErrors: [],
         expectedWarnings: [],
-        shouldCompile: true
+        shouldCompile: true,
       },
       {
         name: 'Invalid Type Assignment',
@@ -86,16 +87,16 @@ export class CompileTimeTestUtils {
         expectedErrors: [
           {
             code: 2322,
-            message: "Type 'string' is not assignable to type 'number'"
+            message: "Type 'string' is not assignable to type 'number'",
           },
           {
             code: 2322,
-            message: "Type 'number' is not assignable to type 'string'"
-          }
+            message: "Type 'number' is not assignable to type 'string'",
+          },
         ],
         expectedWarnings: [],
-        shouldCompile: false
-      }
+        shouldCompile: false,
+      },
     ];
   }
 
@@ -121,7 +122,7 @@ export class CompileTimeTestUtils {
         `,
         expectedErrors: [],
         expectedWarnings: [],
-        shouldCompile: true
+        shouldCompile: true,
       },
       {
         name: 'Generic Constraint Violations',
@@ -146,12 +147,12 @@ export class CompileTimeTestUtils {
         expectedErrors: [
           {
             code: 2345,
-            message: "Argument of type 'number' is not assignable to parameter of type 'Lengthwise'"
-          }
+            message: "Argument of type 'number' is not assignable to parameter of type 'Lengthwise'",
+          },
         ],
         expectedWarnings: [],
-        shouldCompile: false
-      }
+        shouldCompile: false,
+      },
     ];
   }
 
@@ -183,7 +184,7 @@ export class CompileTimeTestUtils {
         `,
         expectedErrors: [],
         expectedWarnings: [],
-        shouldCompile: true
+        shouldCompile: true,
       },
       {
         name: 'Interface Implementation',
@@ -217,8 +218,8 @@ export class CompileTimeTestUtils {
         `,
         expectedErrors: [],
         expectedWarnings: [],
-        shouldCompile: true
-      }
+        shouldCompile: true,
+      },
     ];
   }
 
@@ -267,8 +268,8 @@ export class CompileTimeTestUtils {
         `,
         expectedErrors: [],
         expectedWarnings: [],
-        shouldCompile: true
-      }
+        shouldCompile: true,
+      },
     ];
   }
 
@@ -300,8 +301,8 @@ export class CompileTimeTestUtils {
         `,
         expectedErrors: [],
         expectedWarnings: [],
-        shouldCompile: true
-      }
+        shouldCompile: true,
+      },
     ];
   }
 
@@ -341,8 +342,8 @@ export class CompileTimeTestUtils {
         `,
         expectedErrors: [],
         expectedWarnings: [],
-        shouldCompile: true
-      }
+        shouldCompile: true,
+      },
     ];
   }
 
@@ -383,8 +384,8 @@ export class CompileTimeTestUtils {
         `,
         expectedErrors: [],
         expectedWarnings: [],
-        shouldCompile: true
-      }
+        shouldCompile: true,
+      },
     ];
   }
 
@@ -423,12 +424,12 @@ export class CompileTimeTestUtils {
         expectedErrors: [
           {
             code: 2531,
-            message: "Object is possibly 'null'"
-          }
+            message: "Object is possibly 'null'",
+          },
         ],
         expectedWarnings: [],
-        shouldCompile: false
-      }
+        shouldCompile: false,
+      },
     ];
   }
 
@@ -469,7 +470,7 @@ export class CompileTimeTestUtils {
     return {
       isValid: issues.length === 0,
       issues,
-      recommendations
+      recommendations,
     };
   }
 
@@ -490,12 +491,12 @@ export class CompileTimeTestUtils {
       for (let j = 0; j < types.length; j++) {
         const compatible = this.areTypesCompatible(types[i], types[j]);
         matrix[i][j] = compatible;
-        
+
         if (!compatible && i !== j) {
           incompatibilities.push({
             from: types[i],
             to: types[j],
-            reason: `${types[i]} is not assignable to ${types[j]}`
+            reason: `${types[i]} is not assignable to ${types[j]}`,
           });
         }
       }
@@ -504,7 +505,7 @@ export class CompileTimeTestUtils {
     return {
       matrix,
       typeNames: types,
-      incompatibilities
+      incompatibilities,
     };
   }
 
@@ -514,7 +515,7 @@ export class CompileTimeTestUtils {
   private static areTypesCompatible(type1: string, type2: string): boolean {
     // Simplified compatibility check
     if (type1 === type2) return true;
-    
+
     // Basic primitive compatibility
     const primitiveCompatibility: Record<string, string[]> = {
       'any': ['string', 'number', 'boolean', 'object', 'undefined', 'null'],
@@ -525,7 +526,7 @@ export class CompileTimeTestUtils {
       'object': ['any'],
       'undefined': ['any', 'void'],
       'null': ['any'],
-      'void': ['any', 'undefined']
+      'void': ['any', 'undefined'],
     };
 
     return primitiveCompatibility[type1]?.includes(type2) || false;

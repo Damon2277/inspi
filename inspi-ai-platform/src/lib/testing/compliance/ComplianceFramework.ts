@@ -1,6 +1,6 @@
 /**
  * 合规性检查框架 - 核心框架类
- * 
+ *
  * 提供统一的合规性检查接口和管理功能
  */
 
@@ -98,8 +98,8 @@ export class ComplianceFramework {
    * 按类别获取规则
    */
   getRulesByCategory(category: string): ComplianceRule[] {
-    return Array.from(this.rules.values()).filter(rule => 
-      rule.category === category && rule.enabled
+    return Array.from(this.rules.values()).filter(rule =>
+      rule.category === category && rule.enabled,
     );
   }
 
@@ -121,7 +121,7 @@ export class ComplianceFramework {
           passed: false,
           score: 0,
           message: `Rule execution failed: ${error.message}`,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
       }
     });
@@ -142,23 +142,23 @@ export class ComplianceFramework {
     const warningRules = results.filter(r => r.score > 0 && r.score < 100).length;
 
     // 计算总体分数
-    const overallScore = totalRules > 0 
+    const overallScore = totalRules > 0
       ? Math.round(results.reduce((sum, r) => sum + r.score, 0) / totalRules)
       : 0;
 
     // 计算类别分数
     const categoryScores: Record<string, number> = {};
     const categories = ['code-quality', 'test-coverage', 'documentation', 'security'];
-    
+
     categories.forEach(category => {
       const categoryResults = results.filter(r => {
         const rule = this.getRule(r.ruleId);
         return rule?.category === category;
       });
-      
+
       if (categoryResults.length > 0) {
         categoryScores[category] = Math.round(
-          categoryResults.reduce((sum, r) => sum + r.score, 0) / categoryResults.length
+          categoryResults.reduce((sum, r) => sum + r.score, 0) / categoryResults.length,
         );
       }
     });
@@ -167,10 +167,10 @@ export class ComplianceFramework {
     const recommendations = this.generateRecommendations(results);
 
     // 确定状态
-    const status = overallScore >= this.config.thresholds.pass 
-      ? 'passed' 
-      : overallScore >= this.config.thresholds.warning 
-        ? 'warning' 
+    const status = overallScore >= this.config.thresholds.pass
+      ? 'passed'
+      : overallScore >= this.config.thresholds.warning
+        ? 'warning'
         : 'failed';
 
     return {
@@ -183,11 +183,11 @@ export class ComplianceFramework {
         totalRules,
         passedRules,
         failedRules,
-        warningRules
+        warningRules,
       },
       categoryScores,
       results,
-      recommendations
+      recommendations,
     };
   }
 
@@ -246,7 +246,7 @@ export class ComplianceFramework {
         return acc;
       }, {} as Record<string, number>),
       complianceRate: (report.summary.passedRules / report.summary.totalRules) * 100,
-      improvementAreas: this.identifyImprovementAreas(report)
+      improvementAreas: this.identifyImprovementAreas(report),
     };
   }
 
@@ -255,7 +255,7 @@ export class ComplianceFramework {
    */
   private identifyImprovementAreas(report: ComplianceReport): string[] {
     const areas: string[] = [];
-    
+
     Object.entries(report.categoryScores).forEach(([category, score]) => {
       if (score < this.config.thresholds.warning) {
         areas.push(category);
@@ -296,18 +296,18 @@ export interface ComplianceStats {
 export const DEFAULT_COMPLIANCE_CONFIG: ComplianceConfig = {
   thresholds: {
     pass: 80,
-    warning: 60
+    warning: 60,
   },
   rules: {
     enabled: [],
-    disabled: []
+    disabled: [],
   },
   reporting: {
     outputPath: './compliance-reports',
-    formats: ['json', 'html']
+    formats: ['json', 'html'],
   },
   scheduling: {
     enabled: false,
-    interval: '0 0 * * *' // 每天午夜
-  }
+    interval: '0 0 * * *', // 每天午夜
+  },
 };

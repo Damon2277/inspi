@@ -3,8 +3,10 @@
  * 测试系统健康状态监控和检查功能
  */
 
-import { executeApiRoute, expectApiResponse } from '../setup/test-server'
-import { mockHealthService, resetAllMocks } from '../mocks/api-mocks'
+import { GET as getHealthHandler, POST as postHealthHandler } from '@/app/api/health/route';
+
+import { mockHealthService, resetAllMocks } from '../mocks/api-mocks';
+import { executeApiRoute, expectApiResponse } from '../setup/test-server';
 
 // Mock健康管理器
 jest.mock('@/lib/monitoring/health', () => ({
@@ -12,7 +14,7 @@ jest.mock('@/lib/monitoring/health', () => ({
     getSystemHealth: jest.fn(),
     runCheck: jest.fn(),
   },
-}))
+}));
 
 // Mock日志系统
 jest.mock('@/lib/logging/logger', () => ({
@@ -22,19 +24,16 @@ jest.mock('@/lib/logging/logger', () => ({
     warn: jest.fn(),
     debug: jest.fn(),
   },
-}))
-
-// 导入要测试的API路由
-import { GET as getHealthHandler, POST as postHealthHandler } from '@/app/api/health/route'
+}));
 
 describe('健康检查API测试', () => {
-  const mockHealthManager = require('@/lib/monitoring/health').healthManager
-  const mockLogger = require('@/lib/logging/logger').logger
+  const mockHealthManager = require('@/lib/monitoring/health').healthManager;
+  const mockLogger = require('@/lib/logging/logger').logger;
 
   beforeEach(() => {
-    resetAllMocks()
-    jest.clearAllMocks()
-  })
+    resetAllMocks();
+    jest.clearAllMocks();
+  });
 
   describe('GET /api/health', () => {
     test('应该返回健康的系统状态', async () => {
@@ -54,14 +53,14 @@ describe('健康检查API测试', () => {
           unhealthy: 0,
           degraded: 0,
         },
-      }
+      };
 
-      mockHealthManager.getSystemHealth.mockResolvedValue(healthyStatus)
+      mockHealthManager.getSystemHealth.mockResolvedValue(healthyStatus);
 
       const response = await executeApiRoute(getHealthHandler, {
         method: 'GET',
         url: 'http://localhost:3000/api/health',
-      })
+      });
 
       expectApiResponse(response)
         .toHaveStatus(200)
@@ -93,7 +92,7 @@ describe('健康检查API测试', () => {
             unhealthy: 0,
             degraded: 0,
           }),
-        })
+        });
 
       // 验证日志记录
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -107,9 +106,9 @@ describe('健康检查API测试', () => {
             degradedChecks: 0,
             uptime: expect.any(Number),
           }),
-        })
-      )
-    })
+        }),
+      );
+    });
 
     test('应该返回降级的系统状态', async () => {
       const degradedStatus = {
@@ -128,14 +127,14 @@ describe('健康检查API测试', () => {
           unhealthy: 0,
           degraded: 1,
         },
-      }
+      };
 
-      mockHealthManager.getSystemHealth.mockResolvedValue(degradedStatus)
+      mockHealthManager.getSystemHealth.mockResolvedValue(degradedStatus);
 
       const response = await executeApiRoute(getHealthHandler, {
         method: 'GET',
         url: 'http://localhost:3000/api/health',
-      })
+      });
 
       expectApiResponse(response)
         .toHaveStatus(200) // 降级但仍可用
@@ -145,8 +144,8 @@ describe('健康检查API测试', () => {
             healthy: 3,
             degraded: 1,
           }),
-        })
-    })
+        });
+    });
 
     test('应该返回不健康的系统状态', async () => {
       const unhealthyStatus = {
@@ -165,14 +164,14 @@ describe('健康检查API测试', () => {
           unhealthy: 2,
           degraded: 0,
         },
-      }
+      };
 
-      mockHealthManager.getSystemHealth.mockResolvedValue(unhealthyStatus)
+      mockHealthManager.getSystemHealth.mockResolvedValue(unhealthyStatus);
 
       const response = await executeApiRoute(getHealthHandler, {
         method: 'GET',
         url: 'http://localhost:3000/api/health',
-      })
+      });
 
       expectApiResponse(response)
         .toHaveStatus(503) // 服务不可用
@@ -182,16 +181,16 @@ describe('健康检查API测试', () => {
             healthy: 2,
             unhealthy: 2,
           }),
-        })
-    })
+        });
+    });
 
     test('应该处理健康检查系统失败', async () => {
-      mockHealthManager.getSystemHealth.mockRejectedValue(new Error('Health system failed'))
+      mockHealthManager.getSystemHealth.mockRejectedValue(new Error('Health system failed'));
 
       const response = await executeApiRoute(getHealthHandler, {
         method: 'GET',
         url: 'http://localhost:3000/api/health',
-      })
+      });
 
       expectApiResponse(response)
         .toHaveStatus(500)
@@ -200,35 +199,35 @@ describe('健康检查API测试', () => {
           timestamp: expect.any(Number),
           message: 'Health check system failed',
           error: 'Health system failed',
-        })
+        });
 
       // 验证错误日志
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Health check failed',
-        expect.any(Error)
-      )
-    })
+        expect.any(Error),
+      );
+    });
 
     test('应该处理未知错误', async () => {
-      mockHealthManager.getSystemHealth.mockRejectedValue('Unknown error')
+      mockHealthManager.getSystemHealth.mockRejectedValue('Unknown error');
 
       const response = await executeApiRoute(getHealthHandler, {
         method: 'GET',
         url: 'http://localhost:3000/api/health',
-      })
+      });
 
       expectApiResponse(response)
         .toHaveStatus(500)
         .toHaveBodyContaining({
           status: 'unhealthy',
           error: 'Unknown error',
-        })
-    })
-  })
+        });
+    });
+  });
 
   describe('POST /api/health', () => {
     test('应该执行指定的健康检查', async () => {
-      const checkNames = ['database', 'redis']
+      const checkNames = ['database', 'redis'];
       const checkResults = [
         {
           name: 'database',
@@ -244,17 +243,17 @@ describe('健康检查API测试', () => {
           duration: 30,
           timestamp: Date.now(),
         },
-      ]
+      ];
 
       mockHealthManager.runCheck
         .mockResolvedValueOnce(checkResults[0])
-        .mockResolvedValueOnce(checkResults[1])
+        .mockResolvedValueOnce(checkResults[1]);
 
       const response = await executeApiRoute(postHealthHandler, {
         method: 'POST',
         url: 'http://localhost:3000/api/health',
         body: { checks: checkNames },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
@@ -279,15 +278,15 @@ describe('健康检查API测试', () => {
             unhealthy: 0,
             degraded: 0,
           }),
-        })
+        });
 
-      expect(mockHealthManager.runCheck).toHaveBeenCalledTimes(2)
-      expect(mockHealthManager.runCheck).toHaveBeenCalledWith('database')
-      expect(mockHealthManager.runCheck).toHaveBeenCalledWith('redis')
-    })
+      expect(mockHealthManager.runCheck).toHaveBeenCalledTimes(2);
+      expect(mockHealthManager.runCheck).toHaveBeenCalledWith('database');
+      expect(mockHealthManager.runCheck).toHaveBeenCalledWith('redis');
+    });
 
     test('应该处理部分检查失败', async () => {
-      const checkNames = ['database', 'redis']
+      const checkNames = ['database', 'redis'];
 
       mockHealthManager.runCheck
         .mockResolvedValueOnce({
@@ -297,13 +296,13 @@ describe('健康检查API测试', () => {
           duration: 50,
           timestamp: Date.now(),
         })
-        .mockRejectedValueOnce(new Error('Redis connection failed'))
+        .mockRejectedValueOnce(new Error('Redis connection failed'));
 
       const response = await executeApiRoute(postHealthHandler, {
         method: 'POST',
         url: 'http://localhost:3000/api/health',
         body: { checks: checkNames },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
@@ -325,29 +324,29 @@ describe('健康检查API测试', () => {
             healthy: 1,
             unhealthy: 1,
           }),
-        })
-    })
+        });
+    });
 
     test('应该验证请求体格式', async () => {
       const response = await executeApiRoute(postHealthHandler, {
         method: 'POST',
         url: 'http://localhost:3000/api/health',
         body: { checks: 'invalid' }, // 非数组类型
-      })
+      });
 
       expectApiResponse(response)
         .toHaveStatus(400)
         .toHaveBodyContaining({
           error: 'Invalid request body. Expected array of check names.',
-        })
-    })
+        });
+    });
 
     test('应该处理空的检查列表', async () => {
       const response = await executeApiRoute(postHealthHandler, {
         method: 'POST',
         url: 'http://localhost:3000/api/health',
         body: { checks: [] },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
@@ -360,19 +359,19 @@ describe('健康检查API测试', () => {
             unhealthy: 0,
             degraded: 0,
           }),
-        })
-    })
+        });
+    });
 
     test('应该处理无效的检查名称', async () => {
-      const checkNames = ['invalid-check']
+      const checkNames = ['invalid-check'];
 
-      mockHealthManager.runCheck.mockRejectedValue(new Error('Unknown check'))
+      mockHealthManager.runCheck.mockRejectedValue(new Error('Unknown check'));
 
       const response = await executeApiRoute(postHealthHandler, {
         method: 'POST',
         url: 'http://localhost:3000/api/health',
         body: { checks: checkNames },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveSuccessStatus()
@@ -385,8 +384,8 @@ describe('健康检查API测试', () => {
               message: 'Unknown check',
             }),
           ]),
-        })
-    })
+        });
+    });
 
     test('应该处理JSON解析错误', async () => {
       // 模拟无效的JSON
@@ -394,33 +393,33 @@ describe('健康检查API测试', () => {
         method: 'POST',
         url: 'http://localhost:3000/api/health',
         body: null,
-      })
+      });
 
       expectApiResponse(response)
-        .toHaveErrorStatus()
-    })
+        .toHaveErrorStatus();
+    });
 
     test('应该处理系统异常', async () => {
       mockHealthManager.runCheck.mockImplementation(() => {
-        throw new Error('System error')
-      })
+        throw new Error('System error');
+      });
 
       const response = await executeApiRoute(postHealthHandler, {
         method: 'POST',
         url: 'http://localhost:3000/api/health',
         body: { checks: ['database'] },
-      })
+      });
 
       expectApiResponse(response)
         .toHaveStatus(500)
         .toHaveBodyContaining({
           error: 'Health check failed',
           message: expect.any(String),
-        })
+        });
 
-      expect(mockLogger.error).toHaveBeenCalled()
-    })
-  })
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+  });
 
   describe('健康检查状态映射', () => {
     test('应该正确映射健康状态到HTTP状态码', async () => {
@@ -428,7 +427,7 @@ describe('健康检查API测试', () => {
         { healthStatus: 'healthy', expectedHttpStatus: 200 },
         { healthStatus: 'degraded', expectedHttpStatus: 200 },
         { healthStatus: 'unhealthy', expectedHttpStatus: 503 },
-      ]
+      ];
 
       for (const testCase of testCases) {
         mockHealthManager.getSystemHealth.mockResolvedValue({
@@ -437,17 +436,17 @@ describe('健康检查API测试', () => {
           uptime: 3600,
           checks: {},
           summary: { total: 0, healthy: 0, unhealthy: 0, degraded: 0 },
-        })
+        });
 
         const response = await executeApiRoute(getHealthHandler, {
           method: 'GET',
           url: 'http://localhost:3000/api/health',
-        })
+        });
 
-        expect(response.status).toBe(testCase.expectedHttpStatus)
+        expect(response.status).toBe(testCase.expectedHttpStatus);
       }
-    })
-  })
+    });
+  });
 
   describe('健康检查日志记录', () => {
     test('应该记录健康检查执行日志', async () => {
@@ -457,14 +456,14 @@ describe('健康检查API测试', () => {
         uptime: 3600,
         checks: {},
         summary: { total: 4, healthy: 4, unhealthy: 0, degraded: 0 },
-      }
+      };
 
-      mockHealthManager.getSystemHealth.mockResolvedValue(healthStatus)
+      mockHealthManager.getSystemHealth.mockResolvedValue(healthStatus);
 
       await executeApiRoute(getHealthHandler, {
         method: 'GET',
         url: 'http://localhost:3000/api/health',
-      })
+      });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Health check performed',
@@ -477,23 +476,23 @@ describe('健康检查API测试', () => {
             degradedChecks: 0,
             uptime: 3600,
           }),
-        })
-      )
-    })
+        }),
+      );
+    });
 
     test('应该记录健康检查失败日志', async () => {
-      const error = new Error('Health check failed')
-      mockHealthManager.getSystemHealth.mockRejectedValue(error)
+      const error = new Error('Health check failed');
+      mockHealthManager.getSystemHealth.mockRejectedValue(error);
 
       await executeApiRoute(getHealthHandler, {
         method: 'GET',
         url: 'http://localhost:3000/api/health',
-      })
+      });
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Health check failed',
-        error
-      )
-    })
-  })
-})
+        error,
+      );
+    });
+  });
+});

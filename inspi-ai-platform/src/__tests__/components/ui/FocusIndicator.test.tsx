@@ -1,16 +1,17 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
+
 import '@testing-library/jest-dom';
-import { FocusIndicator, FocusableContainer } from '@/components/ui/FocusIndicator';
+import { FocusIndicator, FocusableContainer } from '@/shared/components/FocusIndicator';
 
 describe('FocusIndicator', () => {
   it('renders children correctly', () => {
     render(
       <FocusIndicator>
         <button>Test Button</button>
-      </FocusIndicator>
+      </FocusIndicator>,
     );
-    
+
     expect(screen.getByRole('button', { name: 'Test Button' })).toBeInTheDocument();
   });
 
@@ -18,9 +19,9 @@ describe('FocusIndicator', () => {
     const { container } = render(
       <FocusIndicator>
         <button>Test Button</button>
-      </FocusIndicator>
+      </FocusIndicator>,
     );
-    
+
     const focusWrapper = container.firstChild as HTMLElement;
     expect(focusWrapper).toHaveClass('rounded-md', 'transition-all', 'duration-200');
   });
@@ -29,9 +30,9 @@ describe('FocusIndicator', () => {
     const { container } = render(
       <FocusIndicator variant="primary">
         <button>Test Button</button>
-      </FocusIndicator>
+      </FocusIndicator>,
     );
-    
+
     const focusWrapper = container.firstChild as HTMLElement;
     expect(focusWrapper).toHaveClass('focus-within:ring-2', 'focus-within:ring-blue-500', 'focus-within:ring-offset-2');
   });
@@ -40,9 +41,9 @@ describe('FocusIndicator', () => {
     const { container } = render(
       <FocusIndicator variant="secondary">
         <button>Test Button</button>
-      </FocusIndicator>
+      </FocusIndicator>,
     );
-    
+
     const focusWrapper = container.firstChild as HTMLElement;
     expect(focusWrapper).toHaveClass('focus-within:ring-2', 'focus-within:ring-gray-400', 'focus-within:ring-offset-2');
   });
@@ -51,9 +52,9 @@ describe('FocusIndicator', () => {
     const { container } = render(
       <FocusIndicator variant="outline">
         <button>Test Button</button>
-      </FocusIndicator>
+      </FocusIndicator>,
     );
-    
+
     const focusWrapper = container.firstChild as HTMLElement;
     expect(focusWrapper).toHaveClass('focus-within:outline-2', 'focus-within:outline-blue-500', 'focus-within:outline-offset-2');
   });
@@ -62,9 +63,9 @@ describe('FocusIndicator', () => {
     const { container } = render(
       <FocusIndicator size="lg">
         <button>Test Button</button>
-      </FocusIndicator>
+      </FocusIndicator>,
     );
-    
+
     const focusWrapper = container.firstChild as HTMLElement;
     expect(focusWrapper).toHaveClass('focus-within:ring-offset-4');
   });
@@ -73,9 +74,9 @@ describe('FocusIndicator', () => {
     const { container } = render(
       <FocusIndicator disabled>
         <button>Test Button</button>
-      </FocusIndicator>
+      </FocusIndicator>,
     );
-    
+
     const focusWrapper = container.firstChild as HTMLElement;
     expect(focusWrapper).not.toHaveClass('focus-within:ring-2');
   });
@@ -84,9 +85,9 @@ describe('FocusIndicator', () => {
     const { container } = render(
       <FocusIndicator className="custom-focus">
         <button>Test Button</button>
-      </FocusIndicator>
+      </FocusIndicator>,
     );
-    
+
     const focusWrapper = container.firstChild as HTMLElement;
     expect(focusWrapper).toHaveClass('custom-focus');
   });
@@ -98,9 +99,9 @@ describe('FocusableContainer', () => {
       <FocusableContainer>
         <button>Button 1</button>
         <button>Button 2</button>
-      </FocusableContainer>
+      </FocusableContainer>,
     );
-    
+
     expect(screen.getByRole('button', { name: 'Button 1' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Button 2' })).toBeInTheDocument();
   });
@@ -109,9 +110,9 @@ describe('FocusableContainer', () => {
     const { container } = render(
       <FocusableContainer>
         <button>Test Button</button>
-      </FocusableContainer>
+      </FocusableContainer>,
     );
-    
+
     const containerElement = container.firstChild as HTMLElement;
     expect(containerElement).toHaveAttribute('role', 'group');
     expect(containerElement).toHaveAttribute('tabIndex', '-1');
@@ -121,9 +122,9 @@ describe('FocusableContainer', () => {
     const { container } = render(
       <FocusableContainer role="navigation" aria-label="Main navigation">
         <button>Test Button</button>
-      </FocusableContainer>
+      </FocusableContainer>,
     );
-    
+
     const containerElement = container.firstChild as HTMLElement;
     expect(containerElement).toHaveAttribute('role', 'navigation');
     expect(containerElement).toHaveAttribute('aria-label', 'Main navigation');
@@ -131,42 +132,42 @@ describe('FocusableContainer', () => {
 
   it('handles keyboard events', () => {
     const mockKeyDown = jest.fn();
-    
+
     render(
       <FocusableContainer onKeyDown={mockKeyDown}>
         <button>Test Button</button>
-      </FocusableContainer>
+      </FocusableContainer>,
     );
-    
+
     const containerElement = screen.getByRole('group');
     fireEvent.keyDown(containerElement, { key: 'ArrowDown' });
-    
+
     expect(mockKeyDown).toHaveBeenCalledTimes(1);
   });
 
   it('prevents default for Home and End keys', () => {
     const mockKeyDown = jest.fn();
-    
+
     render(
       <FocusableContainer onKeyDown={mockKeyDown}>
         <button>Test Button</button>
-      </FocusableContainer>
+      </FocusableContainer>,
     );
-    
+
     const containerElement = screen.getByRole('group');
-    
+
     // Test Home key
-    fireEvent.keyDown(containerElement, { 
+    fireEvent.keyDown(containerElement, {
       key: 'Home',
-      preventDefault: jest.fn()
+      preventDefault: jest.fn(),
     });
-    
+
     // Test End key
-    fireEvent.keyDown(containerElement, { 
+    fireEvent.keyDown(containerElement, {
       key: 'End',
-      preventDefault: jest.fn()
+      preventDefault: jest.fn(),
     });
-    
+
     expect(mockKeyDown).toHaveBeenCalledTimes(2);
   });
 
@@ -174,9 +175,9 @@ describe('FocusableContainer', () => {
     const { container } = render(
       <FocusableContainer className="custom-container">
         <button>Test Button</button>
-      </FocusableContainer>
+      </FocusableContainer>,
     );
-    
+
     const containerElement = container.firstChild as HTMLElement;
     expect(containerElement).toHaveClass('custom-container');
   });

@@ -1,6 +1,6 @@
 /**
  * Test Report Generator
- * 
+ *
  * Comprehensive test report generation system supporting multiple formats,
  * visual coverage reports, historical trend analysis, and custom templates.
  */
@@ -124,10 +124,10 @@ export class TestReportGenerator {
           secondary: '#6c757d',
           success: '#28a745',
           warning: '#ffc107',
-          error: '#dc3545'
-        }
+          error: '#dc3545',
+        },
       },
-      ...config
+      ...config,
     };
 
     this.initializeDefaultTemplates();
@@ -172,8 +172,8 @@ export class TestReportGenerator {
       summary: {
         totalFiles: generatedFiles.length,
         formats: this.config.formats,
-        outputDir: this.config.outputDir
-      }
+        outputDir: this.config.outputDir,
+      },
     };
   }
 
@@ -234,7 +234,7 @@ export class TestReportGenerator {
       trends: this.config.includeTrends ? data.trends : null,
       testResults: data.testResults,
       colors: this.config.branding?.colors,
-      charts: this.config.includeCharts ? this.generateChartScripts(data) : ''
+      charts: this.config.includeCharts ? this.generateChartScripts(data) : '',
     });
 
     fs.writeFileSync(filePath, html, 'utf8');
@@ -248,9 +248,9 @@ export class TestReportGenerator {
       metadata: {
         generatedAt: new Date().toISOString(),
         generator: 'TestReportGenerator',
-        version: '1.0.0'
+        version: '1.0.0',
       },
-      ...data
+      ...data,
     };
 
     fs.writeFileSync(filePath, JSON.stringify(jsonData, null, 2), 'utf8');
@@ -280,7 +280,7 @@ export class TestReportGenerator {
       coverage: data.coverage,
       performance: data.performance,
       quality: data.quality,
-      testResults: data.testResults
+      testResults: data.testResults,
     });
 
     fs.writeFileSync(filePath, markdown, 'utf8');
@@ -291,13 +291,13 @@ export class TestReportGenerator {
    */
   private async generateCsvReport(data: TestReportData, filePath: string): Promise<void> {
     const csvLines = [
-      'Test File,Test Suite,Test Name,Status,Duration (ms),Error Message'
+      'Test File,Test Suite,Test Name,Status,Duration (ms),Error Message',
     ];
 
     data.testResults.forEach(test => {
       const errorMessage = test.error ? test.error.message.replace(/"/g, '""') : '';
       csvLines.push(
-        `"${test.testFile}","${test.testSuite}","${test.testName}","${test.status}",${test.duration},"${errorMessage}"`
+        `"${test.testFile}","${test.testSuite}","${test.testName}","${test.status}",${test.duration},"${errorMessage}"`,
       );
     });
 
@@ -312,7 +312,7 @@ export class TestReportGenerator {
     // This is a placeholder that generates HTML and suggests PDF conversion
     const htmlPath = filePath.replace('.pdf', '.html');
     await this.generateHtmlReport(data, htmlPath);
-    
+
     // Create a simple text file with PDF generation instructions
     const instructions = `
 PDF Report Generation Instructions:
@@ -320,7 +320,7 @@ PDF Report Generation Instructions:
 2. Use a tool like wkhtmltopdf or puppeteer to convert HTML to PDF
 3. Command example: wkhtmltopdf ${htmlPath} ${filePath}
     `;
-    
+
     fs.writeFileSync(filePath.replace('.pdf', '-pdf-instructions.txt'), instructions, 'utf8');
   }
 
@@ -342,16 +342,16 @@ PDF Report Generation Instructions:
               data.coverage.statements,
               data.coverage.branches,
               data.coverage.functions,
-              data.coverage.lines
+              data.coverage.lines,
             ],
             backgroundColor: [
               this.config.branding?.colors.primary,
               this.config.branding?.colors.secondary,
               this.config.branding?.colors.success,
-              this.config.branding?.colors.warning
-            ]
-          }]
-        }
+              this.config.branding?.colors.warning,
+            ],
+          }],
+        },
       };
       fs.writeFileSync(coverageChartPath, JSON.stringify(coverageChartData, null, 2));
       chartFiles.push(coverageChartPath);
@@ -366,15 +366,15 @@ PDF Report Generation Instructions:
             data: [
               data.summary.passedTests,
               data.summary.failedTests,
-              data.summary.skippedTests
+              data.summary.skippedTests,
             ],
             backgroundColor: [
               this.config.branding?.colors.success,
               this.config.branding?.colors.error,
-              this.config.branding?.colors.secondary
-            ]
-          }]
-        }
+              this.config.branding?.colors.secondary,
+            ],
+          }],
+        },
       };
       fs.writeFileSync(resultsChartPath, JSON.stringify(resultsChartData, null, 2));
       chartFiles.push(resultsChartPath);
@@ -391,16 +391,16 @@ PDF Report Generation Instructions:
                 label: 'Coverage %',
                 data: data.trends.coverageTrend.map(t => t.coverage),
                 borderColor: this.config.branding?.colors.primary,
-                fill: false
+                fill: false,
               },
               {
                 label: 'Quality Score',
                 data: data.trends.qualityTrend.map(t => t.score),
                 borderColor: this.config.branding?.colors.success,
-                fill: false
-              }
-            ]
-          }
+                fill: false,
+              },
+            ],
+          },
         };
         fs.writeFileSync(trendChartPath, JSON.stringify(trendChartData, null, 2));
         chartFiles.push(trendChartPath);
@@ -441,7 +441,7 @@ PDF Report Generation Instructions:
       description: 'Default HTML report template',
       format: 'html',
       template: this.getDefaultHtmlTemplate(),
-      variables: ['title', 'timestamp', 'summary', 'coverage', 'performance', 'quality', 'testResults', 'colors', 'charts']
+      variables: ['title', 'timestamp', 'summary', 'coverage', 'performance', 'quality', 'testResults', 'colors', 'charts'],
     });
 
     // Markdown Template
@@ -450,7 +450,7 @@ PDF Report Generation Instructions:
       description: 'Default Markdown report template',
       format: 'markdown',
       template: this.getDefaultMarkdownTemplate(),
-      variables: ['title', 'timestamp', 'summary', 'coverage', 'performance', 'quality', 'testResults']
+      variables: ['title', 'timestamp', 'summary', 'coverage', 'performance', 'quality', 'testResults'],
     });
   }
 
@@ -620,7 +620,7 @@ Generated on {{timestamp}}
     Object.keys(variables).forEach(key => {
       const value = variables[key];
       const regex = new RegExp(`{{${key}}}`, 'g');
-      
+
       if (typeof value === 'object' && value !== null) {
         // Handle nested object properties
         Object.keys(value).forEach(subKey => {
@@ -637,7 +637,7 @@ Generated on {{timestamp}}
 
   private generateJUnitXml(data: TestReportData): string {
     const testSuites = new Map<string, any[]>();
-    
+
     // Group tests by test file
     data.testResults.forEach(test => {
       if (!testSuites.has(test.testFile)) {
@@ -658,13 +658,13 @@ Generated on {{timestamp}}
 
       tests.forEach(test => {
         xml += `    <testcase classname="${test.testSuite}" name="${test.testName}" time="${test.duration / 1000}">`;
-        
+
         if (test.status === 'failed' && test.error) {
           xml += `\n      <failure message="${this.escapeXml(test.error.message)}">${this.escapeXml(test.error.stack || '')}</failure>\n    `;
         } else if (test.status === 'skipped') {
-          xml += `\n      <skipped/>\n    `;
+          xml += '\n      <skipped/>\n    ';
         }
-        
+
         xml += '</testcase>\n';
       });
 

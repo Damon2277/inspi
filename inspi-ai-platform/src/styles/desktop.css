@@ -109,13 +109,17 @@
 .desktop-card {
   background-color: white;
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06);
   border: 1px solid #e5e7eb;
   transition: all 0.2s ease-in-out;
 }
 
 .desktop-card-elevated {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .desktop-card-outlined {
@@ -136,7 +140,9 @@
 }
 
 .desktop-card-hover:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   transform: translateY(-0.125rem);
 }
 
@@ -168,11 +174,15 @@
 .desktop-button-primary {
   background: linear-gradient(to right, #f97316, #ec4899);
   color: white;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .desktop-button-primary:hover:not(:disabled) {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .desktop-button-primary:focus {
@@ -384,29 +394,6 @@
 
 .animate-fade-in-up {
   animation: fadeInUp 0.3s ease-out;
-}/* 强制桌面端
-模式样式 */
-.desktop-mode {
-  /* 确保桌面端样式优先级 */
-}
-
-.desktop-mode .mobile-card,
-.desktop-mode .mobile-button,
-.desktop-mode .mobile-grid,
-.desktop-mode .mobile-container {
-  /* 禁用移动端样式 */
-  display: none !important;
-}
-
-.desktop-mode .desktop-container {
-  /* 强制桌面端容器样式 */
-  display: block !important;
-  width: 100% !important;
-  max-width: 80rem !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-  padding-left: 1.5rem !important;
-  padding-right: 1.5rem !important;
 }
 
 .desktop-mode .desktop-grid {
@@ -419,7 +406,9 @@
   display: block !important;
   background-color: white !important;
   border-radius: 0.75rem !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
   border: 1px solid #e5e7eb !important;
   transition: all 0.2s ease-in-out !important;
 }
@@ -438,25 +427,6 @@
   user-select: none !important;
   border: none !important;
   cursor: pointer !important;
-}
-
-/* 桌面端特定的移动端样式覆盖 */
-@media (min-width: 1024px) {
-  .desktop-mode {
-    /* 在桌面端隐藏所有移动端特定元素 */
-  }
-  
-  .desktop-mode .mobile-bottom-nav {
-    display: none !important;
-  }
-  
-  .desktop-mode .mobile-main {
-    padding-bottom: 0 !important;
-  }
-  
-  .desktop-mode body {
-    overflow-x: visible !important;
-  }
 }
 
 /* 桌面端表单样式 */
@@ -526,8 +496,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* 桌面端搜索输入框 */

@@ -33,7 +33,8 @@ describe('parseCommitMessage', () => {
   });
   
   test('should detect breaking changes', () => {
-    const message = 'feat!: remove deprecated API\n\nBREAKING CHANGE: API v1 is no longer supported';
+    const message = 'feat!: remove deprecated API\n\nBREAKING CHANGE:
+      API v1 is no longer supported';
     const result = parseCommitMessage(message);
     
     expect(result.hasBreakingChange).toBe(true);
@@ -80,7 +81,8 @@ describe('validateCommitMessage', () => {
   });
   
   test('should reject too long description', () => {
-    const message = 'feat(ui): this is a very long description that exceeds the fifty character limit';
+    const message = 'feat(ui):
+      this is a very long description that exceeds the fifty character limit';
     const result = validateCommitMessage(message);
     
     expect(result.valid).toBe(false);

@@ -2,6 +2,7 @@
  * 资源版本管理和缓存破坏
  */
 import { logger } from '@/lib/logging/logger';
+
 import { CacheManager } from '@/lib/cache/manager';
 
 /**
@@ -83,10 +84,10 @@ export class AssetVersionManager {
       queryParam: 'v',
       cacheControl: {
         maxAge: 31536000, // 1年
-        immutable: true
+        immutable: true,
       },
       manifestPath: '/assets/manifest.json',
-      ...config
+      ...config,
     };
   }
 
@@ -96,13 +97,13 @@ export class AssetVersionManager {
   async generateVersion(
     path: string,
     content: Buffer,
-    strategy?: VersionStrategy
+    strategy?: VersionStrategy,
   ): Promise<AssetVersion> {
     const finalStrategy = strategy || this.config.strategy;
-    
+
     try {
       let version: string;
-      
+
       switch (finalStrategy) {
         case VersionStrategy.TIMESTAMP:
           version = Date.now().toString();
@@ -121,7 +122,7 @@ export class AssetVersionManager {
       }
 
       const hash = await this.generateHash(content);
-      
+
       const assetVersion: AssetVersion = {
         path,
         version,
@@ -131,18 +132,18 @@ export class AssetVersionManager {
         strategy: finalStrategy,
         metadata: {
           algorithm: this.config.hashAlgorithm,
-          contentType: this.detectContentType(path)
-        }
+          contentType: this.detectContentType(path),
+        },
       };
 
       // 缓存版本信息
       this.versionCache.set(path, assetVersion);
-      
+
       logger.debug('Asset version generated', {
         path,
         version,
         strategy: finalStrategy,
-        size: content.length
+        size: content.length,
       });
 
       return assetVersion;
@@ -150,7 +151,7 @@ export class AssetVersionManager {
     } catch (error) {
       logger.error('Failed to generate asset version', error instanceof Error ? error : new Error(String(error)), {
         path,
-        strategy: finalStrategy
+        strategy: finalStrategy,
       });
       throw error;
     }
@@ -160,21 +161,21 @@ export class AssetVersionManager {
    * 批量生成版本
    */
   async generateVersions(
-    assets: Array<{ path: string; content: Buffer }>
+    assets: Array<{ path: string; content: Buffer }>,
   ): Promise<Map<string, AssetVersion>> {
     const versions = new Map<string, AssetVersion>();
     const batchSize = 10;
 
     for (let i = 0; i < assets.length; i += batchSize) {
       const batch = assets.slice(i, i + batchSize);
-      
+
       const batchPromises = batch.map(async (asset) => {
         try {
           const version = await this.generateVersion(asset.path, asset.content);
           versions.set(asset.path, version);
         } catch (error) {
           logger.error('Failed to generate version for asset', error instanceof Error ? error : new Error(String(error)), {
-            path: asset.path
+            path: asset.path,
           });
         }
       });
@@ -196,7 +197,7 @@ export class AssetVersionManager {
     }
 
     const base = baseUrl || '';
-    
+
     if (this.config.includeInPath) {
       // 将版本包含在路径中: /assets/app.js -> /assets/app.v123.js
       const pathParts = path.split('.');
@@ -225,7 +226,7 @@ export class AssetVersionManager {
       originalUrl,
       versionedUrl,
       version: versionString,
-      strategy
+      strategy,
     };
   }
 
@@ -252,10 +253,10 @@ export class AssetVersionManager {
    */
   async createManifest(
     buildVersion?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): Promise<VersionManifest> {
     const assets: Record<string, AssetVersion> = {};
-    
+
     // 转换版本缓存为清单格式
     for (const [path, version] of this.versionCache.entries()) {
       assets[path] = version;
@@ -269,18 +270,18 @@ export class AssetVersionManager {
         strategy: this.config.strategy,
         hashAlgorithm: this.config.hashAlgorithm,
         totalAssets: Object.keys(assets).length,
-        ...metadata
-      }
+        ...metadata,
+      },
     };
 
     this.manifest = manifest;
-    
+
     // 保存清单到缓存
     await this.cacheManager.set('asset-manifest', manifest, { ttl: 86400 }); // 24小时
 
     logger.info('Asset manifest created', {
       version: manifest.version,
-      assetCount: Object.keys(assets).length
+      assetCount: Object.keys(assets).length,
     });
 
     return manifest;
@@ -295,12 +296,12 @@ export class AssetVersionManager {
       const cached = await this.cacheManager.get<VersionManifest>('asset-manifest');
       if (cached) {
         this.manifest = cached;
-        
+
         // 重建版本缓存
         for (const [path, version] of Object.entries(cached.assets)) {
           this.versionCache.set(path, version);
         }
-        
+
         logger.debug('Asset manifest loaded from cache');
         return cached;
       }
@@ -327,13 +328,13 @@ export class AssetVersionManager {
 
     try {
       const manifestJson = JSON.stringify(finalManifest, null, 2);
-      
+
       // 这里应该实现实际的文件保存逻辑
       // 例如保存到 public/assets/manifest.json
-      
+
       logger.info('Asset manifest saved', {
         path: this.config.manifestPath,
-        size: manifestJson.length
+        size: manifestJson.length,
       });
 
     } catch (error) {
@@ -346,18 +347,18 @@ export class AssetVersionManager {
    * 检查资源是否需要更新
    */
   async checkForUpdates(
-    assets: Array<{ path: string; content: Buffer }>
+    assets: Array<{ path: string; content: Buffer }>,
   ): Promise<Array<{ path: string; needsUpdate: boolean; reason: string }>> {
     const results: Array<{ path: string; needsUpdate: boolean; reason: string }> = [];
 
     for (const asset of assets) {
       const existingVersion = this.versionCache.get(asset.path);
-      
+
       if (!existingVersion) {
         results.push({
           path: asset.path,
           needsUpdate: true,
-          reason: 'New asset'
+          reason: 'New asset',
         });
         continue;
       }
@@ -368,7 +369,7 @@ export class AssetVersionManager {
         results.push({
           path: asset.path,
           needsUpdate: true,
-          reason: 'Content changed'
+          reason: 'Content changed',
         });
         continue;
       }
@@ -378,7 +379,7 @@ export class AssetVersionManager {
         results.push({
           path: asset.path,
           needsUpdate: true,
-          reason: 'Size changed'
+          reason: 'Size changed',
         });
         continue;
       }
@@ -386,7 +387,7 @@ export class AssetVersionManager {
       results.push({
         path: asset.path,
         needsUpdate: false,
-        reason: 'No changes'
+        reason: 'No changes',
       });
     }
 
@@ -427,7 +428,7 @@ export class AssetVersionManager {
       [VersionStrategy.TIMESTAMP]: 0,
       [VersionStrategy.HASH]: 0,
       [VersionStrategy.SEMANTIC]: 0,
-      [VersionStrategy.BUILD_NUMBER]: 0
+      [VersionStrategy.BUILD_NUMBER]: 0,
     };
 
     let totalSize = 0;
@@ -437,11 +438,11 @@ export class AssetVersionManager {
     for (const version of versions) {
       strategies[version.strategy]++;
       totalSize += version.size;
-      
+
       if (!oldestVersion || version.lastModified < oldestVersion) {
         oldestVersion = version.lastModified;
       }
-      
+
       if (!newestVersion || version.lastModified > newestVersion) {
         newestVersion = version.lastModified;
       }
@@ -453,7 +454,7 @@ export class AssetVersionManager {
       totalSize,
       averageSize: versions.length > 0 ? totalSize / versions.length : 0,
       oldestVersion,
-      newestVersion
+      newestVersion,
     };
   }
 
@@ -469,7 +470,7 @@ export class AssetVersionManager {
       hash = ((hash << 5) - hash) + char;
       hash = hash & hash; // 转换为32位整数
     }
-    
+
     const hashString = Math.abs(hash).toString(16);
     return hashString.substring(0, this.config.versionLength);
   }
@@ -497,7 +498,7 @@ export class AssetVersionManager {
    */
   private detectContentType(path: string): string {
     const extension = path.split('.').pop()?.toLowerCase();
-    
+
     const typeMap: Record<string, string> = {
       'js': 'application/javascript',
       'css': 'text/css',
@@ -508,7 +509,7 @@ export class AssetVersionManager {
       'gif': 'image/gif',
       'svg': 'image/svg+xml',
       'woff': 'font/woff',
-      'woff2': 'font/woff2'
+      'woff2': 'font/woff2',
     };
 
     return typeMap[extension || ''] || 'application/octet-stream';
@@ -530,13 +531,13 @@ export class VersionUtils {
     // 检查查询参数中的版本
     const urlObj = new URL(url, 'http://example.com');
     const version = urlObj.searchParams.get('v');
-    
+
     if (version) {
       urlObj.searchParams.delete('v');
       return {
         originalUrl: urlObj.pathname + urlObj.search,
         version,
-        hasVersion: true
+        hasVersion: true,
       };
     }
 
@@ -547,13 +548,13 @@ export class VersionUtils {
       return {
         originalUrl: `${basePath}.${extension}`,
         version: versionStr,
-        hasVersion: true
+        hasVersion: true,
       };
     }
 
     return {
       originalUrl: url,
-      hasVersion: false
+      hasVersion: false,
     };
   }
 
@@ -589,7 +590,7 @@ export class VersionUtils {
    */
   static generateCacheHeaders(config: VersionConfig['cacheControl']): Record<string, string> {
     const headers: Record<string, string> = {
-      'Cache-Control': `public, max-age=${config.maxAge}`
+      'Cache-Control': `public, max-age=${config.maxAge}`,
     };
 
     if (config.immutable) {
@@ -606,7 +607,7 @@ export class VersionUtils {
     lastModified: Date,
     etag: string,
     ifModifiedSince?: string,
-    ifNoneMatch?: string
+    ifNoneMatch?: string,
   ): boolean {
     // 检查ETag
     if (ifNoneMatch && ifNoneMatch === etag) {

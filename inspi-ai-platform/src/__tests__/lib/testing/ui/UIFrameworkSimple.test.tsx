@@ -1,22 +1,23 @@
 /**
  * Simplified UI Testing Framework Tests
- * 
+ *
  * Basic tests to verify the UI testing framework functionality
  */
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
+
 import {
   ComponentTestFramework,
   createComponentTestFramework,
   AccessibilityTester,
-  createAccessibilityTester
+  createAccessibilityTester,
 } from '../../../../lib/testing/ui';
 
 // Mock jest-axe
 jest.mock('jest-axe', () => ({
   axe: jest.fn().mockResolvedValue({ violations: [] }),
-  toHaveNoViolations: {}
+  toHaveNoViolations: {},
 }));
 
 // Simple test components
@@ -27,8 +28,8 @@ const SimpleButton = ({ onClick, children }: { onClick?: () => void; children: R
 );
 
 const AccessibleButton = ({ onClick }: { onClick?: () => void }) => (
-  <button 
-    onClick={onClick} 
+  <button
+    onClick={onClick}
     data-testid="accessible-button"
     aria-label="Accessible test button"
   >
@@ -46,7 +47,7 @@ describe('UI Testing Framework - Basic Tests', () => {
         viewport: { width: 1024, height: 768 },
         accessibility: { enabled: false }, // Disable for basic tests
         performance: { enabled: true },
-        styles: { enabled: false }
+        styles: { enabled: false },
       });
     });
 
@@ -56,9 +57,9 @@ describe('UI Testing Framework - Basic Tests', () => {
 
     it('should render component successfully', () => {
       const { container } = framework.renderComponent(
-        <SimpleButton>Test Button</SimpleButton>
+        <SimpleButton>Test Button</SimpleButton>,
       );
-      
+
       expect(container.firstChild).toBeInTheDocument();
       expect(screen.getByTestId('simple-button')).toBeInTheDocument();
       expect(screen.getByText('Test Button')).toBeInTheDocument();
@@ -66,9 +67,9 @@ describe('UI Testing Framework - Basic Tests', () => {
 
     it('should track render performance', () => {
       const result = framework.renderComponent(
-        <SimpleButton>Performance Test</SimpleButton>
+        <SimpleButton>Performance Test</SimpleButton>,
       );
-      
+
       expect(result.renderTime).toBeGreaterThan(0);
       expect(result.renderCount).toBe(1);
     });
@@ -76,16 +77,16 @@ describe('UI Testing Framework - Basic Tests', () => {
     it('should handle component with props', () => {
       const mockClick = jest.fn();
       framework.renderComponent(
-        <SimpleButton onClick={mockClick}>Clickable Button</SimpleButton>
+        <SimpleButton onClick={mockClick}>Clickable Button</SimpleButton>,
       );
-      
+
       const button = screen.getByTestId('simple-button');
       expect(button).toHaveTextContent('Clickable Button');
     });
 
     it('should provide test utilities', () => {
       const utils = framework.createTestUtils();
-      
+
       expect(utils.findByTestId).toBeDefined();
       expect(utils.getByTestId).toBeDefined();
       expect(utils.click).toBeDefined();
@@ -103,7 +104,7 @@ describe('UI Testing Framework - Basic Tests', () => {
         keyboardNavigation: false, // Disable complex tests
         screenReaderTesting: false,
         colorContrastTesting: false,
-        focusManagement: false
+        focusManagement: false,
       });
     });
 
@@ -117,9 +118,9 @@ describe('UI Testing Framework - Basic Tests', () => {
 
     it('should test basic accessibility', async () => {
       const { container } = render(<AccessibleButton />);
-      
+
       const result = await tester.testAccessibility(container);
-      
+
       expect(result).toBeDefined();
       expect(result.passed).toBeDefined();
       expect(result.score).toBeGreaterThanOrEqual(0);
@@ -133,7 +134,7 @@ describe('UI Testing Framework - Basic Tests', () => {
         description: 'Test rule',
         impact: 'minor' as const,
         tags: ['test'],
-        check: () => []
+        check: () => [],
       };
 
       tester.addRule(rule);
@@ -146,10 +147,10 @@ describe('UI Testing Framework - Basic Tests', () => {
 
     it('should generate accessibility report', async () => {
       const { container } = render(<AccessibleButton />);
-      
+
       const result = await tester.testAccessibility(container);
       const report = tester.generateReport(result);
-      
+
       expect(report).toContain('# Accessibility Test Report');
       expect(report).toContain('Overall Score:');
       expect(report).toContain('WCAG Level:');
@@ -160,12 +161,12 @@ describe('UI Testing Framework - Basic Tests', () => {
     it('should work with real React components', async () => {
       const Counter = () => {
         const [count, setCount] = React.useState(0);
-        
+
         return (
           <div data-testid="counter">
             <span data-testid="count">{count}</span>
-            <button 
-              data-testid="increment" 
+            <button
+              data-testid="increment"
               onClick={() => setCount(c => c + 1)}
             >
               Increment
@@ -176,27 +177,27 @@ describe('UI Testing Framework - Basic Tests', () => {
 
       const framework = createComponentTestFramework();
       const { container } = framework.renderComponent(<Counter />);
-      
+
       expect(screen.getByTestId('counter')).toBeInTheDocument();
       expect(screen.getByTestId('count')).toHaveTextContent('0');
-      
+
       const user = userEvent.setup();
       const button = screen.getByTestId('increment');
-      
+
       await user.click(button);
       expect(screen.getByTestId('count')).toHaveTextContent('1');
-      
+
       framework.cleanup();
     });
 
     it('should handle async components', async () => {
       const AsyncComponent = () => {
         const [data, setData] = React.useState<string | null>(null);
-        
+
         React.useEffect(() => {
           setTimeout(() => setData('Loaded'), 50);
         }, []);
-        
+
         return (
           <div data-testid="async-component">
             {data ? data : 'Loading...'}
@@ -206,13 +207,13 @@ describe('UI Testing Framework - Basic Tests', () => {
 
       const framework = createComponentTestFramework();
       framework.renderComponent(<AsyncComponent />);
-      
+
       expect(screen.getByTestId('async-component')).toHaveTextContent('Loading...');
-      
+
       // Wait for async update
       await screen.findByText('Loaded');
       expect(screen.getByTestId('async-component')).toHaveTextContent('Loaded');
-      
+
       framework.cleanup();
     });
   });

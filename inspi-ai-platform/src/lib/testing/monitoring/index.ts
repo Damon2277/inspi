@@ -1,6 +1,6 @@
 /**
  * 测试性能监控系统
- * 
+ *
  * 这个模块提供了完整的测试性能监控解决方案，包括：
  * - 实时测试执行时间监控
  * - 内存使用情况跟踪分析
@@ -19,7 +19,7 @@ export type {
   CPUUsage,
   PerformanceSnapshot,
   PerformanceAlert,
-  MonitoringOptions
+  MonitoringOptions,
 } from './RealTimePerformanceMonitor';
 
 export type {
@@ -29,7 +29,7 @@ export type {
   MemoryAnalysis,
   GCStats,
   GCEvent,
-  TrackerOptions
+  TrackerOptions,
 } from './MemoryUsageTracker';
 
 export type {
@@ -38,7 +38,7 @@ export type {
   RegressionDetails,
   PerformanceDataPoint,
   TrendAnalysis,
-  DetectorOptions
+  DetectorOptions,
 } from './PerformanceRegressionDetector';
 
 export type {
@@ -50,13 +50,13 @@ export type {
   Operation,
   Hotspot,
   ResourceUsage,
-  AnalyzerOptions
+  AnalyzerOptions,
 } from './PerformanceBottleneckAnalyzer';
 
-import { RealTimePerformanceMonitor, MonitoringOptions } from './RealTimePerformanceMonitor';
 import { MemoryUsageTracker, TrackerOptions } from './MemoryUsageTracker';
-import { PerformanceRegressionDetector, DetectorOptions } from './PerformanceRegressionDetector';
 import { PerformanceBottleneckAnalyzer, AnalyzerOptions } from './PerformanceBottleneckAnalyzer';
+import { PerformanceRegressionDetector, DetectorOptions } from './PerformanceRegressionDetector';
+import { RealTimePerformanceMonitor, MonitoringOptions } from './RealTimePerformanceMonitor';
 
 export interface TestPerformanceMonitoringOptions {
   realTimeMonitoring?: Partial<MonitoringOptions>;
@@ -103,7 +103,7 @@ export class TestPerformanceMonitoringSystem {
         metrics.testId,
         metrics.testName,
         metrics.duration || 0,
-        metrics.memoryUsage.heapUsed
+        metrics.memoryUsage.heapUsed,
       );
     });
 
@@ -163,7 +163,7 @@ export class TestPerformanceMonitoringSystem {
   endTestMonitoring(testId: string): void {
     const metrics = this.realTimeMonitor.endTest(testId);
     const memoryAnalysis = this.memoryTracker.endTest(testId);
-    
+
     if (metrics && memoryAnalysis) {
       this.bottleneckAnalyzer.endAnalysis(testId, metrics.duration || 0, metrics.memoryUsage.heapUsed);
     }
@@ -185,7 +185,7 @@ export class TestPerformanceMonitoringSystem {
       bottleneckCount: number;
     };
   } {
-    const realTimeMetrics = testId 
+    const realTimeMetrics = testId
       ? this.realTimeMonitor.getTestMetrics(testId)
       : this.realTimeMonitor.getAllMetrics();
 
@@ -201,8 +201,8 @@ export class TestPerformanceMonitoringSystem {
     const allMemoryAnalyses = Array.isArray(memoryAnalysis) ? memoryAnalysis : [memoryAnalysis].filter(Boolean);
 
     const totalTests = allMetrics.length;
-    const averageExecutionTime = totalTests > 0 
-      ? allMetrics.reduce((sum, m) => sum + (m.duration || 0), 0) / totalTests 
+    const averageExecutionTime = totalTests > 0
+      ? allMetrics.reduce((sum, m) => sum + (m.duration || 0), 0) / totalTests
       : 0;
     const memoryLeaks = allMemoryAnalyses.reduce((sum, a) => sum + (a.leaks?.length || 0), 0);
 
@@ -216,8 +216,8 @@ export class TestPerformanceMonitoringSystem {
         averageExecutionTime,
         memoryLeaks,
         regressionCount: regressions.length,
-        bottleneckCount: bottlenecks.length
-      }
+        bottleneckCount: bottlenecks.length,
+      },
     };
   }
 
@@ -234,7 +234,7 @@ export class TestPerformanceMonitoringSystem {
       monitoring: this.realTimeMonitor.getStatistics(),
       memory: this.memoryTracker.getStatistics(),
       regression: this.regressionDetector.getStatistics(),
-      bottleneck: this.bottleneckAnalyzer.getBottleneckStatistics()
+      bottleneck: this.bottleneckAnalyzer.getBottleneckStatistics(),
     };
   }
 
@@ -270,10 +270,10 @@ export class TestPerformanceMonitoringSystem {
   } {
     const activeTests = this.realTimeMonitor.getActiveTests();
     const statistics = this.getPerformanceStatistics();
-    
+
     // 简单的健康状态评估
     let systemHealth: 'healthy' | 'warning' | 'critical' = 'healthy';
-    
+
     if (statistics.regression.totalRegressions > 5) {
       systemHealth = 'warning';
     }
@@ -285,7 +285,7 @@ export class TestPerformanceMonitoringSystem {
       isMonitoring: this.isMonitoring,
       activeTests,
       systemHealth,
-      uptime: process.uptime()
+      uptime: process.uptime(),
     };
   }
 }
@@ -294,11 +294,11 @@ export class TestPerformanceMonitoringSystem {
  * 创建默认的测试性能监控系统实例
  */
 export function createTestPerformanceMonitoring(
-  options: TestPerformanceMonitoringOptions = {}
+  options: TestPerformanceMonitoringOptions = {},
 ): TestPerformanceMonitoringSystem {
   return new TestPerformanceMonitoringSystem({
     enableAllFeatures: true,
-    ...options
+    ...options,
   });
 }
 
@@ -306,7 +306,7 @@ export function createTestPerformanceMonitoring(
  * Jest集成辅助函数
  */
 export function setupJestPerformanceMonitoring(
-  options: TestPerformanceMonitoringOptions = {}
+  options: TestPerformanceMonitoringOptions = {},
 ): {
   beforeAll: () => void;
   afterAll: () => void;
@@ -334,6 +334,6 @@ export function setupJestPerformanceMonitoring(
         currentTestId = null;
       }
     },
-    getReport: () => monitoring.getPerformanceReport()
+    getReport: () => monitoring.getPerformanceReport(),
   };
 }

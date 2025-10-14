@@ -1,8 +1,8 @@
 /**
  * 高级重试策略管理器
  */
-import { logger } from '@/lib/logging/logger';
 import { ApiError } from '@/lib/api/client';
+import { logger } from '@/lib/logging/logger';
 import { reportError, monitoringContext } from '@/lib/monitoring';
 
 /**
@@ -121,7 +121,7 @@ export const DEFAULT_RETRY_CONDITIONS = {
            DEFAULT_RETRY_CONDITIONS.serverErrors(error, attempt) ||
            DEFAULT_RETRY_CONDITIONS.timeoutErrors(error, attempt) ||
            DEFAULT_RETRY_CONDITIONS.rateLimitErrors(error, attempt);
-  }
+  },
 };
 
 /**
@@ -165,15 +165,15 @@ export const DELAY_CALCULATORS = {
    * 带抖动的指数退避
    */
   exponentialBackoffWithJitter: (
-    attempt: number, 
-    baseDelay: number, 
-    multiplier: number = 2, 
-    jitterFactor: number = 0.1
+    attempt: number,
+    baseDelay: number,
+    multiplier: number = 2,
+    jitterFactor: number = 0.1,
   ): number => {
     const delay = baseDelay * Math.pow(multiplier, attempt - 1);
     const jitter = delay * jitterFactor * (Math.random() * 2 - 1);
     return Math.max(0, delay + jitter);
-  }
+  },
 };
 
 /**
@@ -186,7 +186,7 @@ export class AdvancedRetryManager {
     failedRetries: 0,
     averageAttempts: 0,
     averageDuration: 0,
-    strategyUsage: {} as Record<RetryStrategyType, number>
+    strategyUsage: {} as Record<RetryStrategyType, number>,
   };
   private activeRetries = new Map<string, AbortController>();
 
@@ -195,7 +195,7 @@ export class AdvancedRetryManager {
    */
   async execute<T>(
     operation: () => Promise<T>,
-    config: Partial<AdvancedRetryConfig> = {}
+    config: Partial<AdvancedRetryConfig> = {},
   ): Promise<RetryResult<T>> {
     const fullConfig = this.buildConfig(config);
     const operationId = this.generateOperationId();
@@ -253,7 +253,7 @@ export class AdvancedRetryManager {
       failedRetries: 0,
       averageAttempts: 0,
       averageDuration: 0,
-      strategyUsage: {} as Record<RetryStrategyType, number>
+      strategyUsage: {} as Record<RetryStrategyType, number>,
     };
   }
 
@@ -264,7 +264,7 @@ export class AdvancedRetryManager {
     operation: () => Promise<T>,
     config: AdvancedRetryConfig,
     operationId: string,
-    signal: AbortSignal
+    signal: AbortSignal,
   ): Promise<RetryResult<T>> {
     const startTime = Date.now();
     let lastError: Error;
@@ -282,7 +282,7 @@ export class AdvancedRetryManager {
         // 如果不是第一次尝试，等待延迟
         if (attempt > 1) {
           const delay = this.calculateDelay(attempt - 1, config);
-          
+
           // 调用重试回调
           if (config.onRetry) {
             config.onRetry(attempt - 1, lastError!, delay);
@@ -296,8 +296,8 @@ export class AdvancedRetryManager {
               maxRetries: config.maxRetries,
               delay,
               strategy: config.strategy,
-              lastError: lastError!.message
-            }
+              lastError: lastError!.message,
+            },
           });
 
           // 等待延迟
@@ -320,8 +320,8 @@ export class AdvancedRetryManager {
               operationId,
               attempts,
               duration,
-              strategy: config.strategy
-            }
+              strategy: config.strategy,
+            },
           });
         }
 
@@ -330,16 +330,16 @@ export class AdvancedRetryManager {
           data: result,
           attempts,
           totalDuration: duration,
-          strategy: config.strategy
+          strategy: config.strategy,
         };
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        
+
         // 检查是否应该重试
         if (attempt <= config.maxRetries && config.retryCondition(lastError, attempt, config.context)) {
           continue;
         }
-        
+
         // 不再重试，返回失败结果
         break;
       }
@@ -359,8 +359,8 @@ export class AdvancedRetryManager {
         attempts,
         maxRetries: config.maxRetries,
         duration,
-        strategy: config.strategy
-      }
+        strategy: config.strategy,
+      },
     });
 
     // 报告错误到监控系统
@@ -368,13 +368,13 @@ export class AdvancedRetryManager {
       tags: {
         retry_failed: 'true',
         attempts: attempts.toString(),
-        strategy: config.strategy
+        strategy: config.strategy,
       },
       extra: {
         operationId,
         duration,
-        maxRetries: config.maxRetries
-      }
+        maxRetries: config.maxRetries,
+      },
     });
 
     return {
@@ -382,7 +382,7 @@ export class AdvancedRetryManager {
       error: lastError!,
       attempts,
       totalDuration: duration,
-      strategy: config.strategy
+      strategy: config.strategy,
     };
   }
 
@@ -399,7 +399,7 @@ export class AdvancedRetryManager {
       jitter: true,
       jitterFactor: 0.1,
       retryCondition: DEFAULT_RETRY_CONDITIONS.combined,
-      ...config
+      ...config,
     };
   }
 
@@ -433,10 +433,10 @@ export class AdvancedRetryManager {
     // 应用抖动
     if (config.jitter) {
       delay = DELAY_CALCULATORS.exponentialBackoffWithJitter(
-        attempt, 
-        config.baseDelay, 
-        config.multiplier, 
-        config.jitterFactor
+        attempt,
+        config.baseDelay,
+        config.multiplier,
+        config.jitterFactor,
       );
     }
 
@@ -496,17 +496,21 @@ export function createAdvancedRetryManager(): AdvancedRetryManager {
  */
 export function withAdvancedRetry<T extends any[], R>(
   fn: (...args: T) => Promise<R>,
-  config?: Partial<AdvancedRetryConfig>
+  config?: Partial<AdvancedRetryConfig>,
 ): (...args: T) => Promise<R> {
   const retryManager = new AdvancedRetryManager();
-  
+
   return async (...args: T): Promise<R> => {
     const result = await retryManager.execute(() => fn(...args), config);
     if (result.success) {
       return result.data!;
-    } else {
-      throw result.error!;
     }
+
+    if (result.error instanceof Error) {
+      throw result.error;
+    }
+
+    throw new Error(String(result.error));
   };
 }
 

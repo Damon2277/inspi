@@ -2,9 +2,10 @@
  * Compliance Utils Tests
  */
 
-import { ComplianceUtils } from '../../../../lib/testing/compliance/ComplianceUtils';
-import { ComplianceResult, ComplianceViolation } from '../../../../lib/testing/compliance/ComplianceChecker';
 import * as fs from 'fs';
+
+import { ComplianceResult, ComplianceViolation } from '../../../../lib/testing/compliance/ComplianceChecker';
+import { ComplianceUtils } from '../../../../lib/testing/compliance/ComplianceUtils';
 
 // Mock fs module
 jest.mock('fs');
@@ -22,7 +23,7 @@ describe('ComplianceUtils', () => {
         rule: 'ESLint Error',
         message: 'Critical ESLint error found',
         suggestion: 'Fix ESLint error',
-        autoFixable: true
+        autoFixable: true,
       },
       {
         category: 'testCoverage',
@@ -30,7 +31,7 @@ describe('ComplianceUtils', () => {
         rule: 'Low Coverage',
         message: 'Test coverage is too low',
         suggestion: 'Add more tests',
-        autoFixable: false
+        autoFixable: false,
       },
       {
         category: 'security',
@@ -38,7 +39,7 @@ describe('ComplianceUtils', () => {
         rule: 'Vulnerability',
         message: 'Medium severity vulnerability',
         suggestion: 'Update dependency',
-        autoFixable: false
+        autoFixable: false,
       },
       {
         category: 'documentation',
@@ -46,8 +47,8 @@ describe('ComplianceUtils', () => {
         rule: 'Missing Docs',
         message: 'Documentation is missing',
         suggestion: 'Add documentation',
-        autoFixable: false
-      }
+        autoFixable: false,
+      },
     ];
 
     mockResult = {
@@ -55,7 +56,7 @@ describe('ComplianceUtils', () => {
       overall: {
         passed: false,
         score: 75,
-        grade: 'C'
+        grade: 'C',
       },
       categories: {
         codeQuality: {
@@ -68,10 +69,10 @@ describe('ComplianceUtils', () => {
               passed: false,
               value: 5,
               threshold: 0,
-              message: '5 ESLint errors found'
-            }
+              message: '5 ESLint errors found',
+            },
           ],
-          metrics: { eslintErrors: 5 }
+          metrics: { eslintErrors: 5 },
         },
         testCoverage: {
           enabled: true,
@@ -83,10 +84,10 @@ describe('ComplianceUtils', () => {
               passed: false,
               value: 70,
               threshold: 80,
-              message: 'Statement coverage: 70%'
-            }
+              message: 'Statement coverage: 70%',
+            },
           ],
-          metrics: { statementCoverage: 70 }
+          metrics: { statementCoverage: 70 },
         },
         documentation: {
           enabled: true,
@@ -98,17 +99,17 @@ describe('ComplianceUtils', () => {
               passed: true,
               value: 90,
               threshold: 80,
-              message: 'README quality: 90%'
-            }
+              message: 'README quality: 90%',
+            },
           ],
-          metrics: { readmeQuality: 90 }
+          metrics: { readmeQuality: 90 },
         },
         security: {
           enabled: false,
           passed: true,
           score: 100,
           details: [],
-          metrics: {}
+          metrics: {},
         },
         accessibility: {
           enabled: true,
@@ -120,10 +121,10 @@ describe('ComplianceUtils', () => {
               passed: true,
               value: 0,
               threshold: 0,
-              message: '0 WCAG violations'
-            }
+              message: '0 WCAG violations',
+            },
           ],
-          metrics: { wcagViolations: 0 }
+          metrics: { wcagViolations: 0 },
         },
         performance: {
           enabled: true,
@@ -135,11 +136,11 @@ describe('ComplianceUtils', () => {
               passed: true,
               value: 400,
               threshold: 500,
-              message: 'Bundle size: 400KB'
-            }
+              message: 'Bundle size: 400KB',
+            },
           ],
-          metrics: { bundleSize: 400 }
-        }
+          metrics: { bundleSize: 400 },
+        },
       },
       violations: mockViolations,
       recommendations: [
@@ -150,10 +151,10 @@ describe('ComplianceUtils', () => {
           description: 'Multiple code quality issues found',
           action: 'Run linting tools and fix errors',
           estimatedEffort: '2-4 hours',
-          impact: 'High - Critical for production readiness'
-        }
+          impact: 'High - Critical for production readiness',
+        },
       ],
-      trends: []
+      trends: [],
     };
 
     // Setup fs mocks
@@ -176,16 +177,16 @@ describe('ComplianceUtils', () => {
             statements: 80,
             branches: 75,
             functions: 80,
-            lines: 80
-          }
+            lines: 80,
+          },
         },
         performance: {
           enabled: true,
           budgets: {
             bundleSize: 500,
-            loadTime: 3000
-          }
-        }
+            loadTime: 3000,
+          },
+        },
       };
 
       const result = ComplianceUtils.validateConfig(validConfig);
@@ -197,7 +198,7 @@ describe('ComplianceUtils', () => {
     it('should detect missing required fields', () => {
       const invalidConfig = {
         // Missing outputPath
-        reportFormats: ['json']
+        reportFormats: ['json'],
       };
 
       const result = ComplianceUtils.validateConfig(invalidConfig);
@@ -209,7 +210,7 @@ describe('ComplianceUtils', () => {
     it('should validate reportFormats array', () => {
       const invalidConfig = {
         outputPath: './reports',
-        reportFormats: 'json' // Should be array
+        reportFormats: 'json', // Should be array
       };
 
       const result = ComplianceUtils.validateConfig(invalidConfig);
@@ -228,9 +229,9 @@ describe('ComplianceUtils', () => {
             statements: 150, // Invalid: > 100
             branches: -10,   // Invalid: < 0
             functions: 'invalid', // Invalid: not a number
-            lines: 80
-          }
-        }
+            lines: 80,
+          },
+        },
       };
 
       const result = ComplianceUtils.validateConfig(invalidConfig);
@@ -248,9 +249,9 @@ describe('ComplianceUtils', () => {
           enabled: true,
           budgets: {
             bundleSize: -100, // Invalid: negative
-            loadTime: 'invalid' // Invalid: not a number
-          }
-        }
+            loadTime: 'invalid', // Invalid: not a number
+          },
+        },
       };
 
       const result = ComplianceUtils.validateConfig(invalidConfig);
@@ -269,24 +270,24 @@ describe('ComplianceUtils', () => {
           enabled: true,
           thresholds: {
             statements: 70,
-            branches: 65
-          }
+            branches: 65,
+          },
         },
         security: {
-          enabled: false
-        }
+          enabled: false,
+        },
       };
 
       const override = {
         outputPath: './override-reports',
         testCoverage: {
           thresholds: {
-            statements: 80 // Override only statements
-          }
+            statements: 80, // Override only statements
+          },
         },
         documentation: {
-          enabled: true // Add new section
-        }
+          enabled: true, // Add new section
+        },
       };
 
       const merged = ComplianceUtils.mergeConfigs(base, override);
@@ -302,12 +303,12 @@ describe('ComplianceUtils', () => {
     it('should handle array overrides', () => {
       const base = {
         reportFormats: ['json', 'html'],
-        excludePatterns: ['*.test.ts']
+        excludePatterns: ['*.test.ts'],
       };
 
       const override = {
         reportFormats: ['markdown'], // Replace entire array
-        excludePatterns: ['*.spec.ts'] // Replace entire array
+        excludePatterns: ['*.spec.ts'], // Replace entire array
       };
 
       const merged = ComplianceUtils.mergeConfigs(base, override);
@@ -328,7 +329,7 @@ describe('ComplianceUtils', () => {
         { severity: 'critical' } as ComplianceViolation,
         { severity: 'high' } as ComplianceViolation,
         { severity: 'medium' } as ComplianceViolation,
-        { severity: 'low' } as ComplianceViolation
+        { severity: 'low' } as ComplianceViolation,
       ];
 
       const score = ComplianceUtils.calculateScore(violations);
@@ -341,14 +342,14 @@ describe('ComplianceUtils', () => {
     it('should weight critical violations more heavily', () => {
       const criticalViolations = [
         { severity: 'critical' } as ComplianceViolation,
-        { severity: 'critical' } as ComplianceViolation
+        { severity: 'critical' } as ComplianceViolation,
       ];
 
       const lowViolations = [
         { severity: 'low' } as ComplianceViolation,
         { severity: 'low' } as ComplianceViolation,
         { severity: 'low' } as ComplianceViolation,
-        { severity: 'low' } as ComplianceViolation
+        { severity: 'low' } as ComplianceViolation,
       ];
 
       const criticalScore = ComplianceUtils.calculateScore(criticalViolations);
@@ -440,7 +441,7 @@ describe('ComplianceUtils', () => {
           rule: 'ESLint Error',
           message: 'ESLint error 1',
           suggestion: 'Fix error',
-          autoFixable: false
+          autoFixable: false,
         },
         {
           category: 'codeQuality',
@@ -448,7 +449,7 @@ describe('ComplianceUtils', () => {
           rule: 'ESLint Error',
           message: 'ESLint error 2',
           suggestion: 'Fix error',
-          autoFixable: false
+          autoFixable: false,
         },
         {
           category: 'testCoverage',
@@ -456,17 +457,17 @@ describe('ComplianceUtils', () => {
           rule: 'Low Coverage',
           message: 'Coverage too low',
           suggestion: 'Add tests',
-          autoFixable: false
-        }
+          autoFixable: false,
+        },
       ];
 
       const topIssues = ComplianceUtils.getTopIssues(duplicateViolations);
 
       expect(topIssues).toHaveLength(2);
-      
+
       const eslintIssue = topIssues.find(issue => issue.rule === 'ESLint Error');
       expect(eslintIssue?.count).toBe(2);
-      
+
       const coverageIssue = topIssues.find(issue => issue.rule === 'Low Coverage');
       expect(coverageIssue?.count).toBe(1);
     });
@@ -478,7 +479,7 @@ describe('ComplianceUtils', () => {
         { category: 'test', severity: 'low', rule: 'Low Issue', message: 'msg', suggestion: 'fix', autoFixable: false },
         { category: 'test', severity: 'critical', rule: 'Critical Issue', message: 'msg', suggestion: 'fix', autoFixable: false },
         { category: 'test', severity: 'high', rule: 'High Issue', message: 'msg', suggestion: 'fix', autoFixable: false },
-        { category: 'test', severity: 'high', rule: 'High Issue', message: 'msg', suggestion: 'fix', autoFixable: false }
+        { category: 'test', severity: 'high', rule: 'High Issue', message: 'msg', suggestion: 'fix', autoFixable: false },
       ];
 
       const topIssues = ComplianceUtils.getTopIssues(mixedViolations);
@@ -497,7 +498,7 @@ describe('ComplianceUtils', () => {
         rule: `Rule ${i}`,
         message: `Message ${i}`,
         suggestion: `Fix ${i}`,
-        autoFixable: false
+        autoFixable: false,
       }));
 
       const topIssues = ComplianceUtils.getTopIssues(manyViolations, 3);
@@ -511,12 +512,12 @@ describe('ComplianceUtils', () => {
       const improvementAreas = ComplianceUtils.getImprovementAreas(mockResult.categories);
 
       expect(improvementAreas.length).toBeGreaterThan(0);
-      
+
       // Should include codeQuality and testCoverage (both failed)
       const categoryNames = improvementAreas.map(area => area.category);
       expect(categoryNames).toContain('codeQuality');
       expect(categoryNames).toContain('testCoverage');
-      
+
       // Should not include passed categories
       expect(categoryNames).not.toContain('documentation');
       expect(categoryNames).not.toContain('accessibility');
@@ -600,7 +601,7 @@ describe('ComplianceUtils', () => {
 
       expect(typeof jsonData).toBe('string');
       expect(() => JSON.parse(jsonData)).not.toThrow();
-      
+
       const parsed = JSON.parse(jsonData);
       expect(parsed.overall.score).toBe(75);
       expect(parsed.categories).toBeDefined();
@@ -685,12 +686,12 @@ describe('ComplianceUtils', () => {
         version: '1.0.0',
         dependencies: {
           'react': '^18.0.0',
-          'lodash': '^4.17.21'
+          'lodash': '^4.17.21',
         },
         devDependencies: {
           'jest': '^29.0.0',
-          'typescript': '^4.9.0'
-        }
+          'typescript': '^4.9.0',
+        },
       };
 
       mockFs.readFileSync.mockReturnValue(JSON.stringify(mockPackageJson));
@@ -714,14 +715,14 @@ describe('ComplianceUtils', () => {
       const mockPackageJson = {
         dependencies: {
           'react': '^18.0.0',
-          'lodash': '^4.17.21'
+          'lodash': '^4.17.21',
         },
         devDependencies: {
-          'jest': '^29.0.0'
+          'jest': '^29.0.0',
         },
         peerDependencies: {
-          'typescript': '^4.9.0'
-        }
+          'typescript': '^4.9.0',
+        },
       };
 
       mockFs.readFileSync.mockReturnValue(JSON.stringify(mockPackageJson));

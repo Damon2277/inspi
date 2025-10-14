@@ -1,6 +1,6 @@
 /**
  * Style Regression Tester
- * 
+ *
  * Comprehensive style regression testing system that captures,
  * compares, and validates component styles across different
  * states, themes, and viewport sizes.
@@ -102,19 +102,19 @@ export class StyleRegressionTester {
         color: 5,
         size: 2,
         position: 1,
-        opacity: 0.01
+        opacity: 0.01,
       },
       breakpoints: [320, 768, 1024, 1440],
       themes: ['light', 'dark'],
       variants: ['default'],
       baselineDir: './tests/style-baselines',
       outputDir: './tests/style-outputs',
-      ...config
+      ...config,
     };
 
     this.dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
       pretendToBeVisual: true,
-      resources: 'usable'
+      resources: 'usable',
     });
 
     this.setupDOM();
@@ -131,12 +131,12 @@ export class StyleRegressionTester {
       variant?: string;
       viewport?: ViewportConfig;
       theme?: string;
-    }
+    },
   ): Promise<StyleSnapshot> {
     const viewport = options.viewport || {
       width: 1024,
       height: 768,
-      devicePixelRatio: 1
+      devicePixelRatio: 1,
     };
 
     const theme = options.theme || 'light';
@@ -164,7 +164,7 @@ export class StyleRegressionTester {
       viewport,
       theme,
       styles,
-      screenshot
+      screenshot,
     };
 
     this.snapshots.set(options.id, snapshot);
@@ -182,7 +182,7 @@ export class StyleRegressionTester {
       variant?: string;
       viewport?: ViewportConfig;
       theme?: string;
-    }
+    },
   ): Promise<StyleComparisonResult> {
     // Capture current snapshot
     const currentSnapshot = await this.captureSnapshot(container, {
@@ -190,7 +190,7 @@ export class StyleRegressionTester {
       component: options?.component || 'unknown',
       variant: options?.variant,
       viewport: options?.viewport,
-      theme: options?.theme
+      theme: options?.theme,
     });
 
     // Load baseline snapshot
@@ -207,7 +207,7 @@ export class StyleRegressionTester {
    */
   compareSnapshots(
     baseline: StyleSnapshot,
-    current: StyleSnapshot
+    current: StyleSnapshot,
   ): StyleComparisonResult {
     const differences: StyleDifference[] = [];
     const baselineSelectors = new Set(Object.keys(baseline.styles));
@@ -232,7 +232,7 @@ export class StyleRegressionTester {
               expected: baselineValue,
               actual: currentValue,
               severity: this.calculateSeverity(property, baselineValue, currentValue),
-              impact: this.calculateImpact(property, baselineValue, currentValue)
+              impact: this.calculateImpact(property, baselineValue, currentValue),
             });
           }
         }
@@ -247,7 +247,7 @@ export class StyleRegressionTester {
       removedElements: baselineSelectors.size - currentSelectors.size,
       criticalChanges: differences.filter(d => d.severity === 'critical').length,
       majorChanges: differences.filter(d => d.severity === 'major').length,
-      minorChanges: differences.filter(d => d.severity === 'minor').length
+      minorChanges: differences.filter(d => d.severity === 'minor').length,
     };
 
     // Calculate overall score
@@ -257,7 +257,7 @@ export class StyleRegressionTester {
       passed: summary.criticalChanges === 0 && summary.majorChanges === 0,
       differences,
       score,
-      summary
+      summary,
     };
   }
 
@@ -266,7 +266,7 @@ export class StyleRegressionTester {
    */
   async testResponsive(
     container: HTMLElement,
-    component: string
+    component: string,
   ): Promise<ResponsiveTestResult[]> {
     const results: ResponsiveTestResult[] = [];
 
@@ -274,7 +274,7 @@ export class StyleRegressionTester {
       const viewport: ViewportConfig = {
         width: breakpoint,
         height: 768,
-        devicePixelRatio: 1
+        devicePixelRatio: 1,
       };
 
       this.setViewport(viewport);
@@ -287,7 +287,7 @@ export class StyleRegressionTester {
       results.push({
         breakpoint,
         passed: issues.length === 0,
-        issues
+        issues,
       });
     }
 
@@ -300,7 +300,7 @@ export class StyleRegressionTester {
   async testThemes(
     container: HTMLElement,
     component: string,
-    variant?: string
+    variant?: string,
   ): Promise<Map<string, StyleComparisonResult>> {
     const results = new Map<string, StyleComparisonResult>();
     let baselineSnapshot: StyleSnapshot | null = null;
@@ -313,7 +313,7 @@ export class StyleRegressionTester {
         id: `${component}-${variant || 'default'}-${theme}`,
         component,
         variant,
-        theme
+        theme,
       });
 
       if (!baselineSnapshot) {
@@ -337,7 +337,7 @@ export class StyleRegressionTester {
     elements.forEach((element, index) => {
       const computedStyle = window.getComputedStyle(element);
       const selector = this.generateSelector(element, index);
-      
+
       styles[selector] = {};
 
       // Capture relevant style properties
@@ -348,7 +348,7 @@ export class StyleRegressionTester {
         'font-family', 'font-size', 'font-weight', 'line-height',
         'text-align', 'text-decoration', 'text-transform',
         'opacity', 'visibility', 'z-index', 'transform',
-        'box-shadow', 'border-radius', 'overflow'
+        'box-shadow', 'border-radius', 'overflow',
       ];
 
       relevantProperties.forEach(property => {
@@ -425,8 +425,8 @@ export class StyleRegressionTester {
    * Check if property is size-related
    */
   private isSizeProperty(property: string): boolean {
-    return ['width', 'height', 'font-size', 'margin', 'padding'].some(p => 
-      property.includes(p)
+    return ['width', 'height', 'font-size', 'margin', 'padding'].some(p =>
+      property.includes(p),
     );
   }
 
@@ -449,7 +449,7 @@ export class StyleRegressionTester {
     const diff = Math.sqrt(
       Math.pow(rgb1.r - rgb2.r, 2) +
       Math.pow(rgb1.g - rgb2.g, 2) +
-      Math.pow(rgb1.b - rgb2.b, 2)
+      Math.pow(rgb1.b - rgb2.b, 2),
     );
 
     return diff <= this.config.tolerances.color;
@@ -499,9 +499,9 @@ export class StyleRegressionTester {
     const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
     if (rgbMatch) {
       return {
-        r: parseInt(rgbMatch[1]),
-        g: parseInt(rgbMatch[2]),
-        b: parseInt(rgbMatch[3])
+        r: parseInt(rgbMatch[1], 10),
+        g: parseInt(rgbMatch[2], 10),
+        b: parseInt(rgbMatch[3], 10),
       };
     }
 
@@ -511,7 +511,7 @@ export class StyleRegressionTester {
       return {
         r: parseInt(hexMatch[1], 16),
         g: parseInt(hexMatch[2], 16),
-        b: parseInt(hexMatch[3], 16)
+        b: parseInt(hexMatch[3], 16),
       };
     }
 
@@ -532,7 +532,7 @@ export class StyleRegressionTester {
   private calculateSeverity(
     property: string,
     expected: string,
-    actual: string
+    actual: string,
   ): 'minor' | 'major' | 'critical' {
     // Critical changes that break layout
     if (['display', 'position'].includes(property)) {
@@ -554,7 +554,7 @@ export class StyleRegressionTester {
   private calculateImpact(
     property: string,
     expected: string,
-    actual: string
+    actual: string,
   ): string {
     switch (property) {
       case 'display':
@@ -594,7 +594,7 @@ export class StyleRegressionTester {
    */
   private async detectResponsiveIssues(
     container: HTMLElement,
-    breakpoint: number
+    breakpoint: number,
   ): Promise<ResponsiveIssue[]> {
     const issues: ResponsiveIssue[] = [];
     const elements = container.querySelectorAll('*');
@@ -610,7 +610,7 @@ export class StyleRegressionTester {
           element: this.generateSelector(element, 0),
           description: `Element extends beyond viewport width at ${breakpoint}px`,
           severity: 'high',
-          suggestion: 'Add responsive styles or use flexible units'
+          suggestion: 'Add responsive styles or use flexible units',
         });
       }
 
@@ -621,7 +621,7 @@ export class StyleRegressionTester {
           element: this.generateSelector(element, 0),
           description: 'Text is being truncated',
           severity: 'medium',
-          suggestion: 'Consider using responsive typography or multi-line text'
+          suggestion: 'Consider using responsive typography or multi-line text',
         });
       }
 
@@ -636,7 +636,7 @@ export class StyleRegressionTester {
               element: this.generateSelector(element, 0),
               description: 'Element overlaps with sibling element',
               severity: 'high',
-              suggestion: 'Adjust spacing or use responsive layout techniques'
+              suggestion: 'Adjust spacing or use responsive layout techniques',
             });
           }
         }
@@ -650,9 +650,9 @@ export class StyleRegressionTester {
    * Check if two elements overlap
    */
   private elementsOverlap(rect1: DOMRect, rect2: DOMRect): boolean {
-    return !(rect1.right < rect2.left || 
-             rect2.right < rect1.left || 
-             rect1.bottom < rect2.top || 
+    return !(rect1.right < rect2.left ||
+             rect2.right < rect1.left ||
+             rect1.bottom < rect2.top ||
              rect2.bottom < rect1.top);
   }
 
@@ -663,19 +663,19 @@ export class StyleRegressionTester {
     Object.defineProperty(window, 'innerWidth', {
       writable: true,
       configurable: true,
-      value: viewport.width
+      value: viewport.width,
     });
 
     Object.defineProperty(window, 'innerHeight', {
       writable: true,
       configurable: true,
-      value: viewport.height
+      value: viewport.height,
     });
 
     Object.defineProperty(window, 'devicePixelRatio', {
       writable: true,
       configurable: true,
-      value: viewport.devicePixelRatio
+      value: viewport.devicePixelRatio,
     });
 
     // Trigger resize event
@@ -747,15 +747,15 @@ export class StyleRegressionTester {
     const passedTests = results.filter(r => r.passed).length;
     const failedTests = totalTests - passedTests;
 
-    let report = `# Style Regression Test Report\n\n`;
-    report += `**Summary:**\n`;
+    let report = '# Style Regression Test Report\n\n';
+    report += '**Summary:**\n';
     report += `- Total Tests: ${totalTests}\n`;
     report += `- Passed: ${passedTests}\n`;
     report += `- Failed: ${failedTests}\n`;
     report += `- Success Rate: ${((passedTests / totalTests) * 100).toFixed(1)}%\n\n`;
 
     if (failedTests > 0) {
-      report += `## Failed Tests\n\n`;
+      report += '## Failed Tests\n\n';
       results.filter(r => !r.passed).forEach((result, index) => {
         report += `### Test ${index + 1}\n`;
         report += `- Score: ${result.score}/100\n`;
@@ -764,11 +764,11 @@ export class StyleRegressionTester {
         report += `- Minor Changes: ${result.summary.minorChanges}\n\n`;
 
         if (result.differences.length > 0) {
-          report += `**Differences:**\n`;
+          report += '**Differences:**\n';
           result.differences.forEach(diff => {
             report += `- ${diff.selector} - ${diff.property}: ${diff.expected} → ${diff.actual} (${diff.severity})\n`;
           });
-          report += `\n`;
+          report += '\n';
         }
       });
     }

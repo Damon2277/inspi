@@ -116,7 +116,8 @@ describe('git-flow', () => {
     test('should parse modified files correctly', () => {
       // Mock the git status output
       execSync
-        .mockReturnValueOnce(' M modified-file.js\n?? untracked-file.js\n') // git status --porcelain
+        .mockReturnValueOnce(' M modified-file.js\n??
+          untracked-file.js\n') // git status --porcelain
         .mockReturnValueOnce('main') // getCurrentBranch in getWorkingDirectoryStatus
         .mockReturnValueOnce('1\t0'); // rev-list for ahead/behind
       

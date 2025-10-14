@@ -3,29 +3,31 @@
  * 实现邀请码展示和生成界面、分享按钮和分享弹窗、二维码显示功能、邀请链接复制功能
  */
 
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { 
-  Copy, 
-  Share2, 
-  QrCode, 
-  RefreshCw, 
-  Users, 
+import {
+  Copy,
+  Share2,
+  QrCode,
+  RefreshCw,
+  Users,
   Gift,
   TrendingUp,
   Calendar,
   ExternalLink,
   Check,
-  X
-} from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
-import QRCode from 'qrcode'
+  X,
+} from 'lucide-react';
+import QRCode from 'qrcode';
+import React, { useState, useEffect } from 'react';
+
+import { Badge } from '@/shared/components/badge';
+import { Button } from '@/shared/components/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/card';
+import { Input } from '@/shared/components/input';
+import { Separator } from '@/shared/components/separator';
+import { useToast } from '@/shared/hooks/use-toast';
+
 
 interface InviteCode {
   id: string
@@ -60,16 +62,16 @@ interface InvitationManagementProps {
 }
 
 const InvitationManagement: React.FC<InvitationManagementProps> = ({ userId }) => {
-  const [inviteCode, setInviteCode] = useState<InviteCode | null>(null)
-  const [inviteStats, setInviteStats] = useState<InviteStats | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [generating, setGenerating] = useState(false)
-  const [showQRCode, setShowQRCode] = useState(false)
-  const [showShareModal, setShowShareModal] = useState(false)
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
-  const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({})
-  
-  const { toast } = useToast()
+  const [inviteCode, setInviteCode] = useState<InviteCode | null>(null);
+  const [inviteStats, setInviteStats] = useState<InviteStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+  const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
+
+  const { toast } = useToast();
 
   const sharePlatforms: SharePlatform[] = [
     { id: 'wechat', name: '微信', icon: '💬', color: 'bg-green-500', available: true },
@@ -77,102 +79,102 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ userId }) =
     { id: 'dingtalk', name: '钉钉', icon: '📱', color: 'bg-blue-600', available: true },
     { id: 'wework', name: '企业微信', icon: '💼', color: 'bg-green-600', available: true },
     { id: 'email', name: '邮件', icon: '📧', color: 'bg-red-500', available: true },
-    { id: 'link', name: '复制链接', icon: '🔗', color: 'bg-gray-500', available: true }
-  ]
+    { id: 'link', name: '复制链接', icon: '🔗', color: 'bg-gray-500', available: true },
+  ];
 
   useEffect(() => {
-    loadInvitationData()
-  }, [userId])
+    loadInvitationData();
+  }, [userId]);
 
   const loadInvitationData = async () => {
     try {
-      setLoading(true)
-      
+      setLoading(true);
+
       // 获取邀请码信息
-      const inviteResponse = await fetch(`/api/invite/user/${userId}`)
+      const inviteResponse = await fetch(`/api/invite/user/${userId}`);
       if (inviteResponse.ok) {
-        const inviteData = await inviteResponse.json()
-        setInviteCode(inviteData.data)
+        const inviteData = await inviteResponse.json();
+        setInviteCode(inviteData.data);
       }
 
       // 获取邀请统计
-      const statsResponse = await fetch(`/api/invite/stats/${userId}`)
+      const statsResponse = await fetch(`/api/invite/stats/${userId}`);
       if (statsResponse.ok) {
-        const statsData = await statsResponse.json()
-        setInviteStats(statsData.data)
+        const statsData = await statsResponse.json();
+        setInviteStats(statsData.data);
       }
     } catch (error) {
-      console.error('Failed to load invitation data:', error)
+      console.error('Failed to load invitation data:', error);
       toast({
         title: '加载失败',
         description: '无法加载邀请数据，请稍后重试',
-        variant: 'destructive'
-      })
+        variant: 'destructive',
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const generateNewInviteCode = async () => {
     try {
-      setGenerating(true)
-      
+      setGenerating(true);
+
       const response = await fetch('/api/invite/generate', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId })
-      })
+        body: JSON.stringify({ userId }),
+      });
 
       if (response.ok) {
-        const data = await response.json()
-        setInviteCode(data.data)
+        const data = await response.json();
+        setInviteCode(data.data);
         toast({
           title: '生成成功',
-          description: '新的邀请码已生成'
-        })
+          description: '新的邀请码已生成',
+        });
       } else {
-        throw new Error('Failed to generate invite code')
+        throw new Error('Failed to generate invite code');
       }
     } catch (error) {
-      console.error('Failed to generate invite code:', error)
+      console.error('Failed to generate invite code:', error);
       toast({
         title: '生成失败',
         description: '无法生成邀请码，请稍后重试',
-        variant: 'destructive'
-      })
+        variant: 'destructive',
+      });
     } finally {
-      setGenerating(false)
+      setGenerating(false);
     }
-  }
+  };
 
   const copyToClipboard = async (text: string, type: string) => {
     try {
-      await navigator.clipboard.writeText(text)
-      setCopiedStates(prev => ({ ...prev, [type]: true }))
-      
+      await navigator.clipboard.writeText(text);
+      setCopiedStates({ ...copiedStates, [type]: true });
+
       toast({
         title: '复制成功',
-        description: `${type}已复制到剪贴板`
-      })
+        description: `${type}已复制到剪贴板`,
+      });
 
       // 重置复制状态
       setTimeout(() => {
-        setCopiedStates(prev => ({ ...prev, [type]: false }))
-      }, 2000)
+        setCopiedStates({ ...copiedStates, [type]: false });
+      }, 2000);
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error)
+      console.error('Failed to copy to clipboard:', error);
       toast({
         title: '复制失败',
         description: '无法复制到剪贴板',
-        variant: 'destructive'
-      })
+        variant: 'destructive',
+      });
     }
-  }
+  };
 
   const generateQRCode = async () => {
-    if (!inviteCode) return
+    if (!inviteCode) return;
 
     try {
       const qrCodeDataUrl = await QRCode.toDataURL(inviteCode.inviteLink, {
@@ -180,31 +182,31 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ userId }) =
         margin: 2,
         color: {
           dark: '#000000',
-          light: '#FFFFFF'
-        }
-      })
-      
-      setQrCodeDataUrl(qrCodeDataUrl)
-      setShowQRCode(true)
+          light: '#FFFFFF',
+        },
+      });
+
+      setQrCodeDataUrl(qrCodeDataUrl);
+      setShowQRCode(true);
     } catch (error) {
-      console.error('Failed to generate QR code:', error)
+      console.error('Failed to generate QR code:', error);
       toast({
         title: '生成失败',
         description: '无法生成二维码',
-        variant: 'destructive'
-      })
+        variant: 'destructive',
+      });
     }
-  }
+  };
 
   const handleShare = async (platform: SharePlatform) => {
-    if (!inviteCode) return
+    if (!inviteCode) return;
 
     try {
       const shareData = {
         title: '邀请您使用 Inspi.AI',
         text: `我在使用 Inspi.AI 创作，邀请您一起体验！使用我的邀请码 ${inviteCode.code} 注册，我们都能获得额外的AI生成次数！`,
-        url: inviteCode.inviteLink
-      }
+        url: inviteCode.inviteLink,
+      };
 
       switch (platform.id) {
         case 'wechat':
@@ -214,62 +216,62 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ userId }) =
               (window as any).wx.onMenuShareAppMessage({
                 title: shareData.title,
                 desc: shareData.text,
-                link: shareData.url
-              })
-            })
+                link: shareData.url,
+              });
+            });
           } else {
             // 降级到复制链接
-            await copyToClipboard(inviteCode.inviteLink, '邀请链接')
+            await copyToClipboard(inviteCode.inviteLink, '邀请链接');
           }
-          break
+          break;
 
         case 'qq':
           // QQ分享逻辑
-          const qqUrl = `https://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(shareData.url)}&title=${encodeURIComponent(shareData.title)}&desc=${encodeURIComponent(shareData.text)}`
-          window.open(qqUrl, '_blank')
-          break
+          const qqUrl = `https://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(shareData.url)}&title=${encodeURIComponent(shareData.title)}&desc=${encodeURIComponent(shareData.text)}`;
+          window.open(qqUrl, '_blank');
+          break;
 
         case 'email':
           // 邮件分享
-          const emailUrl = `mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodeURIComponent(shareData.text + '\n\n' + shareData.url)}`
-          window.location.href = emailUrl
-          break
+          const emailUrl = `mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodeURIComponent(shareData.text + '\n\n' + shareData.url)}`;
+          window.location.href = emailUrl;
+          break;
 
         case 'link':
           // 复制链接
-          await copyToClipboard(inviteCode.inviteLink, '邀请链接')
-          break
+          await copyToClipboard(inviteCode.inviteLink, '邀请链接');
+          break;
 
         default:
           // 其他平台暂时复制链接
-          await copyToClipboard(inviteCode.inviteLink, '邀请链接')
-          break
+          await copyToClipboard(inviteCode.inviteLink, '邀请链接');
+          break;
       }
 
-      setShowShareModal(false)
-      
+      setShowShareModal(false);
+
       // 记录分享事件
       await fetch('/api/invite/share', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           inviteCodeId: inviteCode.id,
           platform: platform.id,
-          userId
-        })
-      })
+          userId,
+        }),
+      });
 
     } catch (error) {
-      console.error('Failed to share:', error)
+      console.error('Failed to share:', error);
       toast({
         title: '分享失败',
         description: '无法分享邀请链接',
-        variant: 'destructive'
-      })
+        variant: 'destructive',
+      });
     }
-  }
+  };
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('zh-CN', {
@@ -277,22 +279,22 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ userId }) =
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
-    }).format(new Date(date))
-  }
+      minute: '2-digit',
+    }).format(new Date(date));
+  };
 
   const getStatusBadge = (isActive: boolean, expiresAt: Date) => {
-    const now = new Date()
-    const expired = new Date(expiresAt) < now
+    const now = new Date();
+    const expired = new Date(expiresAt) < now;
 
     if (!isActive) {
-      return <Badge variant="secondary">已停用</Badge>
+      return <Badge variant="secondary">已停用</Badge>;
     }
     if (expired) {
-      return <Badge variant="destructive">已过期</Badge>
+      return <Badge variant="destructive">已过期</Badge>;
     }
-    return <Badge variant="default" className="bg-green-500">有效</Badge>
-  }
+    return <Badge variant="default" className="bg-green-500">有效</Badge>;
+  };
 
   if (loading) {
     return (
@@ -305,14 +307,14 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ userId }) =
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">邀请管理</h1>
-        <Button 
+        <Button
           onClick={generateNewInviteCode}
           disabled={generating}
           className="flex items-center gap-2"
@@ -398,7 +400,7 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ userId }) =
                       复制链接
                     </Button>
                   </div>
-                  
+
                   <Input
                     value={inviteCode.inviteLink}
                     readOnly
@@ -453,28 +455,28 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ userId }) =
                   </div>
                   <div className="text-sm text-gray-600">总邀请数</div>
                 </div>
-                
+
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <div className="text-2xl font-bold text-green-600">
                     {inviteStats.successfulRegistrations}
                   </div>
                   <div className="text-sm text-gray-600">成功注册</div>
                 </div>
-                
+
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
                   <div className="text-2xl font-bold text-purple-600">
                     {inviteStats.activeInvitees}
                   </div>
                   <div className="text-sm text-gray-600">活跃用户</div>
                 </div>
-                
+
                 <div className="text-center p-4 bg-orange-50 rounded-lg">
                   <div className="text-2xl font-bold text-orange-600">
                     {inviteStats.totalRewardsEarned}
                   </div>
                   <div className="text-sm text-gray-600">获得奖励</div>
                 </div>
-                
+
                 <div className="col-span-2 text-center p-4 bg-gray-50 rounded-lg">
                   <div className="text-xl font-bold text-gray-700">
                     {(inviteStats.conversionRate * 100).toFixed(1)}%
@@ -506,7 +508,7 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ userId }) =
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            
+
             <div className="grid grid-cols-3 gap-3">
               {sharePlatforms.map((platform) => (
                 <button
@@ -544,7 +546,7 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ userId }) =
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            
+
             <div className="text-center">
               {qrCodeDataUrl && (
                 <img
@@ -560,10 +562,10 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ userId }) =
                 <Button
                   variant="outline"
                   onClick={() => {
-                    const link = document.createElement('a')
-                    link.download = `invite-qr-${inviteCode?.code}.png`
-                    link.href = qrCodeDataUrl
-                    link.click()
+                    const link = document.createElement('a');
+                    link.download = `invite-qr-${inviteCode?.code}.png`;
+                    link.href = qrCodeDataUrl;
+                    link.click();
                   }}
                   className="flex-1"
                 >
@@ -581,7 +583,7 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ userId }) =
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default InvitationManagement
+export default InvitationManagement;

@@ -9,7 +9,7 @@ export const registerServiceWorker = async () => {
 
   try {
     const registration = await navigator.serviceWorker.register('/sw.js', {
-      scope: '/'
+      scope: '/',
     });
 
     console.log('Service Worker registered successfully:', registration);
@@ -22,7 +22,7 @@ export const registerServiceWorker = async () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             // 新版本可用
             console.log('New version available');
-            
+
             // 可以在这里显示更新提示
             if (window.confirm('发现新版本，是否立即更新？')) {
               newWorker.postMessage({ type: 'SKIP_WAITING' });
@@ -81,7 +81,7 @@ export const storeOfflineOperation = (operation: {
 }) => {
   sendMessageToSW({
     type: 'STORE_OFFLINE_OPERATION',
-    operation
+    operation,
   });
 };
 
@@ -133,6 +133,6 @@ export const showNotification = (title: string, options?: NotificationOptions) =
   return new Notification(title, {
     icon: '/icons/icon-192x192.svg',
     badge: '/icons/icon.svg',
-    ...options
+    ...options,
   });
 };

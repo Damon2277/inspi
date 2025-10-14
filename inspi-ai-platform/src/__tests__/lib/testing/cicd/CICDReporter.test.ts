@@ -4,6 +4,7 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
+
 import { CICDReporter } from '../../../../lib/testing/cicd/CICDReporter';
 import { CICDMetrics, PipelineOptimization, QualityGate } from '../../../../lib/testing/cicd/types';
 
@@ -12,8 +13,8 @@ jest.mock('fs', () => ({
   promises: {
     writeFile: jest.fn(),
     access: jest.fn(),
-    mkdir: jest.fn()
-  }
+    mkdir: jest.fn(),
+  },
 }));
 
 describe('CICDReporter', () => {
@@ -24,7 +25,7 @@ describe('CICDReporter', () => {
 
   beforeEach(() => {
     reporter = new CICDReporter('./test-reports');
-    
+
     mockMetrics = {
       pipelineId: 'test-pipeline-123',
       buildNumber: 42,
@@ -36,22 +37,22 @@ describe('CICDReporter', () => {
           status: 'success',
           duration: 600000,
           startTime: new Date('2024-01-01T10:00:00Z'),
-          endTime: new Date('2024-01-01T10:10:00Z')
+          endTime: new Date('2024-01-01T10:10:00Z'),
         },
         {
           name: 'test',
           status: 'success',
           duration: 900000,
           startTime: new Date('2024-01-01T10:10:00Z'),
-          endTime: new Date('2024-01-01T10:25:00Z')
+          endTime: new Date('2024-01-01T10:25:00Z'),
         },
         {
           name: 'deploy',
           status: 'success',
           duration: 300000,
           startTime: new Date('2024-01-01T10:25:00Z'),
-          endTime: new Date('2024-01-01T10:30:00Z')
-        }
+          endTime: new Date('2024-01-01T10:30:00Z'),
+        },
       ],
       testResults: {
         total: 150,
@@ -63,15 +64,15 @@ describe('CICDReporter', () => {
           statements: 85,
           branches: 80,
           functions: 90,
-          lines: 85
-        }
+          lines: 85,
+        },
       },
       qualityGates: {
         total: 5,
         passed: 4,
         failed: 1,
         warnings: 0,
-        blocking: 1
+        blocking: 1,
       },
       artifacts: {
         total: 3,
@@ -79,8 +80,8 @@ describe('CICDReporter', () => {
         types: {
           'build': 1,
           'test-results': 1,
-          'coverage': 1
-        }
+          'coverage': 1,
+        },
       },
       performance: {
         buildTime: 600000,
@@ -91,9 +92,9 @@ describe('CICDReporter', () => {
           cpu: 75,
           memory: 60,
           disk: 40,
-          network: 30
-        }
-      }
+          network: 30,
+        },
+      },
     };
 
     mockOptimization = {
@@ -105,7 +106,7 @@ describe('CICDReporter', () => {
           description: 'Implement build caching to reduce build times',
           impact: 'High - 40% time reduction',
           effort: 'Medium - 2-3 hours',
-          implementation: 'Add cache configuration to CI/CD pipeline'
+          implementation: 'Add cache configuration to CI/CD pipeline',
         },
         {
           type: 'parallelization',
@@ -114,29 +115,29 @@ describe('CICDReporter', () => {
           description: 'Run tests in parallel to reduce execution time',
           impact: 'Medium - 25% time reduction',
           effort: 'Low - 1 hour',
-          implementation: 'Configure parallel test runners'
-        }
+          implementation: 'Configure parallel test runners',
+        },
       ],
       estimatedImprovement: {
         timeReduction: 0.35,
         costReduction: 0.20,
         reliabilityImprovement: 0.15,
-        confidence: 0.85
+        confidence: 0.85,
       },
       implementationPlan: [
         {
           order: 1,
           title: 'Setup build caching',
           description: 'Configure cache for dependencies and build artifacts',
-          validation: 'Verify cache hit rate > 80%'
+          validation: 'Verify cache hit rate > 80%',
         },
         {
           order: 2,
           title: 'Enable parallel testing',
           description: 'Configure test runners for parallel execution',
-          validation: 'Verify test execution time reduction'
-        }
-      ]
+          validation: 'Verify test execution time reduction',
+        },
+      ],
     };
 
     mockQualityGates = [
@@ -148,7 +149,7 @@ describe('CICDReporter', () => {
         value: 85,
         threshold: 80,
         message: 'Coverage meets minimum threshold',
-        blocking: true
+        blocking: true,
       },
       {
         id: 'performance-gate',
@@ -158,8 +159,8 @@ describe('CICDReporter', () => {
         value: 2500,
         threshold: 2000,
         message: 'Response time exceeds threshold',
-        blocking: false
-      }
+        blocking: false,
+      },
     ];
 
     // Reset mocks
@@ -174,7 +175,7 @@ describe('CICDReporter', () => {
       const report = await reporter.generateReport(
         mockMetrics,
         mockOptimization,
-        mockQualityGates
+        mockQualityGates,
       );
 
       expect(report).toHaveProperty('summary');
@@ -208,17 +209,17 @@ describe('CICDReporter', () => {
       expect(fs.writeFile).toHaveBeenCalledWith(
         expect.stringContaining('cicd-report.html'),
         expect.any(String),
-        'utf8'
+        'utf8',
       );
       expect(fs.writeFile).toHaveBeenCalledWith(
         expect.stringContaining('cicd-report.json'),
         expect.any(String),
-        'utf8'
+        'utf8',
       );
       expect(fs.writeFile).toHaveBeenCalledWith(
         expect.stringContaining('cicd-report.md'),
         expect.any(String),
-        'utf8'
+        'utf8',
       );
     });
   });
@@ -249,9 +250,9 @@ describe('CICDReporter', () => {
             status: 'failure',
             duration: 180000,
             startTime: new Date(),
-            endTime: new Date()
-          }
-        ]
+            endTime: new Date(),
+          },
+        ],
       };
 
       const report = await reporter.generateReport(failedMetrics);
@@ -281,16 +282,16 @@ describe('CICDReporter', () => {
             status: 'success',
             duration: 1200000, // 20 minutes (66% of total)
             startTime: new Date(),
-            endTime: new Date()
+            endTime: new Date(),
           },
           {
             name: 'fast-test',
             status: 'success',
             duration: 300000, // 5 minutes
             startTime: new Date(),
-            endTime: new Date()
-          }
-        ]
+            endTime: new Date(),
+          },
+        ],
       };
 
       const report = await reporter.generateReport(bottleneckMetrics);
@@ -351,13 +352,13 @@ describe('CICDReporter', () => {
     it('should generate performance recommendations', async () => {
       const longPipelineMetrics = {
         ...mockMetrics,
-        duration: 2400000 // 40 minutes
+        duration: 2400000, // 40 minutes
       };
 
       const report = await reporter.generateReport(longPipelineMetrics);
 
-      const durationRecommendation = report.recommendations.find(r => 
-        r.includes('pipeline duration')
+      const durationRecommendation = report.recommendations.find(r =>
+        r.includes('pipeline duration'),
       );
       expect(durationRecommendation).toBeDefined();
     });
@@ -367,14 +368,14 @@ describe('CICDReporter', () => {
         ...mockMetrics,
         testResults: {
           ...mockMetrics.testResults,
-          failed: 5
-        }
+          failed: 5,
+        },
       };
 
       const report = await reporter.generateReport(failingTestMetrics);
 
-      const testRecommendation = report.recommendations.find(r => 
-        r.includes('5 failing tests')
+      const testRecommendation = report.recommendations.find(r =>
+        r.includes('5 failing tests'),
       );
       expect(testRecommendation).toBeDefined();
     });
@@ -388,15 +389,15 @@ describe('CICDReporter', () => {
             statements: 70,
             branches: 65,
             functions: 75,
-            lines: 70
-          }
-        }
+            lines: 70,
+          },
+        },
       };
 
       const report = await reporter.generateReport(lowCoverageMetrics);
 
-      const coverageRecommendation = report.recommendations.find(r => 
-        r.includes('test coverage')
+      const coverageRecommendation = report.recommendations.find(r =>
+        r.includes('test coverage'),
       );
       expect(coverageRecommendation).toBeDefined();
     });
@@ -404,8 +405,8 @@ describe('CICDReporter', () => {
     it('should include optimization recommendations', async () => {
       const report = await reporter.generateReport(mockMetrics, mockOptimization);
 
-      const cachingRecommendation = report.recommendations.find(r => 
-        r.includes('Enable build caching')
+      const cachingRecommendation = report.recommendations.find(r =>
+        r.includes('Enable build caching'),
       );
       expect(cachingRecommendation).toBeDefined();
     });
@@ -421,29 +422,29 @@ describe('CICDReporter', () => {
             status: 'success',
             duration: 120000,
             startTime: new Date(),
-            endTime: new Date()
+            endTime: new Date(),
           },
           {
             name: 'type-check',
             status: 'success',
             duration: 180000,
             startTime: new Date(),
-            endTime: new Date()
+            endTime: new Date(),
           },
           {
             name: 'unit-test',
             status: 'success',
             duration: 300000,
             startTime: new Date(),
-            endTime: new Date()
-          }
-        ]
+            endTime: new Date(),
+          },
+        ],
       };
 
       const report = await reporter.generateReport(independentStagesMetrics);
 
-      const parallelOpportunity = report.pipeline.parallelizationOpportunities.find(o => 
-        o.includes('independent stages')
+      const parallelOpportunity = report.pipeline.parallelizationOpportunities.find(o =>
+        o.includes('independent stages'),
       );
       expect(parallelOpportunity).toBeDefined();
     });
@@ -457,29 +458,29 @@ describe('CICDReporter', () => {
             status: 'success',
             duration: 300000,
             startTime: new Date(),
-            endTime: new Date()
+            endTime: new Date(),
           },
           {
             name: 'integration-test',
             status: 'success',
             duration: 600000,
             startTime: new Date(),
-            endTime: new Date()
+            endTime: new Date(),
           },
           {
             name: 'e2e-test',
             status: 'success',
             duration: 900000,
             startTime: new Date(),
-            endTime: new Date()
-          }
-        ]
+            endTime: new Date(),
+          },
+        ],
       };
 
       const report = await reporter.generateReport(multipleTestsMetrics);
 
-      const testParallelOpportunity = report.pipeline.parallelizationOpportunities.find(o => 
-        o.includes('Test stages')
+      const testParallelOpportunity = report.pipeline.parallelizationOpportunities.find(o =>
+        o.includes('Test stages'),
       );
       expect(testParallelOpportunity).toBeDefined();
     });
@@ -489,10 +490,10 @@ describe('CICDReporter', () => {
     it('should generate valid HTML content', async () => {
       await reporter.generateReport(mockMetrics);
 
-      const htmlCall = (fs.writeFile as jest.Mock).mock.calls.find(call => 
-        call[0].includes('cicd-report.html')
+      const htmlCall = (fs.writeFile as jest.Mock).mock.calls.find(call =>
+        call[0].includes('cicd-report.html'),
       );
-      
+
       expect(htmlCall).toBeDefined();
       expect(htmlCall[1]).toContain('<!DOCTYPE html>');
       expect(htmlCall[1]).toContain('<title>CI/CD Pipeline Report</title>');
@@ -502,10 +503,10 @@ describe('CICDReporter', () => {
     it('should include optimization section when provided', async () => {
       await reporter.generateReport(mockMetrics, mockOptimization);
 
-      const htmlCall = (fs.writeFile as jest.Mock).mock.calls.find(call => 
-        call[0].includes('cicd-report.html')
+      const htmlCall = (fs.writeFile as jest.Mock).mock.calls.find(call =>
+        call[0].includes('cicd-report.html'),
       );
-      
+
       expect(htmlCall[1]).toContain('Optimization Opportunities');
       expect(htmlCall[1]).toContain('35%'); // Time reduction
     });
@@ -513,10 +514,10 @@ describe('CICDReporter', () => {
     it('should include quality gates section when provided', async () => {
       await reporter.generateReport(mockMetrics, undefined, mockQualityGates);
 
-      const htmlCall = (fs.writeFile as jest.Mock).mock.calls.find(call => 
-        call[0].includes('cicd-report.html')
+      const htmlCall = (fs.writeFile as jest.Mock).mock.calls.find(call =>
+        call[0].includes('cicd-report.html'),
       );
-      
+
       expect(htmlCall[1]).toContain('Quality Gates');
       expect(htmlCall[1]).toContain('Code Coverage');
     });
@@ -526,10 +527,10 @@ describe('CICDReporter', () => {
     it('should generate valid JSON content', async () => {
       await reporter.generateReport(mockMetrics);
 
-      const jsonCall = (fs.writeFile as jest.Mock).mock.calls.find(call => 
-        call[0].includes('cicd-report.json')
+      const jsonCall = (fs.writeFile as jest.Mock).mock.calls.find(call =>
+        call[0].includes('cicd-report.json'),
       );
-      
+
       expect(jsonCall).toBeDefined();
       expect(() => JSON.parse(jsonCall[1])).not.toThrow();
     });
@@ -537,10 +538,10 @@ describe('CICDReporter', () => {
     it('should include all report data in JSON', async () => {
       await reporter.generateReport(mockMetrics, mockOptimization, mockQualityGates);
 
-      const jsonCall = (fs.writeFile as jest.Mock).mock.calls.find(call => 
-        call[0].includes('cicd-report.json')
+      const jsonCall = (fs.writeFile as jest.Mock).mock.calls.find(call =>
+        call[0].includes('cicd-report.json'),
       );
-      
+
       const reportData = JSON.parse(jsonCall[1]);
       expect(reportData).toHaveProperty('summary');
       expect(reportData).toHaveProperty('pipeline');
@@ -553,10 +554,10 @@ describe('CICDReporter', () => {
     it('should generate valid Markdown content', async () => {
       await reporter.generateReport(mockMetrics);
 
-      const mdCall = (fs.writeFile as jest.Mock).mock.calls.find(call => 
-        call[0].includes('cicd-report.md')
+      const mdCall = (fs.writeFile as jest.Mock).mock.calls.find(call =>
+        call[0].includes('cicd-report.md'),
       );
-      
+
       expect(mdCall).toBeDefined();
       expect(mdCall[1]).toContain('# CI/CD Pipeline Report');
       expect(mdCall[1]).toContain('## Summary');
@@ -572,17 +573,17 @@ describe('CICDReporter', () => {
             status: 'success',
             duration: 1200000, // Major bottleneck
             startTime: new Date(),
-            endTime: new Date()
-          }
-        ]
+            endTime: new Date(),
+          },
+        ],
       };
 
       await reporter.generateReport(bottleneckMetrics);
 
-      const mdCall = (fs.writeFile as jest.Mock).mock.calls.find(call => 
-        call[0].includes('cicd-report.md')
+      const mdCall = (fs.writeFile as jest.Mock).mock.calls.find(call =>
+        call[0].includes('cicd-report.md'),
       );
-      
+
       expect(mdCall[1]).toContain('## Bottlenecks');
       expect(mdCall[1]).toContain('slow-stage');
     });
@@ -600,8 +601,8 @@ describe('CICDReporter', () => {
         ...mockMetrics,
         testResults: {
           ...mockMetrics.testResults,
-          coverage: undefined
-        }
+          coverage: undefined,
+        },
       };
 
       const report = await reporter.generateReport(noCoverageMetrics);

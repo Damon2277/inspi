@@ -4,7 +4,8 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { useAuthStore } from '@/stores/authStore';
+
+import { useAuthStore } from '@/shared/stores/authStore';
 // Create a simple user fixture function
 const createUserFixture = (overrides: any = {}) => ({
   id: 'user-123',
@@ -12,7 +13,7 @@ const createUserFixture = (overrides: any = {}) => ({
   name: 'Test User',
   avatar: null,
   subscription: 'free',
-  ...overrides
+  ...overrides,
 });
 
 // Mock zustand persist
@@ -62,7 +63,7 @@ describe('会话管理并发测试', () => {
       const users = tokens.map((_, index) => ({
         ...mockUser,
         id: `user-${index}`,
-        email: `user${index}@example.com`
+        email: `user${index}@example.com`,
       }));
 
       // Act - 同时执行多个登录
@@ -75,7 +76,7 @@ describe('会话管理并发测试', () => {
       // Assert - 应该保持最后一次登录的状态
       expect(result.current.isAuthenticated).toBe(true);
       expect(result.current.token).toBe('token3');
-      expect(result.current.user?.id).toBe('user-2');
+      expect(result.current(user?.id || (user as any)?._id)).toBe('user-2');
     });
 
     it('应该处理登录和登出的竞态条件', async () => {
@@ -118,7 +119,7 @@ describe('会话管理并发测试', () => {
     it('应该处理多个组件同时更新用户信息', async () => {
       // Arrange
       const { result } = renderHook(() => useAuthStore());
-      
+
       act(() => {
         result.current.login('token1', mockUser, mockSubscription);
       });
@@ -139,7 +140,7 @@ describe('会话管理并发测试', () => {
     it('应该处理订阅信息的并发更新', async () => {
       // Arrange
       const { result } = renderHook(() => useAuthStore());
-      
+
       act(() => {
         result.current.login('token1', mockUser, mockSubscription);
       });
@@ -198,7 +199,7 @@ describe('会话管理并发测试', () => {
               ...mockUser,
               id: `user-${i}`,
             }, mockSubscription);
-          })
+          }),
         );
       }
 
@@ -206,13 +207,13 @@ describe('会话管理并发测试', () => {
 
       // Assert - 应该保持最后一次操作的状态
       expect(result.current.token).toBe('token9');
-      expect(result.current.user?.id).toBe('user-9');
+      expect(result.current.user?.id || (result.current.user as any)?._id).toBe('user-9');
     });
 
     it('应该处理存储失败的情况', async () => {
       // Arrange
       const { result } = renderHook(() => useAuthStore());
-      
+
       // Mock localStorage to throw error
       const originalSetItem = Storage.prototype.setItem;
       Storage.prototype.setItem = jest.fn(() => {
@@ -245,11 +246,11 @@ describe('会话管理并发测试', () => {
             id: `user-${i}`,
             name: `User ${i}`,
           }, mockSubscription);
-          
+
           if (i % 2 === 0) {
             result.current.updateUser({ name: `Updated User ${i}` });
           }
-          
+
           if (i % 3 === 0) {
             result.current.setLoading(true);
             result.current.setLoading(false);
@@ -295,7 +296,7 @@ describe('会话管理并发测试', () => {
       act(() => {
         // 初始登录
         result.current.login('token1', mockUser, mockSubscription);
-        
+
         // 同时进行多种操作
         result.current.setLoading(true);
         result.current.updateUser({ name: 'Concurrent Update' });
@@ -317,7 +318,7 @@ describe('会话管理并发测试', () => {
     it('应该在错误条件下保持状态一致性', async () => {
       // Arrange
       const { result } = renderHook(() => useAuthStore());
-      
+
       act(() => {
         result.current.login('token1', mockUser, mockSubscription);
       });
@@ -358,7 +359,7 @@ describe('会话管理并发测试', () => {
     it('应该处理多个组件同时检查认证状态', async () => {
       // Arrange
       const { result } = renderHook(() => useAuthStore());
-      
+
       act(() => {
         result.current.login('token1', mockUser, mockSubscription);
       });
@@ -373,7 +374,7 @@ describe('会话管理并发测试', () => {
       // Assert - 所有检查应该返回一致的结果
       authChecks.forEach(check => {
         expect(check.isAuthenticated).toBe(true);
-        expect(check.user?.id).toBe(mockUser.id);
+        expect(check(user?.id || (user as any)?._id)).toBe(mockUser.id);
         expect(check.token).toBe('token1');
       });
     });
@@ -433,7 +434,7 @@ describe('会话管理并发测试', () => {
 
       // 取消操作
       cancelled = true;
-      
+
       act(() => {
         result.current.logout();
         result.current.setLoading(false);
@@ -475,7 +476,7 @@ describe('会话管理并发测试', () => {
               });
               resolve();
             }, Math.random() * 10);
-          })
+          }),
         );
       }
 
@@ -489,7 +490,7 @@ describe('会话管理并发测试', () => {
     it('应该处理状态快照的一致性', async () => {
       // Arrange
       const { result } = renderHook(() => useAuthStore());
-      
+
       act(() => {
         result.current.login('snapshot-token', mockUser, mockSubscription);
       });
@@ -509,7 +510,7 @@ describe('会话管理并发测试', () => {
       const firstSnapshot = snapshots[0];
       snapshots.forEach(snapshot => {
         expect(snapshot.isAuthenticated).toBe(firstSnapshot.isAuthenticated);
-        expect(snapshot.user?.id).toBe(firstSnapshot.user?.id);
+        expect(snapshot(user?.id || (user as any)?._id)).toBe(firstSnapshot(user?.id || (user as any)?._id));
         expect(snapshot.token).toBe(firstSnapshot.token);
       });
     });

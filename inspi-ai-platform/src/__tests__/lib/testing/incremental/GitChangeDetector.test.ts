@@ -1,5 +1,6 @@
-import { GitChangeDetector, GitChange, ChangeAnalysis } from '../../../../lib/testing/incremental/GitChangeDetector';
 import { execSync } from 'child_process';
+
+import { GitChangeDetector, GitChange, ChangeAnalysis } from '../../../../lib/testing/incremental/GitChangeDetector';
 
 // Mock child_process
 jest.mock('child_process');
@@ -47,7 +48,7 @@ describe('GitChangeDetector', () => {
       expect(branch).toBe('feature/test-branch');
       expect(mockExecSync).toHaveBeenCalledWith(
         'git branch --show-current',
-        expect.objectContaining({ cwd: mockWorkingDir })
+        expect.objectContaining({ cwd: mockWorkingDir }),
       );
     });
 
@@ -58,7 +59,7 @@ describe('GitChangeDetector', () => {
       expect(commit).toBe('abc123def456');
       expect(mockExecSync).toHaveBeenCalledWith(
         'git rev-parse HEAD',
-        expect.objectContaining({ cwd: mockWorkingDir })
+        expect.objectContaining({ cwd: mockWorkingDir }),
       );
     });
 
@@ -97,25 +98,25 @@ R100\tsrc/old.ts\tsrc/new.ts`;
         type: 'modified',
         filePath: 'src/file1.ts',
         oldFilePath: undefined,
-        status: 'M'
+        status: 'M',
       });
       expect(changes[1]).toEqual({
         type: 'added',
         filePath: 'src/file2.ts',
         oldFilePath: undefined,
-        status: 'A'
+        status: 'A',
       });
       expect(changes[2]).toEqual({
         type: 'deleted',
         filePath: 'src/file3.ts',
         oldFilePath: undefined,
-        status: 'D'
+        status: 'D',
       });
       expect(changes[3]).toEqual({
         type: 'renamed',
         filePath: 'src/new.ts',
         oldFilePath: 'src/old.ts',
-        status: 'R100'
+        status: 'R100',
       });
     });
 
@@ -189,7 +190,7 @@ A\tsrc/new-staged.ts`;
       expect(analysis.changes).toHaveLength(1);
       expect(mockExecSync).not.toHaveBeenCalledWith(
         expect.stringContaining('status --porcelain'),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -216,7 +217,7 @@ A\tsrc/new-staged.ts`;
       expect(commit).toBe('commit789');
       expect(mockExecSync).toHaveBeenCalledWith(
         'git log -1 --format="%H" -- "src/file.ts"',
-        expect.objectContaining({ cwd: mockWorkingDir })
+        expect.objectContaining({ cwd: mockWorkingDir }),
       );
     });
 
@@ -256,7 +257,7 @@ commit2|Author2|2023-01-02|Second commit`;
         hash: 'commit1',
         author: 'Author1',
         date: new Date('2023-01-01'),
-        message: 'First commit'
+        message: 'First commit',
       });
     });
   });
@@ -302,7 +303,7 @@ commit2|Author2|2023-01-02|Second commit`;
         hash: 'abc123',
         author: 'John Doe',
         date: new Date('Mon Jan 1 12:00:00 2023'),
-        message: 'Test commit'
+        message: 'Test commit',
       });
     });
   });

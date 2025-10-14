@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
 import { POST as loginHandler } from '@/app/api/auth/login/route';
 import { POST as registerHandler } from '@/app/api/auth/register/route';
 import { POST as verifyEmailHandler } from '@/app/api/auth/verify-email/route';
@@ -14,18 +15,18 @@ const mockAuthService = {
   registerUser: jest.fn(),
   verifyEmail: jest.fn(),
   generateToken: jest.fn(),
-  validateToken: jest.fn()
+  validateToken: jest.fn(),
 };
 
-jest.mock('@/lib/auth/mock-service', () => mockAuthService);
+jest.mock('@/core/auth/mock-service', () => mockAuthService);
 
 // Mock rate limiting
-const mockRateLimit = jest.fn((limit: number, window: number) => 
-  jest.fn((handler: any) => handler)
+const mockRateLimit = jest.fn((limit: number, window: number) =>
+  jest.fn((handler: any) => handler),
 );
 
-jest.mock('@/lib/auth/middleware', () => ({
-  rateLimit: mockRateLimit
+jest.mock('@/core/auth/middleware', () => ({
+  rateLimit: mockRateLimit,
 }));
 
 // Mock logger
@@ -33,11 +34,11 @@ const mockLogger = {
   info: jest.fn(),
   error: jest.fn(),
   warn: jest.fn(),
-  debug: jest.fn()
+  debug: jest.fn(),
 };
 
 jest.mock('@/lib/utils/logger', () => ({
-  logger: mockLogger
+  logger: mockLogger,
 }));
 
 // Helper function to create mock request
@@ -47,7 +48,7 @@ function createMockRequest(method: string, body: any, headers: Record<string, st
     json: jest.fn().mockResolvedValue(body),
     headers: new Map(Object.entries(headers)),
     cookies: new Map(),
-    url: 'http://localhost:3000/api/auth/test'
+    url: 'http://localhost:3000/api/auth/test',
   } as unknown as NextRequest;
 }
 
@@ -61,14 +62,14 @@ describe('认证API安全性测试', () => {
       // Arrange
       const validLoginData = {
         email: 'test@example.com',
-        password: 'validPassword123'
+        password: 'validPassword123',
       };
 
       mockAuthService.loginUser.mockResolvedValue({
         success: true,
         user: { id: 'user1', email: 'test@example.com', name: 'Test User' },
         token: 'valid-jwt-token',
-        refreshToken: 'valid-refresh-token'
+        refreshToken: 'valid-refresh-token',
       });
 
       const request = createMockRequest('POST', validLoginData);
@@ -83,10 +84,10 @@ describe('认证API安全性测试', () => {
         message: 'Login successful',
         user: expect.objectContaining({
           id: 'user1',
-          email: 'test@example.com'
+          email: 'test@example.com',
         }),
         token: 'valid-jwt-token',
-        refreshToken: 'valid-refresh-token'
+        refreshToken: 'valid-refresh-token',
       });
       expect(mockAuthService.loginUser).toHaveBeenCalledWith(validLoginData);
     });
@@ -95,12 +96,12 @@ describe('认证API安全性测试', () => {
       // Arrange
       const invalidEmailData = {
         email: 'invalid-email',
-        password: 'validPassword123'
+        password: 'validPassword123',
       };
 
       mockAuthService.loginUser.mockResolvedValue({
         success: false,
-        error: 'Invalid email format'
+        error: 'Invalid email format',
       });
 
       const request = createMockRequest('POST', invalidEmailData);
@@ -118,12 +119,12 @@ describe('认证API安全性测试', () => {
       // Arrange
       const emptyPasswordData = {
         email: 'test@example.com',
-        password: ''
+        password: '',
       };
 
       mockAuthService.loginUser.mockResolvedValue({
         success: false,
-        error: 'Password is required'
+        error: 'Password is required',
       });
 
       const request = createMockRequest('POST', emptyPasswordData);
@@ -141,12 +142,12 @@ describe('认证API安全性测试', () => {
       // Arrange
       const wrongCredentials = {
         email: 'test@example.com',
-        password: 'wrongPassword'
+        password: 'wrongPassword',
       };
 
       mockAuthService.loginUser.mockResolvedValue({
         success: false,
-        error: 'Invalid credentials'
+        error: 'Invalid credentials',
       });
 
       const request = createMockRequest('POST', wrongCredentials);
@@ -163,13 +164,13 @@ describe('认证API安全性测试', () => {
     it('应该处理SQL注入攻击', async () => {
       // Arrange
       const sqlInjectionData = {
-        email: \"test@example.com'; DROP TABLE users; --\",
-        password: 'password'
+        email: "test@example.com'; DROP TABLE users; --",
+        password: 'password',
       };
 
       mockAuthService.loginUser.mockResolvedValue({
         success: false,
-        error: 'Invalid email format'
+        error: 'Invalid email format',
       });
 
       const request = createMockRequest('POST', sqlInjectionData);
@@ -187,12 +188,12 @@ describe('认证API安全性测试', () => {
       // Arrange
       const xssData = {
         email: 'test@example.com',
-        password: '<script>alert(\"xss\")</script>'
+        password: '<script>alert(\"xss\")</script>',
       };
 
       mockAuthService.loginUser.mockResolvedValue({
         success: false,
-        error: 'Invalid credentials'
+        error: 'Invalid credentials',
       });
 
       const request = createMockRequest('POST', xssData);
@@ -210,12 +211,12 @@ describe('认证API安全性测试', () => {
       // Arrange
       const longInputData = {
         email: 'a'.repeat(1000) + '@example.com',
-        password: 'b'.repeat(1000)
+        password: 'b'.repeat(1000),
       };
 
       mockAuthService.loginUser.mockResolvedValue({
         success: false,
-        error: 'Input too long'
+        error: 'Input too long',
       });
 
       const request = createMockRequest('POST', longInputData);
@@ -236,7 +237,7 @@ describe('认证API安全性测试', () => {
         json: jest.fn().mockRejectedValue(new Error('Invalid JSON')),
         headers: new Map(),
         cookies: new Map(),
-        url: 'http://localhost:3000/api/auth/login'
+        url: 'http://localhost:3000/api/auth/login',
       } as unknown as NextRequest;
 
       // Act
@@ -253,7 +254,7 @@ describe('认证API安全性测试', () => {
       // Arrange
       const validData = {
         email: 'test@example.com',
-        password: 'password'
+        password: 'password',
       };
 
       mockAuthService.loginUser.mockRejectedValue(new Error('Database connection failed'));
@@ -274,7 +275,7 @@ describe('认证API安全性测试', () => {
       // Arrange
       const validData = {
         email: 'test@example.com',
-        password: 'password'
+        password: 'password',
       };
 
       const request = createMockRequest('POST', validData);
@@ -293,14 +294,14 @@ describe('认证API安全性测试', () => {
       const validRegisterData = {
         email: 'newuser@example.com',
         password: 'StrongPassword123!',
-        name: 'New User'
+        name: 'New User',
       };
 
       mockAuthService.registerUser.mockResolvedValue({
         success: true,
         user: { id: 'user2', email: 'newuser@example.com', name: 'New User' },
         token: 'valid-jwt-token',
-        refreshToken: 'valid-refresh-token'
+        refreshToken: 'valid-refresh-token',
       });
 
       const request = createMockRequest('POST', validRegisterData);
@@ -315,10 +316,10 @@ describe('认证API安全性测试', () => {
         message: 'Registration successful',
         user: expect.objectContaining({
           id: 'user2',
-          email: 'newuser@example.com'
+          email: 'newuser@example.com',
         }),
         token: 'valid-jwt-token',
-        refreshToken: 'valid-refresh-token'
+        refreshToken: 'valid-refresh-token',
       });
     });
 
@@ -327,12 +328,12 @@ describe('认证API安全性测试', () => {
       const weakPasswordData = {
         email: 'test@example.com',
         password: '123',
-        name: 'Test User'
+        name: 'Test User',
       };
 
       mockAuthService.registerUser.mockResolvedValue({
         success: false,
-        error: 'Password too weak'
+        error: 'Password too weak',
       });
 
       const request = createMockRequest('POST', weakPasswordData);
@@ -351,12 +352,12 @@ describe('认证API安全性测试', () => {
       const duplicateEmailData = {
         email: 'existing@example.com',
         password: 'StrongPassword123!',
-        name: 'Test User'
+        name: 'Test User',
       };
 
       mockAuthService.registerUser.mockResolvedValue({
         success: false,
-        error: 'Email already exists'
+        error: 'Email already exists',
       });
 
       const request = createMockRequest('POST', duplicateEmailData);
@@ -373,13 +374,13 @@ describe('认证API安全性测试', () => {
     it('应该验证必填字段', async () => {
       // Arrange
       const incompleteData = {
-        email: 'test@example.com'
+        email: 'test@example.com',
         // 缺少password和name
       };
 
       mockAuthService.registerUser.mockResolvedValue({
         success: false,
-        error: 'Missing required fields'
+        error: 'Missing required fields',
       });
 
       const request = createMockRequest('POST', incompleteData);
@@ -398,12 +399,12 @@ describe('认证API安全性测试', () => {
       const maliciousNameData = {
         email: 'test@example.com',
         password: 'StrongPassword123!',
-        name: '<script>alert(\"xss\")</script>'
+        name: '<script>alert(\"xss\")</script>',
       };
 
       mockAuthService.registerUser.mockResolvedValue({
         success: false,
-        error: 'Invalid name format'
+        error: 'Invalid name format',
       });
 
       const request = createMockRequest('POST', maliciousNameData);
@@ -422,7 +423,7 @@ describe('认证API安全性测试', () => {
       const validData = {
         email: 'test@example.com',
         password: 'StrongPassword123!',
-        name: 'Test User'
+        name: 'Test User',
       };
 
       const request = createMockRequest('POST', validData);
@@ -440,12 +441,12 @@ describe('认证API安全性测试', () => {
       // Arrange
       const validVerificationData = {
         email: 'test@example.com',
-        code: '123456'
+        code: '123456',
       };
 
       mockAuthService.verifyEmail.mockResolvedValue({
         success: true,
-        message: 'Email verified successfully'
+        message: 'Email verified successfully',
       });
 
       const request = createMockRequest('POST', validVerificationData);
@@ -463,12 +464,12 @@ describe('认证API安全性测试', () => {
       // Arrange
       const invalidCodeData = {
         email: 'test@example.com',
-        code: 'invalid'
+        code: 'invalid',
       };
 
       mockAuthService.verifyEmail.mockResolvedValue({
         success: false,
-        error: 'Invalid verification code'
+        error: 'Invalid verification code',
       });
 
       const request = createMockRequest('POST', invalidCodeData);
@@ -486,12 +487,12 @@ describe('认证API安全性测试', () => {
       // Arrange
       const expiredCodeData = {
         email: 'test@example.com',
-        code: '123456'
+        code: '123456',
       };
 
       mockAuthService.verifyEmail.mockResolvedValue({
         success: false,
-        error: 'Verification code expired'
+        error: 'Verification code expired',
       });
 
       const request = createMockRequest('POST', expiredCodeData);
@@ -509,12 +510,12 @@ describe('认证API安全性测试', () => {
       // Arrange
       const bruteForceAttempts = Array(100).fill(null).map((_, i) => ({
         email: 'test@example.com',
-        code: i.toString().padStart(6, '0')
+        code: i.toString().padStart(6, '0'),
       }));
 
       mockAuthService.verifyEmail.mockResolvedValue({
         success: false,
-        error: 'Too many attempts'
+        error: 'Too many attempts',
       });
 
       // Act
@@ -522,7 +523,7 @@ describe('认证API安全性测试', () => {
         bruteForceAttempts.slice(0, 10).map(data => {
           const request = createMockRequest('POST', data);
           return verifyEmailHandler(request);
-        })
+        }),
       );
 
       // Assert
@@ -537,13 +538,13 @@ describe('认证API安全性测试', () => {
       // Arrange
       const validData = {
         email: 'test@example.com',
-        password: 'password'
+        password: 'password',
       };
 
       mockAuthService.loginUser.mockResolvedValue({
         success: true,
         user: { id: 'user1', email: 'test@example.com' },
-        token: 'token'
+        token: 'token',
       });
 
       const request = createMockRequest('POST', validData);
@@ -563,11 +564,11 @@ describe('认证API安全性测试', () => {
         method: 'OPTIONS',
         headers: new Map([
           ['Origin', 'https://example.com'],
-          ['Access-Control-Request-Method', 'POST']
+          ['Access-Control-Request-Method', 'POST'],
         ]),
         json: jest.fn(),
         cookies: new Map(),
-        url: 'http://localhost:3000/api/auth/login'
+        url: 'http://localhost:3000/api/auth/login',
       } as unknown as NextRequest;
 
       // Act
@@ -582,7 +583,7 @@ describe('认证API安全性测试', () => {
     it('应该验证Content-Type', async () => {
       // Arrange
       const request = createMockRequest('POST', { email: 'test@example.com' }, {
-        'Content-Type': 'text/plain'
+        'Content-Type': 'text/plain',
       });
 
       // Act
@@ -599,7 +600,7 @@ describe('认证API安全性测试', () => {
       const largeData = {
         email: 'test@example.com',
         password: 'a'.repeat(10000), // 10KB password
-        extraData: 'b'.repeat(100000) // 100KB extra data
+        extraData: 'b'.repeat(100000), // 100KB extra data
       };
 
       const request = createMockRequest('POST', largeData);
@@ -616,18 +617,18 @@ describe('认证API安全性测试', () => {
     it('应该记录安全事件', async () => {
       // Arrange
       const suspiciousData = {
-        email: \"'; DROP TABLE users; --\",
-        password: '<script>alert(\"xss\")</script>'
+        email: "'; DROP TABLE users; --",
+        password: '<script>alert("xss")</script>',
       };
 
       mockAuthService.loginUser.mockResolvedValue({
         success: false,
-        error: 'Invalid credentials'
+        error: 'Invalid credentials',
       });
 
       const request = createMockRequest('POST', suspiciousData, {
         'X-Forwarded-For': '192.168.1.100',
-        'User-Agent': 'Suspicious Bot'
+        'User-Agent': 'Suspicious Bot',
       });
 
       // Act
@@ -639,8 +640,8 @@ describe('认证API安全性测试', () => {
         expect.objectContaining({
           email: suspiciousData.email,
           ip: '192.168.1.100',
-          userAgent: 'Suspicious Bot'
-        })
+          userAgent: 'Suspicious Bot',
+        }),
       );
     });
   });
@@ -650,17 +651,17 @@ describe('认证API安全性测试', () => {
       // Arrange
       const validData = {
         email: 'test@example.com',
-        password: 'password'
+        password: 'password',
       };
 
-      mockAuthService.loginUser.mockImplementation(() => 
-        new Promise(resolve => 
+      mockAuthService.loginUser.mockImplementation(() =>
+        new Promise(resolve =>
           setTimeout(() => resolve({
             success: true,
             user: { id: 'user1', email: 'test@example.com' },
-            token: 'token'
-          }), 50)
-        )
+            token: 'token',
+          }), 50),
+        ),
       );
 
       const request = createMockRequest('POST', validData);
@@ -678,13 +679,13 @@ describe('认证API安全性测试', () => {
       // Arrange
       const validData = {
         email: 'test@example.com',
-        password: 'password'
+        password: 'password',
       };
 
       mockAuthService.loginUser.mockResolvedValue({
         success: true,
         user: { id: 'user1', email: 'test@example.com' },
-        token: 'token'
+        token: 'token',
       });
 
       // Act
@@ -705,17 +706,17 @@ describe('认证API安全性测试', () => {
       // Arrange
       const validData = {
         email: 'test@example.com',
-        password: 'password'
+        password: 'password',
       };
 
-      mockAuthService.loginUser.mockImplementation(() => 
-        new Promise(resolve => 
+      mockAuthService.loginUser.mockImplementation(() =>
+        new Promise(resolve =>
           setTimeout(() => resolve({
             success: true,
             user: { id: 'user1', email: 'test@example.com' },
-            token: 'token'
-          }), 10000) // 10秒延迟
-        )
+            token: 'token',
+          }), 10000), // 10秒延迟
+        ),
       );
 
       const request = createMockRequest('POST', validData);
@@ -723,9 +724,9 @@ describe('认证API安全性测试', () => {
       // Act & Assert
       await expect(Promise.race([
         loginHandler(request),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 5000)
-        )
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), 5000),
+        ),
       ])).rejects.toThrow('Timeout');
     });
   });

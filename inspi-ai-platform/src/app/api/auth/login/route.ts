@@ -1,37 +1,40 @@
-import { NextRequest, NextResponse } from 'next/server';
-// 临时使用mock服务，直到MongoDB配置完成
-import { loginUser } from '@/lib/auth/mock-service';
-import { rateLimit } from '@/lib/auth/middleware';
-
 /**
- * POST /api/auth/login
- * Login user
+ * 用户登录API路由
  */
-export const POST = rateLimit(10, 15 * 60 * 1000)(async (request: NextRequest) => {
+import { NextRequest, NextResponse } from 'next/server';
+
+import { AuthService } from '@/core/auth/auth-service';
+
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password } = body;
+    const { email, password, rememberMe } = body;
 
-    const result = await loginUser({ email, password });
-
-    if (!result.success) {
+    // 验证输入
+    if (!email || !password) {
       return NextResponse.json(
-        { error: result.error },
-        { status: 401 }
+        { success: false, error: '邮箱和密码不能为空' },
+        { status: 400 },
       );
     }
 
-    return NextResponse.json({
-      message: 'Login successful',
-      user: result.user,
-      token: result.token,
-      refreshToken: result.refreshToken,
+    // 调用认证服务
+    const result = await AuthService.login({
+      email,
+      password,
+      rememberMe,
     });
+
+    if (result.success) {
+      return NextResponse.json(result, { status: 200 });
+    } else {
+      return NextResponse.json(result, { status: 401 });
+    }
   } catch (error) {
     console.error('Login API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { success: false, error: '服务器错误' },
+      { status: 500 },
     );
   }
-});
+}

@@ -1,6 +1,6 @@
 /**
  * Security Test Framework
- * 
+ *
  * 综合安全测试框架，包括输入验证测试、权限控制测试、
  * 数据加密验证和安全漏洞自动扫描
  */
@@ -179,7 +179,7 @@ export class SecurityTestFramework extends EventEmitter {
 
     for (const payload of payloads) {
       const startTime = Date.now();
-      
+
       try {
         const testResult = await this.executeInputValidationTest(payload);
         testResult.duration = Date.now() - startTime;
@@ -202,9 +202,9 @@ export class SecurityTestFramework extends EventEmitter {
             actual: error,
             blocked: false,
             sanitized: false,
-            encrypted: false
+            encrypted: false,
           },
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
     }
@@ -222,7 +222,7 @@ export class SecurityTestFramework extends EventEmitter {
     const sanitizedOutput = this.sanitizeInput(payload.payload);
     const isSanitized = sanitizedOutput !== payload.payload;
 
-    const testPassed = payload.expectedBehavior === 'block' ? isBlocked : 
+    const testPassed = payload.expectedBehavior === 'block' ? isBlocked :
                       payload.expectedBehavior === 'sanitize' ? isSanitized : true;
 
     const result: SecurityTestResult = {
@@ -238,9 +238,9 @@ export class SecurityTestFramework extends EventEmitter {
         actual: isBlocked ? 'blocked' : isSanitized ? 'sanitized' : 'passed',
         blocked: isBlocked,
         sanitized: isSanitized,
-        encrypted: false
+        encrypted: false,
       },
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     if (!testPassed) {
@@ -250,7 +250,7 @@ export class SecurityTestFramework extends EventEmitter {
         description: `Input validation failed for ${payload.type} payload`,
         impact: this.getImpactForPayloadType(payload.type),
         recommendation: this.getRecommendationForPayloadType(payload.type),
-        cwe: this.getCWEForPayloadType(payload.type)
+        cwe: this.getCWEForPayloadType(payload.type),
       };
     }
 
@@ -268,7 +268,7 @@ export class SecurityTestFramework extends EventEmitter {
 
     for (const testCase of testCases) {
       const startTime = Date.now();
-      
+
       try {
         const testResult = await this.executeAuthorizationTest(testCase);
         testResult.duration = Date.now() - startTime;
@@ -286,9 +286,9 @@ export class SecurityTestFramework extends EventEmitter {
             actual: error,
             blocked: false,
             sanitized: false,
-            encrypted: false
+            encrypted: false,
           },
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
     }
@@ -317,9 +317,9 @@ export class SecurityTestFramework extends EventEmitter {
         actual: hasAccess,
         blocked: !hasAccess,
         sanitized: false,
-        encrypted: false
+        encrypted: false,
       },
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     if (!testPassed) {
@@ -329,7 +329,7 @@ export class SecurityTestFramework extends EventEmitter {
         description: `Authorization check failed for ${testCase.action} on ${testCase.resource.type}`,
         impact: 'Unauthorized access to protected resources',
         recommendation: 'Review and fix authorization logic',
-        cwe: 'CWE-285'
+        cwe: 'CWE-285',
       };
     }
 
@@ -347,7 +347,7 @@ export class SecurityTestFramework extends EventEmitter {
 
     for (const testCase of testCases) {
       const startTime = Date.now();
-      
+
       try {
         const testResult = await this.executeEncryptionTest(testCase);
         testResult.duration = Date.now() - startTime;
@@ -365,9 +365,9 @@ export class SecurityTestFramework extends EventEmitter {
             actual: error,
             blocked: false,
             sanitized: false,
-            encrypted: false
+            encrypted: false,
           },
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
     }
@@ -383,11 +383,11 @@ export class SecurityTestFramework extends EventEmitter {
     // 模拟加密测试
     const encryptedData = this.mockEncrypt(testCase.data, testCase.algorithm);
     const decryptedData = this.mockDecrypt(encryptedData, testCase.algorithm);
-    
+
     const encryptionWorked = encryptedData !== testCase.data;
     const decryptionWorked = decryptedData === testCase.data;
-    
-    const testPassed = encryptionWorked === testCase.expectedEncrypted && 
+
+    const testPassed = encryptionWorked === testCase.expectedEncrypted &&
                       decryptionWorked === testCase.expectedDecrypted;
 
     const result: SecurityTestResult = {
@@ -402,9 +402,9 @@ export class SecurityTestFramework extends EventEmitter {
         actual: { encrypted: encryptionWorked, decrypted: decryptionWorked },
         blocked: false,
         sanitized: false,
-        encrypted: encryptionWorked
+        encrypted: encryptionWorked,
       },
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     if (!testPassed) {
@@ -414,7 +414,7 @@ export class SecurityTestFramework extends EventEmitter {
         description: `Encryption test failed for algorithm ${testCase.algorithm}`,
         impact: 'Data may not be properly encrypted',
         recommendation: 'Review encryption implementation',
-        cwe: 'CWE-327'
+        cwe: 'CWE-327',
       };
     }
 
@@ -465,7 +465,7 @@ export class SecurityTestFramework extends EventEmitter {
       "' OR '1'='1",
       "'; DROP TABLE users; --",
       "' UNION SELECT * FROM users --",
-      "1' AND (SELECT COUNT(*) FROM users) > 0 --"
+      "1' AND (SELECT COUNT(*) FROM users) > 0 --",
     ];
 
     const results: SecurityTestResult[] = [];
@@ -473,7 +473,7 @@ export class SecurityTestFramework extends EventEmitter {
     for (const payload of sqlPayloads) {
       const startTime = Date.now();
       const isBlocked = this.mockSQLInjectionDefense(payload);
-      
+
       results.push({
         testName: `SQL Injection Scan - ${payload.substring(0, 20)}...`,
         type: 'vulnerability_scan',
@@ -485,7 +485,7 @@ export class SecurityTestFramework extends EventEmitter {
           payload,
           description: 'SQL injection attempt',
           severity: 'critical',
-          expectedBehavior: 'block'
+          expectedBehavior: 'block',
         },
         details: {
           input: payload,
@@ -494,7 +494,7 @@ export class SecurityTestFramework extends EventEmitter {
           actual: isBlocked ? 'blocked' : 'executed',
           blocked: isBlocked,
           sanitized: false,
-          encrypted: false
+          encrypted: false,
         },
         timestamp: new Date(),
         vulnerability: !isBlocked ? {
@@ -503,8 +503,8 @@ export class SecurityTestFramework extends EventEmitter {
           description: 'SQL injection vulnerability detected',
           impact: 'Database compromise, data theft',
           recommendation: 'Use parameterized queries',
-          cwe: 'CWE-89'
-        } : undefined
+          cwe: 'CWE-89',
+        } : undefined,
       });
     }
 
@@ -517,9 +517,9 @@ export class SecurityTestFramework extends EventEmitter {
   private async scanXSSInjection(): Promise<SecurityTestResult[]> {
     const xssPayloads = [
       "<script>alert('XSS')</script>",
-      "javascript:alert('XSS')",
+      "data:text/html,<script>alert('XSS')</script>",
       "<img src=x onerror=alert('XSS')>",
-      "<svg onload=alert('XSS')>"
+      "<svg onload=alert('XSS')>",
     ];
 
     const results: SecurityTestResult[] = [];
@@ -527,7 +527,7 @@ export class SecurityTestFramework extends EventEmitter {
     for (const payload of xssPayloads) {
       const startTime = Date.now();
       const isBlocked = this.mockXSSDefense(payload);
-      
+
       results.push({
         testName: `XSS Scan - ${payload.substring(0, 20)}...`,
         type: 'vulnerability_scan',
@@ -539,7 +539,7 @@ export class SecurityTestFramework extends EventEmitter {
           payload,
           description: 'Cross-site scripting attempt',
           severity: 'high',
-          expectedBehavior: 'block'
+          expectedBehavior: 'block',
         },
         details: {
           input: payload,
@@ -548,7 +548,7 @@ export class SecurityTestFramework extends EventEmitter {
           actual: isBlocked ? 'blocked' : 'executed',
           blocked: isBlocked,
           sanitized: false,
-          encrypted: false
+          encrypted: false,
         },
         timestamp: new Date(),
         vulnerability: !isBlocked ? {
@@ -557,8 +557,8 @@ export class SecurityTestFramework extends EventEmitter {
           description: 'XSS vulnerability detected',
           impact: 'Session hijacking, data theft',
           recommendation: 'Sanitize user input',
-          cwe: 'CWE-79'
-        } : undefined
+          cwe: 'CWE-79',
+        } : undefined,
       });
     }
 
@@ -570,10 +570,10 @@ export class SecurityTestFramework extends EventEmitter {
    */
   private async scanCommandInjection(): Promise<SecurityTestResult[]> {
     const cmdPayloads = [
-      "; rm -rf /",
-      "| cat /etc/passwd",
-      "&& whoami",
-      "`id`"
+      '; rm -rf /',
+      '| cat /etc/passwd',
+      '&& whoami',
+      '`id`',
     ];
 
     const results: SecurityTestResult[] = [];
@@ -581,7 +581,7 @@ export class SecurityTestFramework extends EventEmitter {
     for (const payload of cmdPayloads) {
       const startTime = Date.now();
       const isBlocked = this.mockCommandInjectionDefense(payload);
-      
+
       results.push({
         testName: `Command Injection Scan - ${payload}`,
         type: 'vulnerability_scan',
@@ -593,7 +593,7 @@ export class SecurityTestFramework extends EventEmitter {
           payload,
           description: 'Command injection attempt',
           severity: 'critical',
-          expectedBehavior: 'block'
+          expectedBehavior: 'block',
         },
         details: {
           input: payload,
@@ -602,7 +602,7 @@ export class SecurityTestFramework extends EventEmitter {
           actual: isBlocked ? 'blocked' : 'executed',
           blocked: isBlocked,
           sanitized: false,
-          encrypted: false
+          encrypted: false,
         },
         timestamp: new Date(),
         vulnerability: !isBlocked ? {
@@ -611,8 +611,8 @@ export class SecurityTestFramework extends EventEmitter {
           description: 'Command injection vulnerability detected',
           impact: 'System compromise',
           recommendation: 'Validate and sanitize input',
-          cwe: 'CWE-78'
-        } : undefined
+          cwe: 'CWE-78',
+        } : undefined,
       });
     }
 
@@ -624,10 +624,10 @@ export class SecurityTestFramework extends EventEmitter {
    */
   private async scanPathTraversal(): Promise<SecurityTestResult[]> {
     const pathPayloads = [
-      "../../../etc/passwd",
-      "..\\..\\..\\windows\\system32\\config\\sam",
-      "....//....//....//etc/passwd",
-      "%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd"
+      '../../../etc/passwd',
+      '..\\..\\..\\windows\\system32\\config\\sam',
+      '....//....//....//etc/passwd',
+      '%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd',
     ];
 
     const results: SecurityTestResult[] = [];
@@ -635,7 +635,7 @@ export class SecurityTestFramework extends EventEmitter {
     for (const payload of pathPayloads) {
       const startTime = Date.now();
       const isBlocked = this.mockPathTraversalDefense(payload);
-      
+
       results.push({
         testName: `Path Traversal Scan - ${payload}`,
         type: 'vulnerability_scan',
@@ -647,7 +647,7 @@ export class SecurityTestFramework extends EventEmitter {
           payload,
           description: 'Path traversal attempt',
           severity: 'high',
-          expectedBehavior: 'block'
+          expectedBehavior: 'block',
         },
         details: {
           input: payload,
@@ -656,7 +656,7 @@ export class SecurityTestFramework extends EventEmitter {
           actual: isBlocked ? 'blocked' : 'executed',
           blocked: isBlocked,
           sanitized: false,
-          encrypted: false
+          encrypted: false,
         },
         timestamp: new Date(),
         vulnerability: !isBlocked ? {
@@ -665,8 +665,8 @@ export class SecurityTestFramework extends EventEmitter {
           description: 'Path traversal vulnerability detected',
           impact: 'File system access',
           recommendation: 'Validate file paths',
-          cwe: 'CWE-22'
-        } : undefined
+          cwe: 'CWE-22',
+        } : undefined,
       });
     }
 
@@ -696,19 +696,19 @@ export class SecurityTestFramework extends EventEmitter {
         vulnerableTests,
         errorTests,
         passRate: (passedTests / totalTests) * 100,
-        vulnerabilityRate: (vulnerableTests / totalTests) * 100
+        vulnerabilityRate: (vulnerableTests / totalTests) * 100,
       },
       vulnerabilities: {
         total: this.vulnerabilities.length,
         critical: criticalVulns,
         high: highVulns,
         medium: mediumVulns,
-        low: lowVulns
+        low: lowVulns,
       },
       testResults: this.testResults,
       vulnerabilityDetails: this.vulnerabilities,
       recommendations: this.generateRecommendations(),
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -722,7 +722,7 @@ export class SecurityTestFramework extends EventEmitter {
       /drop\s+table/i,
       /\.\.\//,
       /etc\/passwd/,
-      /cmd\.exe/i
+      /cmd\.exe/i,
     ];
     return maliciousPatterns.some(pattern => pattern.test(payload.payload));
   }
@@ -740,7 +740,7 @@ export class SecurityTestFramework extends EventEmitter {
     // 模拟权限评估逻辑
     if (user.roles.includes('admin')) return true;
     if (resource.visibility === 'public') return true;
-    if (resource.owner === user.id) return true;
+    if (resource.owner === (user.id || (user as any)._id)) return true;
     if (user.roles.includes('user') && action === 'read' && resource.visibility === 'restricted') return true;
     return false;
   }
@@ -752,22 +752,22 @@ export class SecurityTestFramework extends EventEmitter {
         user: { id: 'admin1', roles: ['admin'], permissions: ['read', 'write'] },
         resource: { id: 'res1', type: 'document', visibility: 'private', owner: 'user1' },
         action: 'read',
-        expectedResult: 'allow'
+        expectedResult: 'allow',
       },
       {
         name: 'User access to own resource',
         user: { id: 'user1', roles: ['user'], permissions: ['read'] },
         resource: { id: 'res1', type: 'document', visibility: 'private', owner: 'user1' },
         action: 'read',
-        expectedResult: 'allow'
+        expectedResult: 'allow',
       },
       {
         name: 'User access to others private resource',
         user: { id: 'user1', roles: ['user'], permissions: ['read'] },
         resource: { id: 'res2', type: 'document', visibility: 'private', owner: 'user2' },
         action: 'read',
-        expectedResult: 'deny'
-      }
+        expectedResult: 'deny',
+      },
     ];
   }
 
@@ -779,7 +779,7 @@ export class SecurityTestFramework extends EventEmitter {
         keySize: 256,
         data: 'sensitive data',
         expectedEncrypted: true,
-        expectedDecrypted: true
+        expectedDecrypted: true,
       },
       {
         name: 'RSA encryption',
@@ -787,8 +787,8 @@ export class SecurityTestFramework extends EventEmitter {
         keySize: 2048,
         data: 'public key data',
         expectedEncrypted: true,
-        expectedDecrypted: true
-      }
+        expectedDecrypted: true,
+      },
     ];
   }
 
@@ -830,7 +830,7 @@ export class SecurityTestFramework extends EventEmitter {
       command: 'System compromise, arbitrary code execution',
       path_traversal: 'File system access, sensitive file disclosure',
       xxe: 'XML external entity attacks, file disclosure',
-      csrf: 'Cross-site request forgery, unauthorized actions'
+      csrf: 'Cross-site request forgery, unauthorized actions',
     };
     return impacts[type as keyof typeof impacts] || 'Unknown security impact';
   }
@@ -842,7 +842,7 @@ export class SecurityTestFramework extends EventEmitter {
       command: 'Validate and sanitize all user inputs, avoid system calls',
       path_traversal: 'Validate file paths and use whitelisting',
       xxe: 'Disable external entity processing in XML parsers',
-      csrf: 'Implement CSRF tokens and same-site cookies'
+      csrf: 'Implement CSRF tokens and same-site cookies',
     };
     return recommendations[type as keyof typeof recommendations] || 'Review security implementation';
   }
@@ -854,26 +854,26 @@ export class SecurityTestFramework extends EventEmitter {
       command: 'CWE-78',
       path_traversal: 'CWE-22',
       xxe: 'CWE-611',
-      csrf: 'CWE-352'
+      csrf: 'CWE-352',
     };
     return cwes[type as keyof typeof cwes] || 'CWE-Unknown';
   }
 
   private generateRecommendations(): string[] {
     const recommendations: string[] = [];
-    
+
     if (this.vulnerabilities.some(v => v.type === 'xss')) {
       recommendations.push('Implement comprehensive XSS protection');
     }
-    
+
     if (this.vulnerabilities.some(v => v.type === 'sql_injection')) {
       recommendations.push('Use parameterized queries for all database operations');
     }
-    
+
     if (this.vulnerabilities.some(v => v.type === 'command_injection')) {
       recommendations.push('Avoid system calls with user input');
     }
-    
+
     if (this.vulnerabilities.some(v => v.type === 'path_traversal')) {
       recommendations.push('Implement strict file path validation');
     }

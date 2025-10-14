@@ -4,8 +4,10 @@
  */
 
 import mongoose from 'mongoose';
+
 import User from '@/lib/models/User';
 import Work from '@/lib/models/Work';
+
 import Contribution from '@/lib/models/Contribution';
 
 // Mock mongoose with transaction support
@@ -15,7 +17,7 @@ const mockSession = {
   abortTransaction: jest.fn(),
   endSession: jest.fn(),
   inTransaction: jest.fn().mockReturnValue(false),
-  transaction: jest.fn()
+  transaction: jest.fn(),
 };
 
 const mockConnection = {
@@ -23,64 +25,64 @@ const mockConnection = {
   transaction: jest.fn(),
   db: {
     admin: jest.fn().mockReturnValue({
-      ping: jest.fn().mockResolvedValue({ ok: 1 })
-    })
-  }
+      ping: jest.fn().mockResolvedValue({ ok: 1 }),
+    }),
+  },
 };
 
 jest.mock('mongoose', () => ({
   connection: mockConnection,
   startSession: jest.fn().mockResolvedValue(mockSession),
   Types: {
-    ObjectId: jest.fn().mockImplementation((id) => id || `mock-id-${Date.now()}`)
-  }
+    ObjectId: jest.fn().mockImplementation((id) => id || `mock-id-${Date.now()}`),
+  },
 }));
 
 // Mock models with transaction support
 const createTransactionMockModel = (name: string) => {
   const mockData = new Map();
-  let transactionData = new Map(); // 事务中的临时数据
+  const transactionData = new Map(); // 事务中的临时数据
   let isInTransaction = false;
-  
+
   return {
     create: jest.fn().mockImplementation(async (data, options = {}) => {
       const doc = {
         ...data,
         _id: `mock-${name.toLowerCase()}-id-${Date.now()}-${Math.random()}`,
-        save: jest.fn().mockResolvedValue(data)
+        save: jest.fn().mockResolvedValue(data),
       };
-      
+
       if (options.session && isInTransaction) {
         transactionData.set(doc._id, doc);
       } else {
         mockData.set(doc._id, doc);
       }
-      
+
       return doc;
     }),
-    
+
     findById: jest.fn().mockImplementation((id) => ({
       session: jest.fn().mockReturnThis(),
       exec: jest.fn().mockImplementation(() => {
         return Promise.resolve(
-          transactionData.get(id) || mockData.get(id) || null
+          transactionData.get(id) || mockData.get(id) || null,
         );
-      })
+      }),
     })),
-    
+
     findByIdAndUpdate: jest.fn().mockImplementation((id, update, options = {}) => ({
       session: jest.fn().mockReturnThis(),
       exec: jest.fn().mockImplementation(() => {
         const dataStore = (options.session && isInTransaction) ? transactionData : mockData;
         const existing = dataStore.get(id);
         if (!existing) return Promise.resolve(null);
-        
+
         const updated = { ...existing, ...update };
         dataStore.set(id, updated);
         return Promise.resolve(options.new ? updated : existing);
-      })
+      }),
     })),
-    
+
     findByIdAndDelete: jest.fn().mockImplementation((id, options = {}) => ({
       session: jest.fn().mockReturnThis(),
       exec: jest.fn().mockImplementation(() => {
@@ -90,35 +92,35 @@ const createTransactionMockModel = (name: string) => {
           dataStore.delete(id);
         }
         return Promise.resolve(existing || null);
-      })
+      }),
     })),
-    
+
     find: jest.fn().mockImplementation((query = {}) => ({
       session: jest.fn().mockReturnThis(),
       exec: jest.fn().mockImplementation(() => {
         const allData = new Map([...mockData, ...transactionData]);
         return Promise.resolve(
-          Array.from(allData.values()).filter(item => 
-            Object.keys(query).every(key => item[key] === query[key])
-          )
+          Array.from(allData.values()).filter(item =>
+            Object.keys(query).every(key => item[key] === query[key]),
+          ),
         );
-      })
+      }),
     })),
-    
+
     countDocuments: jest.fn().mockImplementation((query = {}) => ({
       exec: jest.fn().mockResolvedValue(
-        Array.from(mockData.values()).filter(item => 
-          Object.keys(query).every(key => item[key] === query[key])
-        ).length
-      )
+        Array.from(mockData.values()).filter(item =>
+          Object.keys(query).every(key => item[key] === query[key]),
+        ).length,
+      ),
     })),
-    
+
     // Transaction control methods
     __startTransaction: () => {
       isInTransaction = true;
       transactionData.clear();
     },
-    
+
     __commitTransaction: () => {
       // Move transaction data to main data
       for (const [key, value] of transactionData) {
@@ -127,21 +129,21 @@ const createTransactionMockModel = (name: string) => {
       transactionData.clear();
       isInTransaction = false;
     },
-    
+
     __abortTransaction: () => {
       transactionData.clear();
       isInTransaction = false;
     },
-    
+
     __clearAllData: () => {
       mockData.clear();
       transactionData.clear();
       isInTransaction = false;
     },
-    
+
     __getMainData: () => mockData,
     __getTransactionData: () => transactionData,
-    __isInTransaction: () => isInTransaction
+    __isInTransaction: () => isInTransaction,
   };
 };
 
@@ -161,7 +163,7 @@ describe('数据库事务一致性测试', () => {
     MockUser.__clearAllData();
     MockWork.__clearAllData();
     MockContribution.__clearAllData();
-    
+
     // Reset session mocks
     mockSession.startTransaction.mockClear();
     mockSession.commitTransaction.mockClear();
@@ -174,13 +176,13 @@ describe('数据库事务一致性测试', () => {
       it('应该在事务成功时提交所有操作', async () => {
         // Arrange
         const session = await mongoose.startSession();
-        
+
         // Mock transaction success
         mockSession.transaction.mockImplementation(async (fn) => {
           MockUser.__startTransaction();
           MockWork.__startTransaction();
           MockContribution.__startTransaction();
-          
+
           try {
             const result = await fn(session);
             MockUser.__commitTransaction();
@@ -199,22 +201,22 @@ describe('数据库事务一致性测试', () => {
         const result = await session.transaction(async (session) => {
           const user = await MockUser.create({
             email: 'atomic@example.com',
-            name: 'Atomic User'
+            name: 'Atomic User',
           }, { session });
-          
+
           const work = await MockWork.create({
             title: 'Atomic Work',
             author: user._id,
-            content: { concept: 'test' }
+            content: { concept: 'test' },
           }, { session });
-          
+
           const contribution = await MockContribution.create({
             user: user._id,
             work: work._id,
             type: 'create',
-            points: 10
+            points: 10,
           }, { session });
-          
+
           return { user, work, contribution };
         });
 
@@ -228,13 +230,13 @@ describe('数据库事务一致性测试', () => {
       it('应该在事务失败时回滚所有操作', async () => {
         // Arrange
         const session = await mongoose.startSession();
-        
+
         // Mock transaction failure
         mockSession.transaction.mockImplementation(async (fn) => {
           MockUser.__startTransaction();
           MockWork.__startTransaction();
           MockContribution.__startTransaction();
-          
+
           try {
             await fn(session);
             // 模拟事务中的错误
@@ -251,15 +253,15 @@ describe('数据库事务一致性测试', () => {
         await expect(session.transaction(async (session) => {
           await MockUser.create({
             email: 'rollback@example.com',
-            name: 'Rollback User'
+            name: 'Rollback User',
           }, { session });
-          
+
           await MockWork.create({
             title: 'Rollback Work',
             author: 'rollback-user-id',
-            content: { concept: 'test' }
+            content: { concept: 'test' },
           }, { session });
-          
+
           // 模拟操作失败
           throw new Error('Simulated failure');
         })).rejects.toThrow('Transaction failed');
@@ -276,18 +278,18 @@ describe('数据库事务一致性测试', () => {
       it('应该维护数据完整性约束', async () => {
         // Arrange
         const session = await mongoose.startSession();
-        
+
         mockSession.transaction.mockImplementation(async (fn) => {
           MockUser.__startTransaction();
           MockWork.__startTransaction();
           MockContribution.__startTransaction();
-          
+
           const result = await fn(session);
-          
+
           MockUser.__commitTransaction();
           MockWork.__commitTransaction();
           MockContribution.__commitTransaction();
-          
+
           return result;
         });
 
@@ -296,30 +298,30 @@ describe('数据库事务一致性测试', () => {
           const user = await MockUser.create({
             email: 'consistency@example.com',
             name: 'Consistency User',
-            contributionScore: 0
+            contributionScore: 0,
           }, { session });
-          
+
           const work = await MockWork.create({
             title: 'Consistency Work',
             author: user._id,
             content: { concept: 'test' },
-            likes: 0
+            likes: 0,
           }, { session });
-          
+
           const contribution = await MockContribution.create({
             user: user._id,
             work: work._id,
             type: 'create',
-            points: 10
+            points: 10,
           }, { session });
-          
+
           // 更新用户贡献分数
           const updatedUser = await MockUser.findByIdAndUpdate(
             user._id,
             { contributionScore: 10 },
-            { new: true, session }
+            { new: true, session },
           ).exec();
-          
+
           return { user: updatedUser, work, contribution };
         });
 
@@ -335,7 +337,7 @@ describe('数据库事务一致性测试', () => {
         // Arrange
         const session1 = await mongoose.startSession();
         const session2 = await mongoose.startSession();
-        
+
         // 模拟两个并发事务
         mockSession.transaction.mockImplementation(async (fn) => {
           MockUser.__startTransaction();
@@ -348,12 +350,12 @@ describe('数据库事务一致性测试', () => {
         const transaction1Promise = session1.transaction(async (session) => {
           const user = await MockUser.create({
             email: 'isolation1@example.com',
-            name: 'Isolation User 1'
+            name: 'Isolation User 1',
           }, { session });
-          
+
           // 模拟长时间运行的操作
           await new Promise(resolve => setTimeout(resolve, 100));
-          
+
           return user;
         });
 
@@ -375,7 +377,7 @@ describe('数据库事务一致性测试', () => {
       it('应该确保提交的事务持久化', async () => {
         // Arrange
         const session = await mongoose.startSession();
-        
+
         mockSession.transaction.mockImplementation(async (fn) => {
           MockUser.__startTransaction();
           const result = await fn(session);
@@ -387,7 +389,7 @@ describe('数据库事务一致性测试', () => {
         const user = await session.transaction(async (session) => {
           return await MockUser.create({
             email: 'durable@example.com',
-            name: 'Durable User'
+            name: 'Durable User',
           }, { session });
         });
 
@@ -405,7 +407,7 @@ describe('数据库事务一致性测试', () => {
       const user = await MockUser.create({
         email: 'concurrent@example.com',
         name: 'Concurrent User',
-        contributionScore: 100
+        contributionScore: 100,
       });
 
       const session1 = await mongoose.startSession();
@@ -415,22 +417,22 @@ describe('数据库事务一致性测试', () => {
       const transaction1Promise = session1.transaction(async (session) => {
         const currentUser = await MockUser.findById(user._id).session(session).exec();
         await new Promise(resolve => setTimeout(resolve, 100)); // 模拟处理时间
-        
+
         return await MockUser.findByIdAndUpdate(
           user._id,
           { contributionScore: currentUser.contributionScore + 50 },
-          { new: true, session }
+          { new: true, session },
         ).exec();
       });
 
       const transaction2Promise = session2.transaction(async (session) => {
         const currentUser = await MockUser.findById(user._id).session(session).exec();
         await new Promise(resolve => setTimeout(resolve, 50)); // 更短的处理时间
-        
+
         return await MockUser.findByIdAndUpdate(
           user._id,
           { contributionScore: currentUser.contributionScore + 30 },
-          { new: true, session }
+          { new: true, session },
         ).exec();
       });
 
@@ -489,7 +491,7 @@ describe('数据库事务一致性测试', () => {
       await session.transaction(async (session) => {
         await MockUser.create({
           email: 'performance@example.com',
-          name: 'Performance User'
+          name: 'Performance User',
         }, { session });
       });
 
@@ -509,17 +511,17 @@ describe('数据库事务一致性测试', () => {
         const createPromises = Array(dataCount).fill(null).map((_, index) =>
           MockUser.create({
             email: `bulk${index}@example.com`,
-            name: `Bulk User ${index}`
-          }, { session })
+            name: `Bulk User ${index}`,
+          }, { session }),
         );
-        
+
         await Promise.all(createPromises);
       });
 
       // Assert
       const duration = Date.now() - startTime;
       expect(duration).toBeLessThan(5000); // 100个创建操作应该在5秒内完成
-      
+
       const userCount = await MockUser.countDocuments().exec();
       expect(userCount).toBe(dataCount);
     });
@@ -529,7 +531,7 @@ describe('数据库事务一致性测试', () => {
     it('应该处理会话超时', async () => {
       // Arrange
       const session = await mongoose.startSession();
-      
+
       mockSession.transaction.mockImplementation(async () => {
         throw new Error('Session timeout');
       });
@@ -538,7 +540,7 @@ describe('数据库事务一致性测试', () => {
       await expect(session.transaction(async (session) => {
         await MockUser.create({
           email: 'timeout@example.com',
-          name: 'Timeout User'
+          name: 'Timeout User',
         }, { session });
       })).rejects.toThrow('Session timeout');
     });
@@ -546,7 +548,7 @@ describe('数据库事务一致性测试', () => {
     it('应该处理网络中断', async () => {
       // Arrange
       const session = await mongoose.startSession();
-      
+
       mockSession.transaction.mockImplementation(async () => {
         throw new Error('Network error');
       });
@@ -555,7 +557,7 @@ describe('数据库事务一致性测试', () => {
       await expect(session.transaction(async (session) => {
         await MockUser.create({
           email: 'network@example.com',
-          name: 'Network User'
+          name: 'Network User',
         }, { session });
       })).rejects.toThrow('Network error');
     });
@@ -563,7 +565,7 @@ describe('数据库事务一致性测试', () => {
     it('应该处理资源不足', async () => {
       // Arrange
       const session = await mongoose.startSession();
-      
+
       mockSession.transaction.mockImplementation(async () => {
         throw new Error('Insufficient resources');
       });
@@ -574,10 +576,10 @@ describe('数据库事务一致性测试', () => {
         const promises = Array(10000).fill(null).map((_, index) =>
           MockUser.create({
             email: `resource${index}@example.com`,
-            name: `Resource User ${index}`
-          }, { session })
+            name: `Resource User ${index}`,
+          }, { session }),
         );
-        
+
         await Promise.all(promises);
       })).rejects.toThrow('Insufficient resources');
     });
@@ -594,7 +596,7 @@ describe('数据库事务一致性测试', () => {
         console.log('Transaction started');
         await MockUser.create({
           email: 'logged@example.com',
-          name: 'Logged User'
+          name: 'Logged User',
         }, { session });
         console.log('Transaction completed');
       });
@@ -602,7 +604,7 @@ describe('数据库事务一致性测试', () => {
       // Assert
       expect(logSpy).toHaveBeenCalledWith('Transaction started');
       expect(logSpy).toHaveBeenCalledWith('Transaction completed');
-      
+
       logSpy.mockRestore();
     });
 
@@ -610,7 +612,7 @@ describe('数据库事务一致性测试', () => {
       // Arrange
       const session = await mongoose.startSession();
       const errorSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       mockSession.transaction.mockImplementation(async () => {
         console.error('Transaction failed: Test error');
         throw new Error('Test error');
@@ -620,12 +622,12 @@ describe('数据库事务一致性测试', () => {
       await expect(session.transaction(async (session) => {
         await MockUser.create({
           email: 'error@example.com',
-          name: 'Error User'
+          name: 'Error User',
         }, { session });
       })).rejects.toThrow('Test error');
 
       expect(errorSpy).toHaveBeenCalledWith('Transaction failed: Test error');
-      
+
       errorSpy.mockRestore();
     });
 
@@ -635,7 +637,7 @@ describe('数据库事务一致性测试', () => {
       const performanceMetrics = {
         startTime: 0,
         endTime: 0,
-        duration: 0
+        duration: 0,
       };
 
       mockSession.transaction.mockImplementation(async (fn) => {
@@ -650,7 +652,7 @@ describe('数据库事务一致性测试', () => {
       await session.transaction(async (session) => {
         await MockUser.create({
           email: 'metrics@example.com',
-          name: 'Metrics User'
+          name: 'Metrics User',
         }, { session });
       });
 

@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAuth } from '@/lib/auth/context';
+
+import { useAuth } from '@/core/auth/context';
 
 // Google Sign-In script loader
 declare global {

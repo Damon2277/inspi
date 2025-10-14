@@ -77,7 +77,7 @@ export class PerformanceRegressionDetector extends EventEmitter {
       maxHistorySize: 1000,
       enableTrendAnalysis: true,
       autoUpdateBaseline: true,
-      ...options
+      ...options,
     };
 
     this.loadBaselines();
@@ -91,7 +91,7 @@ export class PerformanceRegressionDetector extends EventEmitter {
       timestamp: new Date(),
       duration,
       memoryUsage,
-      testId
+      testId,
     };
 
     // 添加到历史记录
@@ -163,7 +163,7 @@ export class PerformanceRegressionDetector extends EventEmitter {
         regressionPercent,
         currentValue,
         baselineValue,
-        baseline.confidence
+        baseline.confidence,
       );
 
       this.regressions.push(regression);
@@ -189,11 +189,11 @@ export class PerformanceRegressionDetector extends EventEmitter {
     regressionPercent: number,
     currentValue: number,
     baselineValue: number,
-    confidence: number
+    confidence: number,
   ): PerformanceRegression {
     const severity = this.calculateSeverity(regressionPercent);
     const historicalData = this.performanceHistory.get(testId) || [];
-    const trendAnalysis = this.options.enableTrendAnalysis 
+    const trendAnalysis = this.options.enableTrendAnalysis
       ? this.analyzeTrend(historicalData)
       : { trend: 'stable' as const, slope: 0, correlation: 0, volatility: 0 };
 
@@ -214,8 +214,8 @@ export class PerformanceRegressionDetector extends EventEmitter {
         historicalData: historicalData.slice(-50), // 最近50个数据点
         trendAnalysis,
         possibleCauses,
-        recommendations
-      }
+        recommendations,
+      },
     };
   }
 
@@ -224,7 +224,7 @@ export class PerformanceRegressionDetector extends EventEmitter {
    */
   private calculateSeverity(regressionPercent: number): PerformanceRegression['severity'] {
     const absRegression = Math.abs(regressionPercent);
-    
+
     if (absRegression >= 100) return 'critical';
     if (absRegression >= 50) return 'major';
     if (absRegression >= 30) return 'moderate';
@@ -242,14 +242,14 @@ export class PerformanceRegressionDetector extends EventEmitter {
     // 使用最近的数据点进行趋势分析
     const recentData = data.slice(-20);
     const n = recentData.length;
-    
+
     // 计算线性回归斜率
     const xValues = recentData.map((_, i) => i);
     const yValues = recentData.map(d => d.duration);
-    
+
     const slope = this.calculateLinearRegressionSlope(xValues, yValues);
     const correlation = this.calculateCorrelation(xValues, yValues);
-    
+
     // 计算波动性（标准差）
     const mean = yValues.reduce((sum, val) => sum + val, 0) / n;
     const variance = yValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / n;
@@ -304,7 +304,7 @@ export class PerformanceRegressionDetector extends EventEmitter {
   private identifyPossibleCauses(
     type: PerformanceRegression['type'],
     regressionPercent: number,
-    trendAnalysis: TrendAnalysis
+    trendAnalysis: TrendAnalysis,
   ): string[] {
     const causes: string[] = [];
 
@@ -350,7 +350,7 @@ export class PerformanceRegressionDetector extends EventEmitter {
   private generateRecommendations(
     type: PerformanceRegression['type'],
     severity: PerformanceRegression['severity'],
-    trendAnalysis: TrendAnalysis
+    trendAnalysis: TrendAnalysis,
   ): string[] {
     const recommendations: string[] = [];
 
@@ -422,7 +422,7 @@ export class PerformanceRegressionDetector extends EventEmitter {
       standardDeviation,
       sampleCount: recentData.length,
       lastUpdated: new Date(),
-      confidence
+      confidence,
     };
 
     this.baselines.set(testId, baseline);
@@ -441,7 +441,7 @@ export class PerformanceRegressionDetector extends EventEmitter {
       standardDeviation: 0,
       sampleCount: 1,
       lastUpdated: new Date(),
-      confidence: 1.0
+      confidence: 1.0,
     };
 
     this.baselines.set(testId, baseline);
@@ -490,7 +490,7 @@ export class PerformanceRegressionDetector extends EventEmitter {
       if (fs.existsSync(this.options.baselineFile)) {
         const data = fs.readFileSync(this.options.baselineFile, 'utf8');
         const baselines = JSON.parse(data);
-        
+
         for (const baseline of baselines) {
           baseline.lastUpdated = new Date(baseline.lastUpdated);
           this.baselines.set(baseline.testId, baseline);
@@ -539,7 +539,7 @@ export class PerformanceRegressionDetector extends EventEmitter {
     return {
       baselines: this.getAllBaselines(),
       regressions: this.getRegressions(),
-      historySize: Array.from(this.performanceHistory.values()).reduce((sum, history) => sum + history.length, 0)
+      historySize: Array.from(this.performanceHistory.values()).reduce((sum, history) => sum + history.length, 0),
     };
   }
 

@@ -7,19 +7,19 @@ import { ValidationIssue } from './types';
 // 危险的HTML标签
 const DANGEROUS_TAGS = [
   'script', 'iframe', 'object', 'embed', 'form', 'input', 'textarea',
-  'button', 'select', 'option', 'link', 'meta', 'style', 'base'
+  'button', 'select', 'option', 'link', 'meta', 'style', 'base',
 ];
 
 // 危险的属性
 const DANGEROUS_ATTRIBUTES = [
   'onload', 'onerror', 'onclick', 'onmouseover', 'onmouseout',
   'onfocus', 'onblur', 'onchange', 'onsubmit', 'onreset',
-  'javascript:', 'vbscript:', 'data:', 'expression'
+  '#', 'vbscript:', 'data:', 'expression',
 ];
 
 // 危险的协议
 const DANGEROUS_PROTOCOLS = [
-  'javascript:', 'vbscript:', 'data:', 'file:', 'ftp:'
+  '#', 'vbscript:', 'data:', 'file:', 'ftp:',
 ];
 
 export class XSSFilter {
@@ -28,23 +28,23 @@ export class XSSFilter {
    */
   detect(content: string): ValidationIssue[] {
     const issues: ValidationIssue[] = [];
-    
+
     // 检测危险标签
     const tagIssues = this.detectDangerousTags(content);
     issues.push(...tagIssues);
-    
+
     // 检测危险属性
     const attrIssues = this.detectDangerousAttributes(content);
     issues.push(...attrIssues);
-    
+
     // 检测危险协议
     const protocolIssues = this.detectDangerousProtocols(content);
     issues.push(...protocolIssues);
-    
+
     // 检测编码绕过
     const encodingIssues = this.detectEncodingBypass(content);
     issues.push(...encodingIssues);
-    
+
     return issues;
   }
 
@@ -53,19 +53,19 @@ export class XSSFilter {
    */
   sanitize(content: string): string {
     let sanitized = content;
-    
+
     // 移除危险标签
     sanitized = this.removeDangerousTags(sanitized);
-    
+
     // 移除危险属性
     sanitized = this.removeDangerousAttributes(sanitized);
-    
+
     // 移除危险协议
     sanitized = this.removeDangerousProtocols(sanitized);
-    
+
     // 解码并重新编码
     sanitized = this.normalizeEncoding(sanitized);
-    
+
     return sanitized;
   }
 
@@ -76,7 +76,7 @@ export class XSSFilter {
     const issues: ValidationIssue[] = [];
     const tagRegex = /<\/?(\w+)[^>]*>/gi;
     let match;
-    
+
     while ((match = tagRegex.exec(content)) !== null) {
       const tagName = match[1].toLowerCase();
       if (DANGEROUS_TAGS.includes(tagName)) {
@@ -84,11 +84,11 @@ export class XSSFilter {
           type: 'xss',
           message: `检测到危险HTML标签: ${tagName}`,
           position: { start: match.index, end: match.index + match[0].length },
-          severity: 'error'
+          severity: 'error',
         });
       }
     }
-    
+
     return issues;
   }
 
@@ -97,21 +97,21 @@ export class XSSFilter {
    */
   private detectDangerousAttributes(content: string): ValidationIssue[] {
     const issues: ValidationIssue[] = [];
-    
+
     for (const attr of DANGEROUS_ATTRIBUTES) {
       const regex = new RegExp(`\\b${attr}\\s*=`, 'gi');
       let match;
-      
+
       while ((match = regex.exec(content)) !== null) {
         issues.push({
           type: 'xss',
           message: `检测到危险属性: ${attr}`,
           position: { start: match.index, end: match.index + match[0].length },
-          severity: 'error'
+          severity: 'error',
         });
       }
     }
-    
+
     return issues;
   }
 
@@ -120,21 +120,21 @@ export class XSSFilter {
    */
   private detectDangerousProtocols(content: string): ValidationIssue[] {
     const issues: ValidationIssue[] = [];
-    
+
     for (const protocol of DANGEROUS_PROTOCOLS) {
       const regex = new RegExp(protocol, 'gi');
       let match;
-      
+
       while ((match = regex.exec(content)) !== null) {
         issues.push({
           type: 'xss',
           message: `检测到危险协议: ${protocol}`,
           position: { start: match.index, end: match.index + protocol.length },
-          severity: 'error'
+          severity: 'error',
         });
       }
     }
-    
+
     return issues;
   }
 
@@ -143,11 +143,11 @@ export class XSSFilter {
    */
   private detectEncodingBypass(content: string): ValidationIssue[] {
     const issues: ValidationIssue[] = [];
-    
+
     // 检测HTML实体编码
     const htmlEntityRegex = /&#x?[0-9a-f]+;/gi;
     let match;
-    
+
     while ((match = htmlEntityRegex.exec(content)) !== null) {
       const decoded = this.decodeHtmlEntities(match[0]);
       if (this.isDangerous(decoded)) {
@@ -155,11 +155,11 @@ export class XSSFilter {
           type: 'xss',
           message: `检测到可疑的HTML实体编码: ${match[0]}`,
           position: { start: match.index, end: match.index + match[0].length },
-          severity: 'warning'
+          severity: 'warning',
         });
       }
     }
-    
+
     // 检测URL编码
     const urlEncodedRegex = /%[0-9a-f]{2}/gi;
     const urlMatches = content.match(urlEncodedRegex);
@@ -167,10 +167,10 @@ export class XSSFilter {
       issues.push({
         type: 'xss',
         message: '检测到大量URL编码，可能存在绕过尝试',
-        severity: 'warning'
+        severity: 'warning',
       });
     }
-    
+
     return issues;
   }
 
@@ -192,12 +192,12 @@ export class XSSFilter {
    */
   private removeDangerousAttributes(content: string): string {
     let result = content;
-    
+
     for (const attr of DANGEROUS_ATTRIBUTES) {
       const regex = new RegExp(`\\s+${attr}\\s*=\\s*["'][^"']*["']`, 'gi');
       result = result.replace(regex, '');
     }
-    
+
     return result;
   }
 
@@ -206,12 +206,12 @@ export class XSSFilter {
    */
   private removeDangerousProtocols(content: string): string {
     let result = content;
-    
+
     for (const protocol of DANGEROUS_PROTOCOLS) {
       const regex = new RegExp(protocol, 'gi');
       result = result.replace(regex, '');
     }
-    
+
     return result;
   }
 
@@ -221,14 +221,14 @@ export class XSSFilter {
   private normalizeEncoding(content: string): string {
     // 解码HTML实体
     let result = this.decodeHtmlEntities(content);
-    
+
     // 解码URL编码
     try {
       result = decodeURIComponent(result);
     } catch (e) {
       // 忽略解码错误
     }
-    
+
     // 重新编码特殊字符
     result = result
       .replace(/</g, '&lt;')
@@ -236,7 +236,7 @@ export class XSSFilter {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#x27;')
       .replace(/\//g, '&#x2F;');
-    
+
     return result;
   }
 
@@ -251,9 +251,9 @@ export class XSSFilter {
       '&quot;': '"',
       '&#x27;': "'",
       '&#x2F;': '/',
-      '&#39;': "'"
+      '&#39;': "'",
     };
-    
+
     return text.replace(/&[#\w]+;/g, (entity) => {
       return entityMap[entity] || entity;
     });
@@ -264,7 +264,7 @@ export class XSSFilter {
    */
   private isDangerous(content: string): boolean {
     const lowerContent = content.toLowerCase();
-    
+
     return DANGEROUS_TAGS.some(tag => lowerContent.includes(`<${tag}`)) ||
            DANGEROUS_ATTRIBUTES.some(attr => lowerContent.includes(attr)) ||
            DANGEROUS_PROTOCOLS.some(protocol => lowerContent.includes(protocol));

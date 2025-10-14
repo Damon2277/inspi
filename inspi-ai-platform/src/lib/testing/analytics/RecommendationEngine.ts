@@ -1,15 +1,16 @@
 /**
  * Recommendation Engine
- * 
+ *
  * Generates intelligent, actionable recommendations for improving test quality
  * based on historical data analysis, trend predictions, and best practices.
  * Provides personalized suggestions for different team roles and contexts.
  */
 
 import { EventEmitter } from 'events';
+
 import { HistoricalDataManager } from './HistoricalDataManager';
-import { TrendAnalyzer, TrendInsight } from './TrendAnalyzer';
 import { QualityPredictor, QualityPrediction, QualityRecommendation } from './QualityPredictor';
+import { TrendAnalyzer, TrendInsight } from './TrendAnalyzer';
 
 export interface Recommendation {
   id: string;
@@ -19,22 +20,22 @@ export interface Recommendation {
   title: string;
   description: string;
   rationale: string;
-  
+
   // Action details
   actionItems: ActionItem[];
   estimatedImpact: number; // 0-100
   estimatedEffort: 'low' | 'medium' | 'high';
   timeframe: string;
-  
+
   // Context
   targetAudience: ('developer' | 'tester' | 'lead' | 'manager')[];
   prerequisites: string[];
   risks: string[];
-  
+
   // Evidence
   supportingData: SupportingData[];
   confidence: number; // 0-1
-  
+
   // Tracking
   status: 'new' | 'acknowledged' | 'in_progress' | 'completed' | 'dismissed';
   createdAt: Date;
@@ -114,13 +115,13 @@ export class RecommendationEngine extends EventEmitter {
     dataManager: HistoricalDataManager,
     trendAnalyzer: TrendAnalyzer,
     qualityPredictor: QualityPredictor,
-    context?: Partial<RecommendationContext>
+    context?: Partial<RecommendationContext>,
   ) {
     super();
     this.dataManager = dataManager;
     this.trendAnalyzer = trendAnalyzer;
     this.qualityPredictor = qualityPredictor;
-    
+
     this.context = {
       teamSize: 5,
       projectPhase: 'development',
@@ -128,7 +129,7 @@ export class RecommendationEngine extends EventEmitter {
       availableResources: 'moderate',
       timeConstraints: 'moderate',
       riskTolerance: 'medium',
-      ...context
+      ...context,
     };
 
     this.initializeRecommendationTemplates();
@@ -181,7 +182,7 @@ export class RecommendationEngine extends EventEmitter {
       recommendations: finalRecommendations,
       insights,
       nextSteps,
-      generatedAt: new Date()
+      generatedAt: new Date(),
     };
 
     this.emit('recommendationsGenerated', report);
@@ -193,10 +194,10 @@ export class RecommendationEngine extends EventEmitter {
    */
   async getPersonalizedRecommendations(
     role: 'developer' | 'tester' | 'lead' | 'manager',
-    limit: number = 10
+    limit: number = 10,
   ): Promise<Recommendation[]> {
     const allRecommendations = Array.from(this.recommendations.values());
-    
+
     return allRecommendations
       .filter(rec => rec.targetAudience.includes(role))
       .sort((a, b) => {
@@ -213,9 +214,9 @@ export class RecommendationEngine extends EventEmitter {
    * Update recommendation status
    */
   async updateRecommendationStatus(
-    id: string, 
+    id: string,
     status: Recommendation['status'],
-    notes?: string
+    notes?: string,
   ): Promise<void> {
     const recommendation = this.recommendations.get(id);
     if (!recommendation) {
@@ -224,7 +225,7 @@ export class RecommendationEngine extends EventEmitter {
 
     recommendation.status = status;
     recommendation.updatedAt = new Date();
-    
+
     if (status === 'completed') {
       recommendation.completedAt = new Date();
     }
@@ -243,8 +244,8 @@ export class RecommendationEngine extends EventEmitter {
   }> {
     const allRecommendations = Array.from(this.recommendations.values());
     const completedRecommendations = allRecommendations.filter(r => r.status === 'completed');
-    
-    const completionRate = allRecommendations.length > 0 ? 
+
+    const completionRate = allRecommendations.length > 0 ?
       completedRecommendations.length / allRecommendations.length : 0;
 
     const averageTimeToComplete = completedRecommendations.length > 0 ?
@@ -271,7 +272,7 @@ export class RecommendationEngine extends EventEmitter {
       completionRate,
       averageTimeToComplete,
       impactRealized,
-      topCategories
+      topCategories,
     };
   }
 
@@ -284,18 +285,18 @@ export class RecommendationEngine extends EventEmitter {
     switch (format) {
       case 'json':
         return JSON.stringify(recommendations, null, 2);
-      
+
       case 'csv':
         const headers = ['ID', 'Title', 'Priority', 'Category', 'Status', 'Impact', 'Effort', 'Created'];
         const rows = recommendations.map(r => [
           r.id, r.title, r.priority, r.category, r.status,
-          r.estimatedImpact, r.estimatedEffort, r.createdAt.toISOString()
+          r.estimatedImpact, r.estimatedEffort, r.createdAt.toISOString(),
         ]);
         return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
-      
+
       case 'markdown':
         return this.generateMarkdownReport(recommendations);
-      
+
       default:
         return JSON.stringify(recommendations, null, 2);
     }
@@ -311,19 +312,19 @@ export class RecommendationEngine extends EventEmitter {
       name: 'Low Coverage Alert',
       category: 'coverage',
       triggers: [
-        { type: 'metric_threshold', condition: 'coverage < 0.8', threshold: 0.8 }
+        { type: 'metric_threshold', condition: 'coverage < 0.8', threshold: 0.8 },
       ],
       template: {
         type: 'improvement',
         priority: 'high',
         category: 'coverage',
         title: 'Improve Test Coverage',
-        targetAudience: ['developer', 'tester', 'lead']
+        targetAudience: ['developer', 'tester', 'lead'],
       },
       customization: (context, data) => ({
         description: `Test coverage is below recommended threshold (${(data.coverage * 100).toFixed(1)}%)`,
-        estimatedEffort: context.teamSize > 5 ? 'medium' : 'high'
-      })
+        estimatedEffort: context.teamSize > 5 ? 'medium' : 'high',
+      }),
     });
 
     // Performance optimization templates
@@ -332,19 +333,19 @@ export class RecommendationEngine extends EventEmitter {
       name: 'Slow Test Performance',
       category: 'performance',
       triggers: [
-        { type: 'metric_threshold', condition: 'executionTime > 60', threshold: 60 }
+        { type: 'metric_threshold', condition: 'executionTime > 60', threshold: 60 },
       ],
       template: {
         type: 'optimization',
         priority: 'medium',
         category: 'performance',
         title: 'Optimize Test Performance',
-        targetAudience: ['developer', 'lead']
+        targetAudience: ['developer', 'lead'],
       },
       customization: (context, data) => ({
         description: `Test execution time is ${data.executionTime}s, which exceeds recommended threshold`,
-        estimatedEffort: context.testingMaturity === 'advanced' ? 'low' : 'medium'
-      })
+        estimatedEffort: context.testingMaturity === 'advanced' ? 'low' : 'medium',
+      }),
     });
 
     // Stability improvement templates
@@ -353,19 +354,19 @@ export class RecommendationEngine extends EventEmitter {
       name: 'Flaky Test Detection',
       category: 'stability',
       triggers: [
-        { type: 'metric_threshold', condition: 'flakiness > 0.1', threshold: 0.1 }
+        { type: 'metric_threshold', condition: 'flakiness > 0.1', threshold: 0.1 },
       ],
       template: {
         type: 'improvement',
         priority: 'high',
         category: 'stability',
         title: 'Fix Flaky Tests',
-        targetAudience: ['developer', 'tester']
+        targetAudience: ['developer', 'tester'],
       },
       customization: (context, data) => ({
         description: `${data.flakyTestCount} flaky tests detected with ${(data.flakiness * 100).toFixed(1)}% failure rate`,
-        estimatedEffort: 'high'
-      })
+        estimatedEffort: 'high',
+      }),
     });
 
     // Maintenance templates
@@ -374,19 +375,19 @@ export class RecommendationEngine extends EventEmitter {
       name: 'Outdated Test Maintenance',
       category: 'maintenance',
       triggers: [
-        { type: 'time_based', condition: 'lastUpdate > 30', timeframe: 30 }
+        { type: 'time_based', condition: 'lastUpdate > 30', timeframe: 30 },
       ],
       template: {
         type: 'maintenance',
         priority: 'medium',
         category: 'maintenance',
         title: 'Update Outdated Tests',
-        targetAudience: ['developer', 'tester']
+        targetAudience: ['developer', 'tester'],
       },
       customization: (context, data) => ({
         description: `${data.outdatedTestCount} tests haven't been updated in over 30 days`,
-        estimatedEffort: context.projectPhase === 'legacy' ? 'high' : 'medium'
-      })
+        estimatedEffort: context.projectPhase === 'legacy' ? 'high' : 'medium',
+      }),
     });
   }
 
@@ -442,13 +443,13 @@ export class RecommendationEngine extends EventEmitter {
     const stats = this.dataManager.getStorageStats();
     if (stats.oldestRecord) {
       const daysSinceOldest = (Date.now() - stats.oldestRecord.getTime()) / (24 * 60 * 60 * 1000);
-      
+
       if (daysSinceOldest > 90) {
         recommendations.push(this.createMaintenanceRecommendation(
           'cleanup_old_data',
           'Clean Up Old Test Data',
           `Test data older than ${Math.floor(daysSinceOldest)} days should be archived or cleaned up`,
-          ['manager', 'lead']
+          ['manager', 'lead'],
         ));
       }
     }
@@ -463,7 +464,7 @@ export class RecommendationEngine extends EventEmitter {
     const recentRecords = await this.dataManager.queryTestSuiteRecords(undefined, {
       limit: 10,
       sortBy: 'timestamp',
-      sortOrder: 'desc'
+      sortOrder: 'desc',
     });
 
     if (recentRecords.length > 1) {
@@ -479,7 +480,7 @@ export class RecommendationEngine extends EventEmitter {
           'increase_test_frequency',
           'Increase Test Execution Frequency',
           `Tests are run every ${daysBetweenRuns.toFixed(1)} days on average. Consider more frequent execution.`,
-          ['lead', 'manager']
+          ['lead', 'manager'],
         ));
       }
     }
@@ -489,7 +490,7 @@ export class RecommendationEngine extends EventEmitter {
 
   private async createRecommendationFromInsight(insight: TrendInsight): Promise<Recommendation | null> {
     const id = `insight_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     return {
       id,
       type: 'improvement',
@@ -504,7 +505,7 @@ export class RecommendationEngine extends EventEmitter {
         type: 'code_change' as const,
         estimatedHours: 4,
         status: 'pending' as const,
-        dependencies: []
+        dependencies: [],
       })),
       estimatedImpact: insight.confidence * 100,
       estimatedEffort: 'medium',
@@ -517,18 +518,18 @@ export class RecommendationEngine extends EventEmitter {
         title: 'Trend Analysis',
         description: insight.description,
         trend: 'down',
-        source: 'TrendAnalyzer'
+        source: 'TrendAnalyzer',
       }],
       confidence: insight.confidence,
       status: 'new',
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
   }
 
   private async createRecommendationFromPrediction(prediction: QualityPrediction): Promise<Recommendation | null> {
     const id = `prediction_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     return {
       id,
       type: 'prevention',
@@ -543,7 +544,7 @@ export class RecommendationEngine extends EventEmitter {
         type: 'code_change' as const,
         estimatedHours: Math.abs(factor.impact) * 8,
         status: 'pending' as const,
-        dependencies: []
+        dependencies: [],
       })),
       estimatedImpact: prediction.confidence * 80,
       estimatedEffort: prediction.riskLevel === 'high' ? 'high' : 'medium',
@@ -557,18 +558,18 @@ export class RecommendationEngine extends EventEmitter {
         description: `Predicted change from ${prediction.currentValue.toFixed(2)} to ${prediction.predictedValue.toFixed(2)}`,
         value: prediction.predictedValue,
         trend: prediction.trend === 'improving' ? 'up' : 'down',
-        source: 'QualityPredictor'
+        source: 'QualityPredictor',
       }],
       confidence: prediction.confidence,
       status: 'new',
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
   }
 
   private async createRecommendationFromAnomaly(anomaly: any): Promise<Recommendation | null> {
     const id = `anomaly_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     return {
       id,
       type: 'improvement',
@@ -583,7 +584,7 @@ export class RecommendationEngine extends EventEmitter {
         type: 'code_change' as const,
         estimatedHours: 2,
         status: 'pending' as const,
-        dependencies: []
+        dependencies: [],
       })),
       estimatedImpact: 60,
       estimatedEffort: 'medium',
@@ -596,12 +597,12 @@ export class RecommendationEngine extends EventEmitter {
         title: 'Anomaly Detection',
         description: `${anomaly.metric} anomaly: expected ${anomaly.expectedValue.toFixed(2)}, actual ${anomaly.actualValue.toFixed(2)}`,
         value: anomaly.actualValue,
-        source: 'TrendAnalyzer'
+        source: 'TrendAnalyzer',
       }],
       confidence: 0.8,
       status: 'new',
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
   }
 
@@ -609,7 +610,7 @@ export class RecommendationEngine extends EventEmitter {
     id: string,
     title: string,
     description: string,
-    audience: ('developer' | 'tester' | 'lead' | 'manager')[]
+    audience: ('developer' | 'tester' | 'lead' | 'manager')[],
   ): Recommendation {
     return {
       id: `maintenance_${id}_${Date.now()}`,
@@ -625,7 +626,7 @@ export class RecommendationEngine extends EventEmitter {
         type: 'process_change',
         estimatedHours: 4,
         status: 'pending',
-        dependencies: []
+        dependencies: [],
       }],
       estimatedImpact: 40,
       estimatedEffort: 'low',
@@ -637,7 +638,7 @@ export class RecommendationEngine extends EventEmitter {
       confidence: 0.9,
       status: 'new',
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
   }
 
@@ -645,7 +646,7 @@ export class RecommendationEngine extends EventEmitter {
     id: string,
     title: string,
     description: string,
-    audience: ('developer' | 'tester' | 'lead' | 'manager')[]
+    audience: ('developer' | 'tester' | 'lead' | 'manager')[],
   ): Recommendation {
     return {
       id: `process_${id}_${Date.now()}`,
@@ -661,7 +662,7 @@ export class RecommendationEngine extends EventEmitter {
         type: 'process_change',
         estimatedHours: 8,
         status: 'pending',
-        dependencies: []
+        dependencies: [],
       }],
       estimatedImpact: 60,
       estimatedEffort: 'medium',
@@ -673,23 +674,23 @@ export class RecommendationEngine extends EventEmitter {
       confidence: 0.7,
       status: 'new',
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
   }
 
   private deduplicateAndPrioritize(recommendations: Recommendation[]): Recommendation[] {
     // Simple deduplication based on title similarity
     const unique = new Map<string, Recommendation>();
-    
+
     for (const rec of recommendations) {
       const key = rec.title.toLowerCase().replace(/\s+/g, '_');
       const existing = unique.get(key);
-      
+
       if (!existing || rec.priority > existing.priority) {
         unique.set(key, rec);
       }
     }
-    
+
     return Array.from(unique.values())
       .sort((a, b) => {
         const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
@@ -704,7 +705,7 @@ export class RecommendationEngine extends EventEmitter {
     const criticalCount = recommendations.filter(r => r.priority === 'critical').length;
     const highPriorityCount = recommendations.filter(r => r.priority === 'high').length;
     const estimatedTotalImpact = recommendations.reduce((sum, r) => sum + r.estimatedImpact, 0);
-    
+
     const effortMap = { low: 1, medium: 3, high: 5 };
     const estimatedTotalEffort = recommendations.reduce((sum, r) => sum + effortMap[r.estimatedEffort], 0);
 
@@ -713,49 +714,49 @@ export class RecommendationEngine extends EventEmitter {
       criticalCount,
       highPriorityCount,
       estimatedTotalImpact,
-      estimatedTotalEffort
+      estimatedTotalEffort,
     };
   }
 
   private generateInsights(recommendations: Recommendation[]): string[] {
     const insights: string[] = [];
-    
+
     const categoryCount = new Map<string, number>();
     for (const rec of recommendations) {
       categoryCount.set(rec.category, (categoryCount.get(rec.category) || 0) + 1);
     }
-    
+
     const topCategory = Array.from(categoryCount.entries())
       .sort((a, b) => b[1] - a[1])[0];
-    
+
     if (topCategory) {
       insights.push(`Most recommendations focus on ${topCategory[0]} (${topCategory[1]} items)`);
     }
-    
+
     const criticalCount = recommendations.filter(r => r.priority === 'critical').length;
     if (criticalCount > 0) {
       insights.push(`${criticalCount} critical issues require immediate attention`);
     }
-    
+
     return insights;
   }
 
   private generateNextSteps(recommendations: Recommendation[]): string[] {
     const nextSteps: string[] = [];
-    
+
     const criticalRecs = recommendations.filter(r => r.priority === 'critical');
     if (criticalRecs.length > 0) {
       nextSteps.push(`Address ${criticalRecs.length} critical recommendations first`);
     }
-    
+
     const quickWins = recommendations.filter(r => r.estimatedEffort === 'low' && r.estimatedImpact > 50);
     if (quickWins.length > 0) {
       nextSteps.push(`Consider ${quickWins.length} quick wins for immediate impact`);
     }
-    
+
     nextSteps.push('Review recommendations with team leads');
     nextSteps.push('Prioritize based on current sprint capacity');
-    
+
     return nextSteps;
   }
 
@@ -765,9 +766,9 @@ export class RecommendationEngine extends EventEmitter {
       execution_time: 'performance',
       memory_usage: 'performance',
       pass_rate: 'stability',
-      flakiness: 'stability'
+      flakiness: 'stability',
     };
-    
+
     return mapping[metric] || 'maintenance';
   }
 
@@ -779,15 +780,15 @@ export class RecommendationEngine extends EventEmitter {
       memoryUsage: 'performance',
       flakiness: 'stability',
       stability: 'stability',
-      maintainability: 'maintenance'
+      maintainability: 'maintenance',
     };
-    
+
     return mapping[metric] || 'maintenance';
   }
 
   private generateMarkdownReport(recommendations: Recommendation[]): string {
     let markdown = '# Test Quality Recommendations\n\n';
-    
+
     // Summary
     const summary = this.generateSummary(recommendations);
     markdown += '## Summary\n\n';
@@ -795,23 +796,23 @@ export class RecommendationEngine extends EventEmitter {
     markdown += `- Critical: ${summary.criticalCount}\n`;
     markdown += `- High Priority: ${summary.highPriorityCount}\n`;
     markdown += `- Estimated Total Impact: ${summary.estimatedTotalImpact}\n\n`;
-    
+
     // Recommendations by priority
     const priorities = ['critical', 'high', 'medium', 'low'] as const;
-    
+
     for (const priority of priorities) {
       const priorityRecs = recommendations.filter(r => r.priority === priority);
       if (priorityRecs.length === 0) continue;
-      
+
       markdown += `## ${priority.charAt(0).toUpperCase() + priority.slice(1)} Priority\n\n`;
-      
+
       for (const rec of priorityRecs) {
         markdown += `### ${rec.title}\n\n`;
         markdown += `**Category:** ${rec.category}\n\n`;
         markdown += `**Description:** ${rec.description}\n\n`;
         markdown += `**Impact:** ${rec.estimatedImpact}/100\n\n`;
         markdown += `**Effort:** ${rec.estimatedEffort}\n\n`;
-        
+
         if (rec.actionItems.length > 0) {
           markdown += '**Action Items:**\n';
           for (const action of rec.actionItems) {
@@ -819,11 +820,11 @@ export class RecommendationEngine extends EventEmitter {
           }
           markdown += '\n';
         }
-        
+
         markdown += '---\n\n';
       }
     }
-    
+
     return markdown;
   }
 }

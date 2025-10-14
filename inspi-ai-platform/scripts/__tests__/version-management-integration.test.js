@@ -133,7 +133,8 @@ describe('Version Management System Integration Tests', () => {
       // 添加破坏性变更提交
       fs.writeFileSync('breaking-change.js', 'console.log("Breaking change");');
       execSync('git add .');
-      execSync('git commit -m "feat(api)!: change authentication method\n\nBREAKING CHANGE: API v1 is no longer supported"');
+      execSync('git commit -m "feat(api)!:
+        change authentication method\n\nBREAKING CHANGE: API v1 is no longer supported"');
       
       // 分析提交类型
       const commits = versionManager.getCommitsSinceLastTag();
@@ -278,7 +279,8 @@ describe('Version Management System Integration Tests', () => {
         const version1 = versions[0];
         const version2 = versions[1];
         // 简单的版本比较（假设都是v开头的语义化版本）
-        expect(version1.localeCompare(version2, undefined, { numeric: true })).toBeGreaterThanOrEqual(0);
+        expect(version1.localeCompare(version2, undefined,
+          { numeric: true })).toBeGreaterThanOrEqual(0);
       }
     });
 

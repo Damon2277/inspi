@@ -22,7 +22,7 @@ export class QualityGateManager {
   async evaluateGates(
     testSummary: TestSummary,
     coverage?: CoverageInfo,
-    customMetrics?: Record<string, number>
+    customMetrics?: Record<string, number>,
   ): Promise<QualityGate[]> {
     console.log('🚪 Evaluating quality gates...');
 
@@ -44,7 +44,7 @@ export class QualityGateManager {
     config: QualityGateConfig,
     testSummary: TestSummary,
     coverage?: CoverageInfo,
-    customMetrics?: Record<string, number>
+    customMetrics?: Record<string, number>,
   ): Promise<QualityGate> {
     let value: number;
     let status: 'passed' | 'failed' | 'warning';
@@ -81,8 +81,8 @@ export class QualityGateManager {
       blocking: config.blocking,
       details: {
         operator: config.operator,
-        evaluatedAt: new Date().toISOString()
-      }
+        evaluatedAt: new Date().toISOString(),
+      },
     };
   }
 
@@ -137,7 +137,7 @@ export class QualityGateManager {
   private generateMessage(config: QualityGateConfig, value: number, passed: boolean): string {
     const status = passed ? 'PASSED' : 'FAILED';
     const operatorText = this.getOperatorText(config.operator);
-    
+
     return `${config.name} ${status}: ${value} ${operatorText} ${config.threshold}`;
   }
 
@@ -196,17 +196,17 @@ export class QualityGateManager {
     canProceed: boolean;
   } {
     const gates = Array.from(this.results.values());
-    
+
     return {
       summary: {
         total: gates.length,
         passed: gates.filter(g => g.status === 'passed').length,
         failed: gates.filter(g => g.status === 'failed').length,
         warnings: gates.filter(g => g.status === 'warning').length,
-        blocking: gates.filter(g => g.blocking).length
+        blocking: gates.filter(g => g.blocking).length,
       },
       gates,
-      canProceed: this.canProceed()
+      canProceed: this.canProceed(),
     };
   }
 
@@ -221,7 +221,7 @@ export class QualityGateManager {
         threshold: 95,
         operator: 'gte',
         blocking: true,
-        message: 'Test pass rate must be at least 95%'
+        message: 'Test pass rate must be at least 95%',
       },
       {
         name: 'code-coverage',
@@ -229,7 +229,7 @@ export class QualityGateManager {
         threshold: 80,
         operator: 'gte',
         blocking: true,
-        message: 'Code coverage must be at least 80%'
+        message: 'Code coverage must be at least 80%',
       },
       {
         name: 'build-time',
@@ -237,7 +237,7 @@ export class QualityGateManager {
         threshold: 300000, // 5 minutes
         operator: 'lte',
         blocking: false,
-        message: 'Build time should be under 5 minutes'
+        message: 'Build time should be under 5 minutes',
       },
       {
         name: 'security-score',
@@ -245,8 +245,8 @@ export class QualityGateManager {
         threshold: 8,
         operator: 'gte',
         blocking: true,
-        message: 'Security score must be at least 8/10'
-      }
+        message: 'Security score must be at least 8/10',
+      },
     ];
   }
 

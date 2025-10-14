@@ -5,6 +5,7 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
+
 import { TestResult, TestSummary, CoverageInfo } from './types';
 
 export class TestResultIntegrator {
@@ -36,7 +37,7 @@ export class TestResultIntegrator {
    */
   private async parseTestResults(source: TestResultSource): Promise<TestResult[]> {
     const content = await fs.readFile(source.path, 'utf8');
-    
+
     switch (source.format) {
       case 'junit':
         return this.parseJUnitResults(content, source.path);
@@ -56,20 +57,20 @@ export class TestResultIntegrator {
    */
   private parseJUnitResults(content: string, filePath: string): TestResult[] {
     const results: TestResult[] = [];
-    
+
     // Simple XML parsing - in production, use a proper XML parser
     const testCaseRegex = /<testcase[^>]*name="([^"]*)"[^>]*time="([^"]*)"[^>]*>/g;
     const failureRegex = /<failure[^>]*message="([^"]*)"[^>]*>/g;
-    
+
     let match;
     while ((match = testCaseRegex.exec(content)) !== null) {
       const [, name, time] = match;
       const duration = parseFloat(time) * 1000; // Convert to milliseconds
-      
+
       // Check if this test has a failure
       const failureMatch = failureRegex.exec(content);
       const status = failureMatch ? 'failed' : 'passed';
-      
+
       results.push({
         id: `${filePath}-${name}`,
         name,
@@ -81,11 +82,11 @@ export class TestResultIntegrator {
         file: filePath,
         error: failureMatch ? {
           message: failureMatch[1],
-          type: 'AssertionError'
-        } : undefined
+          type: 'AssertionError',
+        } : undefined,
       });
     }
-    
+
     return results;
   }
 
@@ -95,7 +96,7 @@ export class TestResultIntegrator {
   private parseJsonResults(content: string, filePath: string): TestResult[] {
     const data = JSON.parse(content);
     const results: TestResult[] = [];
-    
+
     // Handle different JSON structures
     if (data.tests) {
       // Jest-like format
@@ -112,12 +113,12 @@ export class TestResultIntegrator {
           error: test.error ? {
             message: test.error.message,
             stack: test.error.stack,
-            type: test.error.type || 'Error'
-          } : undefined
+            type: test.error.type || 'Error',
+          } : undefined,
         });
       });
     }
-    
+
     return results;
   }
 
@@ -127,7 +128,7 @@ export class TestResultIntegrator {
   private parseJestResults(content: string, filePath: string): TestResult[] {
     const data = JSON.parse(content);
     const results: TestResult[] = [];
-    
+
     if (data.testResults) {
       data.testResults.forEach((testFile: any) => {
         testFile.assertionResults?.forEach((assertion: any) => {
@@ -142,13 +143,13 @@ export class TestResultIntegrator {
             file: testFile.name,
             error: assertion.failureMessages?.length > 0 ? {
               message: assertion.failureMessages[0],
-              type: 'AssertionError'
-            } : undefined
+              type: 'AssertionError',
+            } : undefined,
           });
         });
       });
     }
-    
+
     return results;
   }
 
@@ -158,15 +159,15 @@ export class TestResultIntegrator {
   private parseTapResults(content: string, filePath: string): TestResult[] {
     const results: TestResult[] = [];
     const lines = content.split('\n');
-    
+
     let testNumber = 0;
-    
+
     for (const line of lines) {
       if (line.startsWith('ok ') || line.startsWith('not ok ')) {
         testNumber++;
         const isOk = line.startsWith('ok ');
         const name = line.replace(/^(not )?ok \d+ - /, '');
-        
+
         results.push({
           id: `${filePath}-${testNumber}`,
           name,
@@ -175,11 +176,11 @@ export class TestResultIntegrator {
           startTime: new Date(),
           endTime: new Date(),
           suite: path.basename(filePath, '.tap'),
-          file: filePath
+          file: filePath,
         });
       }
     }
-    
+
     return results;
   }
 
@@ -192,13 +193,13 @@ export class TestResultIntegrator {
     const failed = this.results.filter(r => r.status === 'failed').length;
     const skipped = this.results.filter(r => r.status === 'skipped').length;
     const duration = this.results.reduce((sum, r) => sum + r.duration, 0);
-    
+
     return {
       total,
       passed,
       failed,
       skipped,
-      duration
+      duration,
     };
   }
 
@@ -226,28 +227,28 @@ export class TestResultIntegrator {
    */
   private async exportToJUnit(outputPath: string): Promise<void> {
     const summary = this.generateSummary();
-    
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += `<testsuite name="All Tests" tests="${summary.total}" failures="${summary.failed}" time="${summary.duration / 1000}">\n`;
-    
+
     for (const result of this.results) {
       xml += `  <testcase name="${result.name}" classname="${result.suite}" time="${result.duration / 1000}">`;
-      
+
       if (result.status === 'failed' && result.error) {
         xml += `\n    <failure message="${result.error.message}" type="${result.error.type}">`;
         if (result.error.stack) {
           xml += `\n${result.error.stack}\n    `;
         }
-        xml += `</failure>\n  `;
+        xml += '</failure>\n  ';
       } else if (result.status === 'skipped') {
-        xml += `\n    <skipped/>\n  `;
+        xml += '\n    <skipped/>\n  ';
       }
-      
-      xml += `</testcase>\n`;
+
+      xml += '</testcase>\n';
     }
-    
-    xml += `</testsuite>`;
-    
+
+    xml += '</testsuite>';
+
     await fs.writeFile(outputPath, xml, 'utf8');
   }
 
@@ -258,9 +259,9 @@ export class TestResultIntegrator {
     const data = {
       summary: this.generateSummary(),
       results: this.results,
-      exportedAt: new Date().toISOString()
+      exportedAt: new Date().toISOString(),
     };
-    
+
     await fs.writeFile(outputPath, JSON.stringify(data, null, 2), 'utf8');
   }
 
@@ -269,7 +270,7 @@ export class TestResultIntegrator {
    */
   private async exportToHtml(outputPath: string): Promise<void> {
     const summary = this.generateSummary();
-    
+
     const html = `
 <!DOCTYPE html>
 <html>
@@ -327,7 +328,7 @@ export class TestResultIntegrator {
     <p><em>Generated on ${new Date().toLocaleString()}</em></p>
 </body>
 </html>`;
-    
+
     await fs.writeFile(outputPath, html, 'utf8');
   }
 
@@ -350,14 +351,14 @@ export class TestResultIntegrator {
    */
   getResultsBySuite(): Map<string, TestResult[]> {
     const suiteMap = new Map<string, TestResult[]>();
-    
+
     for (const result of this.results) {
       if (!suiteMap.has(result.suite)) {
         suiteMap.set(result.suite, []);
       }
       suiteMap.get(result.suite)!.push(result);
     }
-    
+
     return suiteMap;
   }
 
@@ -367,14 +368,14 @@ export class TestResultIntegrator {
   calculateTrends(previousResults: TestResult[]): TestTrends {
     const currentSummary = this.generateSummary();
     const previousSummary = this.calculateSummaryFromResults(previousResults);
-    
+
     return {
       totalChange: currentSummary.total - previousSummary.total,
-      passRateChange: (currentSummary.passed / currentSummary.total) - 
+      passRateChange: (currentSummary.passed / currentSummary.total) -
                      (previousSummary.passed / previousSummary.total),
       durationChange: currentSummary.duration - previousSummary.duration,
       newFailures: this.findNewFailures(previousResults),
-      fixedTests: this.findFixedTests(previousResults)
+      fixedTests: this.findFixedTests(previousResults),
     };
   }
 
@@ -383,12 +384,12 @@ export class TestResultIntegrator {
    */
   private findNewFailures(previousResults: TestResult[]): string[] {
     const previousFailed = new Set(
-      previousResults.filter(r => r.status === 'failed').map(r => r.name)
+      previousResults.filter(r => r.status === 'failed').map(r => r.name),
     );
     const currentFailed = new Set(
-      this.results.filter(r => r.status === 'failed').map(r => r.name)
+      this.results.filter(r => r.status === 'failed').map(r => r.name),
     );
-    
+
     return Array.from(currentFailed).filter(name => !previousFailed.has(name));
   }
 
@@ -397,12 +398,12 @@ export class TestResultIntegrator {
    */
   private findFixedTests(previousResults: TestResult[]): string[] {
     const previousFailed = new Set(
-      previousResults.filter(r => r.status === 'failed').map(r => r.name)
+      previousResults.filter(r => r.status === 'failed').map(r => r.name),
     );
     const currentPassed = new Set(
-      this.results.filter(r => r.status === 'passed').map(r => r.name)
+      this.results.filter(r => r.status === 'passed').map(r => r.name),
     );
-    
+
     return Array.from(currentPassed).filter(name => previousFailed.has(name));
   }
 
@@ -415,7 +416,7 @@ export class TestResultIntegrator {
     const failed = results.filter(r => r.status === 'failed').length;
     const skipped = results.filter(r => r.status === 'skipped').length;
     const duration = results.reduce((sum, r) => sum + r.duration, 0);
-    
+
     return { total, passed, failed, skipped, duration };
   }
 }

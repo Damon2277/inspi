@@ -28,7 +28,7 @@ describe('PipelineOptimizer', () => {
             commands: ['npm install', 'npm run build'],
             dependencies: [],
             timeout: 600000,
-            retries: 1
+            retries: 1,
           },
           {
             name: 'test',
@@ -36,31 +36,31 @@ describe('PipelineOptimizer', () => {
             commands: ['npm test'],
             dependencies: [],
             timeout: 300000,
-            retries: 2
-          }
+            retries: 2,
+          },
         ],
         parallelization: {
           enabled: false,
           maxConcurrency: 1,
-          strategy: 'stage'
+          strategy: 'stage',
         },
         caching: {
           enabled: false,
           strategy: 'dependencies',
           paths: [],
           key: '',
-          restoreKeys: []
+          restoreKeys: [],
         },
         environment: {
           variables: {},
-          secrets: []
+          secrets: [],
         },
         notifications: {
           enabled: false,
           channels: [],
-          conditions: []
+          conditions: [],
         },
-        qualityGates: []
+        qualityGates: [],
       };
 
       const optimization = await optimizer.optimizePipeline(config);
@@ -85,14 +85,14 @@ describe('PipelineOptimizer', () => {
             commands: ['npm install'],
             dependencies: [],
             timeout: 300000,
-            retries: 1
-          }
+            retries: 1,
+          },
         ],
         parallelization: { enabled: false, maxConcurrency: 1, strategy: 'stage' },
         caching: { enabled: false, strategy: 'dependencies', paths: [], key: '', restoreKeys: [] },
         environment: { variables: {}, secrets: [] },
         notifications: { enabled: false, channels: [], conditions: [] },
-        qualityGates: []
+        qualityGates: [],
       };
 
       const optimization = await optimizer.optimizePipeline(config);
@@ -114,7 +114,7 @@ describe('PipelineOptimizer', () => {
             commands: ['npm run lint'],
             dependencies: [],
             timeout: 180000,
-            retries: 1
+            retries: 1,
           },
           {
             name: 'test',
@@ -122,7 +122,7 @@ describe('PipelineOptimizer', () => {
             commands: ['npm test'],
             dependencies: [],
             timeout: 300000,
-            retries: 1
+            retries: 1,
           },
           {
             name: 'build',
@@ -130,14 +130,14 @@ describe('PipelineOptimizer', () => {
             commands: ['npm run build'],
             dependencies: [],
             timeout: 600000,
-            retries: 1
-          }
+            retries: 1,
+          },
         ],
         parallelization: { enabled: false, maxConcurrency: 1, strategy: 'stage' },
         caching: { enabled: true, strategy: 'dependencies', paths: ['node_modules'], key: 'deps', restoreKeys: [] },
         environment: { variables: {}, secrets: [] },
         notifications: { enabled: false, channels: [], conditions: [] },
-        qualityGates: []
+        qualityGates: [],
       };
 
       const optimization = await optimizer.optimizePipeline(config);
@@ -158,14 +158,14 @@ describe('PipelineOptimizer', () => {
             commands: ['npm run build'],
             dependencies: [],
             timeout: 2400000, // 40 minutes
-            retries: 1
-          }
+            retries: 1,
+          },
         ],
         parallelization: { enabled: false, maxConcurrency: 1, strategy: 'stage' },
         caching: { enabled: true, strategy: 'dependencies', paths: [], key: '', restoreKeys: [] },
         environment: { variables: {}, secrets: [] },
         notifications: { enabled: false, channels: [], conditions: [] },
-        qualityGates: []
+        qualityGates: [],
       };
 
       const optimization = await optimizer.optimizePipeline(config);
@@ -184,12 +184,12 @@ describe('PipelineOptimizer', () => {
         caching: { enabled: false, strategy: 'dependencies', paths: [], key: '', restoreKeys: [] },
         environment: { variables: {}, secrets: [] },
         notifications: { enabled: false, channels: [], conditions: [] },
-        qualityGates: []
+        qualityGates: [],
       };
 
       // First call
       const optimization1 = await optimizer.optimizePipeline(config);
-      
+
       // Second call should use cache
       const optimization2 = await optimizer.optimizePipeline(config);
 
@@ -207,20 +207,20 @@ describe('PipelineOptimizer', () => {
             commands: ['npm test'],
             dependencies: [],
             timeout: 300000,
-            retries: 0 // No retries
-          }
+            retries: 0, // No retries
+          },
         ],
         parallelization: { enabled: false, maxConcurrency: 1, strategy: 'stage' },
         caching: { enabled: false, strategy: 'dependencies', paths: [], key: '', restoreKeys: [] },
         environment: { variables: {}, secrets: [] },
         notifications: { enabled: false, channels: [], conditions: [] },
-        qualityGates: []
+        qualityGates: [],
       };
 
       const optimization = await optimizer.optimizePipeline(config);
 
       expect(optimization.implementationPlan.length).toBeGreaterThan(0);
-      
+
       // Check that steps are ordered
       const orders = optimization.implementationPlan.map(step => step.order);
       const sortedOrders = [...orders].sort((a, b) => a - b);
@@ -238,13 +238,13 @@ describe('PipelineOptimizer', () => {
         caching: { enabled: false, strategy: 'dependencies', paths: [], key: '', restoreKeys: [] },
         environment: { variables: {}, secrets: [] },
         notifications: { enabled: false, channels: [], conditions: [] },
-        qualityGates: []
+        qualityGates: [],
       };
 
       await optimizer.optimizePipeline(config);
-      
+
       const stats = optimizer.getOptimizationStats();
-      
+
       expect(stats).toHaveProperty('cacheSize');
       expect(stats).toHaveProperty('metricsCount');
       expect(stats.cacheSize).toBe(1);
@@ -260,7 +260,7 @@ describe('PipelineOptimizer', () => {
           caching: { enabled: false, strategy: 'dependencies' as const, paths: [], key: '', restoreKeys: [] },
           environment: { variables: {}, secrets: [] },
           notifications: { enabled: false, channels: [], conditions: [] },
-          qualityGates: []
+          qualityGates: [],
         },
         {
           name: 'pipeline-2',
@@ -270,8 +270,8 @@ describe('PipelineOptimizer', () => {
           caching: { enabled: false, strategy: 'dependencies' as const, paths: [], key: '', restoreKeys: [] },
           environment: { variables: {}, secrets: [] },
           notifications: { enabled: false, channels: [], conditions: [] },
-          qualityGates: []
-        }
+          qualityGates: [],
+        },
       ];
 
       for (const config of configs) {
@@ -294,7 +294,7 @@ describe('PipelineOptimizer', () => {
         caching: { enabled: false, strategy: 'dependencies', paths: [], key: '', restoreKeys: [] },
         environment: { variables: {}, secrets: [] },
         notifications: { enabled: false, channels: [], conditions: [] },
-        qualityGates: []
+        qualityGates: [],
       };
 
       const mockMetrics: CICDMetrics[] = [
@@ -312,13 +312,13 @@ describe('PipelineOptimizer', () => {
             testTime: 30000,
             deployTime: 0,
             queueTime: 60000,
-            resourceUsage: { cpu: 50, memory: 60, disk: 30, network: 20 }
-          }
-        }
+            resourceUsage: { cpu: 50, memory: 60, disk: 30, network: 20 },
+          },
+        },
       ];
 
       const optimization = await optimizer.optimizePipeline(config, mockMetrics);
-      
+
       expect(optimization).toBeDefined();
       expect(optimization.recommendations.length).toBeGreaterThan(0);
     });
@@ -340,11 +340,11 @@ describe('PipelineOptimizer', () => {
         caching: { enabled: false, strategy: 'dependencies', paths: [], key: '', restoreKeys: [] },
         environment: { variables: {}, secrets: [] },
         notifications: { enabled: false, channels: [], conditions: [] },
-        qualityGates: []
+        qualityGates: [],
       };
 
       const optimization = await optimizer.optimizePipeline(config);
-      
+
       expect(optimization).toBeDefined();
       expect(optimization.recommendations).toBeDefined();
     });

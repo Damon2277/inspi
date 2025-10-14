@@ -1,12 +1,12 @@
 /**
  * Zustand Test Utilities
- * 
+ *
  * Specialized utilities for testing Zustand stores including
  * store creation, state manipulation, and assertion helpers.
  */
 import { create } from 'zustand';
-import { subscribeWithSelector } from 'zustand/middleware';
-import { persist } from 'zustand/middleware';
+import { subscribeWithSelector, persist } from 'zustand/middleware';
+
 import { StateStore, StateTestScenario, StateAction, StateAssertion } from './StateTestFramework';
 
 export interface ZustandStore<T> extends StateStore<T> {
@@ -76,12 +76,12 @@ export class ZustandTestUtils {
     // Build the store creator function
     const storeCreator = (set: any, get: any) => ({
       ...initialState,
-      ...this.createActionMethods(actions, set, get)
+      ...this.createActionMethods(actions, set, get),
     });
 
     // Apply middleware
     let enhancedCreator = storeCreator;
-    
+
     for (const mw of middleware) {
       switch (mw.type) {
         case 'subscribeWithSelector':
@@ -93,7 +93,7 @@ export class ZustandTestUtils {
               name: persistConfig.name,
               storage: this.getStorage(persistConfig.storage),
               partialize: persistConfig.partialize,
-              onRehydrateStorage: persistConfig.onRehydrateStorage
+              onRehydrateStorage: persistConfig.onRehydrateStorage,
             });
           }
           break;
@@ -112,9 +112,9 @@ export class ZustandTestUtils {
    * Create action methods for the store
    */
   private static createActionMethods<T>(
-    actions: ZustandActions<T>, 
-    set: any, 
-    get: any
+    actions: ZustandActions<T>,
+    set: any,
+    get: any,
   ): Record<string, (...args: any[]) => void> {
     const actionMethods: Record<string, (...args: any[]) => void> = {};
 
@@ -168,8 +168,8 @@ export class ZustandTestUtils {
             type: 'sync',
             execute: (store) => {
               store.setState({ ...store.getState(), updated: true } as any);
-            }
-          }
+            },
+          },
         ],
         assertions: [
           {
@@ -179,9 +179,9 @@ export class ZustandTestUtils {
               const state = store.getState() as any;
               return state.updated === true;
             },
-            message: 'State should have updated property set to true'
-          }
-        ]
+            message: 'State should have updated property set to true',
+          },
+        ],
       },
 
       // Subscription scenario
@@ -197,8 +197,8 @@ export class ZustandTestUtils {
             type: 'sync',
             execute: (store) => {
               store.setState({ ...store.getState(), counter: 1 } as any);
-            }
-          }
+            },
+          },
         ],
         assertions: [
           {
@@ -207,9 +207,9 @@ export class ZustandTestUtils {
             check: (store, context) => {
               return context.subscriptionCalls.length > 0;
             },
-            message: 'Subscription should be called when state changes'
-          }
-        ]
+            message: 'Subscription should be called when state changes',
+          },
+        ],
       },
 
       // Multiple updates scenario
@@ -225,22 +225,22 @@ export class ZustandTestUtils {
             type: 'sync',
             execute: (store) => {
               store.setState({ ...store.getState(), step: 1 } as any);
-            }
+            },
           },
           {
             name: 'Second update',
             type: 'sync',
             execute: (store) => {
               store.setState({ ...store.getState(), step: 2 } as any);
-            }
+            },
           },
           {
             name: 'Third update',
             type: 'sync',
             execute: (store) => {
               store.setState({ ...store.getState(), step: 3 } as any);
-            }
-          }
+            },
+          },
         ],
         assertions: [
           {
@@ -250,7 +250,7 @@ export class ZustandTestUtils {
               const state = store.getState() as any;
               return state.step === 3;
             },
-            message: 'Final state should have step = 3'
+            message: 'Final state should have step = 3',
           },
           {
             name: 'Should have 3 subscription calls',
@@ -258,10 +258,10 @@ export class ZustandTestUtils {
             check: (store, context) => {
               return context.subscriptionCalls.length === 3;
             },
-            message: 'Should have exactly 3 subscription calls'
-          }
-        ]
-      }
+            message: 'Should have exactly 3 subscription calls',
+          },
+        ],
+      },
     ];
   }
 
@@ -269,9 +269,9 @@ export class ZustandTestUtils {
    * Create performance test scenarios
    */
   static createPerformanceScenarios<T>(
-    store: ZustandStore<T>, 
+    store: ZustandStore<T>,
     initialState: T,
-    updateCount: number = 1000
+    updateCount: number = 1000,
   ): StateTestScenario<T>[] {
     return [
       {
@@ -285,7 +285,7 @@ export class ZustandTestUtils {
           type: 'sync' as const,
           execute: (store: StateStore<T>) => {
             store.setState({ ...store.getState(), counter: i + 1 } as any);
-          }
+          },
         })),
         assertions: [
           {
@@ -294,7 +294,7 @@ export class ZustandTestUtils {
             check: (store, context) => {
               return context.performanceMetrics.averageUpdateTime < 1; // Less than 1ms per update
             },
-            message: 'Average update time should be less than 1ms'
+            message: 'Average update time should be less than 1ms',
           },
           {
             name: 'Memory usage should be reasonable',
@@ -302,10 +302,10 @@ export class ZustandTestUtils {
             check: (store, context) => {
               return context.performanceMetrics.peakMemoryUsage < 100; // Less than 100MB
             },
-            message: 'Peak memory usage should be less than 100MB'
-          }
-        ]
-      }
+            message: 'Peak memory usage should be less than 100MB',
+          },
+        ],
+      },
     ];
   }
 
@@ -313,8 +313,8 @@ export class ZustandTestUtils {
    * Create concurrency test scenarios
    */
   static createConcurrencyScenarios<T>(
-    store: ZustandStore<T>, 
-    initialState: T
+    store: ZustandStore<T>,
+    initialState: T,
   ): StateTestScenario<T>[] {
     return [
       {
@@ -331,7 +331,7 @@ export class ZustandTestUtils {
             execute: async (store) => {
               await new Promise(resolve => setTimeout(resolve, 10));
               store.setState({ ...store.getState(), value1: 'updated1' } as any);
-            }
+            },
           },
           {
             name: 'Concurrent update 2',
@@ -340,7 +340,7 @@ export class ZustandTestUtils {
             execute: async (store) => {
               await new Promise(resolve => setTimeout(resolve, 15));
               store.setState({ ...store.getState(), value2: 'updated2' } as any);
-            }
+            },
           },
           {
             name: 'Concurrent update 3',
@@ -349,8 +349,8 @@ export class ZustandTestUtils {
             execute: async (store) => {
               await new Promise(resolve => setTimeout(resolve, 5));
               store.setState({ ...store.getState(), value3: 'updated3' } as any);
-            }
-          }
+            },
+          },
         ],
         assertions: [
           {
@@ -358,14 +358,14 @@ export class ZustandTestUtils {
             type: 'consistency',
             check: (store) => {
               const state = store.getState() as any;
-              return state.value1 === 'updated1' && 
-                     state.value2 === 'updated2' && 
+              return state.value1 === 'updated1' &&
+                     state.value2 === 'updated2' &&
                      state.value3 === 'updated3';
             },
-            message: 'All concurrent updates should be present in final state'
-          }
-        ]
-      }
+            message: 'All concurrent updates should be present in final state',
+          },
+        ],
+      },
     ];
   }
 
@@ -373,9 +373,9 @@ export class ZustandTestUtils {
    * Create persistence test scenarios
    */
   static createPersistenceScenarios<T>(
-    store: ZustandStore<T>, 
+    store: ZustandStore<T>,
     initialState: T,
-    persistKey: string
+    persistKey: string,
   ): StateTestScenario<T>[] {
     return [
       {
@@ -390,15 +390,15 @@ export class ZustandTestUtils {
             type: 'sync',
             execute: (store) => {
               store.setState({ ...store.getState(), persisted: true } as any);
-            }
+            },
           },
           {
             name: 'Wait for persistence',
             type: 'async',
             execute: async () => {
               await new Promise(resolve => setTimeout(resolve, 100));
-            }
-          }
+            },
+          },
         ],
         assertions: [
           {
@@ -409,10 +409,10 @@ export class ZustandTestUtils {
               const persistedData = context.persistenceData?.[persistKey];
               return persistedData && persistedData.persisted === true;
             },
-            message: 'State should be persisted to storage'
-          }
-        ]
-      }
+            message: 'State should be persisted to storage',
+          },
+        ],
+      },
     ];
   }
 
@@ -420,9 +420,9 @@ export class ZustandTestUtils {
    * Create action-based test scenarios
    */
   static createActionScenarios<T>(
-    store: ZustandStore<T> & Record<string, any>, 
+    store: ZustandStore<T> & Record<string, any>,
     initialState: T,
-    actions: string[]
+    actions: string[],
   ): StateTestScenario<T>[] {
     return actions.map(actionName => ({
       name: `Action: ${actionName}`,
@@ -439,8 +439,8 @@ export class ZustandTestUtils {
             if (typeof storeWithActions[actionName] === 'function') {
               storeWithActions[actionName]();
             }
-          }
-        }
+          },
+        },
       ],
       assertions: [
         {
@@ -451,9 +451,9 @@ export class ZustandTestUtils {
             const currentState = store.getState();
             return JSON.stringify(currentState) !== JSON.stringify(context.initialState);
           },
-          message: `${actionName} should modify the state`
-        }
-      ]
+          message: `${actionName} should modify the state`,
+        },
+      ],
     }));
   }
 
@@ -461,10 +461,10 @@ export class ZustandTestUtils {
    * Create selector test scenarios
    */
   static createSelectorScenarios<T, R>(
-    store: ZustandStore<T>, 
+    store: ZustandStore<T>,
     initialState: T,
     selector: (state: T) => R,
-    expectedValue: R
+    expectedValue: R,
   ): StateTestScenario<T>[] {
     return [
       {
@@ -484,10 +484,10 @@ export class ZustandTestUtils {
               return JSON.stringify(result) === JSON.stringify(expectedValue);
             },
             expected: expectedValue,
-            message: 'Selector should return the expected value'
-          }
-        ]
-      }
+            message: 'Selector should return the expected value',
+          },
+        ],
+      },
     ];
   }
 
@@ -495,9 +495,9 @@ export class ZustandTestUtils {
    * Create middleware test scenarios
    */
   static createMiddlewareScenarios<T>(
-    store: ZustandStore<T>, 
+    store: ZustandStore<T>,
     initialState: T,
-    middlewareType: string
+    middlewareType: string,
   ): StateTestScenario<T>[] {
     const scenarios: StateTestScenario<T>[] = [];
 
@@ -515,8 +515,8 @@ export class ZustandTestUtils {
               type: 'sync',
               execute: (store) => {
                 store.setState({ ...store.getState(), specificProp: 'updated' } as any);
-              }
-            }
+              },
+            },
           ],
           assertions: [
             {
@@ -526,9 +526,9 @@ export class ZustandTestUtils {
                 // This would need actual selector subscription testing
                 return context.subscriptionCalls.length > 0;
               },
-              message: 'Selective subscription should be triggered'
-            }
-          ]
+              message: 'Selective subscription should be triggered',
+            },
+          ],
         });
         break;
 
@@ -545,8 +545,8 @@ export class ZustandTestUtils {
               type: 'sync',
               execute: (store) => {
                 store.setState({ ...store.getState(), persistTest: true } as any);
-              }
-            }
+              },
+            },
           ],
           assertions: [
             {
@@ -555,9 +555,9 @@ export class ZustandTestUtils {
               check: (store, context) => {
                 return context.persistenceData && Object.keys(context.persistenceData).length > 0;
               },
-              message: 'State should be persisted by middleware'
-            }
-          ]
+              message: 'State should be persisted by middleware',
+            },
+          ],
         });
         break;
     }
@@ -569,9 +569,9 @@ export class ZustandTestUtils {
    * Create stress test scenarios
    */
   static createStressTestScenarios<T>(
-    store: ZustandStore<T>, 
+    store: ZustandStore<T>,
     initialState: T,
-    config: { updateCount: number; concurrentSubscribers: number }
+    config: { updateCount: number; concurrentSubscribers: number },
   ): StateTestScenario<T>[] {
     return [
       {
@@ -584,12 +584,12 @@ export class ZustandTestUtils {
           name: `Stress update ${i + 1}`,
           type: 'sync' as const,
           execute: (store: StateStore<T>) => {
-            store.setState({ 
-              ...store.getState(), 
+            store.setState({
+              ...store.getState(),
               stressCounter: i + 1,
-              timestamp: Date.now()
+              timestamp: Date.now(),
             } as any);
-          }
+          },
         })),
         assertions: [
           {
@@ -598,7 +598,7 @@ export class ZustandTestUtils {
             check: (store, context) => {
               return context.performanceMetrics.averageUpdateTime < 5; // Less than 5ms average
             },
-            message: 'Should handle high frequency updates efficiently'
+            message: 'Should handle high frequency updates efficiently',
           },
           {
             name: 'Should maintain state consistency',
@@ -607,10 +607,10 @@ export class ZustandTestUtils {
               const state = store.getState() as any;
               return state.stressCounter === config.updateCount;
             },
-            message: 'Should maintain state consistency under stress'
-          }
-        ]
-      }
+            message: 'Should maintain state consistency under stress',
+          },
+        ],
+      },
     ];
   }
 
@@ -635,7 +635,7 @@ export class ZustandTestUtils {
         getStateSpy.mockRestore();
         setStateSpy.mockRestore();
         subscribeSpy.mockRestore();
-      }
+      },
     };
   }
 
@@ -659,7 +659,7 @@ export class ZustandTestUtils {
       key: (index: number) => Object.keys(storage)[index] || null,
       get length() {
         return Object.keys(storage).length;
-      }
+      },
     };
   }
 }

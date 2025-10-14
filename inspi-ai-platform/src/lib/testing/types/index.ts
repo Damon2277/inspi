@@ -1,9 +1,9 @@
 /**
  * Type Definition Testing Module
- * 
+ *
  * Comprehensive TypeScript type testing framework including:
  * - Compile-time type validation
- * - Runtime interface checking  
+ * - Runtime interface checking
  * - Type safety regression testing
  * - Type coverage analysis
  */
@@ -26,7 +26,7 @@ export type {
   TypeRegressionTest,
   TypeTestResult,
   TypeSnapshot,
-  TypeChange
+  TypeChange,
 } from './TypeTestFramework';
 
 // Re-export commonly used utilities
@@ -36,5 +36,5 @@ export {
   expectAssignable,
   expectNotAssignable,
   expectExtends,
-  expectNotExtends
+  expectNotExtends,
 } from './TypeAssertions';

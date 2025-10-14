@@ -1,13 +1,14 @@
 /**
  * Compliance Reporter
- * 
+ *
  * Generates comprehensive compliance reports in multiple formats
  * and provides automated compliance monitoring and alerting.
  */
 
+import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
-import { EventEmitter } from 'events';
+
 import { ComplianceResult, ComplianceConfig } from './ComplianceChecker';
 
 export interface ReportConfig {
@@ -80,12 +81,12 @@ export class ComplianceReporter extends EventEmitter {
    * Generate compliance report in multiple formats
    */
   async generateReport(
-    result: ComplianceResult, 
-    options: { 
+    result: ComplianceResult,
+    options: {
       customTemplate?: string;
       includeHistory?: boolean;
       compareWith?: ComplianceResult;
-    } = {}
+    } = {},
   ): Promise<GeneratedReport[]> {
     this.emit('reportGenerationStarted');
 
@@ -97,17 +98,17 @@ export class ComplianceReporter extends EventEmitter {
 
       try {
         const reportPath = await this.generateFormatReport(
-          result, 
-          format, 
-          timestamp, 
-          options
+          result,
+          format,
+          timestamp,
+          options,
         );
 
         reports.push({
           format: format.type,
           path: reportPath,
           size: this.getFileSize(reportPath),
-          generated: new Date()
+          generated: new Date(),
         });
 
         this.emit('formatReportGenerated', format.type, reportPath);
@@ -122,7 +123,7 @@ export class ComplianceReporter extends EventEmitter {
       timestamp: new Date(),
       result,
       reports,
-      options
+      options,
     };
 
     this.reportHistory.push(metadata);
@@ -136,7 +137,7 @@ export class ComplianceReporter extends EventEmitter {
 
     this.emit('reportGenerationCompleted', reports);
     return reports;
-  } 
+  }
  /**
    * Generate report for specific format
    */
@@ -144,7 +145,7 @@ export class ComplianceReporter extends EventEmitter {
     result: ComplianceResult,
     format: ReportFormat,
     timestamp: string,
-    options: any
+    options: any,
   ): Promise<string> {
     const filename = `compliance-report-${timestamp}.${format.type}`;
     const filepath = path.join(this.config.outputDir, filename);
@@ -192,8 +193,8 @@ export class ComplianceReporter extends EventEmitter {
         generatedAt: new Date().toISOString(),
         generator: 'ComplianceReporter',
         version: '1.0.0',
-        options
-      }
+        options,
+      },
     };
 
     if (options.includeHistory) {
@@ -207,15 +208,15 @@ export class ComplianceReporter extends EventEmitter {
    * Generate HTML report
    */
   private async generateHtmlReport(
-    result: ComplianceResult, 
-    format: ReportFormat, 
-    options: any
+    result: ComplianceResult,
+    format: ReportFormat,
+    options: any,
   ): Promise<string> {
     let template = this.getDefaultHtmlTemplate();
 
     // Use custom template if specified
     if (format.template) {
-      const customTemplate = this.config.templates.find(t => t.name === format.template);
+      const customTemplate = this.config(templates.find as any)(t => t.name === format.template);
       if (customTemplate) {
         template = customTemplate.content;
       }
@@ -231,7 +232,7 @@ export class ComplianceReporter extends EventEmitter {
       violationsHtml: this.generateViolationsHtml(result.violations),
       recommendationsHtml: this.generateRecommendationsHtml(result.recommendations),
       trendsHtml: options.includeHistory ? this.generateTrendsHtml() : '',
-      comparisonHtml: options.compareWith ? this.generateComparisonHtml(result, options.compareWith) : ''
+      comparisonHtml: options.compareWith ? this.generateComparisonHtml(result, options.compareWith) : '',
     };
 
     return this.replaceTemplateVariables(template, variables);
@@ -362,7 +363,7 @@ This compliance report provides a comprehensive analysis of code quality, test c
       'Score',
       'Value',
       'Threshold',
-      'Message'
+      'Message',
     ];
 
     const rows: string[][] = [headers];
@@ -378,7 +379,7 @@ This compliance report provides a comprehensive analysis of code quality, test c
           category.score.toString(),
           detail.value.toString(),
           detail.threshold.toString(),
-          `"${detail.message.replace(/"/g, '""')}"`
+          `"${detail.message.replace(/"/g, '""')}"`,
         ]);
       });
     });
@@ -393,14 +394,14 @@ This compliance report provides a comprehensive analysis of code quality, test c
     result: ComplianceResult,
     format: ReportFormat,
     filepath: string,
-    options: any
+    options: any,
   ): Promise<string> {
     // This would use a PDF generation library like puppeteer or jsPDF
     // For now, generate HTML and save as .html file
     const htmlContent = await this.generateHtmlReport(result, format, options);
     const htmlPath = filepath.replace('.pdf', '.html');
     fs.writeFileSync(htmlPath, htmlContent, 'utf8');
-    
+
     // In a real implementation, convert HTML to PDF here
     return htmlPath;
   }
@@ -473,7 +474,7 @@ This compliance report provides a comprehensive analysis of code quality, test c
   private generateCategoriesHtml(categories: ComplianceResult['categories']): string {
     return Object.entries(categories).map(([name, category]) => {
       const statusClass = category.enabled ? (category.passed ? 'passed' : 'failed') : 'disabled';
-      
+
       return `
         <div class="category ${statusClass}">
             <h3>${this.capitalizeFirst(name)}</h3>
@@ -635,7 +636,7 @@ Historical compliance data shows trends over time.
 
   private generateMarkdownComparison(current: ComplianceResult, previous: ComplianceResult): string {
     const scoreDiff = current.overall.score - previous.overall.score;
-    
+
     return `
 ## Comparison with Previous Report
 
@@ -745,9 +746,9 @@ Historical compliance data shows trends over time.
   }
 
   private async sendNotification(
-    channel: NotificationChannel, 
-    result: ComplianceResult, 
-    trigger: NotificationTrigger
+    channel: NotificationChannel,
+    result: ComplianceResult,
+    trigger: NotificationTrigger,
   ): Promise<void> {
     const message = this.createNotificationMessage(result, trigger);
 
@@ -789,7 +790,7 @@ Historical compliance data shows trends over time.
       if (this.config.retention.maxAge) {
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - this.config.retention.maxAge);
-        
+
         const toRemove = this.reportHistory.filter(report => report.timestamp < cutoffDate);
         for (const report of toRemove) {
           await this.removeReportFiles(report);

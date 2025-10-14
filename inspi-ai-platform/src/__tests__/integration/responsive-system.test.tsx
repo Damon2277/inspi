@@ -1,15 +1,16 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
+import React from 'react';
+
 import { ResponsiveContainer, ResponsiveGrid, DesktopLayout } from '@/components/layout';
 
 // Mock the useResponsive hook
-jest.mock('@/hooks/useResponsive', () => ({
+jest.mock('@/shared/hooks/useResponsive', () => ({
   useResponsive: jest.fn(),
   useResponsiveValue: jest.fn(),
 }));
 
-const mockUseResponsive = require('@/hooks/useResponsive').useResponsive;
-const mockUseResponsiveValue = require('@/hooks/useResponsive').useResponsiveValue;
+const mockUseResponsive = require('@/shared/hooks/useResponsive').useResponsive;
+const mockUseResponsiveValue = require('@/shared/hooks/useResponsive').useResponsiveValue;
 
 describe('Responsive System Integration', () => {
   beforeEach(() => {
@@ -46,7 +47,7 @@ describe('Responsive System Integration', () => {
             <div data-testid="grid-item-3">Item 3</div>
           </ResponsiveGrid>
         </ResponsiveContainer>
-      </DesktopLayout>
+      </DesktopLayout>,
     );
 
     // Verify all components render
@@ -83,12 +84,12 @@ describe('Responsive System Integration', () => {
             <div data-testid="grid-item-2">Item 2</div>
           </ResponsiveGrid>
         </ResponsiveContainer>
-      </DesktopLayout>
+      </DesktopLayout>,
     );
 
     // On mobile, sidebar should not be visible
     expect(screen.queryByTestId('sidebar')).not.toBeInTheDocument();
-    
+
     // Grid items should still be present
     expect(screen.getByTestId('grid-item-1')).toBeInTheDocument();
     expect(screen.getByTestId('grid-item-2')).toBeInTheDocument();
@@ -104,12 +105,12 @@ describe('Responsive System Integration', () => {
     const { container } = render(
       <ResponsiveContainer className="test-container">
         <div>Test Content</div>
-      </ResponsiveContainer>
+      </ResponsiveContainer>,
     );
 
     const containerElement = container.querySelector('.test-container');
     expect(containerElement).toHaveClass('responsive-container');
-    
+
     // Check that CSS custom properties are being used
     const computedStyle = window.getComputedStyle(containerElement!);
     expect(containerElement).toHaveStyle({

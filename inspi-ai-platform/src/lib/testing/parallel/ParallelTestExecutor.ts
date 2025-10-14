@@ -1,7 +1,7 @@
-import { Worker } from 'worker_threads';
+import { EventEmitter } from 'events';
 import * as os from 'os';
 import * as path from 'path';
-import { EventEmitter } from 'events';
+import { Worker } from 'worker_threads';
 
 export interface TestSuite {
   id: string;
@@ -92,7 +92,7 @@ export class ParallelTestExecutor extends EventEmitter {
       retries: 2,
       loadBalancing: 'weighted',
       errorIsolation: true,
-      ...options
+      ...options,
     };
   }
 
@@ -137,8 +137,8 @@ export class ParallelTestExecutor extends EventEmitter {
       const worker = new Worker(workerPath, {
         workerData: {
           workerId: i,
-          options: this.options
-        }
+          options: this.options,
+        },
       });
 
       // 设置工作进程事件监听
@@ -151,7 +151,7 @@ export class ParallelTestExecutor extends EventEmitter {
         totalDuration: 0,
         errors: 0,
         isAvailable: true,
-        currentLoad: 0
+        currentLoad: 0,
       });
     }
 
@@ -259,7 +259,7 @@ export class ParallelTestExecutor extends EventEmitter {
         duration: 0,
         tests: [],
         error: data.error,
-        workerId
+        workerId,
       };
       this.results.set(data.taskId, failedResult);
     }
@@ -305,7 +305,7 @@ export class ParallelTestExecutor extends EventEmitter {
     this.taskQueue = sortedSuites.map(suite => ({
       id: `task_${suite.id}_${Date.now()}`,
       suite,
-      workerId: -1 // 未分配
+      workerId: -1, // 未分配
     }));
   }
 
@@ -406,8 +406,8 @@ export class ParallelTestExecutor extends EventEmitter {
         type: 'task:execute',
         data: {
           taskId: task.id,
-          suite: task.suite
-        }
+          suite: task.suite,
+        },
       });
     }
 
@@ -427,16 +427,16 @@ export class ParallelTestExecutor extends EventEmitter {
     switch (this.options.loadBalancing) {
       case 'weighted':
         // 选择完成任务最少的工作进程
-        return availableWorkers.reduce((min, current) => 
-          current.tasksCompleted < min.tasksCompleted ? current : min
+        return availableWorkers.reduce((min, current) =>
+          current.tasksCompleted < min.tasksCompleted ? current : min,
         );
 
       case 'dynamic':
         // 选择平均执行时间最短的工作进程
         return availableWorkers.reduce((fastest, current) => {
-          const currentAvg = current.tasksCompleted > 0 ? 
+          const currentAvg = current.tasksCompleted > 0 ?
             current.totalDuration / current.tasksCompleted : 0;
-          const fastestAvg = fastest.tasksCompleted > 0 ? 
+          const fastestAvg = fastest.tasksCompleted > 0 ?
             fastest.totalDuration / fastest.tasksCompleted : 0;
           return currentAvg < fastestAvg ? current : fastest;
         });
@@ -453,14 +453,14 @@ export class ParallelTestExecutor extends EventEmitter {
    */
   private aggregateResults(): TestResult[] {
     const results = Array.from(this.results.values());
-    
+
     // 计算总体统计
     const totalTests = results.reduce((sum, result) => sum + result.tests.length, 0);
-    const passedTests = results.reduce((sum, result) => 
-      sum + result.tests.filter(test => test.status === 'passed').length, 0
+    const passedTests = results.reduce((sum, result) =>
+      sum + result.tests.filter(test => test.status === 'passed').length, 0,
     );
-    const failedTests = results.reduce((sum, result) => 
-      sum + result.tests.filter(test => test.status === 'failed').length, 0
+    const failedTests = results.reduce((sum, result) =>
+      sum + result.tests.filter(test => test.status === 'failed').length, 0,
     );
 
     this.emit('results:aggregated', {
@@ -469,7 +469,7 @@ export class ParallelTestExecutor extends EventEmitter {
       failed: results.filter(r => r.status === 'failed').length,
       totalTests,
       passedTests,
-      failedTests
+      failedTests,
     });
 
     return results;
@@ -504,8 +504,8 @@ export class ParallelTestExecutor extends EventEmitter {
     const newWorker = new Worker(workerPath, {
       workerData: {
         workerId,
-        options: this.options
-      }
+        options: this.options,
+      },
     });
 
     this.setupWorkerListeners(newWorker, workerId);
@@ -518,7 +518,7 @@ export class ParallelTestExecutor extends EventEmitter {
       totalDuration: 0,
       errors: 0,
       isAvailable: true,
-      currentLoad: 0
+      currentLoad: 0,
     });
 
     this.emit('worker:restarted', { workerId });
@@ -530,7 +530,7 @@ export class ParallelTestExecutor extends EventEmitter {
   private async waitForWorkersReady(): Promise<void> {
     return new Promise((resolve) => {
       let readyCount = 0;
-      
+
       const checkReady = () => {
         readyCount++;
         if (readyCount === this.maxWorkers) {
@@ -563,14 +563,14 @@ export class ParallelTestExecutor extends EventEmitter {
    */
   getExecutionStats(): ExecutionStats {
     const workerStats = Array.from(this.workerStats.values());
-    
+
     return {
       totalWorkers: this.maxWorkers,
       activeWorkers: workerStats.filter(s => !s.isAvailable).length,
       totalTasksCompleted: workerStats.reduce((sum, s) => sum + s.tasksCompleted, 0),
       totalErrors: workerStats.reduce((sum, s) => sum + s.errors, 0),
       averageTaskDuration: this.calculateAverageTaskDuration(workerStats),
-      workerUtilization: this.calculateWorkerUtilization(workerStats)
+      workerUtilization: this.calculateWorkerUtilization(workerStats),
     };
   }
 

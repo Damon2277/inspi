@@ -1,12 +1,12 @@
 /**
  * Accessibility Tester
- * 
+ *
  * Comprehensive accessibility testing framework that validates
  * WCAG compliance, keyboard navigation, screen reader compatibility,
  * and other accessibility standards.
  */
-import { axe, AxeResults, Result as AxeResult } from 'jest-axe';
 import { fireEvent, waitFor } from '@testing-library/react';
+import { axe, AxeResults, Result as AxeResult } from 'jest-axe';
 
 export interface AccessibilityTestConfig {
   wcagLevel: 'A' | 'AA' | 'AAA';
@@ -146,7 +146,7 @@ export class AccessibilityTester {
       screenReaderTesting: true,
       colorContrastTesting: true,
       focusManagement: true,
-      ...config
+      ...config,
     };
 
     this.initializeCustomRules();
@@ -167,7 +167,7 @@ export class AccessibilityTester {
     violations.push(...customViolations);
 
     // Run specific accessibility tests
-    const keyboardNavigation = this.config.keyboardNavigation 
+    const keyboardNavigation = this.config.keyboardNavigation
       ? await this.testKeyboardNavigation(container)
       : undefined;
 
@@ -197,7 +197,7 @@ export class AccessibilityTester {
       keyboardNavigation,
       screenReader,
       colorContrast,
-      focusManagement
+      focusManagement,
     };
   }
 
@@ -208,7 +208,7 @@ export class AccessibilityTester {
     const axeConfig = {
       rules: this.buildAxeRulesConfig(),
       tags: this.config.tags,
-      exclude: this.config.excludeRules.map(rule => `[data-rule="${rule}"]`)
+      exclude: this.config.excludeRules.map(rule => `[data-rule="${rule}"]`),
     };
 
     return await axe(container, axeConfig);
@@ -218,7 +218,7 @@ export class AccessibilityTester {
    * Convert axe violations to our format
    */
   private convertAxeViolations(axeViolations: AxeResult[]): AccessibilityViolation[] {
-    return axeViolations.flatMap(violation => 
+    return axeViolations.flatMap(violation =>
       violation.nodes.map(node => ({
         ruleId: violation.id,
         impact: violation.impact as 'minor' | 'moderate' | 'serious' | 'critical',
@@ -228,8 +228,8 @@ export class AccessibilityTester {
         help: violation.help,
         helpUrl: violation.helpUrl,
         suggestion: this.generateSuggestion(violation.id, node.element as HTMLElement),
-        wcagCriteria: violation.tags.filter(tag => tag.startsWith('wcag'))
-      }))
+        wcagCriteria: violation.tags.filter(tag => tag.startsWith('wcag')),
+      })),
     );
   }
 
@@ -249,7 +249,7 @@ export class AccessibilityTester {
           element,
           description: 'Element lacks visible focus indicator',
           severity: 'high',
-          suggestion: 'Add CSS focus styles or ensure default focus indicators are visible'
+          suggestion: 'Add CSS focus styles or ensure default focus indicators are visible',
         });
       }
     }
@@ -274,7 +274,7 @@ export class AccessibilityTester {
       tabbableElements: tabbableElements.length,
       trapFocus,
       skipLinks,
-      issues
+      issues,
     };
   }
 
@@ -302,7 +302,7 @@ export class AccessibilityTester {
         element: container,
         description: 'Heading structure is not logical',
         severity: 'medium',
-        suggestion: 'Ensure headings follow a logical hierarchy (h1 → h2 → h3, etc.)'
+        suggestion: 'Ensure headings follow a logical hierarchy (h1 → h2 → h3, etc.)',
       });
     }
 
@@ -317,7 +317,7 @@ export class AccessibilityTester {
       landmarks,
       headingStructure: headingStructure.valid,
       altTexts,
-      issues
+      issues,
     };
   }
 
@@ -345,7 +345,7 @@ export class AccessibilityTester {
       passed: failedChecks === 0,
       totalChecks,
       failedChecks,
-      issues
+      issues,
     };
   }
 
@@ -363,7 +363,7 @@ export class AccessibilityTester {
         element: container,
         description: 'Some elements lack proper focus indicators',
         severity: 'high',
-        suggestion: 'Ensure all interactive elements have visible focus indicators'
+        suggestion: 'Ensure all interactive elements have visible focus indicators',
       });
     }
 
@@ -375,7 +375,7 @@ export class AccessibilityTester {
         element: container,
         description: 'Focus order does not match visual order',
         severity: 'medium',
-        suggestion: 'Adjust tab order to match visual layout'
+        suggestion: 'Adjust tab order to match visual layout',
       });
     }
 
@@ -387,7 +387,7 @@ export class AccessibilityTester {
         element: container,
         description: 'Modal does not trap focus',
         severity: 'high',
-        suggestion: 'Implement focus trapping for modal dialogs'
+        suggestion: 'Implement focus trapping for modal dialogs',
       });
     }
 
@@ -396,7 +396,7 @@ export class AccessibilityTester {
       focusIndicators,
       focusOrder,
       focusTrapping,
-      issues
+      issues,
     };
   }
 
@@ -429,7 +429,7 @@ export class AccessibilityTester {
       'select:not([disabled])',
       'textarea:not([disabled])',
       '[tabindex]:not([tabindex="-1"])',
-      '[contenteditable="true"]'
+      '[contenteditable="true"]',
     ];
 
     return Array.from(container.querySelectorAll(focusableSelectors.join(', '))) as HTMLElement[];
@@ -452,12 +452,12 @@ export class AccessibilityTester {
     // Simulate focus
     element.focus();
     const computedStyle = window.getComputedStyle(element, ':focus');
-    
+
     // Check for common focus indicators
     const hasOutline = computedStyle.outline !== 'none' && computedStyle.outline !== '0px';
     const hasBoxShadow = computedStyle.boxShadow !== 'none';
     const hasBorder = computedStyle.borderColor !== computedStyle.getPropertyValue('border-color');
-    
+
     return hasOutline || hasBoxShadow || hasBorder;
   }
 
@@ -476,14 +476,14 @@ export class AccessibilityTester {
       const nextRect = next.getBoundingClientRect();
 
       // Simple heuristic: next element should be to the right or below
-      if (nextRect.top < currentRect.top || 
+      if (nextRect.top < currentRect.top ||
           (nextRect.top === currentRect.top && nextRect.left < currentRect.left)) {
         issues.push({
           type: 'tab-order',
           element: next,
           description: 'Tab order does not match visual order',
           severity: 'medium',
-          suggestion: 'Adjust tabindex or DOM order to match visual layout'
+          suggestion: 'Adjust tabindex or DOM order to match visual layout',
         });
       }
     }
@@ -506,7 +506,7 @@ export class AccessibilityTester {
             element,
             description: 'Element cannot be activated with keyboard',
             severity: 'high',
-            suggestion: 'Add keyboard event handlers for Enter and Space keys'
+            suggestion: 'Add keyboard event handlers for Enter and Space keys',
           });
         }
       }
@@ -575,9 +575,9 @@ export class AccessibilityTester {
    */
   private hasSkipLinks(container: HTMLElement): boolean {
     const skipLinks = container.querySelectorAll('a[href^="#"]');
-    return Array.from(skipLinks).some(link => 
+    return Array.from(skipLinks).some(link =>
       link.textContent?.toLowerCase().includes('skip') ||
-      link.getAttribute('aria-label')?.toLowerCase().includes('skip')
+      link.getAttribute('aria-label')?.toLowerCase().includes('skip'),
     );
   }
 
@@ -602,7 +602,7 @@ export class AccessibilityTester {
           element: element as HTMLElement,
           description: 'Interactive element lacks accessible name',
           severity: 'high',
-          suggestion: 'Add aria-label, aria-labelledby, or associated label element'
+          suggestion: 'Add aria-label, aria-labelledby, or associated label element',
         });
       }
     });
@@ -630,7 +630,7 @@ export class AccessibilityTester {
     const landmarkSelectors = [
       'main', 'nav', 'aside', 'header', 'footer', 'section',
       '[role="main"]', '[role="navigation"]', '[role="complementary"]',
-      '[role="banner"]', '[role="contentinfo"]', '[role="region"]'
+      '[role="banner"]', '[role="contentinfo"]', '[role="region"]',
     ];
 
     return container.querySelectorAll(landmarkSelectors.join(', ')).length;
@@ -650,7 +650,7 @@ export class AccessibilityTester {
         element: container,
         description: 'Page lacks main landmark',
         severity: 'medium',
-        suggestion: 'Add <main> element or role="main" to identify main content'
+        suggestion: 'Add <main> element or role="main" to identify main content',
       });
     } else if (mainLandmarks.length > 1) {
       issues.push({
@@ -658,7 +658,7 @@ export class AccessibilityTester {
         element: container,
         description: 'Multiple main landmarks found',
         severity: 'medium',
-        suggestion: 'Use only one main landmark per page'
+        suggestion: 'Use only one main landmark per page',
       });
     }
 
@@ -674,18 +674,18 @@ export class AccessibilityTester {
     let previousLevel = 0;
 
     for (const heading of headings) {
-      const level = parseInt(heading.tagName.charAt(1));
-      
+      const level = parseInt(heading.tagName.charAt(1), 10);
+
       if (level > previousLevel + 1) {
         issues.push(`Heading level ${level} follows level ${previousLevel}, skipping levels`);
       }
-      
+
       previousLevel = level;
     }
 
     return {
       valid: issues.length === 0,
-      issues
+      issues,
     };
   }
 
@@ -710,7 +710,7 @@ export class AccessibilityTester {
           element: img,
           description: 'Image lacks alt attribute',
           severity: 'high',
-          suggestion: 'Add descriptive alt text or empty alt="" for decorative images'
+          suggestion: 'Add descriptive alt text or empty alt="" for decorative images',
         });
       }
     });
@@ -740,10 +740,10 @@ export class AccessibilityTester {
     const ratio = this.calculateContrastRatio(color, backgroundColor);
     const fontSize = parseFloat(computedStyle.fontSize);
     const fontWeight = computedStyle.fontWeight;
-    
-    const isLargeText = fontSize >= 18 || (fontSize >= 14 && (fontWeight === 'bold' || parseInt(fontWeight) >= 700));
-    const requiredRatio = this.config.wcagLevel === 'AAA' 
-      ? (isLargeText ? 4.5 : 7) 
+
+    const isLargeText = fontSize >= 18 || (fontSize >= 14 && (fontWeight === 'bold' || parseInt(fontWeight, 10) >= 700));
+    const requiredRatio = this.config.wcagLevel === 'AAA'
+      ? (isLargeText ? 4.5 : 7)
       : (isLargeText ? 3 : 4.5);
 
     if (ratio < requiredRatio) {
@@ -755,7 +755,7 @@ export class AccessibilityTester {
         requiredRatio,
         level: this.config.wcagLevel,
         size: isLargeText ? 'large' : 'normal',
-        suggestion: `Increase contrast ratio to at least ${requiredRatio}:1`
+        suggestion: `Increase contrast ratio to at least ${requiredRatio}:1`,
       };
     }
 
@@ -768,10 +768,10 @@ export class AccessibilityTester {
   private calculateContrastRatio(color1: string, color2: string): number {
     const luminance1 = this.getLuminance(color1);
     const luminance2 = this.getLuminance(color2);
-    
+
     const lighter = Math.max(luminance1, luminance2);
     const darker = Math.min(luminance1, luminance2);
-    
+
     return (lighter + 0.05) / (darker + 0.05);
   }
 
@@ -798,9 +798,9 @@ export class AccessibilityTester {
     const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
     if (rgbMatch) {
       return {
-        r: parseInt(rgbMatch[1]),
-        g: parseInt(rgbMatch[2]),
-        b: parseInt(rgbMatch[3])
+        r: parseInt(rgbMatch[1], 10),
+        g: parseInt(rgbMatch[2], 10),
+        b: parseInt(rgbMatch[3], 10),
       };
     }
 
@@ -810,7 +810,7 @@ export class AccessibilityTester {
       return {
         r: parseInt(hexMatch[1], 16),
         g: parseInt(hexMatch[2], 16),
-        b: parseInt(hexMatch[3], 16)
+        b: parseInt(hexMatch[3], 16),
       };
     }
 
@@ -840,7 +840,7 @@ export class AccessibilityTester {
   private isInteractiveElement(element: HTMLElement): boolean {
     const interactiveTags = ['button', 'a', 'input', 'select', 'textarea'];
     const interactiveRoles = ['button', 'link', 'menuitem', 'tab'];
-    
+
     return interactiveTags.includes(element.tagName.toLowerCase()) ||
            interactiveRoles.includes(element.getAttribute('role') || '') ||
            element.hasAttribute('onclick') ||
@@ -892,7 +892,7 @@ export class AccessibilityTester {
       'landmark-one-main': 'Use only one main landmark per page',
       'region': 'Add landmarks to identify page regions',
       'focus-order-semantics': 'Ensure focus order matches the visual order',
-      'keyboard': 'Make all interactive elements keyboard accessible'
+      'keyboard': 'Make all interactive elements keyboard accessible',
     };
 
     return suggestions[ruleId] || 'Review element for accessibility compliance';
@@ -925,7 +925,7 @@ export class AccessibilityTester {
       moderateViolations,
       minorViolations,
       wcagLevel: this.config.wcagLevel,
-      complianceScore
+      complianceScore,
     };
   }
 
@@ -937,7 +937,7 @@ export class AccessibilityTester {
     keyboardNav?: KeyboardNavigationResult,
     screenReader?: ScreenReaderResult,
     colorContrast?: ColorContrastResult,
-    focusManagement?: FocusManagementResult
+    focusManagement?: FocusManagementResult,
   ): number {
     let score = summary.complianceScore;
 
@@ -983,7 +983,7 @@ export class AccessibilityTester {
           inputs.forEach(input => {
             const hasValidation = input.hasAttribute('aria-describedby') ||
                                 input.hasAttribute('aria-invalid');
-            
+
             if (!hasValidation) {
               violations.push({
                 ruleId: 'form-validation',
@@ -993,14 +993,14 @@ export class AccessibilityTester {
                 selector: this.generateSelector(input as HTMLElement),
                 help: 'Add aria-describedby and aria-invalid attributes for form validation',
                 suggestion: 'Use aria-describedby to reference validation messages and aria-invalid to indicate validation state',
-                wcagCriteria: ['wcag2a']
+                wcagCriteria: ['wcag2a'],
               });
             }
           });
         });
 
         return violations;
-      }
+      },
     });
 
     // Custom rule for interactive elements
@@ -1025,13 +1025,13 @@ export class AccessibilityTester {
               selector: this.generateSelector(htmlElement),
               help: 'Add appropriate role attribute or use semantic HTML elements',
               suggestion: 'Use button, link, or other semantic elements, or add role="button" with keyboard support',
-              wcagCriteria: ['wcag2a']
+              wcagCriteria: ['wcag2a'],
             });
           }
         });
 
         return violations;
-      }
+      },
     });
   }
 
@@ -1076,13 +1076,13 @@ export class AccessibilityTester {
    * Generate accessibility report
    */
   generateReport(result: AccessibilityTestResult): string {
-    let report = `# Accessibility Test Report\n\n`;
-    
+    let report = '# Accessibility Test Report\n\n';
+
     report += `**Overall Score:** ${result.score}/100\n`;
     report += `**Status:** ${result.passed ? 'PASSED' : 'FAILED'}\n`;
     report += `**WCAG Level:** ${result.summary.wcagLevel}\n\n`;
 
-    report += `## Summary\n`;
+    report += '## Summary\n';
     report += `- Total Elements: ${result.summary.totalElements}\n`;
     report += `- Violating Elements: ${result.summary.violatingElements}\n`;
     report += `- Critical Violations: ${result.summary.criticalViolations}\n`;
@@ -1091,7 +1091,7 @@ export class AccessibilityTester {
     report += `- Minor Violations: ${result.summary.minorViolations}\n\n`;
 
     if (result.violations.length > 0) {
-      report += `## Violations\n\n`;
+      report += '## Violations\n\n';
       result.violations.forEach((violation, index) => {
         report += `### ${index + 1}. ${violation.message}\n`;
         report += `- **Impact:** ${violation.impact}\n`;

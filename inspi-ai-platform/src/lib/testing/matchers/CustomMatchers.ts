@@ -1,6 +1,6 @@
 /**
  * Custom Jest Matchers for Inspi.AI Platform Testing
- * 
+ *
  * This module provides custom Jest matchers for domain-specific assertions
  * that improve test readability and provide better error messages.
  */
@@ -21,7 +21,7 @@ export class CustomMatchers {
    */
   static toBeValidCard(received: any): CustomMatcherResult {
     const pass = CustomMatchers.isValidCard(received);
-    
+
     return {
       pass,
       message: () => {
@@ -31,7 +31,7 @@ export class CustomMatchers {
           const issues = CustomMatchers.getCardValidationIssues(received);
           return `Expected ${JSON.stringify(received)} to be a valid card.\nIssues found:\n${issues.join('\n')}`;
         }
-      }
+      },
     };
   }
 
@@ -40,7 +40,7 @@ export class CustomMatchers {
    */
   static toBeValidUser(received: any): CustomMatcherResult {
     const pass = CustomMatchers.isValidUser(received);
-    
+
     return {
       pass,
       message: () => {
@@ -50,7 +50,7 @@ export class CustomMatchers {
           const issues = CustomMatchers.getUserValidationIssues(received);
           return `Expected ${JSON.stringify(received)} to be a valid user.\nIssues found:\n${issues.join('\n')}`;
         }
-      }
+      },
     };
   }
 
@@ -59,7 +59,7 @@ export class CustomMatchers {
    */
   static toBeValidWork(received: any): CustomMatcherResult {
     const pass = CustomMatchers.isValidWork(received);
-    
+
     return {
       pass,
       message: () => {
@@ -69,7 +69,7 @@ export class CustomMatchers {
           const issues = CustomMatchers.getWorkValidationIssues(received);
           return `Expected ${JSON.stringify(received)} to be a valid work.\nIssues found:\n${issues.join('\n')}`;
         }
-      }
+      },
     };
   }
 
@@ -79,11 +79,11 @@ export class CustomMatchers {
   static toHavePerformanceWithin(
     received: number,
     expected: number,
-    tolerance: number = 0.1
+    tolerance: number = 0.1,
   ): CustomMatcherResult {
     const difference = Math.abs(received - expected);
     const pass = difference <= tolerance;
-    
+
     return {
       pass,
       message: () => {
@@ -92,7 +92,7 @@ export class CustomMatchers {
         } else {
           return `Expected ${received} to be within ${tolerance} of ${expected}, but difference was ${difference}`;
         }
-      }
+      },
     };
   }
 
@@ -101,7 +101,7 @@ export class CustomMatchers {
    */
   static toBeValidApiResponse(received: any): CustomMatcherResult {
     const pass = CustomMatchers.isValidApiResponse(received);
-    
+
     return {
       pass,
       message: () => {
@@ -111,7 +111,7 @@ export class CustomMatchers {
           const issues = CustomMatchers.getApiResponseValidationIssues(received);
           return `Expected ${JSON.stringify(received)} to be a valid API response.\nIssues found:\n${issues.join('\n')}`;
         }
-      }
+      },
     };
   }
 
@@ -120,7 +120,7 @@ export class CustomMatchers {
    */
   static toBeValidErrorResponse(received: any): CustomMatcherResult {
     const pass = CustomMatchers.isValidErrorResponse(received);
-    
+
     return {
       pass,
       message: () => {
@@ -130,7 +130,7 @@ export class CustomMatchers {
           const issues = CustomMatchers.getErrorResponseValidationIssues(received);
           return `Expected ${JSON.stringify(received)} to be a valid error response.\nIssues found:\n${issues.join('\n')}`;
         }
-      }
+      },
     };
   }
 
@@ -139,7 +139,7 @@ export class CustomMatchers {
    */
   static toBeValidJWT(received: any): CustomMatcherResult {
     const pass = CustomMatchers.isValidJWT(received);
-    
+
     return {
       pass,
       message: () => {
@@ -148,7 +148,7 @@ export class CustomMatchers {
         } else {
           return `Expected ${received} to be a valid JWT token (format: header.payload.signature)`;
         }
-      }
+      },
     };
   }
 
@@ -157,7 +157,7 @@ export class CustomMatchers {
    */
   static toBeValidEmail(received: any): CustomMatcherResult {
     const pass = CustomMatchers.isValidEmail(received);
-    
+
     return {
       pass,
       message: () => {
@@ -166,7 +166,7 @@ export class CustomMatchers {
         } else {
           return `Expected ${received} to be a valid email address`;
         }
-      }
+      },
     };
   }
 
@@ -187,24 +187,24 @@ export class CustomMatchers {
 
   private static getCardValidationIssues(card: any): string[] {
     const issues: string[] = [];
-    
+
     if (!card || typeof card !== 'object') {
       issues.push('- Must be an object');
       return issues;
     }
-    
+
     if (typeof card.title !== 'string' || card.title.length === 0) {
       issues.push('- title must be a non-empty string');
     }
-    
+
     if (typeof card.content !== 'string' || card.content.length === 0) {
       issues.push('- content must be a non-empty string');
     }
-    
+
     if (!Array.isArray(card.tags)) {
       issues.push('- tags must be an array');
     }
-    
+
     return issues;
   }
 
@@ -216,27 +216,27 @@ export class CustomMatchers {
       CustomMatchers.isValidEmail(user.email) &&
       typeof user.name === 'string' &&
       user.name.length > 0 &&
-      (user.id === undefined || typeof user.id === 'string') &&
+      ((user.id || (user as any)._id) === undefined || typeof (user.id || (user as any)._id) === 'string') &&
       (user.createdAt === undefined || user.createdAt instanceof Date || typeof user.createdAt === 'string')
     );
   }
 
   private static getUserValidationIssues(user: any): string[] {
     const issues: string[] = [];
-    
+
     if (!user || typeof user !== 'object') {
       issues.push('- Must be an object');
       return issues;
     }
-    
+
     if (typeof user.email !== 'string' || !CustomMatchers.isValidEmail(user.email)) {
       issues.push('- email must be a valid email address');
     }
-    
+
     if (typeof user.name !== 'string' || user.name.length === 0) {
       issues.push('- name must be a non-empty string');
     }
-    
+
     return issues;
   }
 
@@ -255,28 +255,28 @@ export class CustomMatchers {
 
   private static getWorkValidationIssues(work: any): string[] {
     const issues: string[] = [];
-    
+
     if (!work || typeof work !== 'object') {
       issues.push('- Must be an object');
       return issues;
     }
-    
+
     if (typeof work.title !== 'string' || work.title.length === 0) {
       issues.push('- title must be a non-empty string');
     }
-    
+
     if (typeof work.description !== 'string') {
       issues.push('- description must be a string');
     }
-    
+
     if (!Array.isArray(work.tags)) {
       issues.push('- tags must be an array');
     }
-    
+
     if (work.status !== undefined && !['draft', 'published', 'archived'].includes(work.status)) {
       issues.push('- status must be one of: draft, published, archived');
     }
-    
+
     return issues;
   }
 
@@ -291,20 +291,20 @@ export class CustomMatchers {
 
   private static getApiResponseValidationIssues(response: any): string[] {
     const issues: string[] = [];
-    
+
     if (!response || typeof response !== 'object') {
       issues.push('- Must be an object');
       return issues;
     }
-    
+
     if (response.success !== true && response.success !== false) {
       issues.push('- success must be a boolean');
     }
-    
+
     if (response.data === undefined && response.error === undefined) {
       issues.push('- must have either data or error property');
     }
-    
+
     return issues;
   }
 
@@ -322,16 +322,16 @@ export class CustomMatchers {
 
   private static getErrorResponseValidationIssues(response: any): string[] {
     const issues: string[] = [];
-    
+
     if (!response || typeof response !== 'object') {
       issues.push('- Must be an object');
       return issues;
     }
-    
+
     if (response.success !== false) {
       issues.push('- success must be false for error responses');
     }
-    
+
     if (!response.error || typeof response.error !== 'object') {
       issues.push('- error must be an object');
     } else {
@@ -342,20 +342,20 @@ export class CustomMatchers {
         issues.push('- error.code must be a string');
       }
     }
-    
+
     return issues;
   }
 
   private static isValidJWT(token: any): boolean {
     if (typeof token !== 'string') return false;
-    
+
     const parts = token.split('.');
     return parts.length === 3 && parts.every(part => part.length > 0);
   }
 
   private static isValidEmail(email: any): boolean {
     if (typeof email !== 'string') return false;
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   }

@@ -1,6 +1,7 @@
 import Head from 'next/head';
-import { SEOData } from '@/lib/seo/utils';
+
 import { SEO_CONFIG } from '@/lib/seo/config';
+import { SEOData } from '@/lib/seo/utils';
 
 interface SEOHeadProps {
   seoData: SEOData;
@@ -23,7 +24,7 @@ export default function SEOHead({ seoData, structuredData = [] }: SEOHeadProps) 
     modifiedTime,
     author,
     section,
-    tags = []
+    tags = [],
   } = seoData;
 
   const fullUrl = `${SEO_CONFIG.SITE_URL}${path}`;
@@ -37,10 +38,10 @@ export default function SEOHead({ seoData, structuredData = [] }: SEOHeadProps) 
       <meta name="description" content={description} />
       <meta name="keywords" content={allKeywords.join(', ')} />
       {author && <meta name="author" content={author} />}
-      
+
       {/* 规范链接 */}
       <link rel="canonical" href={fullUrl} />
-      
+
       {/* Open Graph标签 */}
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
@@ -52,33 +53,33 @@ export default function SEOHead({ seoData, structuredData = [] }: SEOHeadProps) 
       <meta property="og:image:alt" content={title} />
       <meta property="og:locale" content={SEO_CONFIG.OG_LOCALE} />
       <meta property="og:type" content={type} />
-      
+
       {publishedTime && <meta property="article:published_time" content={publishedTime} />}
       {modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
       {section && <meta property="article:section" content={section} />}
       {tags.map(tag => (
         <meta key={tag} property="article:tag" content={tag} />
       ))}
-      
+
       {/* Twitter Card标签 */}
       <meta name="twitter:card" content={SEO_CONFIG.TWITTER_CARD} />
       <meta name="twitter:site" content={SEO_CONFIG.TWITTER_SITE} />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={fullImageUrl} />
-      
+
       {/* 其他重要的meta标签 */}
       <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
       <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-      
+
       {/* 移动端优化 */}
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta name="format-detection" content="telephone=no" />
-      
+
       {/* 语言和地区 */}
       <meta httpEquiv="content-language" content="zh-CN" />
       <meta name="geo.region" content="CN" />
-      
+
       {/* 结构化数据 */}
       {structuredData.map((data, index) => (
         <script

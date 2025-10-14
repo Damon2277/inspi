@@ -3,8 +3,8 @@
  * 验证邮件服务Mock的功能和一致性
  */
 
-import { MockEmailService, MockEmailConfig, MockEmailRecord } from '@/lib/testing';
 import { EmailOptions } from '@/lib/email/service';
+import { MockEmailService, MockEmailConfig, MockEmailRecord } from '@/lib/testing';
 
 describe('MockEmailService', () => {
   let mockService: MockEmailService;
@@ -30,7 +30,7 @@ describe('MockEmailService', () => {
       const emailOptions: EmailOptions = {
         to: 'test@example.com',
         subject: 'Test Email',
-        text: 'This is a test email'
+        text: 'This is a test email',
       };
 
       // Act
@@ -78,7 +78,7 @@ describe('MockEmailService', () => {
         to: 'test@example.com',
         subject: 'Test Subject',
         html: '<p>Test HTML content</p>',
-        text: 'Test text content'
+        text: 'Test text content',
       };
 
       // Act
@@ -102,7 +102,7 @@ describe('MockEmailService', () => {
       const emailOptions: EmailOptions = {
         to: ['user1@example.com', 'user2@example.com'],
         subject: 'Multi-recipient Email',
-        text: 'Test content'
+        text: 'Test content',
       };
 
       // Act
@@ -124,9 +124,9 @@ describe('MockEmailService', () => {
           {
             filename: 'test.txt',
             content: Buffer.from('test content'),
-            contentType: 'text/plain'
-          }
-        ]
+            contentType: 'text/plain',
+          },
+        ],
       };
 
       // Act
@@ -145,19 +145,19 @@ describe('MockEmailService', () => {
       await mockService.sendEmail({
         to: 'user1@example.com',
         subject: 'Welcome Email',
-        text: 'Welcome to our service'
+        text: 'Welcome to our service',
       });
 
       await mockService.sendEmail({
         to: 'user2@example.com',
         subject: 'Password Reset',
-        text: 'Reset your password'
+        text: 'Reset your password',
       });
 
       await mockService.sendEmail({
         to: ['user1@example.com', 'user3@example.com'],
         subject: 'Newsletter',
-        text: 'Monthly newsletter'
+        text: 'Monthly newsletter',
       });
     });
 
@@ -194,13 +194,13 @@ describe('MockEmailService', () => {
       await mockService.sendEmail({
         to: 'user1@example.com',
         subject: 'Email 1',
-        text: 'Content 1'
+        text: 'Content 1',
       });
 
       await mockService.sendEmail({
         to: 'user2@example.com',
         subject: 'Email 2',
-        text: 'Content 2'
+        text: 'Content 2',
       });
 
       // Act
@@ -224,8 +224,8 @@ describe('MockEmailService', () => {
         mockService.sendEmail({
           to: `user${i}@example.com`,
           subject: `Email ${i}`,
-          text: 'Content'
-        }).catch(() => ({ success: false }))
+          text: 'Content',
+        }).catch(() => ({ success: false })),
       );
 
       await Promise.all(promises);
@@ -247,7 +247,7 @@ describe('MockEmailService', () => {
       const config: Partial<MockEmailConfig> = {
         shouldFail: true,
         delay: 100,
-        messageIdPrefix: 'test-'
+        messageIdPrefix: 'test-',
       };
 
       // Act
@@ -268,7 +268,7 @@ describe('MockEmailService', () => {
       await expect(mockService.sendEmail({
         to: 'test@example.com',
         subject: 'Test',
-        text: 'Content'
+        text: 'Content',
       })).resolves.toMatchObject({ success: false });
     });
 
@@ -282,7 +282,7 @@ describe('MockEmailService', () => {
       await mockService.sendEmail({
         to: 'test@example.com',
         subject: 'Test',
-        text: 'Content'
+        text: 'Content',
       });
       const endTime = Date.now();
 
@@ -298,27 +298,27 @@ describe('MockEmailService', () => {
       await expect(mockService.sendEmail({
         to: '',
         subject: 'Test',
-        text: 'Content'
+        text: 'Content',
       } as EmailOptions)).resolves.toMatchObject({
         success: false,
-        error: 'Invalid email options'
+        error: 'Invalid email options',
       });
 
       await expect(mockService.sendEmail({
         to: 'test@example.com',
         subject: '',
-        text: 'Content'
+        text: 'Content',
       })).resolves.toMatchObject({
         success: false,
-        error: 'Invalid email options'
+        error: 'Invalid email options',
       });
 
       await expect(mockService.sendEmail({
         to: 'test@example.com',
-        subject: 'Test'
+        subject: 'Test',
       } as EmailOptions)).resolves.toMatchObject({
         success: false,
-        error: 'Invalid email options'
+        error: 'Invalid email options',
       });
     });
 
@@ -327,19 +327,19 @@ describe('MockEmailService', () => {
       await expect(mockService.sendEmail({
         to: 'invalid-email',
         subject: 'Test',
-        text: 'Content'
+        text: 'Content',
       })).resolves.toMatchObject({
         success: false,
-        error: 'Invalid email options'
+        error: 'Invalid email options',
       });
 
       await expect(mockService.sendEmail({
         to: ['valid@example.com', 'invalid-email'],
         subject: 'Test',
-        text: 'Content'
+        text: 'Content',
       })).resolves.toMatchObject({
         success: false,
-        error: 'Invalid email options'
+        error: 'Invalid email options',
       });
     });
   });
@@ -350,7 +350,7 @@ describe('MockEmailService', () => {
       await mockService.sendEmail({
         to: 'test@example.com',
         subject: 'Test',
-        text: 'Content'
+        text: 'Content',
       });
 
       // Act
@@ -394,7 +394,7 @@ describe('MockEmailService', () => {
       await mockService.sendEmail({
         to: 'test@example.com',
         subject: 'Test',
-        text: 'Content'
+        text: 'Content',
       });
 
       // Act
@@ -419,7 +419,7 @@ describe('MockEmailService', () => {
       await expect(mockService.sendEmail({
         to: 'test@example.com',
         subject: 'Test',
-        text: 'Content'
+        text: 'Content',
       })).rejects.toThrow('not active');
 
       await expect(mockService.verifyConnection()).rejects.toThrow('not active');
@@ -434,7 +434,7 @@ describe('MockEmailService', () => {
       const result = await mockService.sendEmail({
         to: 'test@example.com',
         subject: 'Test',
-        text: 'Content'
+        text: 'Content',
       });
 
       // Assert
@@ -449,8 +449,8 @@ describe('MockEmailService', () => {
         mockService.sendEmail({
           to: `user${i}@example.com`,
           subject: `Email ${i}`,
-          text: 'Content'
-        })
+          text: 'Content',
+        }),
       );
 
       await Promise.all(promises);

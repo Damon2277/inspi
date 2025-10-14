@@ -1,11 +1,11 @@
 /**
  * 错误恢复策略管理器
  */
-import { logger } from '@/lib/logging/logger';
 import { ApiError } from '@/lib/api/client';
-import { CustomError } from '@/lib/errors/CustomError';
-import { ErrorCode } from '@/lib/errors/types';
+import { logger } from '@/lib/logging/logger';
 import { monitoringContext } from '@/lib/monitoring';
+import { CustomError } from '@/shared/errors/CustomError';
+import { ErrorCode } from '@/shared/errors/types';
 
 /**
  * 恢复策略类型
@@ -110,12 +110,12 @@ export const RECOVERY_ACTIONS = {
         metadata: {
           operation: context.operation,
           attempt: context.attempt,
-          error: context.error.message
-        }
+          error: context.error.message,
+        },
       });
       throw new Error('RETRY_REQUESTED');
     },
-    description: `Immediate retry (max ${maxRetries} attempts)`
+    description: `Immediate retry (max ${maxRetries} attempts)`,
   }),
 
   /**
@@ -132,12 +132,12 @@ export const RECOVERY_ACTIONS = {
           operation: context.operation,
           attempt: context.attempt,
           delay,
-          error: context.error.message
-        }
+          error: context.error.message,
+        },
       });
       throw new Error('RETRY_REQUESTED');
     },
-    description: `Delayed retry with ${delay}ms delay (max ${maxRetries} attempts)`
+    description: `Delayed retry with ${delay}ms delay (max ${maxRetries} attempts)`,
   }),
 
   /**
@@ -152,8 +152,8 @@ export const RECOVERY_ACTIONS = {
         metadata: {
           operation: context.operation,
           cacheKey,
-          error: context.error.message
-        }
+          error: context.error.message,
+        },
       });
       // 模拟缓存查找
       const cachedData = await getCachedData(cacheKey);
@@ -162,7 +162,7 @@ export const RECOVERY_ACTIONS = {
       }
       throw new Error('No cached data available');
     },
-    description: `Cache fallback for key: ${cacheKey}`
+    description: `Cache fallback for key: ${cacheKey}`,
   }),
 
   /**
@@ -176,12 +176,12 @@ export const RECOVERY_ACTIONS = {
       logger.info('Executing graceful degradation', {
         metadata: {
           operation: context.operation,
-          error: context.error.message
-        }
+          error: context.error.message,
+        },
       });
       return fallbackData;
     },
-    description: 'Graceful degradation with fallback data'
+    description: 'Graceful degradation with fallback data',
   }),
 
   /**
@@ -196,13 +196,13 @@ export const RECOVERY_ACTIONS = {
         metadata: {
           operation: context.operation,
           message,
-          userId: context.userContext?.userId
-        }
+          userId: context.userContext?.userId,
+        },
       });
       await sendUserNotification(context.userContext?.userId, message);
       return { notified: true, message };
     },
-    description: `User notification: ${message}`
+    description: `User notification: ${message}`,
   }),
 
   /**
@@ -217,14 +217,14 @@ export const RECOVERY_ACTIONS = {
         metadata: {
           operation: context.operation,
           severity,
-          attempt: context.attempt
-        }
+          attempt: context.attempt,
+        },
       });
       await escalateError(context.error, severity, context);
       return { escalated: true, severity };
     },
-    description: `Error escalation with ${severity} severity`
-  })
+    description: `Error escalation with ${severity} severity`,
+  }),
 };
 
 /**
@@ -244,12 +244,12 @@ export const RECOVERY_STRATEGIES: RecoveryStrategy[] = [
       RECOVERY_ACTIONS.immediateRetry(2),
       RECOVERY_ACTIONS.delayedRetry(1000, 3),
       RECOVERY_ACTIONS.cacheFallback('network_fallback'),
-      RECOVERY_ACTIONS.userNotification('网络连接不稳定，正在尝试恢复...')
+      RECOVERY_ACTIONS.userNotification('网络连接不稳定，正在尝试恢复...'),
     ],
     maxAttempts: 5,
     cooldownPeriod: 30000,
     priority: 1,
-    enabled: true
+    enabled: true,
   },
   {
     name: 'Server Error Recovery',
@@ -264,12 +264,12 @@ export const RECOVERY_STRATEGIES: RecoveryStrategy[] = [
       RECOVERY_ACTIONS.delayedRetry(2000, 2),
       RECOVERY_ACTIONS.cacheFallback('server_fallback'),
       RECOVERY_ACTIONS.gracefulDegradation({ message: '服务暂时不可用，请稍后重试' }),
-      RECOVERY_ACTIONS.errorEscalation('high')
+      RECOVERY_ACTIONS.errorEscalation('high'),
     ],
     maxAttempts: 3,
     cooldownPeriod: 60000,
     priority: 2,
-    enabled: true
+    enabled: true,
   },
   {
     name: 'Validation Error Recovery',
@@ -282,12 +282,12 @@ export const RECOVERY_STRATEGIES: RecoveryStrategy[] = [
     },
     actions: [
       RECOVERY_ACTIONS.userNotification('请检查输入信息并重试'),
-      RECOVERY_ACTIONS.errorEscalation('low')
+      RECOVERY_ACTIONS.errorEscalation('low'),
     ],
     maxAttempts: 1,
     cooldownPeriod: 0,
     priority: 3,
-    enabled: true
+    enabled: true,
   },
   {
     name: 'Authentication Error Recovery',
@@ -308,8 +308,8 @@ export const RECOVERY_STRATEGIES: RecoveryStrategy[] = [
           logger.info('Redirecting to login', {
             metadata: {
               operation: context.operation,
-              userId: context.userContext?.userId
-            }
+              userId: context.userContext?.userId,
+            },
           });
           // 重定向到登录页面
           if (typeof window !== 'undefined') {
@@ -317,14 +317,14 @@ export const RECOVERY_STRATEGIES: RecoveryStrategy[] = [
           }
           return { redirected: true, url: '/login' };
         },
-        description: 'Redirect to login page'
-      }
+        description: 'Redirect to login page',
+      },
     ],
     maxAttempts: 1,
     cooldownPeriod: 0,
     priority: 4,
-    enabled: true
-  }
+    enabled: true,
+  },
 ];
 
 /**
@@ -351,8 +351,8 @@ export class RecoveryStrategyManager {
       metadata: {
         name: strategy.name,
         type: strategy.type,
-        priority: strategy.priority
-      }
+        priority: strategy.priority,
+      },
     });
   }
 
@@ -369,7 +369,7 @@ export class RecoveryStrategyManager {
   async recover(
     error: Error,
     operation: string,
-    context?: any
+    context?: any,
   ): Promise<RecoveryResult> {
     const recoveryContext: RecoveryContext = {
       error,
@@ -377,7 +377,7 @@ export class RecoveryStrategyManager {
       attempt: 1,
       startTime: Date.now(),
       metadata: context,
-      userContext: this.extractUserContext()
+      userContext: this.extractUserContext(),
     };
 
     // 查找适用的策略
@@ -386,8 +386,8 @@ export class RecoveryStrategyManager {
       logger.warn('No applicable recovery strategies found', {
         metadata: {
           operation,
-          error: error.message
-        }
+          error: error.message,
+        },
       });
       return {
         success: false,
@@ -396,7 +396,7 @@ export class RecoveryStrategyManager {
         error,
         attempts: 0,
         duration: 0,
-        fallbackUsed: false
+        fallbackUsed: false,
       };
     }
 
@@ -419,21 +419,21 @@ export class RecoveryStrategyManager {
           metadata: {
             strategy: strategy.name,
             operation,
-            originalError: error.message
-          }
+            originalError: error.message,
+          },
         });
       }
     }
 
     // 没有找到适用的策略，返回失败结果
     const duration = Date.now() - recoveryContext.startTime;
-    
+
     logger.error('All recovery strategies failed', error, {
       metadata: {
         operation,
         strategiesAttempted: applicableStrategies.length,
-        duration
-      }
+        duration,
+      },
     });
 
     return {
@@ -443,7 +443,7 @@ export class RecoveryStrategyManager {
       error,
       attempts: 0,
       duration,
-      fallbackUsed: false
+      fallbackUsed: false,
     };
   }
 
@@ -461,17 +461,17 @@ export class RecoveryStrategyManager {
   private canExecuteStrategy(strategy: RecoveryStrategy): boolean {
     const cooldownKey = `${strategy.name}_cooldown`;
     const lastExecution = this.cooldowns.get(cooldownKey);
-    
+
     if (lastExecution && Date.now() - lastExecution < strategy.cooldownPeriod) {
       logger.debug('Strategy in cooldown period', {
         metadata: {
           strategy: strategy.name,
-          cooldownRemaining: strategy.cooldownPeriod - (Date.now() - lastExecution)
-        }
+          cooldownRemaining: strategy.cooldownPeriod - (Date.now() - lastExecution),
+        },
       });
       return false;
     }
-    
+
     return true;
   }
 
@@ -480,17 +480,17 @@ export class RecoveryStrategyManager {
    */
   private async executeStrategy(
     strategy: RecoveryStrategy,
-    context: RecoveryContext
+    context: RecoveryContext,
   ): Promise<RecoveryResult> {
     const startTime = Date.now();
     const cooldownKey = `${strategy.name}_cooldown`;
-    
+
     logger.info('Executing recovery strategy', {
       metadata: {
         strategy: strategy.name,
         operation: context.operation,
-        attempt: context.attempt
-      }
+        attempt: context.attempt,
+      },
     });
 
     // 设置冷却时间
@@ -513,8 +513,8 @@ export class RecoveryStrategyManager {
             strategy: strategy.name,
             action: action.type,
             operation: context.operation,
-            duration
-          }
+            duration,
+          },
         });
 
         return {
@@ -524,15 +524,15 @@ export class RecoveryStrategyManager {
           data: actionResult,
           attempts: context.attempt,
           duration,
-          fallbackUsed: false
+          fallbackUsed: false,
         };
       } catch (actionError) {
         logger.warn('Recovery action failed, trying fallback', {
           metadata: {
             strategy: strategy.name,
             action: action.type,
-            error: actionError instanceof Error ? actionError.message : String(actionError)
-          }
+            error: actionError instanceof Error ? actionError.message : String(actionError),
+          },
         });
 
         // 尝试回退动作
@@ -548,7 +548,7 @@ export class RecoveryStrategyManager {
               data: fallbackResult,
               attempts: context.attempt,
               duration,
-              fallbackUsed: true
+              fallbackUsed: true,
             };
           } catch (fallbackError) {
             logger.error('Fallback action also failed', fallbackError instanceof Error ? fallbackError : new Error(String(fallbackError)));
@@ -565,7 +565,7 @@ export class RecoveryStrategyManager {
       error: context.error,
       attempts: context.attempt,
       duration,
-      fallbackUsed: false
+      fallbackUsed: false,
     };
   }
 
@@ -574,12 +574,12 @@ export class RecoveryStrategyManager {
    */
   private async executeAction(action: RecoveryAction, context: RecoveryContext): Promise<any> {
     const timeout = action.timeout || 30000; // 默认30秒超时
-    
+
     return Promise.race([
       action.execute(context),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Action timeout')), timeout)
-      )
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Action timeout')), timeout),
+      ),
     ]);
   }
 
@@ -600,7 +600,7 @@ export class RecoveryStrategyManager {
       totalStrategies: this.strategies.size,
       enabledStrategies: Array.from(this.strategies.values()).filter(s => s.enabled).length,
       activeRecoveries: this.activeRecoveries.size,
-      cooldowns: Object.fromEntries(this.cooldowns)
+      cooldowns: Object.fromEntries(this.cooldowns),
     };
   }
 
@@ -612,7 +612,7 @@ export class RecoveryStrategyManager {
     for (const [key, timestamp] of this.cooldowns.entries()) {
       const strategy = Array.from(this.strategies.values())
         .find(s => `${s.name}_cooldown` === key);
-      
+
       if (strategy && now - timestamp > strategy.cooldownPeriod) {
         this.cooldowns.delete(key);
       }
@@ -635,7 +635,7 @@ async function getCachedData(key: string): Promise<any> {
 async function sendUserNotification(userId: string | undefined, message: string): Promise<void> {
   // 这里应该实现实际的通知逻辑
   logger.info('User notification sent', {
-    metadata: { userId, message }
+    metadata: { userId, message },
   });
 }
 
@@ -643,17 +643,17 @@ async function sendUserNotification(userId: string | undefined, message: string)
  * 辅助函数：错误上报
  */
 async function escalateError(
-  error: Error, 
+  error: Error,
   severity: 'low' | 'medium' | 'high' | 'critical',
-  context: RecoveryContext
+  context: RecoveryContext,
 ): Promise<void> {
   // 这里应该实现实际的错误上报逻辑
   logger.error('Error escalated', error, {
     metadata: {
       severity,
       operation: context.operation,
-      attempt: context.attempt
-    }
+      attempt: context.attempt,
+    },
   });
 }
 
@@ -670,10 +670,10 @@ export function createRecoveryStrategyManager(): RecoveryStrategyManager {
 export function withRecovery<T extends any[], R>(
   fn: (...args: T) => Promise<R>,
   operation: string,
-  context?: any
+  context?: any,
 ): (...args: T) => Promise<R> {
   const recoveryManager = new RecoveryStrategyManager();
-  
+
   return async (...args: T): Promise<R> => {
     try {
       return await fn(...args);
@@ -681,9 +681,9 @@ export function withRecovery<T extends any[], R>(
       const recoveryResult = await recoveryManager.recover(
         error instanceof Error ? error : new Error(String(error)),
         operation,
-        context
+        context,
       );
-      
+
       if (recoveryResult.success) {
         return recoveryResult.data;
       } else {

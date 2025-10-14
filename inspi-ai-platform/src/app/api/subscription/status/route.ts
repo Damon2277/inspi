@@ -15,22 +15,22 @@ export async function GET(request: NextRequest) {
         startDate: new Date().toISOString(),
         endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1年后
         autoRenew: false,
-        paymentMethod: 'none'
+        paymentMethod: 'none',
       },
       usage: {
         date: new Date().toISOString().split('T')[0],
         generations: {
           current: 5,
           limit: 10,
-          remaining: 5
+          remaining: 5,
         },
         reuses: {
           current: 2,
           limit: 5,
-          remaining: 3
-        }
+          remaining: 3,
+        },
       },
-      plan: 'free'
+      plan: 'free',
     };
 
     return NextResponse.json(mockResponseData);
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     console.error('Get subscription status error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

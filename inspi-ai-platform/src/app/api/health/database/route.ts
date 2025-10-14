@@ -3,8 +3,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { healthManager } from '@/lib/monitoring/health';
+
 import { logger } from '@/lib/logging/logger';
+import { healthManager } from '@/lib/monitoring/health';
 
 /**
  * GET /api/health/database - 获取数据库健康状态
@@ -12,13 +13,13 @@ import { logger } from '@/lib/logging/logger';
 export async function GET(request: NextRequest) {
   try {
     const result = await healthManager.runCheck('database');
-    
+
     logger.info('Database health check performed', {
       metadata: {
         status: result.status,
         duration: result.duration,
-        message: result.message
-      }
+        message: result.message,
+      },
     });
 
     // 根据健康状态设置HTTP状态码
@@ -35,18 +36,18 @@ export async function GET(request: NextRequest) {
       message: result.message,
       duration: result.duration,
       timestamp: result.timestamp,
-      metadata: result.metadata
+      metadata: result.metadata,
     }, { status: statusCode });
   } catch (error) {
     logger.error('Database health check failed', error instanceof Error ? error : new Error(String(error)));
-    
+
     return NextResponse.json({
       name: 'database',
       status: 'unhealthy',
       message: 'Database health check failed',
       duration: 0,
       timestamp: Date.now(),
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     }, { status: 500 });
   }
 }

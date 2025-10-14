@@ -2,7 +2,7 @@
  * 邀请系统数据库模型定义
  */
 
-import { InviteCode, InviteRegistration, RewardRecord, InviteStats, RewardType, RewardSourceType } from './types'
+import { InviteCode, InviteRegistration, RewardRecord, InviteStats, RewardType, RewardSourceType } from './types';
 
 // 邀请码数据库模型
 export interface InviteCodeModel {
@@ -125,7 +125,7 @@ export const CREATE_TABLES_SQL = {
       INDEX idx_expires (expires_at)
     );
   `,
-  
+
   invite_registrations: `
     CREATE TABLE IF NOT EXISTS invite_registrations (
       id VARCHAR(36) PRIMARY KEY,
@@ -143,7 +143,7 @@ export const CREATE_TABLES_SQL = {
       UNIQUE KEY unique_invitee (invitee_id)
     );
   `,
-  
+
   reward_records: `
     CREATE TABLE IF NOT EXISTS reward_records (
       id VARCHAR(36) PRIMARY KEY,
@@ -163,7 +163,7 @@ export const CREATE_TABLES_SQL = {
       INDEX idx_granted_at (granted_at)
     );
   `,
-  
+
   invite_stats: `
     CREATE TABLE IF NOT EXISTS invite_stats (
       id VARCHAR(36) PRIMARY KEY,
@@ -178,7 +178,7 @@ export const CREATE_TABLES_SQL = {
       INDEX idx_successful_registrations (successful_registrations)
     );
   `,
-  
+
   share_stats: `
     CREATE TABLE IF NOT EXISTS share_stats (
       id VARCHAR(36) PRIMARY KEY,
@@ -194,7 +194,7 @@ export const CREATE_TABLES_SQL = {
       UNIQUE KEY unique_code_platform (invite_code_id, platform)
     );
   `,
-  
+
   invite_event_logs: `
     CREATE TABLE IF NOT EXISTS invite_event_logs (
       id VARCHAR(36) PRIMARY KEY,
@@ -212,7 +212,7 @@ export const CREATE_TABLES_SQL = {
       INDEX idx_timestamp (timestamp)
     );
   `,
-  
+
   fraud_detection_logs: `
     CREATE TABLE IF NOT EXISTS fraud_detection_logs (
       id VARCHAR(36) PRIMARY KEY,
@@ -230,7 +230,7 @@ export const CREATE_TABLES_SQL = {
       INDEX idx_detected_at (detected_at)
     );
   `,
-  
+
   reward_configs: `
     CREATE TABLE IF NOT EXISTS reward_configs (
       id VARCHAR(36) PRIMARY KEY,
@@ -351,8 +351,8 @@ export const CREATE_TABLES_SQL = {
       INDEX idx_available_credits (available_credits),
       INDEX idx_last_updated (last_updated)
     );
-  `
-}
+  `,
+};
 
 // 模型转换函数
 export class ModelConverter {
@@ -366,8 +366,8 @@ export class ModelConverter {
       expiresAt: model.expires_at,
       isActive: model.is_active,
       usageCount: model.usage_count,
-      maxUsage: model.max_usage
-    }
+      maxUsage: model.max_usage,
+    };
   }
 
   static toInviteRegistration(model: InviteRegistrationModel): InviteRegistration {
@@ -379,8 +379,8 @@ export class ModelConverter {
       registeredAt: model.registered_at,
       isActivated: model.is_activated,
       activatedAt: model.activated_at,
-      rewardsClaimed: model.rewards_claimed
-    }
+      rewardsClaimed: model.rewards_claimed,
+    };
   }
 
   static toRewardRecord(model: RewardRecordModel): RewardRecord {
@@ -393,12 +393,12 @@ export class ModelConverter {
         badgeId: model.badge_id,
         titleId: model.title_id,
         description: model.description,
-        expiresAt: model.expires_at
+        expiresAt: model.expires_at,
       },
       grantedAt: model.granted_at,
       sourceType: model.source_type,
-      sourceId: model.source_id
-    }
+      sourceId: model.source_id,
+    };
   }
 
   static toInviteStats(model: InviteStatsModel): InviteStats {
@@ -408,8 +408,8 @@ export class ModelConverter {
       successfulRegistrations: model.successful_registrations,
       activeInvitees: model.active_invitees,
       totalRewardsEarned: model.total_rewards_earned,
-      lastUpdated: model.last_updated
-    }
+      lastUpdated: model.last_updated,
+    };
   }
 
   // 将业务模型转换为数据库模型
@@ -422,8 +422,8 @@ export class ModelConverter {
       expires_at: inviteCode.expiresAt,
       is_active: inviteCode.isActive,
       usage_count: inviteCode.usageCount,
-      max_usage: inviteCode.maxUsage
-    }
+      max_usage: inviteCode.maxUsage,
+    };
   }
 
   static fromInviteRegistration(registration: InviteRegistration): InviteRegistrationModel {
@@ -435,7 +435,7 @@ export class ModelConverter {
       registered_at: registration.registeredAt,
       is_activated: registration.isActivated,
       activated_at: registration.activatedAt,
-      rewards_claimed: registration.rewardsClaimed
-    }
+      rewards_claimed: registration.rewardsClaimed,
+    };
   }
 }

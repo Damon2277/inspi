@@ -112,7 +112,8 @@ class TaskBlocker {
       }
     };
 
-    const reportFile = path.join(process.cwd(), 'docs', 'reports', `blocking-report-${Date.now()}.json`);
+    const reportFile = path.join(process.cwd(), 'docs', 'reports',
+      `blocking-report-${Date.now()}.json`);
     const reportDir = path.dirname(reportFile);
     
     if (!fs.existsSync(reportDir)) {

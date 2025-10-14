@@ -1,6 +1,6 @@
 /**
  * Team Collaboration Hub
- * 
+ *
  * Manages team collaboration features for real-time test monitoring,
  * including shared state, user presence, and collaborative metrics.
  */
@@ -124,12 +124,12 @@ export class TeamCollaborationHub extends EventEmitter {
         hash: '',
         message: '',
         author: '',
-        timestamp: new Date()
+        timestamp: new Date(),
       },
       testSuiteVersion: '1.0.0',
       runningTests: {},
       sharedNotes: [],
-      bookmarks: []
+      bookmarks: [],
     };
   }
 
@@ -160,26 +160,26 @@ export class TeamCollaborationHub extends EventEmitter {
     const fullMember: TeamMember = {
       ...member,
       lastActivity: new Date(),
-      currentTests: []
+      currentTests: [],
     };
 
     this.members.set(member.id, fullMember);
-    
+
     this.logActivity({
       userId: 'system',
       type: 'system_action',
       action: 'member_added',
       details: {
-        metadata: { memberId: member.id, memberName: member.name }
+        metadata: { memberId: member.id, memberName: member.name },
       },
-      visibility: 'team'
+      visibility: 'team',
     });
 
     this.sendTeamNotification({
       type: 'member_joined',
       message: `${member.name} joined the team`,
       data: { member: fullMember },
-      recipients: Array.from(this.members.keys()).filter(id => id !== member.id)
+      recipients: Array.from(this.members.keys()).filter(id => id !== member.id),
     });
 
     this.emit('memberAdded', fullMember);
@@ -199,16 +199,16 @@ export class TeamCollaborationHub extends EventEmitter {
       type: 'system_action',
       action: 'member_removed',
       details: {
-        metadata: { memberId: userId, memberName: member.name }
+        metadata: { memberId: userId, memberName: member.name },
       },
-      visibility: 'team'
+      visibility: 'team',
     });
 
     this.sendTeamNotification({
       type: 'member_left',
       message: `${member.name} left the team`,
       data: { member },
-      recipients: Array.from(this.members.keys())
+      recipients: Array.from(this.members.keys()),
     });
 
     this.emit('memberRemoved', member);
@@ -264,9 +264,9 @@ export class TeamCollaborationHub extends EventEmitter {
   public getActiveMembers(): TeamMember[] {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
     return Array.from(this.members.values())
-      .filter(member => 
-        member.status === 'online' && 
-        member.lastActivity > fiveMinutesAgo
+      .filter(member =>
+        member.status === 'online' &&
+        member.lastActivity > fiveMinutesAgo,
       );
   }
 
@@ -275,15 +275,15 @@ export class TeamCollaborationHub extends EventEmitter {
    */
   public updateSharedState(updates: Partial<SharedTestState>): void {
     this.sharedState = { ...this.sharedState, ...updates };
-    
+
     this.logActivity({
       userId: 'system',
       type: 'system_action',
       action: 'shared_state_updated',
       details: {
-        metadata: { updates }
+        metadata: { updates },
       },
-      visibility: 'team'
+      visibility: 'team',
     });
 
     this.emit('sharedStateUpdated', this.sharedState);
@@ -306,7 +306,7 @@ export class TeamCollaborationHub extends EventEmitter {
     this.sharedState.runningTests[testId] = {
       runnerId: userId,
       startTime: new Date(),
-      status: 'running'
+      status: 'running',
     };
 
     if (!member.currentTests.includes(testId)) {
@@ -319,9 +319,9 @@ export class TeamCollaborationHub extends EventEmitter {
       action: 'test_started',
       details: {
         testId,
-        testName: `Test ${testId}`
+        testName: `Test ${testId}`,
       },
-      visibility: 'public'
+      visibility: 'public',
     });
 
     this.emit('testRunStarted', { userId, testId });
@@ -335,7 +335,7 @@ export class TeamCollaborationHub extends EventEmitter {
     if (!runningTest || runningTest.runnerId !== userId) return;
 
     runningTest.status = 'completed';
-    
+
     const member = this.members.get(userId);
     if (member) {
       member.currentTests = member.currentTests.filter(id => id !== testId);
@@ -348,9 +348,9 @@ export class TeamCollaborationHub extends EventEmitter {
       details: {
         testId,
         testName: `Test ${testId}`,
-        metadata: { result }
+        metadata: { result },
       },
-      visibility: 'public'
+      visibility: 'public',
     });
 
     this.emit('testRunCompleted', { userId, testId, result });
@@ -363,7 +363,7 @@ export class TeamCollaborationHub extends EventEmitter {
     authorId: string,
     content: string,
     testId?: string,
-    tags: string[] = []
+    tags: string[] = [],
   ): string {
     const note = {
       id: this.generateId(),
@@ -371,7 +371,7 @@ export class TeamCollaborationHub extends EventEmitter {
       content,
       timestamp: new Date(),
       testId,
-      tags
+      tags,
     };
 
     this.sharedState.sharedNotes.push(note);
@@ -382,9 +382,9 @@ export class TeamCollaborationHub extends EventEmitter {
       action: 'note_added',
       details: {
         testId,
-        metadata: { noteId: note.id, tags }
+        metadata: { noteId: note.id, tags },
       },
-      visibility: 'team'
+      visibility: 'team',
     });
 
     this.emit('noteAdded', note);
@@ -398,7 +398,7 @@ export class TeamCollaborationHub extends EventEmitter {
     userId: string,
     testId: string,
     name: string,
-    description?: string
+    description?: string,
   ): string {
     const bookmark = {
       id: this.generateId(),
@@ -406,7 +406,7 @@ export class TeamCollaborationHub extends EventEmitter {
       testId,
       name,
       description,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     this.sharedState.bookmarks.push(bookmark);
@@ -417,9 +417,9 @@ export class TeamCollaborationHub extends EventEmitter {
       action: 'bookmark_added',
       details: {
         testId,
-        metadata: { bookmarkId: bookmark.id, name }
+        metadata: { bookmarkId: bookmark.id, name },
       },
-      visibility: 'private'
+      visibility: 'private',
     });
 
     this.emit('bookmarkAdded', bookmark);
@@ -453,7 +453,7 @@ export class TeamCollaborationHub extends EventEmitter {
     const fullActivity: CollaborativeActivity = {
       id: this.generateId(),
       timestamp: new Date(),
-      ...activity
+      ...activity,
     };
 
     this.activities.push(fullActivity);
@@ -522,8 +522,8 @@ export class TeamCollaborationHub extends EventEmitter {
       knowledgeSharing: {
         sharedNotes: this.sharedState.sharedNotes.length,
         bookmarks: this.sharedState.bookmarks.length,
-        discussions: this.activities.filter(a => a.type === 'test_comment').length
-      }
+        discussions: this.activities.filter(a => a.type === 'test_comment').length,
+      },
     };
   }
 
@@ -531,12 +531,12 @@ export class TeamCollaborationHub extends EventEmitter {
    * Send team notification
    */
   private sendTeamNotification(
-    notification: Omit<TeamNotification, 'id' | 'timestamp'>
+    notification: Omit<TeamNotification, 'id' | 'timestamp'>,
   ): void {
     const fullNotification: TeamNotification = {
       id: this.generateId(),
       timestamp: new Date(),
-      ...notification
+      ...notification,
     };
 
     this.notifications.push(fullNotification);
@@ -569,7 +569,7 @@ export class TeamCollaborationHub extends EventEmitter {
    */
   private updateMemberPresence(): void {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    
+
     this.members.forEach(member => {
       if (member.status === 'online' && member.lastActivity < fiveMinutesAgo) {
         member.status = 'away';
@@ -623,7 +623,7 @@ export class TeamCollaborationHub extends EventEmitter {
       sharedState: this.getSharedState(),
       activities: this.getRecentActivities(1000),
       notifications: this.getTeamNotifications(undefined, 100),
-      metrics: this.getTeamMetrics()
+      metrics: this.getTeamMetrics(),
     };
   }
 

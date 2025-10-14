@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
 import { healthManager, HealthCheckResult, SystemHealth } from '@/lib/monitoring/health';
 
 // Mock health manager
@@ -13,12 +14,12 @@ const mockHealthManager = {
   runAllChecks: jest.fn(),
   register: jest.fn(),
   unregister: jest.fn(),
-  getLastResults: jest.fn()
+  getLastResults: jest.fn(),
 };
 
 jest.mock('@/lib/monitoring/health', () => ({
   healthManager: mockHealthManager,
-  createHealthCheckMiddleware: jest.fn()
+  createHealthCheckMiddleware: jest.fn(),
 }));
 
 // Mock logger
@@ -26,11 +27,11 @@ const mockLogger = {
   info: jest.fn(),
   error: jest.fn(),
   warn: jest.fn(),
-  debug: jest.fn()
+  debug: jest.fn(),
 };
 
 jest.mock('@/lib/utils/logger', () => ({
-  logger: mockLogger
+  logger: mockLogger,
 }));
 
 // Create mock health API handlers
@@ -39,7 +40,7 @@ const createHealthApiHandler = (method: 'GET' | 'POST') => {
     try {
       if (method === 'GET') {
         const health = await mockHealthManager.getSystemHealth();
-        
+
         let statusCode = 200;
         if (health.status === 'degraded') {
           statusCode = 200;
@@ -54,18 +55,18 @@ const createHealthApiHandler = (method: 'GET' | 'POST') => {
             healthyChecks: health.summary.healthy,
             unhealthyChecks: health.summary.unhealthy,
             degradedChecks: health.summary.degraded,
-            uptime: health.uptime
-          }
+            uptime: health.uptime,
+          },
         });
 
         return new NextResponse(JSON.stringify(health), { status: statusCode });
       } else {
         const body = await request.json();
-        
+
         if (!Array.isArray(body.checks)) {
           return new NextResponse(
             JSON.stringify({ error: 'Invalid request body. Expected array of check names.' }),
-            { status: 400 }
+            { status: 400 },
           );
         }
 
@@ -74,12 +75,12 @@ const createHealthApiHandler = (method: 'GET' | 'POST') => {
             status: 'healthy',
             timestamp: Date.now(),
             checks: [],
-            summary: { total: 0, healthy: 0, unhealthy: 0, degraded: 0 }
+            summary: { total: 0, healthy: 0, unhealthy: 0, degraded: 0 },
           }));
         }
 
         const results = await Promise.allSettled(
-          body.checks.map((checkName: string) => mockHealthManager.runCheck(checkName))
+          body.checks.map((checkName: string) => mockHealthManager.runCheck(checkName)),
         );
 
         const checks = results.map((result, index) => {
@@ -91,7 +92,7 @@ const createHealthApiHandler = (method: 'GET' | 'POST') => {
               status: 'unhealthy',
               message: result.reason?.message || 'Check failed',
               duration: 0,
-              timestamp: Date.now()
+              timestamp: Date.now(),
             };
           }
         });
@@ -100,7 +101,7 @@ const createHealthApiHandler = (method: 'GET' | 'POST') => {
           total: checks.length,
           healthy: checks.filter(c => c.status === 'healthy').length,
           unhealthy: checks.filter(c => c.status === 'unhealthy').length,
-          degraded: checks.filter(c => c.status === 'degraded').length
+          degraded: checks.filter(c => c.status === 'degraded').length,
         };
 
         let overallStatus: 'healthy' | 'unhealthy' | 'degraded' = 'healthy';
@@ -114,17 +115,17 @@ const createHealthApiHandler = (method: 'GET' | 'POST') => {
           status: overallStatus,
           timestamp: Date.now(),
           checks,
-          summary
+          summary,
         }));
       }
     } catch (error) {
       mockLogger.error('Health check failed', error instanceof Error ? error : new Error(String(error)));
-      
+
       return new NextResponse(JSON.stringify({
         status: 'unhealthy',
         timestamp: Date.now(),
         message: 'Health check system failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       }), { status: 500 });
     }
   };
@@ -139,7 +140,7 @@ function createMockRequest(method: string, body?: any) {
     method,
     json: jest.fn().mockResolvedValue(body || {}),
     headers: new Map(),
-    url: 'http://localhost:3000/api/health'
+    url: 'http://localhost:3000/api/health',
   } as unknown as NextRequest;
 }
 
@@ -163,29 +164,29 @@ describe('健康检查API可靠性测试', () => {
             status: 'healthy',
             message: 'Database connection OK',
             duration: 50,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           },
           {
             name: 'redis',
             status: 'healthy',
             message: 'Redis connection OK',
             duration: 30,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           },
           {
             name: 'memory',
             status: 'healthy',
             message: 'Memory usage: 45%',
             duration: 10,
-            timestamp: Date.now()
-          }
+            timestamp: Date.now(),
+          },
         ],
         summary: {
           total: 3,
           healthy: 3,
           unhealthy: 0,
-          degraded: 0
-        }
+          degraded: 0,
+        },
       };
 
       mockHealthManager.getSystemHealth.mockResolvedValue(healthySystemHealth);
@@ -202,7 +203,7 @@ describe('健康检查API可靠性测试', () => {
       expect(responseData.summary.healthy).toBe(3);
       expect(responseData.summary.unhealthy).toBe(0);
       expect(responseData.checks).toHaveLength(3);
-      
+
       // 验证日志记录
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Health check performed',
@@ -211,9 +212,9 @@ describe('健康检查API可靠性测试', () => {
             status: 'healthy',
             totalChecks: 3,
             healthyChecks: 3,
-            unhealthyChecks: 0
-          })
-        })
+            unhealthyChecks: 0,
+          }),
+        }),
       );
     });
 
@@ -231,7 +232,7 @@ describe('健康检查API可靠性测试', () => {
             status: 'healthy',
             message: 'Database connection OK',
             duration: 50,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           },
           {
             name: 'redis',
@@ -239,7 +240,7 @@ describe('健康检查API可靠性测试', () => {
             message: 'Redis connection slow: 1500ms',
             duration: 1500,
             timestamp: Date.now(),
-            metadata: { responseTime: 1500 }
+            metadata: { responseTime: 1500 },
           },
           {
             name: 'memory',
@@ -247,15 +248,15 @@ describe('健康检查API可靠性测试', () => {
             message: 'High memory usage: 85%',
             duration: 10,
             timestamp: Date.now(),
-            metadata: { percentage: 85 }
-          }
+            metadata: { percentage: 85 },
+          },
         ],
         summary: {
           total: 3,
           healthy: 1,
           unhealthy: 0,
-          degraded: 2
-        }
+          degraded: 2,
+        },
       };
 
       mockHealthManager.getSystemHealth.mockResolvedValue(degradedSystemHealth);
@@ -287,29 +288,29 @@ describe('健康检查API可靠性测试', () => {
             status: 'unhealthy',
             message: 'Database connection failed',
             duration: 5000,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           },
           {
             name: 'redis',
             status: 'healthy',
             message: 'Redis connection OK',
             duration: 30,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           },
           {
             name: 'ai-service',
             status: 'unhealthy',
             message: 'AI service unreachable',
             duration: 5000,
-            timestamp: Date.now()
-          }
+            timestamp: Date.now(),
+          },
         ],
         summary: {
           total: 3,
           healthy: 1,
           unhealthy: 2,
-          degraded: 0
-        }
+          degraded: 0,
+        },
       };
 
       mockHealthManager.getSystemHealth.mockResolvedValue(unhealthySystemHealth);
@@ -337,15 +338,15 @@ describe('健康检查API可靠性测试', () => {
           status: 'healthy',
           message: 'Database connection OK',
           duration: 50,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         },
         {
           name: 'redis',
           status: 'healthy',
           message: 'Redis connection OK',
           duration: 30,
-          timestamp: Date.now()
-        }
+          timestamp: Date.now(),
+        },
       ];
 
       mockHealthManager.runCheck
@@ -353,7 +354,7 @@ describe('健康检查API可靠性测试', () => {
         .mockResolvedValueOnce(checkResults[1]);
 
       const request = createMockRequest('POST', {
-        checks: ['database', 'redis']
+        checks: ['database', 'redis'],
       });
 
       // Act
@@ -366,7 +367,7 @@ describe('健康检查API可靠性测试', () => {
       expect(responseData.checks).toHaveLength(2);
       expect(responseData.summary.total).toBe(2);
       expect(responseData.summary.healthy).toBe(2);
-      
+
       expect(mockHealthManager.runCheck).toHaveBeenCalledTimes(2);
       expect(mockHealthManager.runCheck).toHaveBeenCalledWith('database');
       expect(mockHealthManager.runCheck).toHaveBeenCalledWith('redis');
@@ -379,7 +380,7 @@ describe('健康检查API可靠性测试', () => {
         status: 'healthy',
         message: 'Database connection OK',
         duration: 50,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       mockHealthManager.runCheck
@@ -387,7 +388,7 @@ describe('健康检查API可靠性测试', () => {
         .mockRejectedValueOnce(new Error('Redis connection failed'));
 
       const request = createMockRequest('POST', {
-        checks: ['database', 'redis']
+        checks: ['database', 'redis'],
       });
 
       // Act
@@ -400,7 +401,7 @@ describe('健康检查API可靠性测试', () => {
       expect(responseData.checks).toHaveLength(2);
       expect(responseData.summary.healthy).toBe(1);
       expect(responseData.summary.unhealthy).toBe(1);
-      
+
       const failedCheck = responseData.checks.find((check: any) => check.name === 'redis');
       expect(failedCheck.status).toBe('unhealthy');
       expect(failedCheck.message).toBe('Redis connection failed');
@@ -409,7 +410,7 @@ describe('健康检查API可靠性测试', () => {
     it('应该处理空的检查列表', async () => {
       // Arrange
       const request = createMockRequest('POST', {
-        checks: []
+        checks: [],
       });
 
       // Act
@@ -426,7 +427,7 @@ describe('健康检查API可靠性测试', () => {
     it('应该验证请求体格式', async () => {
       // Arrange
       const request = createMockRequest('POST', {
-        checks: 'invalid' // 非数组类型
+        checks: 'invalid', // 非数组类型
       });
 
       // Act
@@ -455,15 +456,15 @@ describe('健康检查API可靠性测试', () => {
             message: 'Connection timeout after 5000ms',
             duration: 5000,
             timestamp: Date.now(),
-            metadata: { error: 'ETIMEDOUT' }
-          }
+            metadata: { error: 'ETIMEDOUT' },
+          },
         ],
         summary: {
           total: 1,
           healthy: 0,
           unhealthy: 1,
-          degraded: 0
-        }
+          degraded: 0,
+        },
       };
 
       mockHealthManager.getSystemHealth.mockResolvedValue(databaseFailureHealth);
@@ -498,16 +499,16 @@ describe('健康检查API可靠性测试', () => {
             metadata: {
               usedMB: 1760,
               totalMB: 2000,
-              percentage: 88
-            }
-          }
+              percentage: 88,
+            },
+          },
         ],
         summary: {
           total: 1,
           healthy: 0,
           unhealthy: 0,
-          degraded: 1
-        }
+          degraded: 1,
+        },
       };
 
       mockHealthManager.getSystemHealth.mockResolvedValue(memoryIssueHealth);
@@ -539,15 +540,15 @@ describe('健康检查API可靠性测试', () => {
             message: 'AI service is unreachable: Connection refused',
             duration: 5000,
             timestamp: Date.now(),
-            metadata: { statusCode: null, responseTime: 5000 }
-          }
+            metadata: { statusCode: null, responseTime: 5000 },
+          },
         ],
         summary: {
           total: 1,
           healthy: 0,
           unhealthy: 1,
-          degraded: 0
-        }
+          degraded: 0,
+        },
       };
 
       mockHealthManager.getSystemHealth.mockResolvedValue(externalServiceFailure);
@@ -582,16 +583,16 @@ describe('健康检查API可靠性测试', () => {
             metadata: {
               freeSpaceGB: 2,
               totalSpaceGB: 50,
-              usedPercentage: 96
-            }
-          }
+              usedPercentage: 96,
+            },
+          },
         ],
         summary: {
           total: 1,
           healthy: 0,
           unhealthy: 1,
-          degraded: 0
-        }
+          degraded: 0,
+        },
       };
 
       mockHealthManager.getSystemHealth.mockResolvedValue(diskSpaceIssue);
@@ -625,15 +626,15 @@ describe('健康检查API可靠性测试', () => {
             message: 'Database response time is slow: 2500ms',
             duration: 2500,
             timestamp: Date.now(),
-            metadata: { responseTime: 2500 }
-          }
+            metadata: { responseTime: 2500 },
+          },
         ],
         summary: {
           total: 1,
           healthy: 0,
           unhealthy: 0,
-          degraded: 1
-        }
+          degraded: 1,
+        },
       };
 
       mockHealthManager.getSystemHealth.mockResolvedValue(slowHealthCheck);
@@ -664,22 +665,22 @@ describe('健康检查API可靠性测试', () => {
             status: 'healthy',
             message: 'Memory usage: 45%',
             duration: 5,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           },
           {
             name: 'application',
             status: 'healthy',
             message: 'Application is running normally',
             duration: 10,
-            timestamp: Date.now()
-          }
+            timestamp: Date.now(),
+          },
         ],
         summary: {
           total: 2,
           healthy: 2,
           unhealthy: 0,
-          degraded: 0
-        }
+          degraded: 0,
+        },
       };
 
       mockHealthManager.getSystemHealth.mockResolvedValue(fastHealthCheck);
@@ -710,15 +711,15 @@ describe('健康检查API可靠性测试', () => {
             status: 'unhealthy',
             message: 'Health check timeout',
             duration: 5000,
-            timestamp: Date.now()
-          }
+            timestamp: Date.now(),
+          },
         ],
         summary: {
           total: 1,
           healthy: 0,
           unhealthy: 1,
-          degraded: 0
-        }
+          degraded: 0,
+        },
       };
 
       mockHealthManager.getSystemHealth.mockResolvedValue(timeoutHealthCheck);
@@ -751,10 +752,10 @@ describe('健康检查API可靠性测试', () => {
       expect(responseData.status).toBe('unhealthy');
       expect(responseData.message).toBe('Health check system failed');
       expect(responseData.error).toBe('Health system crashed');
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Health check failed',
-        expect.any(Error)
+        expect.any(Error),
       );
     });
 
@@ -779,7 +780,7 @@ describe('健康检查API可靠性测试', () => {
         method: 'POST',
         json: jest.fn().mockRejectedValue(new Error('Invalid JSON')),
         headers: new Map(),
-        url: 'http://localhost:3000/api/health'
+        url: 'http://localhost:3000/api/health',
       } as unknown as NextRequest;
 
       // Act
@@ -806,29 +807,29 @@ describe('健康检查API可靠性测试', () => {
             status: 'healthy',
             message: 'Database connection OK',
             duration: 50,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           },
           {
             name: 'cache',
             status: 'unhealthy',
             message: 'Cache service unavailable',
             duration: 5000,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           },
           {
             name: 'memory',
             status: 'healthy',
             message: 'Memory usage: 45%',
             duration: 10,
-            timestamp: Date.now()
-          }
+            timestamp: Date.now(),
+          },
         ],
         summary: {
           total: 3,
           healthy: 2,
           unhealthy: 1,
-          degraded: 0
-        }
+          degraded: 0,
+        },
       };
 
       mockHealthManager.getSystemHealth.mockResolvedValue(partialFailureHealth);
@@ -857,7 +858,7 @@ describe('健康检查API可靠性测试', () => {
         version: '1.0.0',
         environment: 'test',
         checks: [],
-        summary: { total: 0, healthy: 0, unhealthy: 0, degraded: 0 }
+        summary: { total: 0, healthy: 0, unhealthy: 0, degraded: 0 },
       };
 
       mockHealthManager.getSystemHealth.mockResolvedValue(healthyResponse);
@@ -886,7 +887,7 @@ describe('健康检查API可靠性测试', () => {
         version: '1.0.0',
         environment: 'test',
         checks: [],
-        summary: { total: 0, healthy: 0, unhealthy: 0, degraded: 0 }
+        summary: { total: 0, healthy: 0, unhealthy: 0, degraded: 0 },
       };
 
       mockHealthManager.getSystemHealth.mockResolvedValue(healthyResponse);
@@ -923,15 +924,15 @@ describe('健康检查API可靠性测试', () => {
             message: 'Database connection OK',
             duration: 50,
             timestamp: Date.now(),
-            metadata: { responseTime: 50, connectionPool: 'active' }
-          }
+            metadata: { responseTime: 50, connectionPool: 'active' },
+          },
         ],
         summary: {
           total: 1,
           healthy: 1,
           unhealthy: 0,
-          degraded: 0
-        }
+          degraded: 0,
+        },
       };
 
       mockHealthManager.getSystemHealth.mockResolvedValue(completeSystemHealth);
@@ -950,7 +951,7 @@ describe('健康检查API可靠性测试', () => {
       expect(responseData).toHaveProperty('environment');
       expect(responseData).toHaveProperty('checks');
       expect(responseData).toHaveProperty('summary');
-      
+
       expect(responseData.version).toBe('1.2.3');
       expect(responseData.environment).toBe('production');
       expect(responseData.checks[0]).toHaveProperty('metadata');
@@ -969,14 +970,14 @@ describe('健康检查API可靠性测试', () => {
           { name: 'check2', status: 'healthy', message: 'OK', duration: 15, timestamp: Date.now() },
           { name: 'check3', status: 'degraded', message: 'Slow', duration: 200, timestamp: Date.now() },
           { name: 'check4', status: 'unhealthy', message: 'Failed', duration: 5000, timestamp: Date.now() },
-          { name: 'check5', status: 'degraded', message: 'Warning', duration: 150, timestamp: Date.now() }
+          { name: 'check5', status: 'degraded', message: 'Warning', duration: 150, timestamp: Date.now() },
         ],
         summary: {
           total: 5,
           healthy: 2,
           unhealthy: 1,
-          degraded: 2
-        }
+          degraded: 2,
+        },
       };
 
       mockHealthManager.getSystemHealth.mockResolvedValue(mixedStatusHealth);

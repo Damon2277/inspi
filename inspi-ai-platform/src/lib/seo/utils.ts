@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+
 import { SEO_CONFIG, PAGE_SEO_CONFIG, DYNAMIC_SEO_TEMPLATES } from './config';
 
 /**
@@ -34,12 +35,12 @@ export function generateMetadata(data: SEOData = {}): Metadata {
     modifiedTime,
     author,
     section,
-    tags = []
+    tags = [],
   } = data;
 
   const fullUrl = `${SEO_CONFIG.SITE_URL}${path}`;
   const fullImageUrl = image.startsWith('http') ? image : `${SEO_CONFIG.SITE_URL}${image}`;
-  
+
   const allKeywords = [...new Set([...keywords, ...tags])];
 
   const metadata: Metadata = {
@@ -47,7 +48,7 @@ export function generateMetadata(data: SEOData = {}): Metadata {
     description,
     keywords: allKeywords.join(', '),
     authors: author ? [{ name: author }] : [{ name: 'Inspi.AI Team' }],
-    
+
     // Open Graph
     openGraph: {
       title,
@@ -60,16 +61,16 @@ export function generateMetadata(data: SEOData = {}): Metadata {
           width: 1200,
           height: 630,
           alt: title,
-        }
+        },
       ],
       locale: SEO_CONFIG.OG_LOCALE,
       type: type as any,
       ...(publishedTime && { publishedTime }),
       ...(modifiedTime && { modifiedTime }),
       ...(section && { section }),
-      ...(tags.length > 0 && { tags })
+      ...(tags.length > 0 && { tags }),
     },
-    
+
     // Twitter Card
     twitter: {
       card: SEO_CONFIG.TWITTER_CARD as any,
@@ -78,7 +79,7 @@ export function generateMetadata(data: SEOData = {}): Metadata {
       description,
       images: [fullImageUrl],
     },
-    
+
     // 其他元数据
     robots: {
       index: true,
@@ -91,12 +92,12 @@ export function generateMetadata(data: SEOData = {}): Metadata {
         'max-snippet': -1,
       },
     },
-    
+
     // 规范链接
     alternates: {
       canonical: fullUrl,
     },
-    
+
     // 其他
     category: section,
   };
@@ -117,7 +118,7 @@ export function generateWorkSEO(work: {
   updatedAt?: Date;
 }): SEOData {
   const template = DYNAMIC_SEO_TEMPLATES.WORK_DETAIL;
-  
+
   return {
     title: template.titleTemplate(work.title, work.author.name),
     description: template.descriptionTemplate(work.knowledgePoint, work.subject),
@@ -128,7 +129,7 @@ export function generateWorkSEO(work: {
     modifiedTime: work.updatedAt?.toISOString(),
     author: work.author.name,
     section: work.subject,
-    tags: work.tags
+    tags: work.tags,
   };
 }
 
@@ -143,13 +144,13 @@ export function generateUserProfileSEO(user: {
   id: string;
 }): SEOData {
   const template = DYNAMIC_SEO_TEMPLATES.USER_PROFILE;
-  
+
   return {
     title: template.titleTemplate(user.name),
     description: template.descriptionTemplate(user.name, user.contributionScore, user.workCount),
     keywords: template.keywordsTemplate(user.name, user.subjects),
-    path: `/profile/${user.id}`,
-    type: 'profile'
+    path: `/profile/${(user.id || (user as any)._id)}`,
+    type: 'profile',
   };
 }
 
@@ -160,7 +161,7 @@ export function generateStructuredData(type: string, data: any): string {
   const baseStructure = {
     '@context': 'https://schema.org',
     '@type': type,
-    ...data
+    ...data,
   };
 
   return JSON.stringify(baseStructure, null, 2);
@@ -177,9 +178,9 @@ export function generateWebsiteStructuredData(): string {
     potentialAction: {
       '@type': 'SearchAction',
       target: `${SEO_CONFIG.SITE_URL}/search?q={search_term_string}`,
-      'query-input': 'required name=search_term_string'
+      'query-input': 'required name=search_term_string',
     },
-    publisher: SEO_CONFIG.ORGANIZATION
+    publisher: SEO_CONFIG.ORGANIZATION,
   });
 }
 
@@ -207,7 +208,7 @@ export function generateArticleStructuredData(work: {
     description: work.description,
     author: {
       '@type': 'Person',
-      name: work.author.name
+      name: work.author.name,
     },
     publisher: SEO_CONFIG.ORGANIZATION,
     datePublished: work.publishedAt.toISOString(),
@@ -216,8 +217,8 @@ export function generateArticleStructuredData(work: {
     url: work.url,
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': work.url
-    }
+      '@id': work.url,
+    },
   });
 }
 
@@ -232,11 +233,11 @@ export function generateBreadcrumbStructuredData(breadcrumbs: Array<{
     '@type': 'ListItem',
     position: index + 1,
     name: item.name,
-    item: `${SEO_CONFIG.SITE_URL}${item.url}`
+    item: `${SEO_CONFIG.SITE_URL}${item.url}`,
   }));
 
   return generateStructuredData('BreadcrumbList', {
-    itemListElement
+    itemListElement,
   });
 }
 
@@ -246,23 +247,23 @@ export function generateBreadcrumbStructuredData(breadcrumbs: Array<{
 export function optimizeTextForSEO(text: string, maxLength: number = 160): string {
   // 移除HTML标签
   const cleanText = text.replace(/<[^>]*>/g, '');
-  
+
   // 移除多余的空白字符
   const trimmedText = cleanText.replace(/\s+/g, ' ').trim();
-  
+
   // 截断到指定长度
   if (trimmedText.length <= maxLength) {
     return trimmedText;
   }
-  
+
   // 在单词边界截断
   const truncated = trimmedText.substring(0, maxLength);
   const lastSpaceIndex = truncated.lastIndexOf(' ');
-  
+
   if (lastSpaceIndex > maxLength * 0.8) {
     return truncated.substring(0, lastSpaceIndex) + '...';
   }
-  
+
   return truncated + '...';
 }
 
@@ -270,22 +271,22 @@ export function optimizeTextForSEO(text: string, maxLength: number = 160): strin
  * 生成关键词密度优化的内容
  */
 export function optimizeContentKeywords(
-  content: string, 
-  primaryKeywords: string[], 
-  targetDensity: number = 0.02
+  content: string,
+  primaryKeywords: string[],
+  targetDensity: number = 0.02,
 ): string {
   // 这是一个简化的关键词密度优化函数
   // 实际应用中可能需要更复杂的NLP处理
-  
+
   const words = content.split(/\s+/);
   const totalWords = words.length;
   const targetCount = Math.floor(totalWords * targetDensity);
-  
+
   let optimizedContent = content;
-  
+
   primaryKeywords.forEach(keyword => {
     const currentCount = (content.match(new RegExp(keyword, 'gi')) || []).length;
-    
+
     if (currentCount < targetCount) {
       // 在适当位置插入关键词（这里是简化实现）
       const insertions = targetCount - currentCount;
@@ -296,7 +297,7 @@ export function optimizeContentKeywords(
       optimizedContent = words.join(' ');
     }
   });
-  
+
   return optimizedContent;
 }
 
@@ -310,27 +311,27 @@ export function validateSEOData(data: SEOData): {
 } {
   const errors: string[] = [];
   const warnings: string[] = [];
-  
+
   // 检查必需字段
   if (!data.title) {
     errors.push('标题是必需的');
   } else if (data.title.length > 60) {
     warnings.push('标题长度超过60个字符，可能在搜索结果中被截断');
   }
-  
+
   if (!data.description) {
     errors.push('描述是必需的');
   } else if (data.description.length > 160) {
     warnings.push('描述长度超过160个字符，可能在搜索结果中被截断');
   }
-  
+
   if (!data.keywords || data.keywords.length === 0) {
     warnings.push('建议添加关键词以提高SEO效果');
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors,
-    warnings
+    warnings,
   };
 }

@@ -118,7 +118,8 @@ class TestTools {
       }
       
       // 保存数据
-      const outputPath = output || path.join(this.config.testDataDir, `${type}-${Date.now()}.${format}`)
+      const outputPath = output || path.join(this.config.testDataDir,
+        `${type}-${Date.now()}.${format}`)
       await this.saveData(data, outputPath, format)
       
       console.log(`✅ 测试数据已生成: ${outputPath}`)
@@ -171,7 +172,8 @@ class TestTools {
       const report = this.generateAnalysisReport(analysis, format)
       
       // 保存报告
-      const outputPath = output || path.join(this.config.reportsDir, `analysis-${Date.now()}.${format}`)
+      const outputPath = output || path.join(this.config.reportsDir,
+        `analysis-${Date.now()}.${format}`)
       await this.saveData(report, outputPath, format)
       
       console.log(`✅ 分析报告已生成: ${outputPath}`)

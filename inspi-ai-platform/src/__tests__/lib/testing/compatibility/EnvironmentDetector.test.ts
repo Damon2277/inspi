@@ -64,7 +64,7 @@ describe('EnvironmentDetector', () => {
 
     it('should identify supported Node.js versions', () => {
       const versionInfo = EnvironmentDetector.getNodeVersionInfo();
-      
+
       // Assuming we support Node.js 18+
       if (versionInfo.major >= 18) {
         expect(versionInfo.supported).toBe(true);
@@ -73,7 +73,7 @@ describe('EnvironmentDetector', () => {
 
     it('should identify LTS versions correctly', () => {
       const versionInfo = EnvironmentDetector.getNodeVersionInfo();
-      
+
       // LTS versions are even-numbered major versions >= 18
       if (versionInfo.major >= 18 && versionInfo.major % 2 === 0) {
         expect(versionInfo.lts).toBe(true);
@@ -82,7 +82,7 @@ describe('EnvironmentDetector', () => {
 
     it('should include appropriate features for version', () => {
       const versionInfo = EnvironmentDetector.getNodeVersionInfo();
-      
+
       if (versionInfo.major >= 18) {
         expect(versionInfo.features).toContain('fetch');
         expect(versionInfo.features).toContain('test-runner');
@@ -99,7 +99,7 @@ describe('EnvironmentDetector', () => {
   describe('isCI', () => {
     it('should detect CI environment correctly', () => {
       const originalEnv = process.env;
-      
+
       // Test with no CI environment
       process.env = { ...originalEnv };
       delete process.env.CI;
@@ -130,10 +130,10 @@ describe('EnvironmentDetector', () => {
 
     it('should detect Docker container when DOCKER_CONTAINER is set', () => {
       const originalEnv = process.env;
-      
+
       process.env.DOCKER_CONTAINER = 'true';
       expect(EnvironmentDetector.isContainer()).toBe(true);
-      
+
       process.env = originalEnv;
     });
   });
@@ -142,24 +142,24 @@ describe('EnvironmentDetector', () => {
     it('should return null when not in container', () => {
       // Mock isContainer to return false
       jest.spyOn(EnvironmentDetector, 'isContainer').mockReturnValue(false);
-      
+
       const containerInfo = EnvironmentDetector.getContainerInfo();
       expect(containerInfo).toBeNull();
-      
+
       jest.restoreAllMocks();
     });
 
     it('should return container info when in container', () => {
       // Mock isContainer to return true
       jest.spyOn(EnvironmentDetector, 'isContainer').mockReturnValue(true);
-      
+
       const containerInfo = EnvironmentDetector.getContainerInfo();
-      
+
       if (containerInfo) {
         expect(containerInfo).toHaveProperty('runtime');
         expect(typeof containerInfo.runtime).toBe('string');
       }
-      
+
       jest.restoreAllMocks();
     });
   });
@@ -186,13 +186,13 @@ describe('EnvironmentDetector', () => {
         patch: 0,
         lts: true,
         supported: false,
-        features: []
+        features: [],
       });
 
       const compatibility = EnvironmentDetector.checkCompatibility();
       expect(compatibility.compatible).toBe(false);
-      expect(compatibility.issues.some(issue => 
-        issue.includes('Unsupported Node.js version')
+      expect(compatibility.issues.some(issue =>
+        issue.includes('Unsupported Node.js version'),
       )).toBe(true);
 
       jest.restoreAllMocks();
@@ -204,8 +204,8 @@ describe('EnvironmentDetector', () => {
       jest.spyOn(os, 'freemem').mockReturnValue(500 * 1024 * 1024); // 500MB
 
       const compatibility = EnvironmentDetector.checkCompatibility();
-      expect(compatibility.warnings.some(warning => 
-        warning.includes('Low available memory')
+      expect(compatibility.warnings.some(warning =>
+        warning.includes('Low available memory'),
       )).toBe(true);
 
       jest.restoreAllMocks();
@@ -215,18 +215,18 @@ describe('EnvironmentDetector', () => {
       // Mock process.platform
       Object.defineProperty(process, 'platform', {
         value: 'win32',
-        configurable: true
+        configurable: true,
       });
 
       const compatibility = EnvironmentDetector.checkCompatibility();
-      expect(compatibility.warnings.some(warning => 
-        warning.includes('Windows platform')
+      expect(compatibility.warnings.some(warning =>
+        warning.includes('Windows platform'),
       )).toBe(true);
 
       // Restore original platform
       Object.defineProperty(process, 'platform', {
         value: 'darwin', // or whatever the original was
-        configurable: true
+        configurable: true,
       });
     });
   });
@@ -236,16 +236,16 @@ describe('EnvironmentDetector', () => {
       // Mock execSync to throw error
       const { execSync } = require('child_process');
       const originalExecSync = execSync;
-      
+
       jest.doMock('child_process', () => ({
         execSync: jest.fn().mockImplementation(() => {
           throw new Error('Command failed');
-        })
+        }),
       }));
 
       // Re-import to get mocked version
       const { EnvironmentDetector: MockedDetector } = require('../../../../lib/testing/compatibility/EnvironmentDetector');
-      
+
       const info = await MockedDetector.getEnvironmentInfo();
       expect(info.npmVersion).toBe('unknown');
 

@@ -2,13 +2,14 @@
  * Compliance Reporter Tests
  */
 
+import * as fs from 'fs';
+
+import { ComplianceResult } from '../../../../lib/testing/compliance/ComplianceChecker';
 import {
   ComplianceReporter,
   createComplianceReporter,
-  ReportConfig
+  ReportConfig,
 } from '../../../../lib/testing/compliance/ComplianceReporter';
-import { ComplianceResult } from '../../../../lib/testing/compliance/ComplianceChecker';
-import * as fs from 'fs';
 
 // Mock fs module
 jest.mock('fs');
@@ -27,33 +28,33 @@ describe('ComplianceReporter', () => {
         { type: 'html', enabled: true },
         { type: 'markdown', enabled: true },
         { type: 'xml', enabled: true },
-        { type: 'csv', enabled: true }
+        { type: 'csv', enabled: true },
       ],
       templates: [
         {
           name: 'custom-html',
           type: 'html',
           content: '<html><body>{{overallScore}}</body></html>',
-          variables: ['overallScore']
-        }
+          variables: ['overallScore'],
+        },
       ],
       scheduling: {
         enabled: false,
         frequency: 'daily',
         time: '09:00',
         timezone: 'UTC',
-        autoGenerate: true
+        autoGenerate: true,
       },
       notifications: {
         enabled: false,
         channels: [],
-        triggers: []
+        triggers: [],
       },
       retention: {
         maxReports: 10,
         maxAge: 30,
-        archiveOldReports: false
-      }
+        archiveOldReports: false,
+      },
     };
 
     mockResult = {
@@ -61,7 +62,7 @@ describe('ComplianceReporter', () => {
       overall: {
         passed: true,
         score: 85,
-        grade: 'B'
+        grade: 'B',
       },
       categories: {
         codeQuality: {
@@ -74,13 +75,13 @@ describe('ComplianceReporter', () => {
               passed: true,
               value: 0,
               threshold: 0,
-              message: '0 ESLint errors found'
-            }
+              message: '0 ESLint errors found',
+            },
           ],
           metrics: {
             eslintErrors: 0,
-            eslintWarnings: 2
-          }
+            eslintWarnings: 2,
+          },
         },
         testCoverage: {
           enabled: true,
@@ -92,19 +93,19 @@ describe('ComplianceReporter', () => {
               passed: false,
               value: 75,
               threshold: 80,
-              message: 'Statement coverage: 75%'
-            }
+              message: 'Statement coverage: 75%',
+            },
           ],
           metrics: {
-            statementCoverage: 75
-          }
+            statementCoverage: 75,
+          },
         },
         documentation: {
           enabled: false,
           passed: true,
           score: 100,
           details: [],
-          metrics: {}
+          metrics: {},
         },
         security: {
           enabled: true,
@@ -116,12 +117,12 @@ describe('ComplianceReporter', () => {
               passed: true,
               value: 0,
               threshold: 0,
-              message: '0 high severity vulnerabilities found'
-            }
+              message: '0 high severity vulnerabilities found',
+            },
           ],
           metrics: {
-            highSeverityVulns: 0
-          }
+            highSeverityVulns: 0,
+          },
         },
         accessibility: {
           enabled: true,
@@ -133,12 +134,12 @@ describe('ComplianceReporter', () => {
               passed: true,
               value: 0,
               threshold: 0,
-              message: '0 WCAG violations found'
-            }
+              message: '0 WCAG violations found',
+            },
           ],
           metrics: {
-            wcagViolations: 0
-          }
+            wcagViolations: 0,
+          },
         },
         performance: {
           enabled: true,
@@ -150,13 +151,13 @@ describe('ComplianceReporter', () => {
               passed: true,
               value: 245,
               threshold: 500,
-              message: 'Bundle size: 245KB'
-            }
+              message: 'Bundle size: 245KB',
+            },
           ],
           metrics: {
-            bundleSize: 245
-          }
-        }
+            bundleSize: 245,
+          },
+        },
       },
       violations: [
         {
@@ -165,8 +166,8 @@ describe('ComplianceReporter', () => {
           rule: 'Statement Coverage',
           message: 'Statement coverage is below threshold',
           suggestion: 'Add more unit tests to increase statement coverage',
-          autoFixable: false
-        }
+          autoFixable: false,
+        },
       ],
       recommendations: [
         {
@@ -176,10 +177,10 @@ describe('ComplianceReporter', () => {
           description: 'Statement coverage is below the required threshold',
           action: 'Write additional unit tests to meet coverage thresholds',
           estimatedEffort: '4-8 hours',
-          impact: 'Medium - Important for code quality'
-        }
+          impact: 'Medium - Important for code quality',
+        },
       ],
-      trends: []
+      trends: [],
     };
 
     reporter = createComplianceReporter(config);
@@ -262,10 +263,10 @@ describe('ComplianceReporter', () => {
 
       // Check that JSON content was written
       const writeCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('.json')
+        call[0].toString().includes('.json'),
       );
       expect(writeCall).toBeDefined();
-      
+
       const jsonContent = writeCall![1] as string;
       expect(() => JSON.parse(jsonContent)).not.toThrow();
     });
@@ -274,9 +275,9 @@ describe('ComplianceReporter', () => {
       await reporter.generateReport(mockResult, { includeHistory: true });
 
       const writeCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('.json')
+        call[0].toString().includes('.json'),
       );
-      
+
       const jsonContent = JSON.parse(writeCall![1] as string);
       expect(jsonContent.metadata).toBeDefined();
       expect(jsonContent.metadata.generatedAt).toBeDefined();
@@ -292,10 +293,10 @@ describe('ComplianceReporter', () => {
       expect(htmlReport).toBeDefined();
 
       const writeCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('.html')
+        call[0].toString().includes('.html'),
       );
       expect(writeCall).toBeDefined();
-      
+
       const htmlContent = writeCall![1] as string;
       expect(htmlContent).toContain('<!DOCTYPE html>');
       expect(htmlContent).toContain('Compliance Report');
@@ -309,9 +310,9 @@ describe('ComplianceReporter', () => {
       await customReporter.generateReport(mockResult);
 
       const writeCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('.html')
+        call[0].toString().includes('.html'),
       );
-      
+
       const htmlContent = writeCall![1] as string;
       expect(htmlContent).toContain(mockResult.overall.score.toString());
     });
@@ -320,9 +321,9 @@ describe('ComplianceReporter', () => {
       await reporter.generateReport(mockResult);
 
       const writeCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('.html')
+        call[0].toString().includes('.html'),
       );
-      
+
       const htmlContent = writeCall![1] as string;
       expect(htmlContent).toContain('codeQuality');
       expect(htmlContent).toContain('testCoverage');
@@ -333,9 +334,9 @@ describe('ComplianceReporter', () => {
       await reporter.generateReport(mockResult);
 
       const writeCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('.html')
+        call[0].toString().includes('.html'),
       );
-      
+
       const htmlContent = writeCall![1] as string;
       expect(htmlContent).toContain('Violations');
       expect(htmlContent).toContain('Statement Coverage');
@@ -350,10 +351,10 @@ describe('ComplianceReporter', () => {
       expect(markdownReport).toBeDefined();
 
       const writeCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('.markdown')
+        call[0].toString().includes('.markdown'),
       );
       expect(writeCall).toBeDefined();
-      
+
       const markdownContent = writeCall![1] as string;
       expect(markdownContent).toContain('# Compliance Report');
       expect(markdownContent).toContain('## Categories');
@@ -364,9 +365,9 @@ describe('ComplianceReporter', () => {
       await reporter.generateReport(mockResult);
 
       const writeCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('.markdown')
+        call[0].toString().includes('.markdown'),
       );
-      
+
       const markdownContent = writeCall![1] as string;
       expect(markdownContent).toContain('## Violations');
       expect(markdownContent).toContain('### MEDIUM - Statement Coverage');
@@ -376,9 +377,9 @@ describe('ComplianceReporter', () => {
       await reporter.generateReport(mockResult);
 
       const writeCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('.markdown')
+        call[0].toString().includes('.markdown'),
       );
-      
+
       const markdownContent = writeCall![1] as string;
       expect(markdownContent).toContain('## Recommendations');
       expect(markdownContent).toContain('### MEDIUM - Improve test coverage');
@@ -393,10 +394,10 @@ describe('ComplianceReporter', () => {
       expect(xmlReport).toBeDefined();
 
       const writeCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('.xml')
+        call[0].toString().includes('.xml'),
       );
       expect(writeCall).toBeDefined();
-      
+
       const xmlContent = writeCall![1] as string;
       expect(xmlContent).toContain('<?xml version="1.0" encoding="UTF-8"?>');
       expect(xmlContent).toContain('<compliance-report>');
@@ -410,9 +411,9 @@ describe('ComplianceReporter', () => {
       await reporter.generateReport(mockResult);
 
       const writeCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('.xml')
+        call[0].toString().includes('.xml'),
       );
-      
+
       const xmlContent = writeCall![1] as string;
       expect(xmlContent).toContain('&lt;special&gt;');
       expect(xmlContent).toContain('&amp;');
@@ -428,10 +429,10 @@ describe('ComplianceReporter', () => {
       expect(csvReport).toBeDefined();
 
       const writeCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('.csv')
+        call[0].toString().includes('.csv'),
       );
       expect(writeCall).toBeDefined();
-      
+
       const csvContent = writeCall![1] as string;
       const lines = csvContent.split('\n');
       expect(lines[0]).toContain('Category,Check,Status,Score,Value,Threshold,Message');
@@ -441,12 +442,12 @@ describe('ComplianceReporter', () => {
       await reporter.generateReport(mockResult);
 
       const writeCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('.csv')
+        call[0].toString().includes('.csv'),
       );
-      
+
       const csvContent = writeCall![1] as string;
       const lines = csvContent.split('\n');
-      
+
       // Should have header + data rows
       expect(lines.length).toBeGreaterThan(1);
       expect(csvContent).toContain('codeQuality');
@@ -460,9 +461,9 @@ describe('ComplianceReporter', () => {
       await reporter.generateReport(mockResult);
 
       const writeCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('.csv')
+        call[0].toString().includes('.csv'),
       );
-      
+
       const csvContent = writeCall![1] as string;
       expect(csvContent).toContain('"Test, with comma"');
     });
@@ -474,7 +475,7 @@ describe('ComplianceReporter', () => {
 
       // Should write history file
       const historyWriteCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('report-history.json')
+        call[0].toString().includes('report-history.json'),
       );
       expect(historyWriteCall).toBeDefined();
     });
@@ -486,8 +487,8 @@ describe('ComplianceReporter', () => {
           timestamp: new Date('2023-01-01'),
           result: mockResult,
           reports: [],
-          options: {}
-        }
+          options: {},
+        },
       ];
 
       mockFs.readFileSync.mockReturnValue(JSON.stringify(existingHistory));
@@ -498,7 +499,7 @@ describe('ComplianceReporter', () => {
       // Should have loaded and extended the history
       expect(mockFs.readFileSync).toHaveBeenCalledWith(
         expect.stringContaining('report-history.json'),
-        'utf8'
+        'utf8',
       );
     });
 
@@ -516,9 +517,9 @@ describe('ComplianceReporter', () => {
       await reporter.generateReport(mockResult, { includeHistory: true });
 
       const writeCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('.json')
+        call[0].toString().includes('.json'),
       );
-      
+
       const jsonContent = JSON.parse(writeCall![1] as string);
       expect(jsonContent.metadata.history).toBeDefined();
     });
@@ -529,9 +530,9 @@ describe('ComplianceReporter', () => {
       await reporter.generateReport(mockResult, { compareWith: previousResult });
 
       const writeCall = mockFs.writeFileSync.mock.calls.find(call =>
-        call[0].toString().includes('.html')
+        call[0].toString().includes('.html'),
       );
-      
+
       const htmlContent = writeCall![1] as string;
       expect(htmlContent).toContain('Comparison with Previous Report');
     });
@@ -545,28 +546,28 @@ describe('ComplianceReporter', () => {
           {
             type: 'file',
             config: {},
-            enabled: true
-          }
+            enabled: true,
+          },
         ],
         triggers: [
           {
             condition: 'score_below',
             threshold: 90,
-            severity: 'medium'
-          }
-        ]
+            severity: 'medium',
+          },
+        ],
       };
     });
 
     it('should check notification triggers', async () => {
       const notificationReporter = createComplianceReporter(config);
-      
+
       await notificationReporter.generateReport(mockResult);
 
       // Should trigger notification since score (85) is below threshold (90)
       expect(mockFs.appendFileSync).toHaveBeenCalledWith(
         expect.stringContaining('notifications.log'),
-        expect.stringContaining('Compliance Alert')
+        expect.stringContaining('Compliance Alert'),
       );
     });
 
@@ -595,14 +596,14 @@ describe('ComplianceReporter', () => {
   describe('Report Cleanup', () => {
     it('should clean up old reports based on count limit', async () => {
       config.retention.maxReports = 2;
-      
+
       // Mock existing history with more than maxReports
       const existingHistory = Array.from({ length: 5 }, (_, i) => ({
         id: `report-${i}`,
         timestamp: new Date(`2023-01-0${i + 1}`),
         result: mockResult,
         reports: [{ format: 'json', path: `report-${i}.json`, size: 1024, generated: new Date() }],
-        options: {}
+        options: {},
       }));
 
       mockFs.readFileSync.mockReturnValue(JSON.stringify(existingHistory));
@@ -616,13 +617,13 @@ describe('ComplianceReporter', () => {
 
     it('should clean up old reports based on age limit', async () => {
       config.retention.maxAge = 1; // 1 day
-      
+
       const oldReport = {
         id: 'old-report',
         timestamp: new Date('2022-12-01'), // Very old
         result: mockResult,
         reports: [{ format: 'json', path: 'old-report.json', size: 1024, generated: new Date() }],
-        options: {}
+        options: {},
       };
 
       mockFs.readFileSync.mockReturnValue(JSON.stringify([oldReport]));
@@ -643,7 +644,7 @@ describe('ComplianceReporter', () => {
         timestamp: new Date('2022-12-01'),
         result: mockResult,
         reports: [{ format: 'json', path: 'old-report.json', size: 1024, generated: new Date() }],
-        options: {}
+        options: {},
       };
 
       mockFs.readFileSync.mockReturnValue(JSON.stringify([oldReport]));
@@ -653,7 +654,7 @@ describe('ComplianceReporter', () => {
 
       expect(mockFs.renameSync).toHaveBeenCalledWith(
         'old-report.json',
-        expect.stringContaining('archive')
+        expect.stringContaining('archive'),
       );
     });
   });
@@ -694,7 +695,7 @@ describe('ComplianceReporter', () => {
         timestamp: new Date(),
         result: mockResult,
         reports: [{ format: 'json', path: `report-${i}.json`, size: 1024, generated: new Date() }],
-        options: {}
+        options: {},
       }));
 
       mockFs.readFileSync.mockReturnValue(JSON.stringify(existingHistory));

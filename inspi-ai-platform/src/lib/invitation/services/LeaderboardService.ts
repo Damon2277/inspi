@@ -3,8 +3,8 @@
  * 提供各种排行榜功能和缓存管理
  */
 
-import { DatabaseService } from '../database'
-import { LeaderboardEntry, TimePeriod, RewardSummary } from '../types'
+import { DatabaseService } from '../database';
+import { LeaderboardEntry, TimePeriod, RewardSummary } from '../types';
 
 export interface LeaderboardFilter {
   period?: TimePeriod
@@ -16,20 +16,20 @@ export interface LeaderboardFilter {
 export interface LeaderboardService {
   // 获取邀请排行榜
   getInviteLeaderboard(filter: LeaderboardFilter, limit: number): Promise<LeaderboardEntry[]>
-  
+
   // 获取月度排行榜
   getMonthlyLeaderboard(year: number, month: number, limit: number): Promise<LeaderboardEntry[]>
-  
+
   // 获取实时排行榜
   getRealTimeLeaderboard(limit: number): Promise<LeaderboardEntry[]>
-  
+
   // 获取用户排名
   getUserRank(userId: string, filter: LeaderboardFilter): Promise<{
     rank: number
     totalUsers: number
     percentile: number
   }>
-  
+
   // 获取排行榜变化
   getLeaderboardChanges(previousPeriod: TimePeriod, currentPeriod: TimePeriod): Promise<Array<{
     userId: string
@@ -39,10 +39,10 @@ export interface LeaderboardService {
     rankChange: number
     trend: 'up' | 'down' | 'stable' | 'new'
   }>>
-  
+
   // 更新排行榜缓存
   updateLeaderboardCache(filter: LeaderboardFilter): Promise<void>
-  
+
   // 获取排行榜统计
   getLeaderboardStats(): Promise<{
     totalParticipants: number
@@ -53,8 +53,8 @@ export interface LeaderboardService {
 }
 
 export class LeaderboardServiceImpl implements LeaderboardService {
-  private cachePrefix = 'leaderboard:'
-  private cacheExpiry = 300 // 5分钟缓存
+  private cachePrefix = 'leaderboard:';
+  private cacheExpiry = 300; // 5分钟缓存
 
   constructor(private db: DatabaseService) {}
 
@@ -63,12 +63,12 @@ export class LeaderboardServiceImpl implements LeaderboardService {
    */
   async getInviteLeaderboard(filter: LeaderboardFilter, limit: number = 50): Promise<LeaderboardEntry[]> {
     try {
-      const cacheKey = this.generateCacheKey('invite', filter, limit)
-      
+      const cacheKey = this.generateCacheKey('invite', filter, limit);
+
       // 尝试从缓存获取
-      const cached = await this.getFromCache(cacheKey)
+      const cached = await this.getFromCache(cacheKey);
       if (cached) {
-        return cached
+        return cached;
       }
 
       let query = `
@@ -86,15 +86,15 @@ export class LeaderboardServiceImpl implements LeaderboardService {
         LEFT JOIN invite_codes ic ON u.id = ic.inviter_id
         LEFT JOIN invite_registrations ir ON ic.id = ir.invite_code_id
         LEFT JOIN rewards r ON u.id = r.user_id AND r.source_type IN ('invite_registration', 'invite_activation')
-      `
+      `;
 
-      const params: any[] = []
-      const conditions: string[] = []
+      const params: any[] = [];
+      const conditions: string[] = [];
 
       // 添加时间过滤
       if (filter.period) {
-        conditions.push('ir.registered_at BETWEEN ? AND ?')
-        params.push(filter.period.start, filter.period.end)
+        conditions.push('ir.registered_at BETWEEN ? AND ?');
+        params.push(filter.period.start, filter.period.end);
       }
 
       // 添加最小邀请数过滤
@@ -103,59 +103,59 @@ export class LeaderboardServiceImpl implements LeaderboardService {
       }
 
       if (conditions.length > 0) {
-        query += ' WHERE ' + conditions.join(' AND ')
+        query += ' WHERE ' + conditions.join(' AND ');
       }
 
       query += `
         GROUP BY u.id, u.name, u.email
         HAVING COUNT(DISTINCT ir.id) > 0
-      `
+      `;
 
       // 添加最小邀请数过滤
       if (filter.minInvites && filter.minInvites > 0) {
-        query += ` AND COUNT(DISTINCT ir.id) >= ${filter.minInvites}`
+        query += ` AND COUNT(DISTINCT ir.id) >= ${filter.minInvites}`;
       }
 
       // 添加排序
       switch (filter.category) {
         case 'registrations':
-          query += ' ORDER BY invite_count DESC, total_credits DESC'
-          break
+          query += ' ORDER BY invite_count DESC, total_credits DESC';
+          break;
         case 'rewards':
-          query += ' ORDER BY total_credits DESC, invite_count DESC'
-          break
+          query += ' ORDER BY total_credits DESC, invite_count DESC';
+          break;
         case 'activations':
-          query += ' ORDER BY active_invite_count DESC, invite_count DESC'
-          break
+          query += ' ORDER BY active_invite_count DESC, invite_count DESC';
+          break;
         default:
-          query += ' ORDER BY invite_count DESC, total_credits DESC'
+          query += ' ORDER BY invite_count DESC, total_credits DESC';
       }
 
-      query += ` LIMIT ?`
-      params.push(limit)
+      query += ' LIMIT ?';
+      params.push(limit);
 
-      const results = await this.db.query(query, params)
-      
+      const results = await this.db.query(query, params);
+
       const leaderboard = results.map((row: any, index: number) => ({
         userId: row.user_id,
         userName: row.user_name,
-        inviteCount: parseInt(row.invite_count) || 0,
+        inviteCount: parseInt(row.invite_count, 10) || 0,
         rank: index + 1,
         rewards: {
-          totalCredits: parseInt(row.total_credits) || 0,
+          totalCredits: parseInt(row.total_credits, 10) || 0,
           badges: [], // 需要单独查询具体徽章
           titles: [], // 需要单独查询具体称号
-          premiumDays: 0
-        }
-      }))
+          premiumDays: 0,
+        },
+      }));
 
       // 缓存结果
-      await this.setCache(cacheKey, leaderboard)
+      await this.setCache(cacheKey, leaderboard);
 
-      return leaderboard
+      return leaderboard;
     } catch (error) {
-      console.error('Failed to get invite leaderboard:', error)
-      throw new Error('Failed to get invite leaderboard')
+      console.error('Failed to get invite leaderboard:', error);
+      throw new Error('Failed to get invite leaderboard');
     }
   }
 
@@ -164,18 +164,18 @@ export class LeaderboardServiceImpl implements LeaderboardService {
    */
   async getMonthlyLeaderboard(year: number, month: number, limit: number = 50): Promise<LeaderboardEntry[]> {
     try {
-      const startDate = new Date(year, month - 1, 1)
-      const endDate = new Date(year, month, 0, 23, 59, 59)
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0, 23, 59, 59);
 
       const filter: LeaderboardFilter = {
         period: { start: startDate, end: endDate },
-        category: 'invites'
-      }
+        category: 'invites',
+      };
 
-      return await this.getInviteLeaderboard(filter, limit)
+      return await this.getInviteLeaderboard(filter, limit);
     } catch (error) {
-      console.error('Failed to get monthly leaderboard:', error)
-      throw new Error('Failed to get monthly leaderboard')
+      console.error('Failed to get monthly leaderboard:', error);
+      throw new Error('Failed to get monthly leaderboard');
     }
   }
 
@@ -185,19 +185,19 @@ export class LeaderboardServiceImpl implements LeaderboardService {
   async getRealTimeLeaderboard(limit: number = 20): Promise<LeaderboardEntry[]> {
     try {
       // 获取最近7天的排行榜
-      const endDate = new Date()
-      const startDate = new Date()
-      startDate.setDate(startDate.getDate() - 7)
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 7);
 
       const filter: LeaderboardFilter = {
         period: { start: startDate, end: endDate },
-        category: 'invites'
-      }
+        category: 'invites',
+      };
 
-      return await this.getInviteLeaderboard(filter, limit)
+      return await this.getInviteLeaderboard(filter, limit);
     } catch (error) {
-      console.error('Failed to get real-time leaderboard:', error)
-      throw new Error('Failed to get real-time leaderboard')
+      console.error('Failed to get real-time leaderboard:', error);
+      throw new Error('Failed to get real-time leaderboard');
     }
   }
 
@@ -225,18 +225,18 @@ export class LeaderboardServiceImpl implements LeaderboardService {
           LEFT JOIN invite_codes ic ON u.id = ic.inviter_id
           LEFT JOIN invite_registrations ir ON ic.id = ir.invite_code_id
           LEFT JOIN rewards r ON u.id = r.user_id AND r.source_type IN ('invite_registration', 'invite_activation')
-      `
+      `;
 
-      const params: any[] = []
-      const conditions: string[] = []
+      const params: any[] = [];
+      const conditions: string[] = [];
 
       if (filter.period) {
-        conditions.push('ir.registered_at BETWEEN ? AND ?')
-        params.push(filter.period.start, filter.period.end)
+        conditions.push('ir.registered_at BETWEEN ? AND ?');
+        params.push(filter.period.start, filter.period.end);
       }
 
       if (conditions.length > 0) {
-        query += ' WHERE ' + conditions.join(' AND ')
+        query += ' WHERE ' + conditions.join(' AND ');
       }
 
       query += `
@@ -244,32 +244,35 @@ export class LeaderboardServiceImpl implements LeaderboardService {
           HAVING COUNT(DISTINCT ir.id) > 0
         ) user_rank
         WHERE user_rank.user_id = ?
-      `
+      `;
 
-      params.push(userId)
+      params.push(userId);
 
-      const result = await this.db.queryOne(query, params)
+      const result = await this.db.queryOne<{
+        rank: number | string;
+        total_users: number | string;
+      }>(query, params);
 
       if (!result) {
         return {
           rank: 0,
           totalUsers: 0,
-          percentile: 0
-        }
+          percentile: 0,
+        };
       }
 
-      const rank = parseInt(result.rank)
-      const totalUsers = parseInt(result.total_users)
-      const percentile = totalUsers > 0 ? ((totalUsers - rank + 1) / totalUsers) * 100 : 0
+      const rank = Number(result.rank);
+      const totalUsers = Number(result.total_users);
+      const percentile = totalUsers > 0 ? ((totalUsers - rank + 1) / totalUsers) * 100 : 0;
 
       return {
         rank,
         totalUsers,
-        percentile
-      }
+        percentile,
+      };
     } catch (error) {
-      console.error('Failed to get user rank:', error)
-      throw new Error('Failed to get user rank')
+      console.error('Failed to get user rank:', error);
+      throw new Error('Failed to get user rank');
     }
   }
 
@@ -277,8 +280,8 @@ export class LeaderboardServiceImpl implements LeaderboardService {
    * 获取排行榜变化
    */
   async getLeaderboardChanges(
-    previousPeriod: TimePeriod, 
-    currentPeriod: TimePeriod
+    previousPeriod: TimePeriod,
+    currentPeriod: TimePeriod,
   ): Promise<Array<{
     userId: string
     userName: string
@@ -290,28 +293,28 @@ export class LeaderboardServiceImpl implements LeaderboardService {
     try {
       const [previousLeaderboard, currentLeaderboard] = await Promise.all([
         this.getInviteLeaderboard({ period: previousPeriod }, 100),
-        this.getInviteLeaderboard({ period: currentPeriod }, 100)
-      ])
+        this.getInviteLeaderboard({ period: currentPeriod }, 100),
+      ]);
 
-      const previousRanks = new Map<string, number>()
+      const previousRanks = new Map<string, number>();
       previousLeaderboard.forEach(entry => {
-        previousRanks.set(entry.userId, entry.rank)
-      })
+        previousRanks.set(entry.userId, entry.rank);
+      });
 
       const changes = currentLeaderboard.map(entry => {
-        const previousRank = previousRanks.get(entry.userId) || 0
-        const currentRank = entry.rank
-        const rankChange = previousRank > 0 ? previousRank - currentRank : 0
+        const previousRank = previousRanks.get(entry.userId) || 0;
+        const currentRank = entry.rank;
+        const rankChange = previousRank > 0 ? previousRank - currentRank : 0;
 
-        let trend: 'up' | 'down' | 'stable' | 'new'
+        let trend: 'up' | 'down' | 'stable' | 'new';
         if (previousRank === 0) {
-          trend = 'new'
+          trend = 'new';
         } else if (rankChange > 0) {
-          trend = 'up'
+          trend = 'up';
         } else if (rankChange < 0) {
-          trend = 'down'
+          trend = 'down';
         } else {
-          trend = 'stable'
+          trend = 'stable';
         }
 
         return {
@@ -320,14 +323,14 @@ export class LeaderboardServiceImpl implements LeaderboardService {
           previousRank,
           currentRank,
           rankChange,
-          trend
-        }
-      })
+          trend,
+        };
+      });
 
-      return changes
+      return changes;
     } catch (error) {
-      console.error('Failed to get leaderboard changes:', error)
-      throw new Error('Failed to get leaderboard changes')
+      console.error('Failed to get leaderboard changes:', error);
+      throw new Error('Failed to get leaderboard changes');
     }
   }
 
@@ -337,16 +340,16 @@ export class LeaderboardServiceImpl implements LeaderboardService {
   async updateLeaderboardCache(filter: LeaderboardFilter): Promise<void> {
     try {
       // 清除相关缓存
-      const cacheKey = this.generateCacheKey('invite', filter, 50)
-      await this.deleteFromCache(cacheKey)
+      const cacheKey = this.generateCacheKey('invite', filter, 50);
+      await this.deleteFromCache(cacheKey);
 
       // 重新生成缓存
-      await this.getInviteLeaderboard(filter, 50)
-      
-      console.log('Leaderboard cache updated for filter:', filter)
+      await this.getInviteLeaderboard(filter, 50);
+
+      console.log('Leaderboard cache updated for filter:', filter);
     } catch (error) {
-      console.error('Failed to update leaderboard cache:', error)
-      throw new Error('Failed to update leaderboard cache')
+      console.error('Failed to update leaderboard cache:', error);
+      throw new Error('Failed to update leaderboard cache');
     }
   }
 
@@ -375,19 +378,23 @@ export class LeaderboardServiceImpl implements LeaderboardService {
           GROUP BY ic.inviter_id
           HAVING COUNT(DISTINCT ir.id) > 0
         ) invite_counts ON u.id = invite_counts.inviter_id
-      `
+      `;
 
-      const result = await this.db.queryOne(query)
+      const result = await this.db.queryOne<{
+        total_participants: number | string;
+        average_invites: number | string;
+        top_performer_threshold: number | string;
+      }>(query);
 
       return {
-        totalParticipants: parseInt(result?.total_participants) || 0,
-        averageInvites: parseFloat(result?.average_invites) || 0,
-        topPerformerThreshold: parseFloat(result?.top_performer_threshold) || 0,
-        lastUpdated: new Date()
-      }
+        totalParticipants: Number(result?.total_participants) || 0,
+        averageInvites: Number(result?.average_invites) || 0,
+        topPerformerThreshold: Number(result?.top_performer_threshold) || 0,
+        lastUpdated: new Date(),
+      };
     } catch (error) {
-      console.error('Failed to get leaderboard stats:', error)
-      throw new Error('Failed to get leaderboard stats')
+      console.error('Failed to get leaderboard stats:', error);
+      throw new Error('Failed to get leaderboard stats');
     }
   }
 
@@ -395,22 +402,22 @@ export class LeaderboardServiceImpl implements LeaderboardService {
    * 生成缓存键
    */
   private generateCacheKey(type: string, filter: LeaderboardFilter, limit: number): string {
-    const filterStr = JSON.stringify(filter)
-    const hash = this.simpleHash(filterStr)
-    return `${this.cachePrefix}${type}:${hash}:${limit}`
+    const filterStr = JSON.stringify(filter);
+    const hash = this.simpleHash(filterStr);
+    return `${this.cachePrefix}${type}:${hash}:${limit}`;
   }
 
   /**
    * 简单哈希函数
    */
   private simpleHash(str: string): string {
-    let hash = 0
+    let hash = 0;
     for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i)
-      hash = ((hash << 5) - hash) + char
-      hash = hash & hash // Convert to 32bit integer
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
     }
-    return Math.abs(hash).toString(36)
+    return Math.abs(hash).toString(36);
   }
 
   /**
@@ -420,10 +427,10 @@ export class LeaderboardServiceImpl implements LeaderboardService {
     try {
       // 这里应该实现Redis缓存获取
       // 暂时返回null，表示缓存未命中
-      return null
+      return null;
     } catch (error) {
-      console.error('Failed to get from cache:', error)
-      return null
+      console.error('Failed to get from cache:', error);
+      return null;
     }
   }
 
@@ -434,9 +441,9 @@ export class LeaderboardServiceImpl implements LeaderboardService {
     try {
       // 这里应该实现Redis缓存设置
       // 暂时只记录日志
-      console.log(`Cache set for key: ${key}, data length: ${data.length}`)
+      console.log(`Cache set for key: ${key}, data length: ${data.length}`);
     } catch (error) {
-      console.error('Failed to set cache:', error)
+      console.error('Failed to set cache:', error);
     }
   }
 
@@ -447,9 +454,9 @@ export class LeaderboardServiceImpl implements LeaderboardService {
     try {
       // 这里应该实现Redis缓存删除
       // 暂时只记录日志
-      console.log(`Cache deleted for key: ${key}`)
+      console.log(`Cache deleted for key: ${key}`);
     } catch (error) {
-      console.error('Failed to delete from cache:', error)
+      console.error('Failed to delete from cache:', error);
     }
   }
 }

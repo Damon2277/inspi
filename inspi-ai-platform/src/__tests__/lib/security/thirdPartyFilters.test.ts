@@ -16,7 +16,7 @@ describe('BaiduContentFilter', () => {
       provider: 'baidu',
       apiKey: 'test-api-key',
       secretKey: 'test-secret-key',
-      enabled: true
+      enabled: true,
     });
     jest.clearAllMocks();
   });
@@ -29,8 +29,8 @@ describe('BaiduContentFilter', () => {
           ok: true,
           json: () => Promise.resolve({
             access_token: 'mock-token',
-            expires_in: 3600
-          })
+            expires_in: 3600,
+          }),
         } as Response)
         // Mock 内容审核请求
         .mockResolvedValueOnce({
@@ -41,14 +41,14 @@ describe('BaiduContentFilter', () => {
             data: [{
               type: 'inappropriate',
               probability: 0.9,
-              msg: '包含不当内容'
+              msg: '包含不当内容',
             }],
-            log_id: 'test-log-id'
-          })
+            log_id: 'test-log-id',
+          }),
         } as Response);
 
       const issues = await filter.detect('测试违规内容');
-      
+
       expect(issues).toHaveLength(1);
       expect(issues[0].type).toBe('sensitive_word');
       expect(issues[0].severity).toBe('error');
@@ -61,8 +61,8 @@ describe('BaiduContentFilter', () => {
           ok: true,
           json: () => Promise.resolve({
             access_token: 'mock-token',
-            expires_in: 3600
-          })
+            expires_in: 3600,
+          }),
         } as Response)
         .mockResolvedValueOnce({
           ok: true,
@@ -70,12 +70,12 @@ describe('BaiduContentFilter', () => {
             conclusionType: 1, // 合规
             confidence: 0.95,
             data: [],
-            log_id: 'test-log-id'
-          })
+            log_id: 'test-log-id',
+          }),
         } as Response);
 
       const issues = await filter.detect('正常内容');
-      
+
       expect(issues).toHaveLength(0);
     });
 
@@ -85,8 +85,8 @@ describe('BaiduContentFilter', () => {
           ok: true,
           json: () => Promise.resolve({
             access_token: 'mock-token',
-            expires_in: 3600
-          })
+            expires_in: 3600,
+          }),
         } as Response)
         .mockResolvedValueOnce({
           ok: true,
@@ -96,14 +96,14 @@ describe('BaiduContentFilter', () => {
             data: [{
               type: 'uncertain',
               probability: 0.7,
-              msg: '需要人工审核'
+              msg: '需要人工审核',
             }],
-            log_id: 'test-log-id'
-          })
+            log_id: 'test-log-id',
+          }),
         } as Response);
 
       const issues = await filter.detect('可疑内容');
-      
+
       expect(issues).toHaveLength(1);
       expect(issues[0].severity).toBe('warning');
     });
@@ -111,11 +111,11 @@ describe('BaiduContentFilter', () => {
     test('应该处理API错误', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        status: 500
+        status: 500,
       } as Response);
 
       const issues = await filter.detect('测试内容');
-      
+
       expect(issues).toHaveLength(0); // 错误时不阻止内容
     });
 
@@ -125,19 +125,19 @@ describe('BaiduContentFilter', () => {
           ok: true,
           json: () => Promise.resolve({
             access_token: 'mock-token',
-            expires_in: 3600
-          })
+            expires_in: 3600,
+          }),
         } as Response)
         .mockResolvedValueOnce({
           ok: true,
           json: () => Promise.resolve({
             error_code: 18,
-            error_msg: 'Open api qps request limit reached'
-          })
+            error_msg: 'Open api qps request limit reached',
+          }),
         } as Response);
 
       const issues = await filter.detect('测试内容');
-      
+
       expect(issues).toHaveLength(0);
     });
   });
@@ -149,8 +149,8 @@ describe('BaiduContentFilter', () => {
           ok: true,
           json: () => Promise.resolve({
             access_token: 'mock-token',
-            expires_in: 3600
-          })
+            expires_in: 3600,
+          }),
         } as Response)
         .mockResolvedValueOnce({
           ok: true,
@@ -158,8 +158,8 @@ describe('BaiduContentFilter', () => {
             conclusionType: 1,
             confidence: 0.95,
             data: [],
-            log_id: 'test-log-id-1'
-          })
+            log_id: 'test-log-id-1',
+          }),
         } as Response)
         .mockResolvedValueOnce({
           ok: true,
@@ -167,13 +167,13 @@ describe('BaiduContentFilter', () => {
             conclusionType: 1,
             confidence: 0.95,
             data: [],
-            log_id: 'test-log-id-2'
-          })
+            log_id: 'test-log-id-2',
+          }),
         } as Response);
 
       await filter.detect('内容1');
       await filter.detect('内容2');
-      
+
       // 应该只请求一次token
       expect(mockFetch).toHaveBeenCalledTimes(3); // 1次token + 2次内容检测
     });
@@ -185,11 +185,11 @@ describe('BaiduContentFilter', () => {
         provider: 'baidu',
         apiKey: 'test-api-key',
         secretKey: 'test-secret-key',
-        enabled: false
+        enabled: false,
       });
 
       const issues = await disabledFilter.detect('任何内容');
-      
+
       expect(issues).toHaveLength(0);
       expect(mockFetch).not.toHaveBeenCalled();
     });
@@ -209,7 +209,7 @@ describe('ThirdPartyFilterManager', () => {
       provider: 'baidu',
       apiKey: 'test-key',
       secretKey: 'test-secret',
-      enabled: true
+      enabled: true,
     });
 
     expect(manager.getFilters()).toContain('test-baidu');
@@ -225,8 +225,8 @@ describe('ThirdPartyFilterManager', () => {
         ok: true,
         json: () => Promise.resolve({
           access_token: 'mock-token',
-          expires_in: 3600
-        })
+          expires_in: 3600,
+        }),
       } as Response)
       .mockResolvedValueOnce({
         ok: true,
@@ -234,19 +234,19 @@ describe('ThirdPartyFilterManager', () => {
           conclusionType: 3,
           confidence: 0.9,
           data: [{ type: 'inappropriate', probability: 0.9, msg: '违规' }],
-          log_id: 'test-log-id'
-        })
+          log_id: 'test-log-id',
+        }),
       } as Response);
 
     manager.addFilter('baidu', {
       provider: 'baidu',
       apiKey: 'test-key',
       secretKey: 'test-secret',
-      enabled: true
+      enabled: true,
     });
 
     const issues = await manager.detectAll('测试内容');
-    
+
     expect(issues).toHaveLength(1);
     expect(issues[0].message).toContain('百度内容审核');
   });
@@ -258,11 +258,11 @@ describe('ThirdPartyFilterManager', () => {
       provider: 'baidu',
       apiKey: 'test-key',
       secretKey: 'test-secret',
-      enabled: true
+      enabled: true,
     });
 
     const issues = await manager.detectAll('测试内容');
-    
+
     expect(issues).toHaveLength(0); // 错误时返回空数组
   });
 
@@ -271,7 +271,7 @@ describe('ThirdPartyFilterManager', () => {
       manager.addFilter('unsupported', {
         provider: 'custom' as any,
         apiKey: 'test-key',
-        enabled: true
+        enabled: true,
       });
     }).toThrow('Unsupported provider: custom');
   });

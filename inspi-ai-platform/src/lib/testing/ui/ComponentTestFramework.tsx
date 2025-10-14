@@ -1,21 +1,20 @@
 /**
  * Component Test Framework
- * 
+ *
  * Comprehensive testing framework for React components including
  * rendering tests, interaction simulation, style regression testing,
  * and accessibility validation.
  */
-import React from 'react';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { renderHook, act } from '@testing-library/react';
+import { QueryClient } from '@tanstack/react-query';
+import { render, screen, fireEvent, waitFor, within, renderHook, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { QueryClient } from '@tanstack/react-query';
+import React from 'react';
 // Mock theme provider for testing
-const MockThemeProvider: React.FC<{ children: React.ReactNode; attribute?: string; defaultTheme?: string }> = ({ children }) => <>{children}</>;
+const MockThemeProvider: React.FC<{ children: React.ReactNode; attribute?: string; defaultTheme?: string }> = ({ children }) => <React.Fragment>{children}</React.Fragment>;
 
 // Mock query client provider for testing
-const MockQueryClientProvider: React.FC<{ children: React.ReactNode; client: any }> = ({ children }) => <>{children}</>;
+const MockQueryClientProvider: React.FC<{ children: React.ReactNode; client: any }> = ({ children }) => <React.Fragment>{children}</React.Fragment>;
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations);
@@ -109,9 +108,9 @@ export class ComponentTestFramework {
       accessibility: { enabled: true },
       performance: { enabled: true, renderTimeThreshold: 100 },
       styles: { enabled: true },
-      ...config
+      ...config,
     };
-    
+
     this.queryClient = {
       clear: jest.fn(),
       // Mock query client for testing
@@ -126,14 +125,14 @@ export class ComponentTestFramework {
    */
   renderComponent(
     component: React.ReactElement,
-    options: ComponentTestConfig = {}
+    options: ComponentTestConfig = {},
   ) {
     const mergedConfig = { ...this.config, ...options };
     this.renderCount = 0;
 
     const AllProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       this.renderCount++;
-      
+
       let wrappedChildren = children;
 
       // Wrap with theme provider
@@ -159,20 +158,20 @@ export class ComponentTestFramework {
         });
       }
 
-      return <>{wrappedChildren}</>;
+      return <React.Fragment>{wrappedChildren}</React.Fragment>;
     };
 
     const startTime = performance.now();
     const result = render(component, {
       wrapper: AllProviders,
-      ...options
+      ...options,
     });
     const renderTime = performance.now() - startTime;
 
     return {
       ...result,
       renderTime,
-      renderCount: this.renderCount
+      renderCount: this.renderCount,
     };
   }
 
@@ -185,7 +184,7 @@ export class ComponentTestFramework {
 
     // Render base component
     const { container, renderTime } = this.renderComponent(
-      React.createElement(suite.component, suite.props || {})
+      React.createElement(suite.component, suite.props || {}),
     );
 
     const result: ComponentTestResult = {
@@ -193,7 +192,7 @@ export class ComponentTestFramework {
       memoryUsage: 0,
       reRenderCount: this.renderCount,
       accessibilityViolations: [],
-      interactions: []
+      interactions: [],
     };
 
     try {
@@ -219,7 +218,7 @@ export class ComponentTestFramework {
         for (const interaction of suite.interactions) {
           const interactionResult = await this.testInteraction(
             container,
-            interaction
+            interaction,
           );
           result.interactions.push(interactionResult);
         }
@@ -241,11 +240,11 @@ export class ComponentTestFramework {
   private async testVariant(
     Component: React.ComponentType<any>,
     variant: ComponentVariant,
-    config?: ComponentTestConfig
+    config?: ComponentTestConfig,
   ): Promise<void> {
     const { container } = this.renderComponent(
       React.createElement(Component, variant.props),
-      config
+      config,
     );
 
     // Basic rendering test
@@ -268,7 +267,7 @@ export class ComponentTestFramework {
     const axeConfig = {
       rules: config.rules ? this.buildRulesConfig(config.rules) : undefined,
       tags: config.tags,
-      exclude: config.skipRules
+      exclude: config.skipRules,
     };
 
     const results = await axe(container, axeConfig);
@@ -304,7 +303,7 @@ export class ComponentTestFramework {
    */
   async testInteraction(
     container: HTMLElement,
-    interaction: ComponentInteraction
+    interaction: ComponentInteraction,
   ): Promise<InteractionResult> {
     const user = userEvent.setup();
     const startTime = performance.now();
@@ -321,7 +320,7 @@ export class ComponentTestFramework {
         action: interaction.name,
         element: container.tagName,
         success: true,
-        duration
+        duration,
       };
     } catch (error) {
       const duration = performance.now() - startTime;
@@ -330,7 +329,7 @@ export class ComponentTestFramework {
         element: container.tagName,
         success: false,
         duration,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -340,13 +339,13 @@ export class ComponentTestFramework {
    */
   private async testResponsiveBreakpoint(
     container: HTMLElement,
-    breakpoint: number
+    breakpoint: number,
   ): Promise<void> {
     // Simulate viewport resize
     Object.defineProperty(window, 'innerWidth', {
       writable: true,
       configurable: true,
-      value: breakpoint
+      value: breakpoint,
     });
 
     // Trigger resize event
@@ -370,7 +369,7 @@ export class ComponentTestFramework {
       const computedStyle = window.getComputedStyle(element);
       const relevantStyles = [
         'display', 'position', 'width', 'height', 'margin', 'padding',
-        'color', 'background-color', 'font-size', 'font-weight'
+        'color', 'background-color', 'font-size', 'font-weight',
       ];
 
       const elementStyles = relevantStyles
@@ -399,23 +398,23 @@ export class ComponentTestFramework {
    */
   private setupViewport(): void {
     const { width, height, devicePixelRatio = 1 } = this.config.viewport!;
-    
+
     Object.defineProperty(window, 'innerWidth', {
       writable: true,
       configurable: true,
-      value: width
+      value: width,
     });
 
     Object.defineProperty(window, 'innerHeight', {
       writable: true,
       configurable: true,
-      value: height
+      value: height,
     });
 
     Object.defineProperty(window, 'devicePixelRatio', {
       writable: true,
       configurable: true,
-      value: devicePixelRatio
+      value: devicePixelRatio,
     });
   }
 
@@ -485,7 +484,7 @@ export class ComponentTestFramework {
 
       // Wait utilities
       waitForElement: (callback: () => HTMLElement) => waitFor(callback),
-      waitForElementToBeRemoved: (element: HTMLElement) => 
+      waitForElementToBeRemoved: (element: HTMLElement) =>
         waitFor(() => expect(element).not.toBeInTheDocument()),
 
       // Accessibility utilities
@@ -509,7 +508,7 @@ export class ComponentTestFramework {
         renderFn();
         await waitFor(() => {});
         return performance.now() - start;
-      }
+      },
     };
   }
 
@@ -536,7 +535,7 @@ export function createComponentTestFramework(config?: ComponentTestConfig): Comp
  */
 export function withComponentTest<P extends object>(
   Component: React.ComponentType<P>,
-  config?: ComponentTestConfig
+  config?: ComponentTestConfig,
 ) {
   return (props: P) => {
     const framework = createComponentTestFramework(config);
@@ -575,7 +574,7 @@ export class ComponentTestSuiteBuilder {
     name: string,
     action: ComponentInteraction['action'],
     assertions: ComponentInteraction['assertions'],
-    timeout?: number
+    timeout?: number,
   ): this {
     if (!this.suite.interactions) this.suite.interactions = [];
     this.suite.interactions.push({ name, action, assertions, timeout });

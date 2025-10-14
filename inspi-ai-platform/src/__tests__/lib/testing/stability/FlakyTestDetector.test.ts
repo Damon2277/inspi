@@ -22,8 +22,8 @@ describe('FlakyTestDetector', () => {
       environment: {
         nodeVersion: 'v18.0.0',
         platform: 'linux',
-        ci: false
-      }
+        ci: false,
+      },
     };
 
     const history: TestExecutionRecord[] = [];
@@ -33,7 +33,7 @@ describe('FlakyTestDetector', () => {
         for (let i = 0; i < 20; i++) {
           history.push({
             ...baseRecord,
-            timestamp: new Date(Date.now() + i * 1000)
+            timestamp: new Date(Date.now() + i * 1000),
           });
         }
         break;
@@ -43,7 +43,7 @@ describe('FlakyTestDetector', () => {
           history.push({
             ...baseRecord,
             status: i % 2 === 0 ? 'passed' : 'failed',
-            timestamp: new Date(Date.now() + i * 1000)
+            timestamp: new Date(Date.now() + i * 1000),
           });
         }
         break;
@@ -54,7 +54,7 @@ describe('FlakyTestDetector', () => {
             ...baseRecord,
             duration: i % 3 === 0 ? 1000 : 100, // High variance
             status: i % 5 === 0 ? 'failed' : 'passed',
-            timestamp: new Date(Date.now() + i * 1000)
+            timestamp: new Date(Date.now() + i * 1000),
           });
         }
         break;
@@ -66,9 +66,9 @@ describe('FlakyTestDetector', () => {
             status: (i < 10 && i % 3 === 0) ? 'failed' : 'passed', // Failures only in first half (CI)
             environment: {
               ...baseRecord.environment,
-              ci: i < 10 // First half is CI, second half is local
+              ci: i < 10, // First half is CI, second half is local
             },
-            timestamp: new Date(Date.now() + i * 1000)
+            timestamp: new Date(Date.now() + i * 1000),
           });
         }
         break;
@@ -94,7 +94,7 @@ describe('FlakyTestDetector', () => {
       durationVariance: 0.1, // Mock value
       consecutiveFailures: 0,
       isFlaky: failCount / history.length > 0.1,
-      stabilityTrend: 'stable'
+      stabilityTrend: 'stable',
     };
   };
 
@@ -125,7 +125,7 @@ describe('FlakyTestDetector', () => {
       const history = createMockHistory('timing');
       const metrics = {
         ...createMockMetrics(history),
-        durationVariance: 0.8 // High variance
+        durationVariance: 0.8, // High variance
       };
 
       const analysis = detector.analyzeTest('timing test', 'timing.spec.ts', history, metrics);
@@ -153,8 +153,8 @@ describe('FlakyTestDetector', () => {
         environment: {
           nodeVersion: 'v18.0.0',
           platform: 'linux',
-          ci: false
-        }
+          ci: false,
+        },
       };
 
       // Add some failures with race condition indicators
@@ -164,9 +164,9 @@ describe('FlakyTestDetector', () => {
           status: i % 4 === 0 ? 'failed' : 'passed',
           error: i % 4 === 0 ? {
             message: 'Timeout waiting for async operation',
-            type: 'TimeoutError'
+            type: 'TimeoutError',
           } : undefined,
-          timestamp: new Date(Date.now() + i * 1000)
+          timestamp: new Date(Date.now() + i * 1000),
         });
       }
 
@@ -187,8 +187,8 @@ describe('FlakyTestDetector', () => {
         environment: {
           nodeVersion: 'v18.0.0',
           platform: 'linux',
-          ci: false
-        }
+          ci: false,
+        },
       };
 
       // Add failures with resource-related errors
@@ -198,9 +198,9 @@ describe('FlakyTestDetector', () => {
           status: i % 3 === 0 ? 'failed' : 'passed',
           error: i % 3 === 0 ? {
             message: 'Out of memory error during test execution',
-            type: 'MemoryError'
+            type: 'MemoryError',
           } : undefined,
-          timestamp: new Date(Date.now() + i * 1000)
+          timestamp: new Date(Date.now() + i * 1000),
         });
       }
 
@@ -218,14 +218,14 @@ describe('FlakyTestDetector', () => {
           testName: 'stable test',
           testFile: 'stable.spec.ts',
           history: createMockHistory('stable'),
-          metrics: createMockMetrics(createMockHistory('stable'))
+          metrics: createMockMetrics(createMockHistory('stable')),
         },
         {
           testName: 'flaky test',
           testFile: 'flaky.spec.ts',
           history: createMockHistory('intermittent'),
-          metrics: createMockMetrics(createMockHistory('intermittent'))
-        }
+          metrics: createMockMetrics(createMockHistory('intermittent')),
+        },
       ];
 
       const analyses = detector.analyzeTests(testsData);
@@ -249,7 +249,7 @@ describe('FlakyTestDetector', () => {
           patterns: [],
           riskLevel: 'low' as const,
           stabilityScore: 0.7,
-          recommendations: []
+          recommendations: [],
         },
         {
           testName: 'high risk',
@@ -259,7 +259,7 @@ describe('FlakyTestDetector', () => {
           patterns: [],
           riskLevel: 'high' as const,
           stabilityScore: 0.2,
-          recommendations: []
+          recommendations: [],
         },
         {
           testName: 'critical risk',
@@ -269,8 +269,8 @@ describe('FlakyTestDetector', () => {
           patterns: [],
           riskLevel: 'critical' as const,
           stabilityScore: 0.1,
-          recommendations: []
-        }
+          recommendations: [],
+        },
       ];
 
       const categorized = detector.getFlakyTestsByRisk(analyses);
@@ -291,7 +291,7 @@ describe('FlakyTestDetector', () => {
           patterns: [],
           riskLevel: 'low' as const,
           stabilityScore: 0.9,
-          recommendations: []
+          recommendations: [],
         },
         {
           testName: 'flaky test',
@@ -301,8 +301,8 @@ describe('FlakyTestDetector', () => {
           patterns: [],
           riskLevel: 'medium' as const,
           stabilityScore: 0.4,
-          recommendations: []
-        }
+          recommendations: [],
+        },
       ];
 
       const categorized = detector.getFlakyTestsByRisk(analyses);
@@ -328,7 +328,7 @@ describe('FlakyTestDetector', () => {
         durationVariance: 0,
         consecutiveFailures: 0,
         isFlaky: false,
-        stabilityTrend: 'stable'
+        stabilityTrend: 'stable',
       };
 
       const analysis = detector.analyzeTest('empty test', 'empty.spec.ts', history, metrics);
@@ -359,15 +359,15 @@ describe('FlakyTestDetector', () => {
         environment: {
           nodeVersion: 'v18.0.0',
           platform: 'linux',
-          ci: true
-        }
+          ci: true,
+        },
       };
 
       // Only 2 CI runs, not enough for environmental analysis
       for (let i = 0; i < 2; i++) {
         history.push({
           ...baseRecord,
-          timestamp: new Date(Date.now() + i * 1000)
+          timestamp: new Date(Date.now() + i * 1000),
         });
       }
 

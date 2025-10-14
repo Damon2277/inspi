@@ -1,6 +1,6 @@
 /**
  * Dynamic Chart Generator for Real-Time Dashboard
- * 
+ *
  * Generates dynamic charts for test execution status, coverage changes,
  * and performance metrics with real-time updates.
  */
@@ -80,22 +80,22 @@ export class DynamicChartGenerator {
         maxDataPoints: 100,
         colors: [
           '#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8',
-          '#6f42c1', '#e83e8c', '#fd7e14', '#20c997', '#6c757d'
+          '#6f42c1', '#e83e8c', '#fd7e14', '#20c997', '#6c757d',
         ],
         animation: {
           enabled: true,
           duration: 300,
-          easing: 'ease-in-out'
+          easing: 'ease-in-out',
         },
         legend: {
           enabled: true,
-          position: 'top'
+          position: 'top',
         },
         tooltip: {
-          enabled: true
+          enabled: true,
         },
-        ...config
-      }
+        ...config,
+      },
     };
 
     this.charts.set(id, chartData);
@@ -130,7 +130,7 @@ export class DynamicChartGenerator {
       throw new Error(`Chart with id ${chartId} not found`);
     }
 
-    const series = chart.series.find(s => s.name === seriesName);
+    const series = chart(series.find as any)(s => s.name === seriesName);
     if (!series) {
       throw new Error(`Series ${seriesName} not found in chart ${chartId}`);
     }
@@ -154,7 +154,7 @@ export class DynamicChartGenerator {
       throw new Error(`Chart with id ${chartId} not found`);
     }
 
-    const series = chart.series.find(s => s.name === seriesName);
+    const series = chart(series.find as any)(s => s.name === seriesName);
     if (!series) {
       throw new Error(`Series ${seriesName} not found in chart ${chartId}`);
     }
@@ -173,7 +173,7 @@ export class DynamicChartGenerator {
    * Generate test execution status chart
    */
   public generateTestStatusChart(
-    testStatuses: Array<{ status: string; timestamp: Date; count: number }>
+    testStatuses: Array<{ status: string; timestamp: Date; count: number }>,
   ): ChartData {
     const chartId = 'test-status-timeline';
     const config: ChartConfig = {
@@ -184,13 +184,13 @@ export class DynamicChartGenerator {
         x: {
           label: 'Time',
           type: 'time',
-          format: 'HH:mm:ss'
+          format: 'HH:mm:ss',
         },
         y: {
           label: 'Number of Tests',
-          min: 0
-        }
-      }
+          min: 0,
+        },
+      },
     };
 
     const chart = this.createChart(chartId, config);
@@ -202,7 +202,7 @@ export class DynamicChartGenerator {
       }
       groups[status.status].push({
         timestamp: status.timestamp,
-        value: status.count
+        value: status.count,
       });
       return groups;
     }, {} as { [status: string]: ChartDataPoint[] });
@@ -212,7 +212,7 @@ export class DynamicChartGenerator {
       this.addSeries(chartId, {
         name: status.charAt(0).toUpperCase() + status.slice(1),
         data,
-        type: 'area'
+        type: 'area',
       });
     });
 
@@ -229,7 +229,7 @@ export class DynamicChartGenerator {
       branches: number;
       functions: number;
       lines: number;
-    }>
+    }>,
   ): ChartData {
     const chartId = 'coverage-trend';
     const config: ChartConfig = {
@@ -240,15 +240,15 @@ export class DynamicChartGenerator {
         x: {
           label: 'Time',
           type: 'time',
-          format: 'HH:mm'
+          format: 'HH:mm',
         },
         y: {
           label: 'Coverage %',
           min: 0,
           max: 100,
-          format: '{value}%'
-        }
-      }
+          format: '{value}%',
+        },
+      },
     };
 
     const chart = this.createChart(chartId, config);
@@ -258,13 +258,13 @@ export class DynamicChartGenerator {
     coverageTypes.forEach(type => {
       const data = coverageHistory.map(snapshot => ({
         timestamp: snapshot.timestamp,
-        value: snapshot[type as keyof typeof snapshot] as number
+        value: snapshot[type as keyof typeof snapshot] as number,
       }));
 
       this.addSeries(chartId, {
         name: type.charAt(0).toUpperCase() + type.slice(1),
         data,
-        type: 'line'
+        type: 'line',
       });
     });
 
@@ -280,7 +280,7 @@ export class DynamicChartGenerator {
       averageTestTime: number;
       memoryUsage: number;
       totalTests: number;
-    }>
+    }>,
   ): ChartData {
     const chartId = 'performance-metrics';
     const config: ChartConfig = {
@@ -291,13 +291,13 @@ export class DynamicChartGenerator {
         x: {
           label: 'Time',
           type: 'time',
-          format: 'HH:mm'
+          format: 'HH:mm',
         },
         y: {
           label: 'Value',
-          min: 0
-        }
-      }
+          min: 0,
+        },
+      },
     };
 
     const chart = this.createChart(chartId, config);
@@ -307,9 +307,9 @@ export class DynamicChartGenerator {
       name: 'Avg Test Time (ms)',
       data: performanceData.map(d => ({
         timestamp: d.timestamp,
-        value: d.averageTestTime
+        value: d.averageTestTime,
       })),
-      type: 'line'
+      type: 'line',
     });
 
     // Memory usage series
@@ -317,9 +317,9 @@ export class DynamicChartGenerator {
       name: 'Memory Usage (MB)',
       data: performanceData.map(d => ({
         timestamp: d.timestamp,
-        value: d.memoryUsage
+        value: d.memoryUsage,
       })),
-      type: 'line'
+      type: 'line',
     });
 
     return chart;
@@ -334,7 +334,7 @@ export class DynamicChartGenerator {
       testName: string;
       failureCount: number;
       timestamp: Date;
-    }>
+    }>,
   ): ChartData {
     const chartId = 'failure-heatmap';
     const config: ChartConfig = {
@@ -343,13 +343,13 @@ export class DynamicChartGenerator {
       axes: {
         x: {
           label: 'Test Files',
-          type: 'category'
+          type: 'category',
         },
         y: {
           label: 'Tests',
-          type: 'category'
-        }
-      }
+          type: 'category',
+        },
+      },
     };
 
     const chart = this.createChart(chartId, config);
@@ -362,14 +362,14 @@ export class DynamicChartGenerator {
         file: failure.file,
         testName: failure.testName,
         x: failure.file,
-        y: failure.testName
-      }
+        y: failure.testName,
+      },
     }));
 
     this.addSeries(chartId, {
       name: 'Failure Count',
       data: heatmapData,
-      type: 'scatter'
+      type: 'scatter',
     });
 
     return chart;
@@ -386,15 +386,15 @@ export class DynamicChartGenerator {
       realTime: true,
       legend: {
         enabled: true,
-        position: 'right'
-      }
+        position: 'right',
+      },
     };
 
     const chart = this.createChart(chartId, config);
-    
+
     // Initialize with empty data
     chart.labels = ['Passed', 'Failed', 'Running', 'Pending'];
-    
+
     return chart;
   }
 
@@ -408,7 +408,7 @@ export class DynamicChartGenerator {
       failed: number;
       running: number;
       pending: number;
-    }
+    },
   ): void {
     const chart = this.charts.get(chartId);
     if (!chart) return;
@@ -420,8 +420,8 @@ export class DynamicChartGenerator {
         { timestamp: now, value: data.passed, label: 'Passed' },
         { timestamp: now, value: data.failed, label: 'Failed' },
         { timestamp: now, value: data.running, label: 'Running' },
-        { timestamp: now, value: data.pending, label: 'Pending' }
-      ]
+        { timestamp: now, value: data.pending, label: 'Pending' },
+      ],
     }];
 
     this.notifyUpdate(chartId, chart);
@@ -482,7 +482,7 @@ export class DynamicChartGenerator {
       id: chartId,
       config: chart.config,
       seriesCount: chart.series.length,
-      dataPoints: chart.series.reduce((sum, series) => sum + series.data.length, 0)
+      dataPoints: chart.series.reduce((sum, series) => sum + series.data.length, 0),
     };
   }
 
@@ -505,12 +505,12 @@ export class DynamicChartGenerator {
           label: s.name,
           data: s.data.map(d => ({
             x: config.axes?.x?.type === 'time' ? d.timestamp : d.label || index,
-            y: d.value
+            y: d.value,
           })),
           backgroundColor: s.color || config.colors?.[index % (config.colors?.length || 1)],
           borderColor: s.color || config.colors?.[index % (config.colors?.length || 1)],
-          fill: s.type === 'area'
-        }))
+          fill: s.type === 'area',
+        })),
       },
       options: {
         responsive: config.responsive,
@@ -518,18 +518,18 @@ export class DynamicChartGenerator {
         plugins: {
           title: {
             display: true,
-            text: config.title
+            text: config.title,
           },
           legend: {
             display: config.legend?.enabled,
-            position: config.legend?.position
+            position: config.legend?.position,
           },
           tooltip: {
-            enabled: config.tooltip?.enabled
-          }
+            enabled: config.tooltip?.enabled,
+          },
         },
-        scales: {}
-      }
+        scales: {},
+      },
     };
 
     // Configure scales
@@ -538,9 +538,9 @@ export class DynamicChartGenerator {
         display: true,
         title: {
           display: true,
-          text: config.axes.x.label
+          text: config.axes.x.label,
         },
-        type: config.axes.x.type === 'time' ? 'time' : 'linear'
+        type: config.axes.x.type === 'time' ? 'time' : 'linear',
       };
     }
 
@@ -549,10 +549,10 @@ export class DynamicChartGenerator {
         display: true,
         title: {
           display: true,
-          text: config.axes.y.label
+          text: config.axes.y.label,
         },
         min: config.axes.y.min,
-        max: config.axes.y.max
+        max: config.axes.y.max,
       };
     }
 
@@ -565,7 +565,7 @@ export class DynamicChartGenerator {
   private mapChartType(type: string): string {
     const typeMap: { [key: string]: string } = {
       'area': 'line',
-      'heatmap': 'scatter'
+      'heatmap': 'scatter',
     };
 
     return typeMap[type] || type;

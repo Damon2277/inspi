@@ -1,19 +1,20 @@
 /**
  * Type Test Framework Tests
- * 
+ *
  * Comprehensive tests for the TypeScript type testing framework
  */
 
+import * as ts from 'typescript';
+
+import { CompileTimeTestUtils } from '../../../../lib/testing/types/CompileTimeTestUtils';
 import {
   TypeTestFramework,
   createTypeTestFramework,
   TypeTestConfig,
   CompileTimeTest,
   RuntimeTypeCheck,
-  TypeTestCase
+  TypeTestCase,
 } from '../../../../lib/testing/types/TypeTestFramework';
-import { CompileTimeTestUtils } from '../../../../lib/testing/types/CompileTimeTestUtils';
-import * as ts from 'typescript';
 
 describe('TypeTestFramework', () => {
   let framework: TypeTestFramework;
@@ -26,7 +27,7 @@ describe('TypeTestFramework', () => {
         module: ts.ModuleKind.CommonJS,
         strict: true,
         esModuleInterop: true,
-        skipLibCheck: true
+        skipLibCheck: true,
       },
       strictMode: true,
       includePatterns: ['src/**/*.ts'],
@@ -34,18 +35,18 @@ describe('TypeTestFramework', () => {
       coverage: {
         enabled: true,
         threshold: 80,
-        reportPath: './coverage/types'
+        reportPath: './coverage/types',
       },
       runtime: {
         enabled: true,
         strictChecking: true,
-        performanceMode: false
+        performanceMode: false,
       },
       regression: {
         enabled: true,
         baselinePath: './snapshots/baseline.json',
-        snapshotPath: './snapshots'
-      }
+        snapshotPath: './snapshots',
+      },
     };
 
     framework = createTypeTestFramework(config);
@@ -80,7 +81,7 @@ describe('TypeTestFramework', () => {
       // Create invalid config to trigger error
       const invalidFramework = createTypeTestFramework({
         ...config,
-        includePatterns: ['/nonexistent/path/**/*.ts']
+        includePatterns: ['/nonexistent/path/**/*.ts'],
       });
 
       await expect(invalidFramework.initialize()).rejects.toThrow();
@@ -119,11 +120,11 @@ describe('TypeTestFramework', () => {
         expectedErrors: [
           {
             code: 2322,
-            message: "Type 'string' is not assignable to type 'number'"
-          }
+            message: "Type 'string' is not assignable to type 'number'",
+          },
         ],
         expectedWarnings: [],
-        shouldCompile: false
+        shouldCompile: false,
       };
 
       const results = await framework.runCompileTimeTests([failingTest]);
@@ -138,7 +139,7 @@ describe('TypeTestFramework', () => {
       const results = await framework.runCompileTimeTests(genericTests);
 
       expect(results).toHaveLength(genericTests.length);
-      
+
       const passingTest = results.find(r => r.testCase === 'Generic Function Types');
       const failingTest = results.find(r => r.testCase === 'Generic Constraint Violations');
 
@@ -191,7 +192,7 @@ describe('TypeTestFramework', () => {
       const results = await framework.runCompileTimeTests(strictTests);
 
       expect(results).toHaveLength(strictTests.length);
-      
+
       // Strict mode tests should detect null/undefined issues
       const result = results[0];
       expect(result.assertions.some(a => a.name.includes('Expected Error'))).toBe(true);
@@ -218,19 +219,19 @@ describe('TypeTestFramework', () => {
           {
             value: { id: 1, name: 'John', email: 'john@example.com' },
             shouldPass: true,
-            description: 'Valid user object'
+            description: 'Valid user object',
           },
           {
             value: { id: 'invalid', name: 'John', email: 'john@example.com' },
             shouldPass: false,
-            description: 'Invalid id type'
+            description: 'Invalid id type',
           },
           {
             value: { name: 'John', email: 'john@example.com' },
             shouldPass: false,
-            description: 'Missing required id field'
-          }
-        ]
+            description: 'Missing required id field',
+          },
+        ],
       };
 
       const results = await framework.runRuntimeTypeChecks([runtimeCheck]);
@@ -238,7 +239,7 @@ describe('TypeTestFramework', () => {
 
       expect(result.type).toBe('runtime');
       expect(result.assertions).toHaveLength(3);
-      
+
       // Check that validation results match expectations
       const validObjectAssertion = result.assertions.find(a => a.name.includes('Valid user object'));
       const invalidIdAssertion = result.assertions.find(a => a.name.includes('Invalid id type'));
@@ -274,11 +275,11 @@ describe('TypeTestFramework', () => {
               address: {
                 street: '123 Main St',
                 city: 'Anytown',
-                zipCode: '12345'
-              }
+                zipCode: '12345',
+              },
             },
             shouldPass: true,
-            description: 'Valid nested object'
+            description: 'Valid nested object',
           },
           {
             value: {
@@ -286,14 +287,14 @@ describe('TypeTestFramework', () => {
               name: 'John',
               address: {
                 street: '123 Main St',
-                city: 'Anytown'
+                city: 'Anytown',
                 // Missing zipCode
-              }
+              },
             },
             shouldPass: false,
-            description: 'Invalid nested object - missing field'
-          }
-        ]
+            description: 'Invalid nested object - missing field',
+          },
+        ],
       };
 
       const results = await framework.runRuntimeTypeChecks([nestedTypeCheck]);
@@ -323,22 +324,22 @@ describe('TypeTestFramework', () => {
               id: 1,
               name: 'John',
               status: 'active',
-              tags: ['admin', 'user']
+              tags: ['admin', 'user'],
             },
             shouldPass: true,
-            description: 'Valid array and union types'
+            description: 'Valid array and union types',
           },
           {
             value: {
               id: 1,
               name: 'John',
               status: 'invalid_status',
-              tags: ['admin', 'user']
+              tags: ['admin', 'user'],
             },
             shouldPass: false,
-            description: 'Invalid union type value'
-          }
-        ]
+            description: 'Invalid union type value',
+          },
+        ],
       };
 
       const results = await framework.runRuntimeTypeChecks([arrayUnionCheck]);
@@ -369,7 +370,7 @@ describe('TypeTestFramework', () => {
       const report = await framework.generateCoverageReport();
 
       expect(Array.isArray(report.fileBreakdown)).toBe(true);
-      
+
       if (report.fileBreakdown.length > 0) {
         const fileReport = report.fileBreakdown[0];
         expect(fileReport).toHaveProperty('file');
@@ -412,7 +413,7 @@ describe('TypeTestFramework', () => {
 
     it('should detect type changes between snapshots', async () => {
       const baselineSnapshot = await framework.createTypeSnapshot();
-      
+
       // Simulate changes by creating a new snapshot
       // In a real scenario, this would be after code changes
       const currentSnapshot = await framework.createTypeSnapshot();
@@ -420,7 +421,7 @@ describe('TypeTestFramework', () => {
       const regressionTests = await framework.runRegressionTests(baselineSnapshot);
 
       expect(Array.isArray(regressionTests)).toBe(true);
-      
+
       if (regressionTests.length > 0) {
         const test = regressionTests[0];
         expect(test).toHaveProperty('name');
@@ -447,9 +448,9 @@ describe('TypeTestFramework', () => {
             {
               name: 'Interface compiles',
               type: 'assignable',
-              expected: true
-            }
-          ]
+              expected: true,
+            },
+          ],
         },
         {
           name: 'Runtime Validation Test',
@@ -460,10 +461,10 @@ describe('TypeTestFramework', () => {
             {
               name: 'Valid object passes',
               type: 'runtime-valid',
-              expected: true
-            }
-          ]
-        }
+              expected: true,
+            },
+          ],
+        },
       ];
 
       const results = await framework.runTests(testCases);
@@ -484,7 +485,7 @@ describe('TypeTestFramework', () => {
         target: 'TestType',
         assertions: [],
         setup: setupSpy,
-        teardown: teardownSpy
+        teardown: teardownSpy,
       };
 
       await framework.runTests([testCase]);
@@ -505,14 +506,14 @@ describe('TypeTestFramework', () => {
         description: 'Test event emission',
         type: 'compile-time',
         target: 'TestType',
-        assertions: []
+        assertions: [],
       };
 
       await framework.runTests([testCase]);
 
       expect(startedSpy).toHaveBeenCalledWith({
         testCase: 'Event Test',
-        type: 'compile-time'
+        type: 'compile-time',
       });
       expect(completedSpy).toHaveBeenCalled();
     });
@@ -533,9 +534,9 @@ describe('TypeTestFramework', () => {
           {
             name: 'Test assertion',
             type: 'assignable',
-            expected: true
-          }
-        ]
+            expected: true,
+          },
+        ],
       };
 
       const results = await framework.runTests([testCase]);
@@ -555,15 +556,15 @@ describe('TypeTestFramework', () => {
           description: 'Compile-time test',
           type: 'compile-time',
           target: 'TestType1',
-          assertions: []
+          assertions: [],
         },
         {
           name: 'Runtime Test',
           description: 'Runtime test',
           type: 'runtime',
           target: 'TestType2',
-          assertions: []
-        }
+          assertions: [],
+        },
       ];
 
       const results = await framework.runTests(testCases);
@@ -589,7 +590,7 @@ describe('TypeTestFramework', () => {
         assertions: [],
         setup: async () => {
           throw new Error('Setup failed');
-        }
+        },
       };
 
       const results = await framework.runTests([testCase]);
@@ -610,15 +611,15 @@ describe('TypeTestFramework', () => {
           assertions: [],
           setup: async () => {
             throw new Error('Test failure');
-          }
+          },
         },
         {
           name: 'Passing Test',
           description: 'This test will pass',
           type: 'compile-time',
           target: 'TestType2',
-          assertions: []
-        }
+          assertions: [],
+        },
       ];
 
       const results = await framework.runTests(testCases);
@@ -636,17 +637,17 @@ describe('TypeTestFramework', () => {
 
     it('should complete tests within reasonable time', async () => {
       const startTime = Date.now();
-      
+
       const testCases: TypeTestCase[] = Array.from({ length: 10 }, (_, i) => ({
         name: `Performance Test ${i}`,
         description: `Performance test case ${i}`,
         type: 'compile-time',
         target: `TestType${i}`,
-        assertions: []
+        assertions: [],
       }));
 
       await framework.runTests(testCases);
-      
+
       const duration = Date.now() - startTime;
       expect(duration).toBeLessThan(10000); // Should complete within 10 seconds
     });
@@ -657,7 +658,7 @@ describe('TypeTestFramework', () => {
         description: 'Test execution timing',
         type: 'compile-time',
         target: 'TestType',
-        assertions: []
+        assertions: [],
       };
 
       const results = await framework.runTests([testCase]);
@@ -674,7 +675,7 @@ describe('CompileTimeTestUtils', () => {
     it('should create passing tests', () => {
       const test = CompileTimeTestUtils.createPassingTest(
         'Valid Interface',
-        'interface User { id: number; name: string; }'
+        'interface User { id: number; name: string; }',
       );
 
       expect(test.name).toBe('Valid Interface');
@@ -686,14 +687,14 @@ describe('CompileTimeTestUtils', () => {
       const expectedErrors = [
         {
           code: 2322,
-          message: "Type 'string' is not assignable to type 'number'"
-        }
+          message: "Type 'string' is not assignable to type 'number'",
+        },
       ];
 
       const test = CompileTimeTestUtils.createFailingTest(
         'Invalid Assignment',
         'const x: number = "string";',
-        expectedErrors
+        expectedErrors,
       );
 
       expect(test.name).toBe('Invalid Assignment');
@@ -708,7 +709,7 @@ describe('CompileTimeTestUtils', () => {
         strict: true,
         noImplicitAny: true,
         strictNullChecks: true,
-        target: ts.ScriptTarget.ES2020
+        target: ts.ScriptTarget.ES2020,
       };
 
       const result = CompileTimeTestUtils.validateCompilerOptions(strictOptions);
@@ -722,7 +723,7 @@ describe('CompileTimeTestUtils', () => {
         strict: false,
         noImplicitAny: false,
         strictNullChecks: false,
-        target: ts.ScriptTarget.ES5
+        target: ts.ScriptTarget.ES5,
       };
 
       const result = CompileTimeTestUtils.validateCompilerOptions(nonStrictOptions);
@@ -749,8 +750,8 @@ describe('CompileTimeTestUtils', () => {
       const matrix = CompileTimeTestUtils.generateCompatibilityMatrix(types);
 
       expect(matrix.incompatibilities.length).toBeGreaterThan(0);
-      expect(matrix.incompatibilities.some(i => 
-        i.from === 'string' && i.to === 'number'
+      expect(matrix.incompatibilities.some(i =>
+        i.from === 'string' && i.to === 'number',
       )).toBe(true);
     });
   });

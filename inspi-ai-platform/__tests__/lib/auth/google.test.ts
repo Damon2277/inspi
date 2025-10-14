@@ -1,8 +1,10 @@
-import { verifyGoogleToken, getGoogleAuthUrl, exchangeCodeForTokens } from '@/lib/auth/google';
 import { OAuth2Client } from 'google-auth-library';
-import { User } from '@/lib/models/User';
+
 import { ContributionLog } from '@/lib/models/ContributionLog';
+import { User } from '@/lib/models/User';
 import connectDB from '@/lib/mongodb';
+
+import { verifyGoogleToken, getGoogleAuthUrl, exchangeCodeForTokens } from '@/lib/auth/google';
 
 // Mock dependencies
 jest.mock('google-auth-library');
@@ -42,7 +44,7 @@ describe('Google Auth', () => {
 
     it('should verify token and authenticate existing user', async () => {
       mockConnectDB.mockResolvedValue(undefined);
-      
+
       const mockTicket = {
         getPayload: jest.fn().mockReturnValue(mockPayload),
       };
@@ -78,7 +80,7 @@ describe('Google Auth', () => {
 
     it('should verify token and create new user', async () => {
       mockConnectDB.mockResolvedValue(undefined);
-      
+
       const mockTicket = {
         getPayload: jest.fn().mockReturnValue(mockPayload),
       };
@@ -112,7 +114,7 @@ describe('Google Auth', () => {
 
     it('should fail with invalid token', async () => {
       mockConnectDB.mockResolvedValue(undefined);
-      
+
       const mockTicket = {
         getPayload: jest.fn().mockReturnValue(null),
       };
@@ -126,7 +128,7 @@ describe('Google Auth', () => {
 
     it('should fail when email is not provided', async () => {
       mockConnectDB.mockResolvedValue(undefined);
-      
+
       const mockTicket = {
         getPayload: jest.fn().mockReturnValue({ ...mockPayload, email: undefined }),
       };

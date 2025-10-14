@@ -3,19 +3,24 @@
  * 获取用户在特定活动中的结果
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { DatabaseFactory } from '@/lib/invitation/database'
-import { logger } from '@/lib/utils/logger'
+import { NextRequest, NextResponse } from 'next/server';
+
+import { DatabaseFactory } from '@/lib/invitation/database';
+import { logger } from '@/shared/utils/logger';
 
 // GET /api/activities/[id]/results/[userId] - 获取用户活动结果
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string; userId: string } }
+  { params }: { params: Promise<{ id: string; userId: string }> },
 ) {
+  let activityId: string = '';
+  let userId: string = '';
   try {
-    const { id: activityId, userId } = params
+    const resolvedParams = await params;
+    activityId = resolvedParams.id;
+    userId = resolvedParams.userId;
 
-    const db = DatabaseFactory.getInstance()
+    const db = DatabaseFactory.getInstance();
 
     // 查询用户活动结果
     const [result] = await db.query<any>(`
@@ -26,13 +31,13 @@ export async function GET(
       FROM activity_results ar
       JOIN invitation_activities ia ON ar.activity_id = ia.id
       WHERE ar.activity_id = ? AND ar.user_id = ?
-    `, [activityId, userId])
+    `, [activityId, userId]);
 
     if (!result) {
       return NextResponse.json({
         success: false,
-        error: '未找到活动结果'
-      }, { status: 404 })
+        error: '未找到活动结果',
+      }, { status: 404 });
     }
 
     const activityResult = {
@@ -42,18 +47,18 @@ export async function GET(
       score: result.final_score,
       rewards: JSON.parse(result.rewards_granted || '[]'),
       isWinner: result.is_winner,
-      completedAt: result.completed_at ? new Date(result.completed_at) : null
-    }
+      completedAt: result.completed_at ? new Date(result.completed_at) : null,
+    };
 
     return NextResponse.json({
       success: true,
-      data: activityResult
-    })
+      data: activityResult,
+    });
   } catch (error) {
-    logger.error('Failed to get user activity result', { error, activityId: params.id, userId: params.userId })
+    logger.error('Failed to get user activity result', { error, activityId, userId });
     return NextResponse.json({
       success: false,
-      error: '获取活动结果失败'
-    }, { status: 500 })
+      error: '获取活动结果失败',
+    }, { status: 500 });
   }
 }

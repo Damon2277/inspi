@@ -1,8 +1,9 @@
 /**
  * 资源上传和管理系统
  */
-import { logger } from '@/lib/logging/logger';
 import { AssetType } from '@/lib/cdn/config';
+import { logger } from '@/lib/logging/logger';
+
 import { ImageOptimizer, ImageFormat } from './compression';
 
 /**
@@ -62,6 +63,7 @@ export interface UploadProgress {
   progress: number; // 0-100
   message: string;
   error?: string;
+  [key: string]: unknown;
 }
 
 /**
@@ -96,18 +98,18 @@ export class AssetUploadManager {
         'audio/mp3',
         'audio/wav',
         'application/pdf',
-        'text/plain'
+        'text/plain',
       ],
       allowedExtensions: [
         'jpg', 'jpeg', 'png', 'gif', 'webp', 'avif',
-        'mp4', 'webm', 'mp3', 'wav', 'pdf', 'txt'
+        'mp4', 'webm', 'mp3', 'wav', 'pdf', 'txt',
       ],
       uploadPath: '/uploads',
       generateThumbnails: true,
       thumbnailSizes: [150, 300, 600],
       autoOptimize: true,
       virusScan: false,
-      ...config
+      ...config,
     };
   }
 
@@ -122,22 +124,22 @@ export class AssetUploadManager {
       folder?: string;
       optimize?: boolean;
       generateThumbnails?: boolean;
-    }
+    },
   ): Promise<UploadResult> {
     const uploadId = this.generateUploadId();
-    
+
     try {
       // 初始化进度
       this.updateProgress(uploadId, {
         id: uploadId,
         stage: 'uploading',
         progress: 0,
-        message: 'Starting upload...'
+        message: 'Starting upload...',
       });
 
       // 获取文件信息
       const fileInfo = await this.getFileInfo(file, options?.originalName);
-      
+
       // 验证文件
       const validation = this.validateFile(fileInfo);
       if (!validation.valid) {
@@ -148,7 +150,7 @@ export class AssetUploadManager {
         id: uploadId,
         stage: 'uploading',
         progress: 20,
-        message: 'File validated, uploading...'
+        message: 'File validated, uploading...',
       });
 
       // 病毒扫描
@@ -160,7 +162,7 @@ export class AssetUploadManager {
         id: uploadId,
         stage: 'processing',
         progress: 40,
-        message: 'Processing file...'
+        message: 'Processing file...',
       });
 
       // 生成文件名和路径
@@ -176,21 +178,21 @@ export class AssetUploadManager {
       let compressionRatio: number | undefined;
 
       // 优化处理
-      if ((options?.optimize !== false && this.config.autoOptimize) && 
+      if ((options?.optimize !== false && this.config.autoOptimize) &&
           fileInfo.assetType === AssetType.IMAGE) {
-        
+
         this.updateProgress(uploadId, {
           id: uploadId,
           stage: 'optimizing',
           progress: 60,
-          message: 'Optimizing image...'
+          message: 'Optimizing image...',
         });
 
         const optimizationResult = await this.imageOptimizer.optimize(fileInfo.buffer, {
           quality: 85,
-          generateThumbnails: options?.generateThumbnails !== false && this.config.generateThumbnails 
-            ? this.config.thumbnailSizes 
-            : undefined
+          generateThumbnails: options?.generateThumbnails !== false && this.config.generateThumbnails
+            ? this.config.thumbnailSizes
+            : undefined,
         });
 
         finalBuffer = optimizationResult.main.buffer;
@@ -213,7 +215,7 @@ export class AssetUploadManager {
         id: uploadId,
         stage: 'completed',
         progress: 100,
-        message: 'Upload completed successfully'
+        message: 'Upload completed successfully',
       });
 
       // 创建上传结果
@@ -231,7 +233,7 @@ export class AssetUploadManager {
           ? this.config.thumbnailSizes.map(size => ({
               size,
               path: `${this.config.uploadPath}/${folder}/thumbs/${size}_${fileName}`,
-              url: this.generateUrl(`${this.config.uploadPath}/${folder}/thumbs/${size}_${fileName}`)
+              url: this.generateUrl(`${this.config.uploadPath}/${folder}/thumbs/${size}_${fileName}`),
             }))
           : undefined,
         metadata: {
@@ -239,8 +241,8 @@ export class AssetUploadManager {
           uploadedBy: options?.userId,
           optimized,
           originalSize: fileInfo.buffer.length,
-          compressionRatio
-        }
+          compressionRatio,
+        },
       };
 
       // 缓存结果
@@ -251,7 +253,7 @@ export class AssetUploadManager {
         fileName,
         size: result.size,
         optimized,
-        compressionRatio
+        compressionRatio,
       });
 
       return result;
@@ -262,12 +264,12 @@ export class AssetUploadManager {
         stage: 'failed',
         progress: 0,
         message: 'Upload failed',
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
 
       logger.error('File upload failed', error instanceof Error ? error : new Error(String(error)), {
         uploadId,
-        originalName: options?.originalName
+        originalName: options?.originalName,
       });
 
       throw error;
@@ -285,7 +287,7 @@ export class AssetUploadManager {
       optimize?: boolean;
       generateThumbnails?: boolean;
       maxConcurrent?: number;
-    }
+    },
   ): Promise<UploadResult[]> {
     const results: UploadResult[] = [];
     const maxConcurrent = options?.maxConcurrent || 3;
@@ -293,23 +295,23 @@ export class AssetUploadManager {
     // 分批处理
     for (let i = 0; i < files.length; i += maxConcurrent) {
       const batch = files.slice(i, i + maxConcurrent);
-      
+
       const batchPromises = batch.map(async (file, index) => {
         try {
           return await this.uploadFile(file, {
             ...options,
-            originalName: file instanceof File ? file.name : `file_${i + index}`
+            originalName: file instanceof File ? file.name : `file_${i + index}`,
           });
         } catch (error) {
           logger.error('Batch upload failed for file', error instanceof Error ? error : new Error(String(error)), {
-            index: i + index
+            index: i + index,
           });
           return null;
         }
       });
 
       const batchResults = await Promise.allSettled(batchPromises);
-      
+
       batchResults.forEach((result) => {
         if (result.status === 'fulfilled' && result.value) {
           results.push(result.value);
@@ -372,7 +374,7 @@ export class AssetUploadManager {
    */
   private async getFileInfo(
     file: File | Buffer,
-    originalName?: string
+    originalName?: string,
   ): Promise<{
     buffer: Buffer;
     originalName: string;
@@ -410,7 +412,7 @@ export class AssetUploadManager {
       extension,
       mimeType,
       assetType,
-      dimensions
+      dimensions,
     };
   }
 
@@ -460,7 +462,7 @@ export class AssetUploadManager {
     return {
       valid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -471,7 +473,7 @@ export class AssetUploadManager {
     // 这里应该集成实际的病毒扫描服务
     // 为了演示，我们模拟扫描过程
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
     // 模拟检测到病毒的情况（极小概率）
     if (Math.random() < 0.001) {
       throw new Error('Virus detected in file');
@@ -517,7 +519,7 @@ export class AssetUploadManager {
       [AssetType.SCRIPT]: 'scripts',
       [AssetType.STYLESHEET]: 'styles',
       [AssetType.FONT]: 'fonts',
-      [AssetType.OTHER]: 'misc'
+      [AssetType.OTHER]: 'misc',
     };
 
     return folderMap[assetType] || 'misc';
@@ -536,7 +538,7 @@ export class AssetUploadManager {
    */
   private detectMimeType(fileName: string): string {
     const extension = this.getFileExtension(fileName).toLowerCase();
-    
+
     const mimeMap: Record<string, string> = {
       'jpg': 'image/jpeg',
       'jpeg': 'image/jpeg',
@@ -549,7 +551,7 @@ export class AssetUploadManager {
       'mp3': 'audio/mpeg',
       'wav': 'audio/wav',
       'pdf': 'application/pdf',
-      'txt': 'text/plain'
+      'txt': 'text/plain',
     };
 
     return mimeMap[extension] || 'application/octet-stream';
@@ -573,7 +575,7 @@ export class AssetUploadManager {
     if (mimeType === 'application/javascript') return AssetType.SCRIPT;
     if (mimeType === 'text/css') return AssetType.STYLESHEET;
     if (mimeType.startsWith('font/')) return AssetType.FONT;
-    
+
     return AssetType.OTHER;
   }
 
@@ -603,7 +605,7 @@ export class AssetUploadManager {
    */
   private updateProgress(uploadId: string, progress: UploadProgress): void {
     this.uploadProgress.set(uploadId, progress);
-    
+
     // 这里可以通过WebSocket或Server-Sent Events发送进度更新
     logger.debug('Upload progress updated', progress);
   }
@@ -613,7 +615,7 @@ export class AssetUploadManager {
    */
   cleanup(maxAge: number = 24 * 60 * 60 * 1000): void {
     const cutoffTime = Date.now() - maxAge;
-    
+
     for (const [uploadId, result] of this.uploadedAssets.entries()) {
       if (result.metadata.uploadedAt.getTime() < cutoffTime) {
         this.uploadedAssets.delete(uploadId);
@@ -621,8 +623,8 @@ export class AssetUploadManager {
       }
     }
 
-    logger.info('Upload records cleaned up', { 
-      remaining: this.uploadedAssets.size 
+    logger.info('Upload records cleaned up', {
+      remaining: this.uploadedAssets.size,
     });
   }
 }
@@ -643,11 +645,11 @@ export class UploadUtils {
    */
   static formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
-    
+
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
@@ -678,7 +680,7 @@ export class UploadUtils {
       fileAPI: !!(window.File && window.FileReader && window.FileList && window.Blob),
       dragDrop: 'draggable' in document.createElement('div'),
       formData: !!window.FormData,
-      progress: 'upload' in new XMLHttpRequest()
+      progress: 'upload' in new XMLHttpRequest(),
     };
   }
 }

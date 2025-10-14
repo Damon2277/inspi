@@ -3,21 +3,22 @@
  * GET /api/leaderboard - 获取排行榜数据
  */
 import { NextRequest, NextResponse } from 'next/server';
-import contributionService from '@/lib/services/contributionService';
-import { handleServiceError } from '@/lib/utils/standardErrorHandler';
+
 import { LEADERBOARD_CONFIG } from '@/lib/config/contribution';
+import contributionService from '@/lib/services/contributionService';
+import { handleServiceError } from '@/shared/utils/standardErrorHandler';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
+
     // 解析查询参数
     const type = searchParams.get('type') || 'total';
     const limit = Math.min(
-      parseInt(searchParams.get('limit') || LEADERBOARD_CONFIG.DEFAULT_LIMIT.toString()),
-      LEADERBOARD_CONFIG.MAX_LIMIT
+      parseInt(searchParams.get('limit') || LEADERBOARD_CONFIG.DEFAULT_LIMIT.toString(), 10),
+      LEADERBOARD_CONFIG.MAX_LIMIT,
     );
-    const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
     const includeUserRank = searchParams.get('includeUserRank') === 'true';
     const userId = searchParams.get('userId');
 
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
     if (!['total', 'weekly', 'monthly', 'creation', 'reuse'].includes(type)) {
       return NextResponse.json({
         success: false,
-        error: '无效的排行榜类型'
+        error: '无效的排行榜类型',
       }, { status: 400 });
     }
 
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
       limit,
       offset,
       includeUserRank,
-      userId: userId || undefined
+      userId: userId || undefined,
     });
 
     // 获取排行榜统计信息
@@ -45,15 +46,15 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         ...leaderboard,
-        stats
-      }
+        stats,
+      },
     });
 
   } catch (error) {
     console.error('获取排行榜失败:', error);
     return NextResponse.json({
       success: false,
-      error: '获取排行榜失败'
+      error: '获取排行榜失败',
     }, { status: 500 });
   }
 }
@@ -64,20 +65,20 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // TODO: 添加管理员权限验证
-    
+
     // 更新排行榜缓存
     await contributionService.updateLeaderboardCache();
 
     return NextResponse.json({
       success: true,
-      message: '排行榜缓存更新成功'
+      message: '排行榜缓存更新成功',
     });
 
   } catch (error) {
     console.error('更新排行榜缓存失败:', error);
     return NextResponse.json({
       success: false,
-      error: '更新排行榜缓存失败'
+      error: '更新排行榜缓存失败',
     }, { status: 500 });
   }
 }

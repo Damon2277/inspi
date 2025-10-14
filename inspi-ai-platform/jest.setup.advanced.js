@@ -15,21 +15,21 @@ beforeAll(async () => {
   try {
     testEnvironment = TestEnvironment.getInstance();
     const result = await testEnvironment.initialize();
-    
+
     if (!result.success) {
       console.error('❌ Test environment initialization failed:');
       result.errors.forEach(error => console.error(`  - ${error}`));
-      
+
       if (result.errors.length > 0) {
         throw new Error('Test environment initialization failed');
       }
     }
-    
+
     if (result.warnings.length > 0) {
       console.warn('⚠️  Test environment warnings:');
       result.warnings.forEach(warning => console.warn(`  - ${warning}`));
     }
-    
+
     console.log(`✅ Test environment initialized (${result.environment.type})`);
     console.log(`   Platform: ${result.environment.platform}`);
     console.log(`   Node: ${result.environment.nodeVersion}`);
@@ -37,7 +37,7 @@ beforeAll(async () => {
     console.log(`   Memory: ${Math.round(result.environment.memory / 1024 / 1024)}MB`);
     console.log(`   CI: ${result.environment.ci ? 'Yes' : 'No'}`);
     console.log(`   Docker: ${result.environment.docker ? 'Yes' : 'No'}`);
-    
+
   } catch (error) {
     console.error('Failed to initialize test environment:', error);
     throw error;
@@ -85,7 +85,7 @@ process.on('uncaughtException', (error) => {
 
 // 设置全局测试超时处理
 const originalTimeout = setTimeout;
-global.setTimeout = function(callback, delay, ...args) {
+global.setTimeout = function (callback, delay, ...args) {
   if (delay > 30000) {
     console.warn(`⚠️  Long timeout detected: ${delay}ms`);
   }
@@ -95,7 +95,7 @@ global.setTimeout = function(callback, delay, ...args) {
 // 增强的测试工具
 global.testUtils = {
   ...global.testUtils,
-  
+
   // 创建测试用户
   createTestUser: (overrides = {}) => ({
     id: `test_user_${Date.now()}`,
@@ -104,7 +104,7 @@ global.testUtils = {
     createdAt: new Date(),
     ...overrides,
   }),
-  
+
   // 创建测试作品
   createTestWork: (overrides = {}) => ({
     id: `test_work_${Date.now()}`,
@@ -114,7 +114,7 @@ global.testUtils = {
     createdAt: new Date(),
     ...overrides,
   }),
-  
+
   // 等待条件满足
   waitFor: async (condition, timeout = 5000, interval = 100) => {
     const start = Date.now();
@@ -126,27 +126,27 @@ global.testUtils = {
     }
     throw new Error(`Condition not met within ${timeout}ms`);
   },
-  
+
   // 模拟延迟
   delay: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
-  
+
   // 生成随机字符串
   randomString: (length = 10) => {
     return Math.random().toString(36).substring(2, 2 + length);
   },
-  
+
   // 生成随机邮箱
   randomEmail: () => {
     return `test_${Math.random().toString(36).substring(2)}@example.com`;
   },
-  
+
   // 清理测试数据
   cleanup: async () => {
     if (global.testUtils.isUnitTest) {
       // 单元测试不需要清理数据库
       return;
     }
-    
+
     try {
       const { TestDatabaseManager } = require('./src/lib/testing/TestDatabaseManager');
       const dbManager = TestDatabaseManager.getInstance();

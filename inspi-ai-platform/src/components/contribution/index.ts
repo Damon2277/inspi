@@ -16,5 +16,5 @@ export type {
   ContributionHistory as ContributionHistoryType,
   ContributionRecord,
   TrendingWorksResponse,
-  TrendingWork
-} from '@/types/contribution';
+  TrendingWork,
+} from '@/shared/types/contribution';

@@ -18,7 +18,7 @@ describe('Cache Performance Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
-    
+
     // Mock Redis client
     mockRedisClient = {
       get: jest.fn(),
@@ -37,11 +37,11 @@ describe('Cache Performance Tests', () => {
       slowlog: jest.fn(),
       isReady: true,
       on: jest.fn(),
-      quit: jest.fn()
+      quit: jest.fn(),
     };
 
     (redis as any).createClient = jest.fn().mockReturnValue(mockRedisClient);
-    
+
     simpleRedis = new SimpleRedis();
     performanceOptimizer = new CachePerformanceOptimizer(simpleRedis);
   });
@@ -74,7 +74,7 @@ describe('Cache Performance Tests', () => {
       const keyValuePairs = [
         ['batch_key1', 'value1'],
         ['batch_key2', 'value2'],
-        ['batch_key3', 'value3']
+        ['batch_key3', 'value3'],
       ];
 
       mockRedisClient.mset.mockResolvedValue('OK');
@@ -86,7 +86,7 @@ describe('Cache Performance Tests', () => {
 
       // Assert
       expect(mockRedisClient.mset).toHaveBeenCalledWith(
-        keyValuePairs.flat()
+        keyValuePairs.flat(),
       );
       expect(endTime - startTime).toBeLessThan(50);
     });
@@ -116,14 +116,14 @@ describe('Cache Performance Tests', () => {
         { type: 'set', key: 'pipe_key1', value: 'value1' },
         { type: 'set', key: 'pipe_key2', value: 'value2' },
         { type: 'get', key: 'pipe_key3' },
-        { type: 'del', key: 'pipe_key4' }
+        { type: 'del', key: 'pipe_key4' },
       ];
 
       const mockPipeline = {
         set: jest.fn().mockReturnThis(),
         get: jest.fn().mockReturnThis(),
         del: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue(['OK', 'OK', 'value3', 1])
+        exec: jest.fn().mockResolvedValue(['OK', 'OK', 'value3', 1]),
       };
 
       mockRedisClient.pipeline.mockReturnValue(mockPipeline);
@@ -146,19 +146,19 @@ describe('Cache Performance Tests', () => {
     it('应该处理Pipeline执行失败的情况', async () => {
       // Arrange
       const operations = [
-        { type: 'set', key: 'fail_key', value: 'value' }
+        { type: 'set', key: 'fail_key', value: 'value' },
       ];
 
       const mockPipeline = {
         set: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockRejectedValue(new Error('Pipeline failed'))
+        exec: jest.fn().mockRejectedValue(new Error('Pipeline failed')),
       };
 
       mockRedisClient.pipeline.mockReturnValue(mockPipeline);
 
       // Act & Assert
       await expect(
-        performanceOptimizer.executePipeline(operations)
+        performanceOptimizer.executePipeline(operations),
       ).rejects.toThrow('Pipeline failed');
     });
 
@@ -168,12 +168,12 @@ describe('Cache Performance Tests', () => {
         { type: 'multi' },
         { type: 'set', key: 'tx_key1', value: 'value1' },
         { type: 'set', key: 'tx_key2', value: 'value2' },
-        { type: 'exec' }
+        { type: 'exec' },
       ];
 
       const mockMulti = {
         set: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue(['OK', 'OK'])
+        exec: jest.fn().mockResolvedValue(['OK', 'OK']),
       };
 
       mockRedisClient.multi.mockReturnValue(mockMulti);
@@ -199,7 +199,7 @@ describe('Cache Performance Tests', () => {
       const connections = await Promise.all([
         connectionPool.getConnection(),
         connectionPool.getConnection(),
-        connectionPool.getConnection()
+        connectionPool.getConnection(),
       ]);
 
       // Assert
@@ -231,7 +231,7 @@ describe('Cache Performance Tests', () => {
 
       // 尝试获取第三个连接，应该等待
       const conn3Promise = connectionPool.getConnection();
-      
+
       // 释放一个连接
       await connectionPool.releaseConnection(conn1);
       const conn3 = await conn3Promise;
@@ -267,8 +267,8 @@ describe('Cache Performance Tests', () => {
     it('应该支持并发预热以提高效率', async () => {
       // Arrange
       const keys = Array.from({ length: 10 }, (_, i) => `concurrent_key_${i}`);
-      const dataLoader = jest.fn().mockImplementation((key) => 
-        Promise.resolve({ key, data: `data_${key}` })
+      const dataLoader = jest.fn().mockImplementation((key) =>
+        Promise.resolve({ key, data: `data_${key}` }),
       );
 
       mockRedisClient.set.mockResolvedValue('OK');
@@ -340,7 +340,7 @@ describe('Cache Performance Tests', () => {
       // Act
       const cleanupResult = await performanceOptimizer.autoCleanup({
         memoryThreshold: 0.8,
-        cleanupPercentage: 0.1
+        cleanupPercentage: 0.1,
       });
 
       // Assert
@@ -354,7 +354,7 @@ describe('Cache Performance Tests', () => {
       const largeObject = {
         id: 1,
         data: 'x'.repeat(10000), // 10KB数据
-        metadata: { created: Date.now(), tags: ['large', 'test'] }
+        metadata: { created: Date.now(), tags: ['large', 'test'] },
       };
 
       mockRedisClient.set.mockResolvedValue('OK');
@@ -362,14 +362,14 @@ describe('Cache Performance Tests', () => {
       // Act
       await performanceOptimizer.setLargeObject('large_key', largeObject, {
         compress: true,
-        chunkSize: 1024
+        chunkSize: 1024,
       });
 
       // Assert
       // 应该使用压缩存储
       expect(mockRedisClient.set).toHaveBeenCalledWith(
         'large_key',
-        expect.any(String) // 压缩后的数据
+        expect.any(String), // 压缩后的数据
       );
     });
   });
@@ -381,7 +381,7 @@ describe('Cache Performance Tests', () => {
       const mockScanResults = [
         ['10', ['user:1', 'user:2']],
         ['20', ['user:3', 'user:4']],
-        ['0', ['user:5']] // cursor为0表示扫描结束
+        ['0', ['user:5']], // cursor为0表示扫描结束
       ];
 
       mockRedisClient.scan
@@ -406,17 +406,17 @@ describe('Cache Performance Tests', () => {
       const pageSize = 10;
       const page = 2;
 
-      const mockResults = Array.from({ length: pageSize }, (_, i) => 
-        [`user_${i + 10}`, (100 - i - 10).toString()]
+      const mockResults = Array.from({ length: pageSize }, (_, i) =>
+        [`user_${i + 10}`, (100 - i - 10).toString()],
       ).flat();
 
       mockRedisClient.zrevrange.mockResolvedValue(mockResults);
 
       // Act
       const results = await performanceOptimizer.getPaginatedResults(
-        sortedSetKey, 
-        page, 
-        pageSize
+        sortedSetKey,
+        page,
+        pageSize,
       );
 
       // Assert
@@ -424,7 +424,7 @@ describe('Cache Performance Tests', () => {
         sortedSetKey,
         10, // (page - 1) * pageSize
         19, // page * pageSize - 1
-        'WITHSCORES'
+        'WITHSCORES',
       );
       expect(results).toHaveLength(pageSize);
     });
@@ -446,16 +446,16 @@ describe('Cache Performance Tests', () => {
       // Act
       // 首次查询
       const result1 = await performanceOptimizer.cachedQuery(
-        query, 
-        mockQueryExecutor, 
-        { ttl: 300 }
+        query,
+        mockQueryExecutor,
+        { ttl: 300 },
       );
 
       // 第二次查询
       const result2 = await performanceOptimizer.cachedQuery(
-        query, 
-        mockQueryExecutor, 
-        { ttl: 300 }
+        query,
+        mockQueryExecutor,
+        { ttl: 300 },
       );
 
       // Assert
@@ -464,7 +464,7 @@ describe('Cache Performance Tests', () => {
       expect(mockQueryExecutor).toHaveBeenCalledTimes(1); // 只执行一次实际查询
       expect(mockRedisClient.set).toHaveBeenCalledWith(
         expect.stringContaining('query:'),
-        JSON.stringify(queryResult)
+        JSON.stringify(queryResult),
       );
     });
   });
@@ -475,8 +475,8 @@ describe('Cache Performance Tests', () => {
       const key = 'latency_test_key';
       const value = 'latency_test_value';
 
-      mockRedisClient.set.mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve('OK'), 50))
+      mockRedisClient.set.mockImplementation(() =>
+        new Promise(resolve => setTimeout(() => resolve('OK'), 50)),
       );
 
       // Act
@@ -493,7 +493,7 @@ describe('Cache Performance Tests', () => {
     it('应该收集缓存命中率统计', async () => {
       // Arrange
       const keys = ['hit_key1', 'miss_key2', 'hit_key3', 'miss_key4'];
-      
+
       mockRedisClient.get
         .mockResolvedValueOnce('value1') // hit
         .mockResolvedValueOnce(null)     // miss
@@ -502,7 +502,7 @@ describe('Cache Performance Tests', () => {
 
       // Act
       const hitRateCollector = new CacheHitRateCollector();
-      
+
       for (const key of keys) {
         const value = await simpleRedis.get(key);
         hitRateCollector.record(key, value !== null);
@@ -522,18 +522,18 @@ describe('Cache Performance Tests', () => {
       const slowOperations = [
         { operation: 'get', key: 'slow_key1', duration: 150 },
         { operation: 'set', key: 'slow_key2', duration: 200 },
-        { operation: 'del', key: 'normal_key', duration: 10 }
+        { operation: 'del', key: 'normal_key', duration: 10 },
       ];
 
       // Act
       const bottleneckAnalyzer = new PerformanceBottleneckAnalyzer();
-      
+
       slowOperations.forEach(op => {
         bottleneckAnalyzer.recordOperation(op.operation, op.key, op.duration);
       });
 
       const bottlenecks = bottleneckAnalyzer.identifyBottlenecks({
-        slowThreshold: 100
+        slowThreshold: 100,
       });
 
       // Assert
@@ -553,7 +553,7 @@ describe('Cache Performance Tests', () => {
         p99Latency: 100,
         hitRate: 0.85,
         memoryUsage: 0.6,
-        connectionPoolUtilization: 0.4
+        connectionPoolUtilization: 0.4,
       };
 
       // Act
@@ -575,14 +575,14 @@ class CachePerformanceOptimizer {
   async batchGet(keys: string[]): Promise<(string | null)[]> {
     const client = this.cache.getClient();
     if (!client) return keys.map(() => null);
-    
+
     return await client.mget(...keys);
   }
 
   async batchSet(keyValuePairs: [string, string][]): Promise<void> {
     const client = this.cache.getClient();
     if (!client) return;
-    
+
     const flatArray = keyValuePairs.flat();
     await client.mset(...flatArray);
   }
@@ -590,7 +590,7 @@ class CachePerformanceOptimizer {
   async batchDelete(keys: string[], options: { batchSize: number }): Promise<void> {
     const client = this.cache.getClient();
     if (!client) return;
-    
+
     for (let i = 0; i < keys.length; i += options.batchSize) {
       const batch = keys.slice(i, i + options.batchSize);
       await client.del(...batch);
@@ -600,9 +600,9 @@ class CachePerformanceOptimizer {
   async executePipeline(operations: any[]): Promise<any[]> {
     const client = this.cache.getClient();
     if (!client) return [];
-    
+
     const pipeline = client.pipeline();
-    
+
     operations.forEach(op => {
       switch (op.type) {
         case 'set':
@@ -616,28 +616,28 @@ class CachePerformanceOptimizer {
           break;
       }
     });
-    
+
     return await pipeline.exec();
   }
 
   async executeTransaction(operations: any[]): Promise<any[]> {
     const client = this.cache.getClient();
     if (!client) return [];
-    
+
     const multi = client.multi();
-    
+
     operations.forEach(op => {
       if (op.type === 'set') {
         multi.set(op.key, op.value);
       }
     });
-    
+
     return await multi.exec();
   }
 
   async warmUpCache(keys: string[], dataLoader: (key: string) => Promise<any>): Promise<void> {
     const keyValuePairs: [string, string][] = [];
-    
+
     for (const key of keys) {
       try {
         const data = await dataLoader(key);
@@ -646,25 +646,25 @@ class CachePerformanceOptimizer {
         console.warn(`Failed to load data for key ${key}:`, error);
       }
     }
-    
+
     if (keyValuePairs.length > 0) {
       await this.batchSet(keyValuePairs);
     }
   }
 
   async concurrentWarmUp(
-    keys: string[], 
+    keys: string[],
     dataLoader: (key: string) => Promise<any>,
-    options: { concurrency: number }
+    options: { concurrency: number },
   ): Promise<void> {
     const client = this.cache.getClient();
     if (!client) return;
-    
+
     const chunks = [];
     for (let i = 0; i < keys.length; i += options.concurrency) {
       chunks.push(keys.slice(i, i + options.concurrency));
     }
-    
+
     for (const chunk of chunks) {
       const promises = chunk.map(async (key) => {
         try {
@@ -674,24 +674,24 @@ class CachePerformanceOptimizer {
           console.warn(`Failed to warm up key ${key}:`, error);
         }
       });
-      
+
       await Promise.all(promises);
     }
   }
 
   async warmUpCacheWithErrorHandling(
-    keys: string[], 
-    dataLoader: (key: string) => Promise<any>
+    keys: string[],
+    dataLoader: (key: string) => Promise<any>,
   ): Promise<{ successful: number; failed: number; errors: Error[] }> {
     let successful = 0;
     let failed = 0;
     const errors: Error[] = [];
-    
+
     const client = this.cache.getClient();
     if (!client) {
       return { successful: 0, failed: keys.length, errors: [new Error('Redis client not available')] };
     }
-    
+
     for (const key of keys) {
       try {
         const data = await dataLoader(key);
@@ -702,116 +702,116 @@ class CachePerformanceOptimizer {
         errors.push(error as Error);
       }
     }
-    
+
     return { successful, failed, errors };
   }
 
   async getMemoryStats(): Promise<any> {
     const client = this.cache.getClient();
     if (!client) return null;
-    
+
     const info = await client.info('memory');
     const lines = info.split('\r\n');
-    
-    const used = parseInt(lines.find(l => l.startsWith('used_memory:'))?.split(':')[1] || '0');
-    const peak = parseInt(lines.find(l => l.startsWith('used_memory_peak:'))?.split(':')[1] || '0');
-    const max = parseInt(lines.find(l => l.startsWith('maxmemory:'))?.split(':')[1] || '0');
-    
+
+    const used = parseInt(lines.find(l => l.startsWith('used_memory:'))?.split(':')[1] || '0', 10);
+    const peak = parseInt(lines.find(l => l.startsWith('used_memory_peak:'))?.split(':')[1] || '0', 10);
+    const max = parseInt(lines.find(l => l.startsWith('maxmemory:'))?.split(':')[1] || '0', 10);
+
     return {
       used,
       peak,
       max,
-      usagePercentage: max > 0 ? (used / max) * 100 : 0
+      usagePercentage: max > 0 ? (used / max) * 100 : 0,
     };
   }
 
   async autoCleanup(options: { memoryThreshold: number; cleanupPercentage: number }): Promise<any> {
     const memoryStats = await this.getMemoryStats();
     const usageRatio = memoryStats.used / memoryStats.max;
-    
+
     if (usageRatio < options.memoryThreshold) {
       return { triggered: false, keysRemoved: 0 };
     }
-    
+
     const client = this.cache.getClient();
     if (!client) return { triggered: false, keysRemoved: 0 };
-    
+
     const allKeys = await client.keys('*');
     const keysToRemove = Math.floor(allKeys.length * options.cleanupPercentage);
     const keysToEvict = allKeys.slice(0, keysToRemove);
-    
+
     if (keysToEvict.length > 0) {
       await client.del(...keysToEvict);
     }
-    
+
     return { triggered: true, keysRemoved: keysToEvict.length };
   }
 
   async setLargeObject(key: string, obj: any, options: { compress: boolean; chunkSize: number }): Promise<void> {
     const client = this.cache.getClient();
     if (!client) return;
-    
+
     let data = JSON.stringify(obj);
-    
+
     if (options.compress) {
       // 简化的压缩实现（实际应该使用真正的压缩算法）
       data = data.replace(/\s+/g, '');
     }
-    
+
     await client.set(key, data);
   }
 
   async scanKeys(pattern: string): Promise<string[]> {
     const client = this.cache.getClient();
     if (!client) return [];
-    
+
     const allKeys: string[] = [];
     let cursor = '0';
-    
+
     do {
       const [nextCursor, keys] = await client.scan(cursor, 'MATCH', pattern);
       cursor = nextCursor;
       allKeys.push(...keys);
     } while (cursor !== '0');
-    
+
     return allKeys;
   }
 
   async getPaginatedResults(key: string, page: number, pageSize: number): Promise<any[]> {
     const client = this.cache.getClient();
     if (!client) return [];
-    
+
     const start = (page - 1) * pageSize;
     const end = page * pageSize - 1;
-    
+
     return await client.zrevrange(key, start, end, 'WITHSCORES');
   }
 
   async cachedQuery(
-    query: string, 
-    executor: () => Promise<any>, 
-    options: { ttl: number }
+    query: string,
+    executor: () => Promise<any>,
+    options: { ttl: number },
   ): Promise<any> {
     const client = this.cache.getClient();
     if (!client) return await executor();
-    
+
     const queryKey = `query:${Buffer.from(query).toString('base64')}`;
-    
+
     const cached = await client.get(queryKey);
     if (cached) {
       return JSON.parse(cached);
     }
-    
+
     const result = await executor();
     await client.set(queryKey, JSON.stringify(result));
-    
+
     return result;
   }
 
   async measureLatency(operation: () => Promise<void>): Promise<any> {
     const startTime = performance.now();
     let success = true;
-    
+
     try {
       await operation();
     } catch (error) {
@@ -822,14 +822,14 @@ class CachePerformanceOptimizer {
       return {
         duration: endTime - startTime,
         operation: 'set',
-        success
+        success,
       };
     }
   }
 
   async generatePerformanceReport(data: any): Promise<any> {
     const status = data.hitRate > 0.8 && data.averageLatency < 50 ? 'good' : 'needs_improvement';
-    
+
     const recommendations = [];
     if (data.hitRate > 0.8) {
       recommendations.push('缓存命中率良好');
@@ -837,14 +837,14 @@ class CachePerformanceOptimizer {
     if (data.averageLatency < 50) {
       recommendations.push('平均延迟表现良好');
     }
-    
+
     return {
       summary: { status },
       recommendations,
       metrics: {
         latency: { average: data.averageLatency },
-        hitRate: data.hitRate
-      }
+        hitRate: data.hitRate,
+      },
     };
   }
 }
@@ -862,12 +862,12 @@ class RedisConnectionPool {
     if (this.connections.length > 0) {
       return this.connections.pop();
     }
-    
+
     if (this.activeConnections < this.maxSize) {
       this.activeConnections++;
       return { id: this.activeConnections };
     }
-    
+
     // 等待连接可用
     return new Promise((resolve) => {
       const checkForConnection = () => {
@@ -910,7 +910,7 @@ class CacheHitRateCollector {
       totalRequests: this.totalRequests,
       hits: this.hits,
       misses: this.totalRequests - this.hits,
-      hitRate: this.totalRequests > 0 ? this.hits / this.totalRequests : 0
+      hitRate: this.totalRequests > 0 ? this.hits / this.totalRequests : 0,
     };
   }
 }

@@ -1,43 +1,41 @@
-/**
- * 标记通知为已读API路由
- */
+import { NextRequest, NextResponse } from 'next/server';
 
-import { NextRequest, NextResponse } from 'next/server'
-import { NotificationServiceImpl } from '@/lib/invitation/services/NotificationService'
-import { DatabaseService } from '@/lib/invitation/database'
+import { notificationService } from '@/lib/notification/notification-service';
 
-const db = new DatabaseService()
-const notificationService = new NotificationServiceImpl(db)
-
-/**
- * 标记单个通知为已读
- */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const notificationId = params.id
+    const { id } = await params;
 
-    if (!notificationId) {
+    if (!id) {
       return NextResponse.json(
-        { error: 'Notification ID is required' },
-        { status: 400 }
-      )
+        { success: false, error: '通知ID不能为空' },
+        { status: 400 },
+      );
     }
 
-    await notificationService.markAsRead(notificationId)
+    // 标记通知为已读
+    const success = await notificationService.markNotificationAsRead(id);
 
-    return NextResponse.json({
-      success: true,
-      message: 'Notification marked as read'
-    })
+    if (success) {
+      return NextResponse.json({
+        success: true,
+        message: '通知已标记为已读',
+      });
+    } else {
+      return NextResponse.json(
+        { success: false, error: '通知不存在或标记失败' },
+        { status: 404 },
+      );
+    }
 
   } catch (error) {
-    console.error('Failed to mark notification as read:', error)
+    console.error('标记通知已读失败:', error);
     return NextResponse.json(
-      { error: 'Failed to mark notification as read' },
-      { status: 500 }
-    )
+      { success: false, error: '标记通知已读失败' },
+      { status: 500 },
+    );
   }
 }

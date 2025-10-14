@@ -79,7 +79,7 @@ export class RealTimePerformanceMonitor extends EventEmitter {
       durationThreshold: 30000, // 30 seconds
       maxHistorySize: 1000,
       alertEnabled: true,
-      ...options
+      ...options,
     };
   }
 
@@ -93,7 +93,7 @@ export class RealTimePerformanceMonitor extends EventEmitter {
 
     this.isMonitoring = true;
     this.baselineCPU = this.getCurrentCPUUsage();
-    
+
     this.monitoringInterval = setInterval(() => {
       this.capturePerformanceSnapshot();
     }, this.options.snapshotInterval);
@@ -110,7 +110,7 @@ export class RealTimePerformanceMonitor extends EventEmitter {
     }
 
     this.isMonitoring = false;
-    
+
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = undefined;
@@ -129,7 +129,7 @@ export class RealTimePerformanceMonitor extends EventEmitter {
       startTime: Date.now(),
       memoryUsage: this.getCurrentMemoryUsage(),
       cpuUsage: this.getCurrentCPUUsage(),
-      status: 'running'
+      status: 'running',
     };
 
     this.activeTests.set(testId, metrics);
@@ -155,7 +155,7 @@ export class RealTimePerformanceMonitor extends EventEmitter {
       status,
       error,
       memoryUsage: this.getCurrentMemoryUsage(),
-      cpuUsage: this.getCurrentCPUUsage()
+      cpuUsage: this.getCurrentCPUUsage(),
     };
 
     this.activeTests.delete(testId);
@@ -185,7 +185,7 @@ export class RealTimePerformanceMonitor extends EventEmitter {
       external: memUsage.external,
       rss: memUsage.rss,
       arrayBuffers: memUsage.arrayBuffers,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
   }
 
@@ -197,7 +197,7 @@ export class RealTimePerformanceMonitor extends EventEmitter {
     return {
       user: cpuUsage.user,
       system: cpuUsage.system,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
   }
 
@@ -212,7 +212,7 @@ export class RealTimePerformanceMonitor extends EventEmitter {
       systemLoad: os.loadavg(),
       freeMemory: os.freemem(),
       totalMemory: os.totalmem(),
-      cpuCount: os.cpus().length
+      cpuCount: os.cpus().length,
     };
 
     this.performanceHistory.push(snapshot);
@@ -244,7 +244,7 @@ export class RealTimePerformanceMonitor extends EventEmitter {
         message: `Test ${metrics.testName} took ${metrics.duration}ms to complete`,
         testId: metrics.testId,
         metrics: { duration: metrics.duration },
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
 
@@ -256,7 +256,7 @@ export class RealTimePerformanceMonitor extends EventEmitter {
         message: `Test ${metrics.testName} used ${Math.round(metrics.memoryUsage.heapUsed / 1024 / 1024)}MB of memory`,
         testId: metrics.testId,
         metrics: { memoryUsage: metrics.memoryUsage },
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
 
@@ -280,7 +280,7 @@ export class RealTimePerformanceMonitor extends EventEmitter {
         severity: memoryUsagePercent > 0.95 ? 'critical' : 'high',
         message: `System memory usage is at ${Math.round(memoryUsagePercent * 100)}%`,
         metrics: { memoryUsagePercent, freeMemory: snapshot.freeMemory },
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
 
@@ -293,7 +293,7 @@ export class RealTimePerformanceMonitor extends EventEmitter {
         severity: avgLoad > snapshot.cpuCount ? 'critical' : 'high',
         message: `System load is ${avgLoad.toFixed(2)} (threshold: ${loadThreshold.toFixed(2)})`,
         metrics: { systemLoad: snapshot.systemLoad, cpuCount: snapshot.cpuCount },
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
 
@@ -338,9 +338,9 @@ export class RealTimePerformanceMonitor extends EventEmitter {
   } {
     const completedTests = this.completedTests.filter(t => t.duration !== undefined);
     const totalTests = completedTests.length;
-    
-    const averageDuration = totalTests > 0 
-      ? completedTests.reduce((sum, t) => sum + (t.duration || 0), 0) / totalTests 
+
+    const averageDuration = totalTests > 0
+      ? completedTests.reduce((sum, t) => sum + (t.duration || 0), 0) / totalTests
       : 0;
 
     const averageMemoryUsage = totalTests > 0
@@ -357,7 +357,7 @@ export class RealTimePerformanceMonitor extends EventEmitter {
 
     const latestSnapshot = this.performanceHistory[this.performanceHistory.length - 1];
     const currentSystemLoad = latestSnapshot ? latestSnapshot.systemLoad : [0, 0, 0];
-    const memoryUsagePercent = latestSnapshot 
+    const memoryUsagePercent = latestSnapshot
       ? (latestSnapshot.totalMemory - latestSnapshot.freeMemory) / latestSnapshot.totalMemory
       : 0;
 
@@ -368,7 +368,7 @@ export class RealTimePerformanceMonitor extends EventEmitter {
       slowestTests,
       memoryIntensiveTests,
       currentSystemLoad,
-      memoryUsagePercent
+      memoryUsagePercent,
     };
   }
 
@@ -394,7 +394,7 @@ export class RealTimePerformanceMonitor extends EventEmitter {
       durationTrend,
       memoryTrend,
       systemLoadTrend,
-      timestamps
+      timestamps,
     };
   }
 
@@ -421,7 +421,7 @@ export class RealTimePerformanceMonitor extends EventEmitter {
       activeTests: this.getActiveTests(),
       completedTests: this.getCompletedTests(),
       performanceHistory: this.getPerformanceHistory(),
-      stats: this.getPerformanceStats()
+      stats: this.getPerformanceStats(),
     };
   }
 

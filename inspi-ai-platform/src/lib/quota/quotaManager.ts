@@ -4,7 +4,7 @@
  */
 
 import { redis } from '@/lib/cache/redis';
-import { logger } from '@/lib/utils/logger';
+import { logger } from '@/shared/utils/logger';
 
 export interface UserQuota {
   userId: string;
@@ -25,7 +25,7 @@ export class QuotaManager {
   private quotaLimits: QuotaLimits = {
     free: 10,
     pro: 100,
-    super: 1000
+    super: 1000,
   };
 
   // 内存优化：缓存今天的日期键，避免重复计算
@@ -39,7 +39,7 @@ export class QuotaManager {
     dailyLimit: 0,
     currentUsage: 0,
     remaining: 0,
-    resetTime: new Date()
+    resetTime: new Date(),
   };
 
   /**
@@ -49,14 +49,14 @@ export class QuotaManager {
     try {
       const today = this.getTodayKeyCached();
       const quotaKey = `quota:${userId}:${today}`;
-      
+
       // 获取当前使用量
       const currentUsage = await redis.get(quotaKey) || '0';
       const usage = parseInt(currentUsage, 10);
-      
+
       const dailyLimit = this.quotaLimits[plan];
       const remaining = Math.max(0, dailyLimit - usage);
-      
+
       // 复用对象，减少内存分配
       this.reusableQuota.userId = userId;
       this.reusableQuota.plan = plan;
@@ -68,12 +68,12 @@ export class QuotaManager {
       // 返回对象的副本
       return { ...this.reusableQuota };
     } catch (error) {
-      logger.error('Failed to check quota', { 
-        userId, 
-        plan, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      logger.error('Failed to check quota', {
+        userId,
+        plan,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
-      
+
       // 返回默认配额信息
       return {
         userId,
@@ -81,7 +81,7 @@ export class QuotaManager {
         dailyLimit: this.quotaLimits[plan],
         currentUsage: 0,
         remaining: this.quotaLimits[plan],
-        resetTime: this.getNextMidnight()
+        resetTime: this.getNextMidnight(),
       };
     }
   }
@@ -92,13 +92,13 @@ export class QuotaManager {
   async consumeQuota(userId: string, plan: 'free' | 'pro' | 'super' = 'free', amount = 1): Promise<boolean> {
     try {
       const quota = await this.checkQuota(userId, plan);
-      
+
       if (quota.remaining < amount) {
-        logger.warn('Quota exceeded', { 
-          userId, 
-          plan, 
-          requested: amount, 
-          remaining: quota.remaining 
+        logger.warn('Quota exceeded', {
+          userId,
+          plan,
+          requested: amount,
+          remaining: quota.remaining,
         });
         return false;
       }
@@ -106,25 +106,25 @@ export class QuotaManager {
       // 增加使用量
       const today = this.getTodayKeyCached();
       const quotaKey = `quota:${userId}:${today}`;
-      
-      await redis.increment(quotaKey, { 
-        ttl: this.getSecondsUntilMidnightCached() 
+
+      await redis.increment(quotaKey, {
+        ttl: this.getSecondsUntilMidnightCached(),
       });
 
-      logger.info('Quota consumed', { 
-        userId, 
-        plan, 
-        amount, 
-        newUsage: quota.currentUsage + amount 
+      logger.info('Quota consumed', {
+        userId,
+        plan,
+        amount,
+        newUsage: quota.currentUsage + amount,
       });
 
       return true;
     } catch (error) {
-      logger.error('Failed to consume quota', { 
-        userId, 
-        plan, 
-        amount, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      logger.error('Failed to consume quota', {
+        userId,
+        plan,
+        amount,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return false;
     }
@@ -137,14 +137,14 @@ export class QuotaManager {
     try {
       const today = this.getTodayKeyCached();
       const quotaKey = `quota:${userId}:${today}`;
-      
+
       await redis.del(quotaKey);
-      
+
       logger.info('Quota reset', { userId });
     } catch (error) {
-      logger.error('Failed to reset quota', { 
-        userId, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      logger.error('Failed to reset quota', {
+        userId,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -158,7 +158,7 @@ export class QuotaManager {
   }> {
     try {
       const today = await this.checkQuota(userId, plan);
-      
+
       // 获取最近7天的使用历史
       const history = [];
       for (let i = 6; i >= 0; i--) {
@@ -166,25 +166,25 @@ export class QuotaManager {
         date.setDate(date.getDate() - i);
         const dateKey = this.getDateKey(date);
         const quotaKey = `quota:${userId}:${dateKey}`;
-        
+
         const usage = await redis.get(quotaKey) || '0';
         history.push({
           date: dateKey,
-          usage: parseInt(usage, 10)
+          usage: parseInt(usage, 10),
         });
       }
 
       return { today, history };
     } catch (error) {
-      logger.error('Failed to get quota stats', { 
-        userId, 
-        plan, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      logger.error('Failed to get quota stats', {
+        userId,
+        plan,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
-      
+
       return {
         today: await this.checkQuota(userId, plan),
-        history: []
+        history: [],
       };
     }
   }
@@ -239,19 +239,19 @@ export class QuotaManager {
   private getSecondsUntilMidnightCached(): number {
     const now = new Date();
     const currentDate = now.toISOString().split('T')[0];
-    
+
     if (!this.midnightCache || this.midnightCache.date !== currentDate) {
       const midnight = new Date();
       midnight.setDate(midnight.getDate() + 1);
       midnight.setHours(0, 0, 0, 0);
-      
+
       this.midnightCache = {
         date: currentDate,
         seconds: Math.floor((midnight.getTime() - now.getTime()) / 1000),
-        midnight
+        midnight,
       };
     }
-    
+
     return Math.max(0, Math.floor((this.midnightCache.midnight.getTime() - now.getTime()) / 1000));
   }
 
@@ -263,7 +263,7 @@ export class QuotaManager {
     const midnight = new Date();
     midnight.setDate(midnight.getDate() + 1);
     midnight.setHours(0, 0, 0, 0);
-    
+
     return Math.floor((midnight.getTime() - now.getTime()) / 1000);
   }
 
@@ -274,7 +274,7 @@ export class QuotaManager {
     if (this.midnightCache) {
       return new Date(this.midnightCache.midnight);
     }
-    
+
     const midnight = new Date();
     midnight.setDate(midnight.getDate() + 1);
     midnight.setHours(0, 0, 0, 0);

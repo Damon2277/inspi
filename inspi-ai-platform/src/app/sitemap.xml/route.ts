@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
+
 import { generateSitemapXML } from '@/lib/seo/sitemap';
 
 export async function GET() {
   try {
     const sitemapXML = await generateSitemapXML();
-    
+
     return new NextResponse(sitemapXML, {
       status: 200,
       headers: {
@@ -14,7 +15,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Error generating sitemap:', error);
-    
+
     return new NextResponse('Error generating sitemap', {
       status: 500,
     });

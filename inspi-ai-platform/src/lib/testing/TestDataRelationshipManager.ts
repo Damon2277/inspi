@@ -1,7 +1,9 @@
 import { ObjectId } from 'mongoose';
+
 import { User, Work, KnowledgeGraph, GraphNode, GraphEdge } from '@/types';
-import { TestDataFactory } from './TestDataFactory';
+
 import { TestDataBuilder } from './TestDataBuilder';
+import { TestDataFactory } from './TestDataFactory';
 
 /**
  * 测试数据关联关系管理器
@@ -202,7 +204,7 @@ export class TestDataRelationshipManager {
   private validateRelationship(
     type: RelationshipType,
     source: any,
-    target: any
+    target: any,
   ): { valid: boolean; error?: string } {
     const constraint = this.constraints.get(type);
     if (!constraint) {
@@ -222,7 +224,7 @@ export class TestDataRelationshipManager {
     type: RelationshipType,
     source: DataReference,
     target: DataReference,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): DataRelationship {
     return {
       id: this.generateRelationshipId(),
@@ -252,7 +254,7 @@ export class TestDataRelationshipManager {
     const relationship = this.createRelationship(
       RelationshipType.USER_OWNS_WORK,
       { type: 'user', id: user._id },
-      { type: 'work', id: work._id }
+      { type: 'work', id: work._id },
     );
     this.collection.addRelationship(relationship);
   }
@@ -275,7 +277,7 @@ export class TestDataRelationshipManager {
     const relationship = this.createRelationship(
       RelationshipType.USER_OWNS_GRAPH,
       { type: 'user', id: user._id },
-      { type: 'graph', id: graph._id }
+      { type: 'graph', id: graph._id },
     );
     this.collection.addRelationship(relationship);
   }
@@ -307,7 +309,7 @@ export class TestDataRelationshipManager {
       RelationshipType.WORK_REUSES_WORK,
       { type: 'work', id: reusedWork._id },
       { type: 'work', id: originalWork._id },
-      { reuseDate: new Date() }
+      { reuseDate: new Date() },
     );
     this.collection.addRelationship(relationship);
   }
@@ -315,7 +317,7 @@ export class TestDataRelationshipManager {
   // 建立图谱节点关系
   establishGraphNodeRelationship(graph: KnowledgeGraph, node: GraphNode): void {
     // 检查节点是否已存在
-    const existingNode = graph.nodes.find(n => n.id === node.id);
+    const existingNode = graph(nodes.find as any)(n => n.id === node.id);
     if (existingNode) {
       throw new Error(`Node ${node.id} already exists in graph ${graph._id}`);
     }
@@ -331,7 +333,7 @@ export class TestDataRelationshipManager {
     const relationship = this.createRelationship(
       RelationshipType.GRAPH_CONTAINS_NODE,
       { type: 'graph', id: graph._id },
-      { type: 'node', id: node.id }
+      { type: 'node', id: node.id },
     );
     this.collection.addRelationship(relationship);
   }
@@ -341,7 +343,7 @@ export class TestDataRelationshipManager {
     graph: KnowledgeGraph,
     sourceNode: GraphNode,
     targetNode: GraphNode,
-    edge: GraphEdge
+    edge: GraphEdge,
   ): void {
     const validation = this.validateRelationship(RelationshipType.NODE_CONNECTS_NODE, sourceNode, targetNode);
     if (!validation.valid) {
@@ -351,7 +353,7 @@ export class TestDataRelationshipManager {
     // 检查节点是否存在于图谱中
     const sourceExists = graph.nodes.some(n => n.id === sourceNode.id);
     const targetExists = graph.nodes.some(n => n.id === targetNode.id);
-    
+
     if (!sourceExists || !targetExists) {
       throw new Error('Source or target node does not exist in the graph');
     }
@@ -372,7 +374,7 @@ export class TestDataRelationshipManager {
       RelationshipType.NODE_CONNECTS_NODE,
       { type: 'node', id: sourceNode.id },
       { type: 'node', id: targetNode.id },
-      { edgeId: edge.id, edgeType: edge.type }
+      { edgeId: edge.id, edgeType: edge.type },
     );
     this.collection.addRelationship(relationship);
   }
@@ -483,7 +485,7 @@ export class TestDataRelationshipManager {
 
   // 创建复杂的知识图谱场景
   createComplexGraphScenario(): TestDataCollection {
-    const user = this.factory.user.create();
+    const user = this.factory(user.create as any)();
     this.collection.addUser(user);
 
     const graph = this.factory.graph.createForUser(user._id, {
@@ -596,7 +598,7 @@ export class TestDataRelationshipManager {
       graph.edges.forEach(edge => {
         const sourceNode = graph.nodes.find(n => n.id === edge.source);
         const targetNode = graph.nodes.find(n => n.id === edge.target);
-        
+
         if (!sourceNode) {
           errors.push(`Graph ${graph._id} edge ${edge.id} references non-existent source node ${edge.source}`);
         }

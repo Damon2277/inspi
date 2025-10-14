@@ -6,8 +6,9 @@
 import { spawn, SpawnOptions } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { ContainerInfo, ContainerConfig, CompatibilityTestResult } from './types';
+
 import { EnvironmentDetector } from './EnvironmentDetector';
+import { ContainerInfo, ContainerConfig, CompatibilityTestResult } from './types';
 
 export class ContainerTestRunner {
   private supportedContainers: ContainerConfig[] = [
@@ -17,8 +18,8 @@ export class ContainerTestRunner {
       nodeVersion: '18.18.0',
       environment: {
         NODE_ENV: 'test',
-        CI: 'true'
-      }
+        CI: 'true',
+      },
     },
     {
       runtime: 'docker',
@@ -26,8 +27,8 @@ export class ContainerTestRunner {
       nodeVersion: '20.8.0',
       environment: {
         NODE_ENV: 'test',
-        CI: 'true'
-      }
+        CI: 'true',
+      },
     },
     {
       runtime: 'docker',
@@ -35,8 +36,8 @@ export class ContainerTestRunner {
       nodeVersion: '18.18.0',
       environment: {
         NODE_ENV: 'test',
-        CI: 'true'
-      }
+        CI: 'true',
+      },
     },
     {
       runtime: 'docker',
@@ -44,9 +45,9 @@ export class ContainerTestRunner {
       nodeVersion: '20.8.0',
       environment: {
         NODE_ENV: 'test',
-        CI: 'true'
-      }
-    }
+        CI: 'true',
+      },
+    },
   ];
 
   private testTimeout = 600000; // 10 minutes for container tests
@@ -56,7 +57,7 @@ export class ContainerTestRunner {
    */
   async testMultipleContainers(
     testCommand: string,
-    containers?: ContainerConfig[]
+    containers?: ContainerConfig[],
   ): Promise<CompatibilityTestResult[]> {
     const containersToTest = containers || this.supportedContainers;
     const results: CompatibilityTestResult[] = [];
@@ -75,10 +76,10 @@ export class ContainerTestRunner {
             type: 'platform',
             message: `Failed to test container ${container.image}: ${error}`,
             severity: 'critical',
-            affectedTests: ['all']
+            affectedTests: ['all'],
           }],
           warnings: [],
-          performance: this.getEmptyPerformanceMetrics()
+          performance: this.getEmptyPerformanceMetrics(),
         });
       }
     }
@@ -91,7 +92,7 @@ export class ContainerTestRunner {
    */
   async testSingleContainer(
     container: ContainerConfig,
-    testCommand: string
+    testCommand: string,
   ): Promise<CompatibilityTestResult> {
     const startTime = Date.now();
     const environment = await EnvironmentDetector.getEnvironmentInfo();
@@ -109,10 +110,10 @@ export class ContainerTestRunner {
           message: `Container runtime ${container.runtime} is not available`,
           severity: 'critical',
           suggestion: `Install ${container.runtime} to run containerized tests`,
-          affectedTests: ['all']
+          affectedTests: ['all'],
         }],
         warnings: [],
-        performance: this.getEmptyPerformanceMetrics()
+        performance: this.getEmptyPerformanceMetrics(),
       };
     }
 
@@ -127,14 +128,14 @@ export class ContainerTestRunner {
       return {
         environment: {
           ...environment,
-          nodeVersion: container.nodeVersion
+          nodeVersion: container.nodeVersion,
         },
         testSuite: `${container.runtime}-${container.image}`,
         passed: testResult.passed,
         duration,
         errors: testResult.errors,
         warnings: testResult.warnings,
-        performance: testResult.performance
+        performance: testResult.performance,
       };
     } catch (error) {
       return {
@@ -146,10 +147,10 @@ export class ContainerTestRunner {
           type: 'platform',
           message: `Error running container tests: ${error}`,
           severity: 'critical',
-          affectedTests: ['all']
+          affectedTests: ['all'],
         }],
         warnings: [],
-        performance: this.getEmptyPerformanceMetrics()
+        performance: this.getEmptyPerformanceMetrics(),
       };
     }
   }
@@ -159,17 +160,17 @@ export class ContainerTestRunner {
    */
   async getContainerInfo(container: ContainerConfig): Promise<ContainerInfo> {
     const version = await this.getContainerRuntimeVersion(container.runtime);
-    
+
     return {
       runtime: container.runtime as 'docker' | 'podman' | 'containerd',
       version,
       baseImage: container.image,
       nodeVersion: container.nodeVersion,
       architecture: process.arch,
-      memoryLimit: container.environment?.MEMORY_LIMIT ? 
+      memoryLimit: container.environment?.MEMORY_LIMIT ?
         parseInt(container.environment.MEMORY_LIMIT, 10) : undefined,
-      cpuLimit: container.environment?.CPU_LIMIT ? 
-        parseFloat(container.environment.CPU_LIMIT) : undefined
+      cpuLimit: container.environment?.CPU_LIMIT ?
+        parseFloat(container.environment.CPU_LIMIT) : undefined,
     };
   }
 
@@ -187,14 +188,14 @@ export class ContainerTestRunner {
         CI: 'true',
         // Enable test optimizations
         JEST_WORKERS: '2',
-        NODE_ENV: 'test'
+        NODE_ENV: 'test',
       },
       volumes: [
         // Mount source code
         `${process.cwd()}:/app`,
         // Mount node_modules for faster installs
-        '/app/node_modules'
-      ]
+        '/app/node_modules',
+      ],
     };
   }
 
@@ -233,7 +234,7 @@ export class ContainerTestRunner {
   private async ensureContainerImage(container: ContainerConfig): Promise<void> {
     // Check if image exists locally
     const checkResult = await this.runCommand(
-      `${container.runtime} images -q ${container.image}`
+      `${container.runtime} images -q ${container.image}`,
     );
 
     if (checkResult.exitCode !== 0 || !checkResult.stdout.trim()) {
@@ -241,7 +242,7 @@ export class ContainerTestRunner {
       console.log(`Pulling container image: ${container.image}`);
       const pullResult = await this.runCommand(
         `${container.runtime} pull ${container.image}`,
-        { timeout: 300000 } // 5 minutes for image pull
+        { timeout: 300000 }, // 5 minutes for image pull
       );
 
       if (pullResult.exitCode !== 0) {
@@ -255,7 +256,7 @@ export class ContainerTestRunner {
    */
   private async runContainerTest(
     container: ContainerConfig,
-    testCommand: string
+    testCommand: string,
   ): Promise<{
     passed: boolean;
     errors: any[];
@@ -268,9 +269,9 @@ export class ContainerTestRunner {
     const containerCmd = this.buildContainerCommand(container, testCommand);
 
     try {
-      const result = await this.runCommand(containerCmd, { 
+      const result = await this.runCommand(containerCmd, {
         timeout: this.testTimeout,
-        cwd: process.cwd()
+        cwd: process.cwd(),
       });
 
       const endTime = Date.now();
@@ -279,12 +280,12 @@ export class ContainerTestRunner {
         memoryUsage: {
           peak: 0, // Would need container stats
           average: 0,
-          final: 0
+          final: 0,
         },
         cpuUsage: {
           peak: 0,
-          average: 0
-        }
+          average: 0,
+        },
       };
 
       return {
@@ -293,10 +294,10 @@ export class ContainerTestRunner {
           type: 'platform',
           message: `Container tests failed: ${result.stderr}`,
           severity: 'major',
-          affectedTests: this.parseFailedTests(result.stderr)
+          affectedTests: this.parseFailedTests(result.stderr),
         }] : [],
         warnings: this.parseContainerWarnings(result.stdout, result.stderr),
-        performance
+        performance,
       };
     } catch (error) {
       return {
@@ -305,10 +306,10 @@ export class ContainerTestRunner {
           type: 'platform',
           message: `Container test execution failed: ${error}`,
           severity: 'critical',
-          affectedTests: ['all']
+          affectedTests: ['all'],
         }],
         warnings: [],
-        performance: this.getEmptyPerformanceMetrics()
+        performance: this.getEmptyPerformanceMetrics(),
       };
     }
   }
@@ -364,7 +365,7 @@ export class ContainerTestRunner {
 
     // Add command
     parts.push('sh', '-c');
-    
+
     // Prepare the test command with npm install
     const fullCommand = `npm ci --silent && ${testCommand}`;
     parts.push(fullCommand);
@@ -377,7 +378,7 @@ export class ContainerTestRunner {
    */
   private async runCommand(
     command: string,
-    options: SpawnOptions & { timeout?: number } = {}
+    options: SpawnOptions & { timeout?: number } = {},
   ): Promise<{
     exitCode: number;
     stdout: string;
@@ -386,7 +387,7 @@ export class ContainerTestRunner {
     return new Promise((resolve, reject) => {
       const child = spawn('sh', ['-c', command], {
         stdio: 'pipe',
-        ...options
+        ...options,
       });
 
       let stdout = '';
@@ -411,7 +412,7 @@ export class ContainerTestRunner {
         resolve({
           exitCode: code || 0,
           stdout,
-          stderr
+          stderr,
         });
       });
 
@@ -458,7 +459,7 @@ export class ContainerTestRunner {
         warnings.push({
           type: 'compatibility' as const,
           message: match,
-          affectedTests: ['all']
+          affectedTests: ['all'],
         });
       }
     }
@@ -470,7 +471,7 @@ export class ContainerTestRunner {
         warnings.push({
           type: 'performance' as const,
           message: match,
-          affectedTests: ['all']
+          affectedTests: ['all'],
         });
       }
     }
@@ -487,12 +488,12 @@ export class ContainerTestRunner {
       memoryUsage: {
         peak: 0,
         average: 0,
-        final: 0
+        final: 0,
       },
       cpuUsage: {
         peak: 0,
-        average: 0
-      }
+        average: 0,
+      },
     };
   }
 }

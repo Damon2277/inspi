@@ -2,30 +2,33 @@
  * 复用和致敬系统服务层
  */
 
-import { 
-  ReuseRequest, 
-  ReuseResponse, 
-  ReusePermissionCheck, 
+import { ObjectId } from 'mongodb';
+
+import User, { UserDocument } from '@/lib/models/User';
+import { IWork, getWorkAuthorId } from '@/lib/models/Work';
+import {
+  ReuseRequest,
+  ReuseResponse,
+  ReusePermissionCheck,
   ReusePermission,
   Attribution,
   ReuseRecord,
   UserReuseQuota,
   ReuseLimits,
   WorkReuseInfo,
-  ReuseStats
-} from '@/types/reuse';
-import { IWork } from '@/lib/models/Work';
-import User, { UserDocument } from '@/lib/models/User';
+  ReuseStats,
+} from '@/shared/types/reuse';
+import { handleServiceError } from '@/shared/utils/standardErrorHandler';
+
 import workService from './workService';
-import { handleServiceError } from '@/lib/utils/standardErrorHandler';
-import { ObjectId } from 'mongodb';
+
 
 // 默认复用限制配置
 const DEFAULT_REUSE_LIMITS: ReuseLimits = {
   dailyLimit: 10,
   monthlyLimit: 100,
   totalLimit: 1000,
-  cooldownPeriod: 24 // 24小时冷却期
+  cooldownPeriod: 24, // 24小时冷却期
 };
 
 class ReuseService {
@@ -33,8 +36,8 @@ class ReuseService {
    * 检查用户复用权限
    */
   async checkReusePermission(
-    userId: string, 
-    workId: string
+    userId: string,
+    workId: string,
   ): Promise<ReusePermissionCheck> {
     try {
       // 1. 检查作品是否存在
@@ -43,16 +46,16 @@ class ReuseService {
         return {
           permission: 'denied',
           reason: '作品不存在',
-          canReuse: false
+          canReuse: false,
         };
       }
 
       // 2. 检查是否为自己的作品
-      if (work.author.toString() === userId) {
+      if (getWorkAuthorId(work.author) === userId) {
         return {
           permission: 'self_work',
           reason: '不能复用自己的作品',
-          canReuse: false
+          canReuse: false,
         };
       }
 
@@ -61,7 +64,7 @@ class ReuseService {
         return {
           permission: 'denied',
           reason: '作品未发布，不允许复用',
-          canReuse: false
+          canReuse: false,
         };
       }
 
@@ -73,7 +76,7 @@ class ReuseService {
           reason: '今日复用次数已达上限',
           quotaUsed: quota.dailyUsed,
           quotaLimit: quota.limits.dailyLimit,
-          canReuse: false
+          canReuse: false,
         };
       }
 
@@ -85,7 +88,7 @@ class ReuseService {
           return {
             permission: 'denied',
             reason: `该作品复用冷却中，请在${cooldownEnd.toLocaleString()}后重试`,
-            canReuse: false
+            canReuse: false,
           };
         }
       }
@@ -94,14 +97,14 @@ class ReuseService {
         permission: 'allowed',
         quotaUsed: quota.dailyUsed,
         quotaLimit: quota.limits.dailyLimit,
-        canReuse: true
+        canReuse: true,
       };
     } catch (error) {
       handleServiceError(error, '检查复用权限');
       return {
         permission: 'denied',
         reason: '检查复用权限时发生错误',
-        canReuse: false
+        canReuse: false,
       };
     }
   }
@@ -116,7 +119,7 @@ class ReuseService {
       if (!permissionCheck.canReuse) {
         return {
           success: false,
-          message: permissionCheck.reason || '复用权限检查失败'
+          message: permissionCheck.reason || '复用权限检查失败',
         };
       }
 
@@ -125,7 +128,7 @@ class ReuseService {
       if (!originalWork) {
         return {
           success: false,
-          message: '原作品不存在'
+          message: '原作品不存在',
         };
       }
 
@@ -137,7 +140,7 @@ class ReuseService {
         gradeLevel: originalWork.gradeLevel,
         cards: originalWork.cards, // 复制所有卡片
         tags: originalWork.tags,
-        status: 'draft' as const // 复用的作品默认为草稿状态
+        status: 'draft' as const, // 复用的作品默认为草稿状态
       };
 
       const newWork = await workService.createWork(userId, newWorkData);
@@ -146,7 +149,7 @@ class ReuseService {
       const attribution = await this.generateAttribution(
         originalWork,
         newWork.id,
-        request.reuseType
+        request.reuseType,
       );
 
       // 5. 创建复用记录
@@ -155,13 +158,13 @@ class ReuseService {
         request.workId,
         newWork.id,
         attribution,
-        request.reuseType
+        request.reuseType,
       );
 
       // 6. 更新统计信息
       await Promise.all([
         this.updateReuseCount(request.workId),
-        this.updateUserQuota(userId)
+        this.updateUserQuota(userId),
       ]);
 
       return {
@@ -170,14 +173,14 @@ class ReuseService {
         data: {
           newWorkId: newWork.id,
           attribution,
-          reuseRecord
-        }
+          reuseRecord,
+        },
       };
     } catch (error) {
       handleServiceError(error, '复用作品');
       return {
         success: false,
-        message: '复用作品时发生错误'
+        message: '复用作品时发生错误',
       };
     }
   }
@@ -188,20 +191,20 @@ class ReuseService {
   private async generateAttribution(
     originalWork: any, // Using any for now to avoid type issues
     newWorkId: string,
-    reuseType: 'full' | 'partial'
+    reuseType: 'full' | 'partial',
   ): Promise<Attribution> {
     try {
       // 获取原作者信息
-      const originalAuthor = await User.findById(originalWork.author.toString());
-      
+      const originalAuthor = await (User.findById as any)(getWorkAuthorId(originalWork.author));
+
       return {
         id: new ObjectId().toString(),
         originalWorkId: originalWork._id.toString(),
         originalWorkTitle: originalWork.title,
-        originalAuthorId: originalWork.author.toString(),
+        originalAuthorId: getWorkAuthorId(originalWork.author),
         originalAuthorName: originalAuthor?.name || '未知作者',
         reuseDate: new Date().toISOString(),
-        reuseType
+        reuseType,
       };
     } catch (error) {
       handleServiceError(error, '生成归属信息');
@@ -217,7 +220,7 @@ class ReuseService {
     originalWorkId: string,
     newWorkId: string,
     attribution: Attribution,
-    reuseType: 'full' | 'partial'
+    reuseType: 'full' | 'partial',
   ): Promise<ReuseRecord> {
     try {
       const reuseRecord: ReuseRecord = {
@@ -229,7 +232,7 @@ class ReuseService {
         status: 'completed',
         attribution,
         reuseType,
-        reuseCount: 1
+        reuseCount: 1,
       };
 
       // TODO: 保存到数据库
@@ -259,7 +262,7 @@ class ReuseService {
         monthlyUsed: 0, // TODO: 从数据库查询本月使用量
         totalUsed: 0, // TODO: 从数据库查询总使用量
         lastReuseDate: '', // TODO: 从数据库查询最后复用时间
-        limits: DEFAULT_REUSE_LIMITS
+        limits: DEFAULT_REUSE_LIMITS,
       };
     } catch (error) {
       handleServiceError(error, '获取用户复用配额');
@@ -270,7 +273,7 @@ class ReuseService {
         monthlyUsed: 0,
         totalUsed: 0,
         lastReuseDate: '',
-        limits: DEFAULT_REUSE_LIMITS
+        limits: DEFAULT_REUSE_LIMITS,
       };
     }
   }
@@ -328,7 +331,7 @@ class ReuseService {
         totalReuses: 0,
         uniqueReusers: 0,
         reusesByMonth: [],
-        topReusers: []
+        topReusers: [],
       };
 
       return {
@@ -337,7 +340,7 @@ class ReuseService {
         canBeReused: work.status === 'published',
         reusePermission: 'allowed', // TODO: 根据实际情况判断
         attribution: [], // TODO: 从数据库获取归属信息
-        reuseStats
+        reuseStats,
       };
     } catch (error) {
       handleServiceError(error, '获取作品复用信息');
@@ -358,14 +361,14 @@ class ReuseService {
       return {
         records: [],
         total: 0,
-        hasMore: false
+        hasMore: false,
       };
     } catch (error) {
       handleServiceError(error, '获取用户复用历史');
       return {
         records: [],
         total: 0,
-        hasMore: false
+        hasMore: false,
       };
     }
   }
@@ -383,14 +386,14 @@ class ReuseService {
       return {
         records: [],
         total: 0,
-        hasMore: false
+        hasMore: false,
       };
     } catch (error) {
       handleServiceError(error, '获取作品复用历史');
       return {
         records: [],
         total: 0,
-        hasMore: false
+        hasMore: false,
       };
     }
   }
@@ -409,7 +412,7 @@ class ReuseService {
     if (!request.workId || typeof request.workId !== 'string') {
       return false;
     }
-    
+
     if (!['full', 'partial'].includes(request.reuseType)) {
       return false;
     }

@@ -10,7 +10,7 @@ describe('ErrorIsolation', () => {
       maxErrorRate: 0.3,
       timeWindowMs: 60000, // 1 minute
       isolationDurationMs: 30000, // 30 seconds
-      autoRestart: true
+      autoRestart: true,
     };
 
     errorIsolation = new ErrorIsolation(mockPolicy);
@@ -50,7 +50,7 @@ describe('ErrorIsolation', () => {
         type: 'runtime',
         severity: 'low',
         workerId: 1,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const handledSpy = jest.fn();
@@ -62,13 +62,13 @@ describe('ErrorIsolation', () => {
       expect(handledSpy).toHaveBeenCalledWith({
         error: expect.objectContaining({
           type: 'timeout',
-          severity: 'high'
+          severity: 'high',
         }),
         strategy: expect.objectContaining({
           type: 'retry',
-          maxAttempts: 2
+          maxAttempts: 2,
         }),
-        result
+        result,
       });
     });
 
@@ -78,7 +78,7 @@ describe('ErrorIsolation', () => {
         type: 'runtime',
         severity: 'low',
         workerId: 1,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const result = await errorIsolation.handleError(memoryError);
@@ -93,7 +93,7 @@ describe('ErrorIsolation', () => {
         type: 'runtime',
         severity: 'low',
         workerId: 1,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const result = await errorIsolation.handleError(networkError);
@@ -108,7 +108,7 @@ describe('ErrorIsolation', () => {
         type: 'runtime',
         severity: 'low',
         workerId: 1,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const result = await errorIsolation.handleError(assertionError);
@@ -122,7 +122,7 @@ describe('ErrorIsolation', () => {
         type: 'runtime',
         severity: 'low',
         workerId: 1,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const result = await errorIsolation.handleError(setupError);
@@ -142,7 +142,7 @@ describe('ErrorIsolation', () => {
         type: 'assertion',
         severity: 'low',
         workerId: 1,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       await errorIsolation.handleError(error);
@@ -151,7 +151,7 @@ describe('ErrorIsolation', () => {
       expect(workerHealth?.errorCount).toBe(1);
       expect(workerHealth?.lastError).toEqual(expect.objectContaining({
         message: 'Test failed',
-        type: 'assertion'
+        type: 'assertion',
       }));
     });
 
@@ -166,7 +166,7 @@ describe('ErrorIsolation', () => {
           type: 'assertion',
           severity: 'low',
           workerId: 1,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         };
 
         await errorIsolation.handleError(error);
@@ -175,7 +175,7 @@ describe('ErrorIsolation', () => {
       expect(isolatedSpy).toHaveBeenCalledWith({
         workerId: 1,
         reason: 'High error rate',
-        isolatedUntil: expect.any(Number)
+        isolatedUntil: expect.any(Number),
       });
 
       expect(errorIsolation.isWorkerHealthy(1)).toBe(false);
@@ -197,7 +197,7 @@ describe('ErrorIsolation', () => {
         type: 'assertion',
         severity: 'low',
         workerId: 1,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       await errorIsolation.handleError(error);
@@ -225,12 +225,12 @@ describe('ErrorIsolation', () => {
       // Manually trigger recovery for testing
       setTimeout(() => {
         shortErrorIsolation['recoverWorker'](1);
-        
+
         expect(recoveredSpy).toHaveBeenCalledWith({
           workerId: 1,
-          restartCount: 1
+          restartCount: 1,
         });
-        
+
         expect(shortErrorIsolation.isWorkerHealthy(1)).toBe(true);
         shortErrorIsolation.cleanup();
         done();
@@ -249,7 +249,7 @@ describe('ErrorIsolation', () => {
         type: 'network',
         severity: 'medium',
         workerId: 1,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const startTime = Date.now();
@@ -269,7 +269,7 @@ describe('ErrorIsolation', () => {
         type: 'memory',
         severity: 'critical',
         workerId: 1,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const result = await errorIsolation.handleError(error);
@@ -277,7 +277,7 @@ describe('ErrorIsolation', () => {
       expect(result.action).toBe('restart');
       expect(restartSpy).toHaveBeenCalledWith({
         workerId: 1,
-        reason: 'Out of memory error'
+        reason: 'Out of memory error',
       });
     });
 
@@ -290,7 +290,7 @@ describe('ErrorIsolation', () => {
         type: 'runtime',
         severity: 'critical',
         workerId: 1,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const result = await errorIsolation.handleError(error);
@@ -306,7 +306,7 @@ describe('ErrorIsolation', () => {
         severity: 'low',
         workerId: 1,
         testName: 'failing-test',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const result = await errorIsolation.handleError(error);
@@ -329,22 +329,22 @@ describe('ErrorIsolation', () => {
           type: 'timeout',
           severity: 'high',
           workerId: 1,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         },
         {
           message: 'Assertion error',
           type: 'assertion',
           severity: 'low',
           workerId: 1,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         },
         {
           message: 'Memory error',
           type: 'memory',
           severity: 'critical',
           workerId: 2,
-          timestamp: Date.now()
-        }
+          timestamp: Date.now(),
+        },
       ];
 
       for (const error of errors) {
@@ -371,7 +371,7 @@ describe('ErrorIsolation', () => {
         type: 'assertion',
         severity: 'low',
         workerId: 1,
-        timestamp: Date.now() - (mockPolicy.timeWindowMs + 10000) // Outside window
+        timestamp: Date.now() - (mockPolicy.timeWindowMs + 10000), // Outside window
       };
 
       // Add recent error
@@ -380,7 +380,7 @@ describe('ErrorIsolation', () => {
         type: 'timeout',
         severity: 'high',
         workerId: 1,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       // Manually add to history to simulate old error
@@ -407,11 +407,11 @@ describe('ErrorIsolation', () => {
         type: 'network',
         severity: 'high',
         description: 'Database connection lost',
-        recovery: { type: 'retry', maxAttempts: 5, backoffMs: 3000 }
+        recovery: { type: 'retry', maxAttempts: 5, backoffMs: 3000 },
       });
 
       expect(patternSpy).toHaveBeenCalledWith({
-        patternId: 'custom-db-error'
+        patternId: 'custom-db-error',
       });
 
       errorIsolation.registerWorker(1);
@@ -421,7 +421,7 @@ describe('ErrorIsolation', () => {
         type: 'runtime',
         severity: 'low',
         workerId: 1,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const result = await errorIsolation.handleError(dbError);
@@ -438,13 +438,13 @@ describe('ErrorIsolation', () => {
 
       const newPolicy = {
         maxErrorsPerWorker: 5,
-        maxErrorRate: 0.4
+        maxErrorRate: 0.4,
       };
 
       errorIsolation.updatePolicy(newPolicy);
 
       expect(policySpy).toHaveBeenCalledWith({
-        policy: expect.objectContaining(newPolicy)
+        policy: expect.objectContaining(newPolicy),
       });
     });
   });
@@ -459,7 +459,7 @@ describe('ErrorIsolation', () => {
         message: 'Test error',
         type: 'assertion',
         severity: 'low',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       expect(errorIsolation.getAllWorkerHealth()).toHaveLength(2);
@@ -479,7 +479,7 @@ describe('ErrorIsolation', () => {
         type: 'assertion',
         severity: 'low',
         workerId: 999, // Unregistered worker
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const result = await errorIsolation.handleError(error);
@@ -493,7 +493,7 @@ describe('ErrorIsolation', () => {
         message: 'General error',
         type: 'assertion',
         severity: 'low',
-        timestamp: Date.now()
+        timestamp: Date.now(),
         // No workerId
       };
 
@@ -511,7 +511,7 @@ describe('ErrorIsolation', () => {
         type: 'unknown' as any,
         severity: 'medium',
         workerId: 1,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const result = await errorIsolation.handleError(unknownError);

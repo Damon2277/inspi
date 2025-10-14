@@ -1,6 +1,6 @@
 /**
  * Custom Jest Matchers for Component Testing
- * 
+ *
  * Extended Jest matchers specifically designed for React component testing,
  * including accessibility, styling, and behavior assertions.
  */
@@ -18,7 +18,7 @@ declare global {
       toBeKeyboardNavigable(): R;
       toHaveProperHeadingStructure(): R;
       toHaveAltText(): R;
-      
+
       // Visual matchers
       toBeVisible(): R;
       toBeHidden(): R;
@@ -26,36 +26,36 @@ declare global {
       toHaveClass(className: string): R;
       toHaveInlineStyle(property: string, value: string): R;
       toMatchSnapshot(options?: any): R;
-      
+
       // Interaction matchers
       toBeClickable(): R;
       toBeFocusable(): R;
       toBeDisabled(): R;
       toBeEnabled(): R;
       toHaveBeenTriggered(): R;
-      
+
       // Content matchers
       toHaveTextContent(text: string | RegExp): R;
       toContainText(text: string): R;
       toHaveValue(value: string | number): R;
       toBeEmpty(): R;
-      
+
       // Form matchers
       toBeRequired(): R;
       toBeValid(): R;
       toBeInvalid(): R;
       toHaveValidationError(message?: string): R;
-      
+
       // Component state matchers
       toHaveState(state: Record<string, any>): R;
       toHaveProp(prop: string, value?: any): R;
       toBeLoading(): R;
       toHaveError(error?: string): R;
-      
+
       // Performance matchers
       toRenderWithinTime(maxTime: number): R;
       toNotCauseMemoryLeak(): R;
-      
+
       // Responsive matchers
       toBeResponsive(): R;
       toHaveBreakpoint(breakpoint: string): R;
@@ -77,20 +77,20 @@ export const accessibilityMatchers = {
 
     return {
       message: () => pass
-        ? `Expected element not to be accessible`
+        ? 'Expected element not to be accessible'
         : `Expected element to be accessible. Missing: ${[
             !hasAriaLabel && 'aria-label or aria-labelledby',
             !hasRole && 'role attribute',
-            !isKeyboardAccessible && 'keyboard accessibility'
+            !isKeyboardAccessible && 'keyboard accessibility',
           ].filter(Boolean).join(', ')}`,
-      pass
+      pass,
     };
   },
 
   toHaveAriaLabel(received: Element, expectedLabel: string) {
     const ariaLabel = received.getAttribute('aria-label');
     const ariaLabelledBy = received.getAttribute('aria-labelledby');
-    
+
     let actualLabel = ariaLabel;
     if (ariaLabelledBy) {
       const labelElement = document.getElementById(ariaLabelledBy);
@@ -103,7 +103,7 @@ export const accessibilityMatchers = {
       message: () => pass
         ? `Expected element not to have aria-label "${expectedLabel}"`
         : `Expected element to have aria-label "${expectedLabel}", but got "${actualLabel}"`,
-      pass
+      pass,
     };
   },
 
@@ -115,34 +115,34 @@ export const accessibilityMatchers = {
       message: () => pass
         ? `Expected element not to have role "${expectedRole}"`
         : `Expected element to have role "${expectedRole}", but got "${role}"`,
-      pass
+      pass,
     };
   },
 
   toBeKeyboardNavigable(received: Element) {
     const tabIndex = received.getAttribute('tabindex');
     const isInteractiveElement = ['button', 'input', 'select', 'textarea', 'a'].includes(
-      received.tagName.toLowerCase()
+      received.tagName.toLowerCase(),
     );
-    const hasTabIndex = tabIndex !== null && parseInt(tabIndex) >= 0;
+    const hasTabIndex = tabIndex !== null && parseInt(tabIndex, 10) >= 0;
 
     const pass = isInteractiveElement || hasTabIndex;
 
     return {
       message: () => pass
-        ? `Expected element not to be keyboard navigable`
-        : `Expected element to be keyboard navigable (interactive element or tabindex >= 0)`,
-      pass
+        ? 'Expected element not to be keyboard navigable'
+        : 'Expected element to be keyboard navigable (interactive element or tabindex >= 0)',
+      pass,
     };
   },
 
   toHaveProperHeadingStructure(received: Element) {
     const headings = Array.from(received.querySelectorAll('h1, h2, h3, h4, h5, h6'));
-    const headingLevels = headings.map(h => parseInt(h.tagName.charAt(1)));
-    
+    const headingLevels = headings.map(h => parseInt(h.tagName.charAt(1), 10));
+
     let isProper = true;
     let previousLevel = 0;
-    
+
     for (const level of headingLevels) {
       if (level > previousLevel + 1) {
         isProper = false;
@@ -153,9 +153,9 @@ export const accessibilityMatchers = {
 
     return {
       message: () => isProper
-        ? `Expected element not to have proper heading structure`
-        : `Expected element to have proper heading structure (no skipped levels)`,
-      pass: isProper
+        ? 'Expected element not to have proper heading structure'
+        : 'Expected element to have proper heading structure (no skipped levels)',
+      pass: isProper,
     };
   },
 
@@ -165,11 +165,11 @@ export const accessibilityMatchers = {
 
     return {
       message: () => allHaveAlt
-        ? `Expected images not to have alt text`
-        : `Expected all images to have alt text`,
-      pass: allHaveAlt
+        ? 'Expected images not to have alt text'
+        : 'Expected all images to have alt text',
+      pass: allHaveAlt,
     };
-  }
+  },
 };
 
 /**
@@ -178,29 +178,29 @@ export const accessibilityMatchers = {
 export const visualMatchers = {
   toBeVisible(received: Element) {
     const style = window.getComputedStyle(received);
-    const isVisible = style.display !== 'none' && 
-                     style.visibility !== 'hidden' && 
+    const isVisible = style.display !== 'none' &&
+                     style.visibility !== 'hidden' &&
                      style.opacity !== '0';
 
     return {
       message: () => isVisible
-        ? `Expected element not to be visible`
-        : `Expected element to be visible`,
-      pass: isVisible
+        ? 'Expected element not to be visible'
+        : 'Expected element to be visible',
+      pass: isVisible,
     };
   },
 
   toBeHidden(received: Element) {
     const style = window.getComputedStyle(received);
-    const isHidden = style.display === 'none' || 
-                    style.visibility === 'hidden' || 
+    const isHidden = style.display === 'none' ||
+                    style.visibility === 'hidden' ||
                     style.opacity === '0';
 
     return {
       message: () => isHidden
-        ? `Expected element not to be hidden`
-        : `Expected element to be hidden`,
-      pass: isHidden
+        ? 'Expected element not to be hidden'
+        : 'Expected element to be hidden',
+      pass: isHidden,
     };
   },
 
@@ -213,7 +213,7 @@ export const visualMatchers = {
       message: () => pass
         ? `Expected element not to have computed style ${property}: ${expectedValue}`
         : `Expected element to have computed style ${property}: ${expectedValue}, but got ${actualValue}`,
-      pass
+      pass,
     };
   },
 
@@ -224,7 +224,7 @@ export const visualMatchers = {
       message: () => pass
         ? `Expected element not to have class "${expectedClass}"`
         : `Expected element to have class "${expectedClass}"`,
-      pass
+      pass,
     };
   },
 
@@ -237,9 +237,9 @@ export const visualMatchers = {
       message: () => pass
         ? `Expected element not to have inline style ${property}: ${expectedValue}`
         : `Expected element to have inline style ${property}: ${expectedValue}, but got ${actualValue}`,
-      pass
+      pass,
     };
-  }
+  },
 };
 
 /**
@@ -249,7 +249,7 @@ export const interactionMatchers = {
   toBeClickable(received: Element) {
     const isButton = received.tagName.toLowerCase() === 'button';
     const isLink = received.tagName.toLowerCase() === 'a' && received.hasAttribute('href');
-    const hasClickHandler = received.hasAttribute('onclick') || 
+    const hasClickHandler = received.hasAttribute('onclick') ||
                            received.getAttribute('role') === 'button';
     const isDisabled = received.hasAttribute('disabled');
 
@@ -257,53 +257,53 @@ export const interactionMatchers = {
 
     return {
       message: () => pass
-        ? `Expected element not to be clickable`
-        : `Expected element to be clickable`,
-      pass
+        ? 'Expected element not to be clickable'
+        : 'Expected element to be clickable',
+      pass,
     };
   },
 
   toBeFocusable(received: Element) {
     const tabIndex = received.getAttribute('tabindex');
     const isInteractiveElement = ['button', 'input', 'select', 'textarea', 'a'].includes(
-      received.tagName.toLowerCase()
+      received.tagName.toLowerCase(),
     );
-    const hasTabIndex = tabIndex !== null && parseInt(tabIndex) >= 0;
+    const hasTabIndex = tabIndex !== null && parseInt(tabIndex, 10) >= 0;
     const isDisabled = received.hasAttribute('disabled');
 
     const pass = (isInteractiveElement || hasTabIndex) && !isDisabled;
 
     return {
       message: () => pass
-        ? `Expected element not to be focusable`
-        : `Expected element to be focusable`,
-      pass
+        ? 'Expected element not to be focusable'
+        : 'Expected element to be focusable',
+      pass,
     };
   },
 
   toBeDisabled(received: Element) {
-    const isDisabled = received.hasAttribute('disabled') || 
+    const isDisabled = received.hasAttribute('disabled') ||
                       received.getAttribute('aria-disabled') === 'true';
 
     return {
       message: () => isDisabled
-        ? `Expected element not to be disabled`
-        : `Expected element to be disabled`,
-      pass: isDisabled
+        ? 'Expected element not to be disabled'
+        : 'Expected element to be disabled',
+      pass: isDisabled,
     };
   },
 
   toBeEnabled(received: Element) {
-    const isDisabled = received.hasAttribute('disabled') || 
+    const isDisabled = received.hasAttribute('disabled') ||
                       received.getAttribute('aria-disabled') === 'true';
 
     return {
       message: () => !isDisabled
-        ? `Expected element not to be enabled`
-        : `Expected element to be enabled`,
-      pass: !isDisabled
+        ? 'Expected element not to be enabled'
+        : 'Expected element to be enabled',
+      pass: !isDisabled,
     };
-  }
+  },
 };
 
 /**
@@ -312,7 +312,7 @@ export const interactionMatchers = {
 export const contentMatchers = {
   toHaveTextContent(received: Element, expectedText: string | RegExp) {
     const actualText = received.textContent || '';
-    const pass = typeof expectedText === 'string' 
+    const pass = typeof expectedText === 'string'
       ? actualText === expectedText
       : expectedText.test(actualText);
 
@@ -320,7 +320,7 @@ export const contentMatchers = {
       message: () => pass
         ? `Expected element not to have text content "${expectedText}"`
         : `Expected element to have text content "${expectedText}", but got "${actualText}"`,
-      pass
+      pass,
     };
   },
 
@@ -332,7 +332,7 @@ export const contentMatchers = {
       message: () => pass
         ? `Expected element not to contain text "${expectedText}"`
         : `Expected element to contain text "${expectedText}", but got "${actualText}"`,
-      pass
+      pass,
     };
   },
 
@@ -345,7 +345,7 @@ export const contentMatchers = {
       message: () => pass
         ? `Expected element not to have value "${expectedValue}"`
         : `Expected element to have value "${expectedValue}", but got "${actualValue}"`,
-      pass
+      pass,
     };
   },
 
@@ -354,11 +354,11 @@ export const contentMatchers = {
 
     return {
       message: () => isEmpty
-        ? `Expected element not to be empty`
-        : `Expected element to be empty`,
-      pass: isEmpty
+        ? 'Expected element not to be empty'
+        : 'Expected element to be empty',
+      pass: isEmpty,
     };
-  }
+  },
 };
 
 /**
@@ -366,14 +366,14 @@ export const contentMatchers = {
  */
 export const formMatchers = {
   toBeRequired(received: Element) {
-    const isRequired = received.hasAttribute('required') || 
+    const isRequired = received.hasAttribute('required') ||
                       received.getAttribute('aria-required') === 'true';
 
     return {
       message: () => isRequired
-        ? `Expected element not to be required`
-        : `Expected element to be required`,
-      pass: isRequired
+        ? 'Expected element not to be required'
+        : 'Expected element to be required',
+      pass: isRequired,
     };
   },
 
@@ -383,9 +383,9 @@ export const formMatchers = {
 
     return {
       message: () => isValid
-        ? `Expected element not to be valid`
-        : `Expected element to be valid`,
-      pass: isValid
+        ? 'Expected element not to be valid'
+        : 'Expected element to be valid',
+      pass: isValid,
     };
   },
 
@@ -395,9 +395,9 @@ export const formMatchers = {
 
     return {
       message: () => isInvalid
-        ? `Expected element not to be invalid`
-        : `Expected element to be invalid`,
-      pass: isInvalid
+        ? 'Expected element not to be invalid'
+        : 'Expected element to be invalid',
+      pass: isInvalid,
     };
   },
 
@@ -408,8 +408,8 @@ export const formMatchers = {
 
     if (!hasError) {
       return {
-        message: () => `Expected element to have validation error`,
-        pass: false
+        message: () => 'Expected element to have validation error',
+        pass: false,
       };
     }
 
@@ -419,15 +419,15 @@ export const formMatchers = {
         message: () => pass
           ? `Expected element not to have validation error "${expectedMessage}"`
           : `Expected element to have validation error "${expectedMessage}", but got "${validationMessage}"`,
-        pass
+        pass,
       };
     }
 
     return {
-      message: () => `Expected element not to have validation error`,
-      pass: true
+      message: () => 'Expected element not to have validation error',
+      pass: true,
     };
-  }
+  },
 };
 
 /**
@@ -436,26 +436,26 @@ export const formMatchers = {
 export const componentStateMatchers = {
   toHaveState(received: ReactWrapper, expectedState: Record<string, any>) {
     const actualState = received.state();
-    const pass = Object.keys(expectedState).every(key => 
-      actualState[key] === expectedState[key]
+    const pass = Object.keys(expectedState).every(key =>
+      actualState[key] === expectedState[key],
     );
 
     return {
       message: () => pass
         ? `Expected component not to have state ${JSON.stringify(expectedState)}`
         : `Expected component to have state ${JSON.stringify(expectedState)}, but got ${JSON.stringify(actualState)}`,
-      pass
+      pass,
     };
   },
 
   toHaveProp(received: ReactWrapper, propName: string, expectedValue?: any) {
     const props = received.props();
     const hasProp = propName in props;
-    
+
     if (!hasProp) {
       return {
         message: () => `Expected component to have prop "${propName}"`,
-        pass: false
+        pass: false,
       };
     }
 
@@ -465,20 +465,20 @@ export const componentStateMatchers = {
         message: () => pass
           ? `Expected component not to have prop "${propName}" with value ${expectedValue}`
           : `Expected component to have prop "${propName}" with value ${expectedValue}, but got ${props[propName]}`,
-        pass
+        pass,
       };
     }
 
     return {
       message: () => `Expected component not to have prop "${propName}"`,
-      pass: true
+      pass: true,
     };
   },
 
   toBeLoading(received: Element) {
-    const hasLoadingAttribute = received.hasAttribute('aria-busy') && 
+    const hasLoadingAttribute = received.hasAttribute('aria-busy') &&
                                received.getAttribute('aria-busy') === 'true';
-    const hasLoadingClass = received.classList.contains('loading') || 
+    const hasLoadingClass = received.classList.contains('loading') ||
                            received.classList.contains('spinner');
     const hasLoadingText = received.textContent?.toLowerCase().includes('loading');
 
@@ -486,16 +486,16 @@ export const componentStateMatchers = {
 
     return {
       message: () => pass
-        ? `Expected element not to be loading`
-        : `Expected element to be loading`,
-      pass
+        ? 'Expected element not to be loading'
+        : 'Expected element to be loading',
+      pass,
     };
   },
 
   toHaveError(received: Element, expectedError?: string) {
-    const hasErrorAttribute = received.hasAttribute('aria-invalid') && 
+    const hasErrorAttribute = received.hasAttribute('aria-invalid') &&
                              received.getAttribute('aria-invalid') === 'true';
-    const hasErrorClass = received.classList.contains('error') || 
+    const hasErrorClass = received.classList.contains('error') ||
                          received.classList.contains('invalid');
     const errorElement = received.querySelector('[role="alert"], .error-message');
 
@@ -503,8 +503,8 @@ export const componentStateMatchers = {
 
     if (!hasError) {
       return {
-        message: () => `Expected element to have error`,
-        pass: false
+        message: () => 'Expected element to have error',
+        pass: false,
       };
     }
 
@@ -515,15 +515,15 @@ export const componentStateMatchers = {
         message: () => pass
           ? `Expected element not to have error "${expectedError}"`
           : `Expected element to have error "${expectedError}", but got "${errorText}"`,
-        pass
+        pass,
       };
     }
 
     return {
-      message: () => `Expected element not to have error`,
-      pass: true
+      message: () => 'Expected element not to have error',
+      pass: true,
     };
-  }
+  },
 };
 
 /**
@@ -541,13 +541,13 @@ export const performanceMatchers = {
       message: () => pass
         ? `Expected render time not to be within ${maxTime}ms`
         : `Expected render time to be within ${maxTime}ms, but took ${renderTime.toFixed(2)}ms`,
-      pass
+      pass,
     };
   },
 
   toNotCauseMemoryLeak(received: () => void) {
     const initialMemory = (performance as any).memory?.usedJSHeapSize || 0;
-    
+
     // Run the function multiple times
     for (let i = 0; i < 100; i++) {
       received();
@@ -564,11 +564,11 @@ export const performanceMatchers = {
 
     return {
       message: () => pass
-        ? `Expected function not to cause memory leak`
+        ? 'Expected function not to cause memory leak'
         : `Expected function not to cause memory leak, but memory increased by ${(memoryIncrease / 1024).toFixed(2)}KB`,
-      pass
+      pass,
     };
-  }
+  },
 };
 
 /**
@@ -578,10 +578,10 @@ export const responsiveMatchers = {
   toBeResponsive(received: Element) {
     // Check if element has responsive classes or styles
     const hasResponsiveClasses = Array.from(received.classList).some(className =>
-      className.includes('responsive') || 
-      className.includes('mobile') || 
-      className.includes('tablet') || 
-      className.includes('desktop')
+      className.includes('responsive') ||
+      className.includes('mobile') ||
+      className.includes('tablet') ||
+      className.includes('desktop'),
     );
 
     const style = window.getComputedStyle(received);
@@ -592,9 +592,9 @@ export const responsiveMatchers = {
 
     return {
       message: () => pass
-        ? `Expected element not to be responsive`
-        : `Expected element to be responsive`,
-      pass
+        ? 'Expected element not to be responsive'
+        : 'Expected element to be responsive',
+      pass,
     };
   },
 
@@ -606,9 +606,9 @@ export const responsiveMatchers = {
       message: () => hasBreakpointClass
         ? `Expected element not to have breakpoint "${breakpoint}"`
         : `Expected element to have breakpoint "${breakpoint}"`,
-      pass: hasBreakpointClass
+      pass: hasBreakpointClass,
     };
-  }
+  },
 };
 
 // Combine all matchers
@@ -620,7 +620,7 @@ export const componentMatchers = {
   ...formMatchers,
   ...componentStateMatchers,
   ...performanceMatchers,
-  ...responsiveMatchers
+  ...responsiveMatchers,
 };
 
 // Setup function to extend Jest with all matchers

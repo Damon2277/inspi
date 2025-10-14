@@ -3,14 +3,14 @@
  * Analyzes and optimizes CI/CD pipelines for better performance and efficiency
  */
 
-import { 
-  PipelineConfig, 
-  PipelineOptimization, 
+import {
+  PipelineConfig,
+  PipelineOptimization,
   OptimizationRecommendation,
   ImprovementEstimate,
   ImplementationStep,
   CICDMetrics,
-  PipelineAnalysis
+  PipelineAnalysis,
 } from './types';
 
 export class PipelineOptimizer {
@@ -22,10 +22,10 @@ export class PipelineOptimizer {
    */
   async optimizePipeline(
     config: PipelineConfig,
-    metrics?: CICDMetrics[]
+    metrics?: CICDMetrics[],
   ): Promise<PipelineOptimization> {
     const cacheKey = this.generateCacheKey(config);
-    
+
     if (this.optimizationCache.has(cacheKey)) {
       return this.optimizationCache.get(cacheKey)!;
     }
@@ -45,7 +45,7 @@ export class PipelineOptimizer {
     const optimization: PipelineOptimization = {
       recommendations,
       estimatedImprovement,
-      implementationPlan
+      implementationPlan,
     };
 
     this.optimizationCache.set(cacheKey, optimization);
@@ -65,7 +65,7 @@ export class PipelineOptimizer {
       bottlenecks,
       inefficiencies,
       recommendations,
-      trends
+      trends,
     };
   }
 
@@ -76,8 +76,8 @@ export class PipelineOptimizer {
     const bottlenecks = [];
 
     // Check for sequential stages that could be parallelized
-    const sequentialStages = config.stages.filter(stage => 
-      stage.dependencies.length === 0 && stage.type !== 'deploy'
+    const sequentialStages = config.stages.filter(stage =>
+      stage.dependencies.length === 0 && stage.type !== 'deploy',
     );
 
     if (sequentialStages.length > 1 && !config.parallelization.enabled) {
@@ -86,7 +86,7 @@ export class PipelineOptimizer {
         type: 'dependency' as const,
         impact: 0.8,
         frequency: 1.0,
-        suggestions: ['Enable parallelization for independent stages']
+        suggestions: ['Enable parallelization for independent stages'],
       });
     }
 
@@ -101,8 +101,8 @@ export class PipelineOptimizer {
           suggestions: [
             'Consider breaking down into smaller stages',
             'Optimize build/test commands',
-            'Use more powerful runners'
-          ]
+            'Use more powerful runners',
+          ],
         });
       }
     });
@@ -114,7 +114,7 @@ export class PipelineOptimizer {
         type: 'io' as const,
         impact: 0.7,
         frequency: 1.0,
-        suggestions: ['Enable dependency caching', 'Cache build artifacts']
+        suggestions: ['Enable dependency caching', 'Cache build artifacts'],
       });
     }
 
@@ -129,8 +129,8 @@ export class PipelineOptimizer {
 
     // Check for redundant stages
     const stageNames = config.stages.map(s => s.name);
-    const duplicates = stageNames.filter((name, index) => 
-      stageNames.indexOf(name) !== index
+    const duplicates = stageNames.filter((name, index) =>
+      stageNames.indexOf(name) !== index,
     );
 
     if (duplicates.length > 0) {
@@ -138,7 +138,7 @@ export class PipelineOptimizer {
         type: 'redundant' as const,
         description: `Duplicate stages found: ${duplicates.join(', ')}`,
         impact: 'Medium - increases pipeline duration',
-        solution: 'Consolidate or remove duplicate stages'
+        solution: 'Consolidate or remove duplicate stages',
       });
     }
 
@@ -146,13 +146,13 @@ export class PipelineOptimizer {
     if (config.parallelization.matrix) {
       const matrixSize = Object.values(config.parallelization.matrix)
         .reduce((acc, arr) => acc * arr.length, 1);
-      
+
       if (matrixSize > 20) {
         inefficiencies.push({
           type: 'oversized' as const,
           description: `Large matrix build with ${matrixSize} combinations`,
           impact: 'High - excessive resource usage and cost',
-          solution: 'Reduce matrix dimensions or use selective testing'
+          solution: 'Reduce matrix dimensions or use selective testing',
         });
       }
     }
@@ -164,7 +164,7 @@ export class PipelineOptimizer {
           type: 'misconfigured' as const,
           description: `Deploy stage "${stage.name}" has no dependencies`,
           impact: 'High - potential deployment of untested code',
-          solution: 'Add test and build stages as dependencies'
+          solution: 'Add test and build stages as dependencies',
         });
       }
     });
@@ -177,7 +177,7 @@ export class PipelineOptimizer {
    */
   private generateRecommendations(
     config: PipelineConfig,
-    analysis: PipelineAnalysis
+    analysis: PipelineAnalysis,
   ): OptimizationRecommendation[] {
     const recommendations: OptimizationRecommendation[] = [];
 
@@ -190,14 +190,14 @@ export class PipelineOptimizer {
         description: 'Cache node_modules and other dependencies to reduce build time',
         impact: '30-50% reduction in build time',
         effort: 'Low - 15 minutes to implement',
-        implementation: 'Add caching configuration to pipeline'
+        implementation: 'Add caching configuration to pipeline',
       });
     }
 
     // Parallelization recommendations
     if (!config.parallelization.enabled) {
-      const parallelizableStages = config.stages.filter(stage => 
-        stage.dependencies.length === 0 && stage.type !== 'deploy'
+      const parallelizableStages = config.stages.filter(stage =>
+        stage.dependencies.length === 0 && stage.type !== 'deploy',
       );
 
       if (parallelizableStages.length > 1) {
@@ -208,7 +208,7 @@ export class PipelineOptimizer {
           description: 'Run independent stages in parallel to reduce total pipeline time',
           impact: `${Math.min(parallelizableStages.length * 20, 60)}% reduction in pipeline time`,
           effort: 'Medium - 30 minutes to implement',
-          implementation: 'Configure parallel execution for independent stages'
+          implementation: 'Configure parallel execution for independent stages',
         });
       }
     }
@@ -223,7 +223,7 @@ export class PipelineOptimizer {
         description: 'Break down long stages and optimize resource usage',
         impact: '20-30% reduction in stage duration',
         effort: 'High - 2-4 hours to implement',
-        implementation: 'Analyze and optimize slow commands, consider stage splitting'
+        implementation: 'Analyze and optimize slow commands, consider stage splitting',
       });
     }
 
@@ -236,7 +236,7 @@ export class PipelineOptimizer {
         description: 'Add retry logic to handle transient failures',
         impact: 'Improved pipeline reliability',
         effort: 'Low - 10 minutes to implement',
-        implementation: 'Configure retry attempts for flaky stages'
+        implementation: 'Configure retry attempts for flaky stages',
       });
     }
 
@@ -305,7 +305,7 @@ export class PipelineOptimizer {
       timeReduction,
       costReduction,
       reliabilityImprovement,
-      confidence: 0.85
+      confidence: 0.85,
     };
   }
 
@@ -332,9 +332,9 @@ export class PipelineOptimizer {
             files: [{
               path: '.github/workflows/ci.yml',
               action: 'update',
-              content: this.generateCachingConfig()
+              content: this.generateCachingConfig(),
             }],
-            validation: 'Verify cache is being used in pipeline logs'
+            validation: 'Verify cache is being used in pipeline logs',
           });
           break;
 
@@ -346,9 +346,9 @@ export class PipelineOptimizer {
             files: [{
               path: '.github/workflows/ci.yml',
               action: 'update',
-              content: this.generateParallelConfig()
+              content: this.generateParallelConfig(),
             }],
-            validation: 'Check that independent stages run simultaneously'
+            validation: 'Check that independent stages run simultaneously',
           });
           break;
 
@@ -360,9 +360,9 @@ export class PipelineOptimizer {
             files: [{
               path: '.github/workflows/ci.yml',
               action: 'update',
-              content: this.generateRetryConfig()
+              content: this.generateRetryConfig(),
             }],
-            validation: 'Test that failed stages are retried automatically'
+            validation: 'Test that failed stages are retried automatically',
           });
           break;
       }
@@ -380,7 +380,7 @@ export class PipelineOptimizer {
         duration: { current: 0, previous: 0, trend: 'stable' as const, change: 0 },
         successRate: { current: 0, previous: 0, trend: 'stable' as const, change: 0 },
         resourceUsage: { current: 0, previous: 0, trend: 'stable' as const, change: 0 },
-        testCoverage: { current: 0, previous: 0, trend: 'stable' as const, change: 0 }
+        testCoverage: { current: 0, previous: 0, trend: 'stable' as const, change: 0 },
       };
     }
 
@@ -397,19 +397,19 @@ export class PipelineOptimizer {
       duration: {
         current: avgDurationRecent,
         previous: avgDurationOlder,
-        trend: avgDurationRecent < avgDurationOlder ? 'improving' : 
+        trend: avgDurationRecent < avgDurationOlder ? 'improving' :
                avgDurationRecent > avgDurationOlder ? 'degrading' : 'stable',
-        change: ((avgDurationRecent - avgDurationOlder) / avgDurationOlder) * 100
+        change: ((avgDurationRecent - avgDurationOlder) / avgDurationOlder) * 100,
       },
       successRate: {
         current: successRateRecent,
         previous: successRateOlder,
         trend: successRateRecent > successRateOlder ? 'improving' :
                successRateRecent < successRateOlder ? 'degrading' : 'stable',
-        change: ((successRateRecent - successRateOlder) / successRateOlder) * 100
+        change: ((successRateRecent - successRateOlder) / successRateOlder) * 100,
       },
       resourceUsage: { current: 0, previous: 0, trend: 'stable' as const, change: 0 },
-      testCoverage: { current: 0, previous: 0, trend: 'stable' as const, change: 0 }
+      testCoverage: { current: 0, previous: 0, trend: 'stable' as const, change: 0 },
     };
   }
 
@@ -462,9 +462,9 @@ export class PipelineOptimizer {
     const configHash = JSON.stringify({
       stages: config.stages.map(s => ({ name: s.name, type: s.type, timeout: s.timeout })),
       parallelization: config.parallelization,
-      caching: config.caching
+      caching: config.caching,
     });
-    
+
     return Buffer.from(configHash).toString('base64').slice(0, 32);
   }
 
@@ -482,7 +482,7 @@ export class PipelineOptimizer {
     return {
       cacheSize: this.optimizationCache.size,
       metricsCount: this.metricsHistory.length,
-      avgImprovementEstimate: this.calculateAverageImprovement()
+      avgImprovementEstimate: this.calculateAverageImprovement(),
     };
   }
 
@@ -493,15 +493,15 @@ export class PipelineOptimizer {
     const optimizations = Array.from(this.optimizationCache.values());
     if (optimizations.length === 0) return null;
 
-    const avgTimeReduction = optimizations.reduce((sum, opt) => 
+    const avgTimeReduction = optimizations.reduce((sum, opt) =>
       sum + opt.estimatedImprovement.timeReduction, 0) / optimizations.length;
-    
-    const avgCostReduction = optimizations.reduce((sum, opt) => 
+
+    const avgCostReduction = optimizations.reduce((sum, opt) =>
       sum + opt.estimatedImprovement.costReduction, 0) / optimizations.length;
 
     return {
       timeReduction: avgTimeReduction,
-      costReduction: avgCostReduction
+      costReduction: avgCostReduction,
     };
   }
 }

@@ -3,10 +3,10 @@
  * 覆盖AI服务的所有核心功能、边界条件、错误处理和性能测试
  */
 
-import { GeminiService, AIGenerationOptions, AIGenerationResult } from '@/lib/ai/geminiService';
-import { env } from '@/config/environment';
-import { logger } from '@/lib/utils/logger';
+import { GeminiService, AIGenerationOptions, AIGenerationResult } from '@/core/ai/geminiService';
 import { redis } from '@/lib/cache/redis';
+import { env } from '@/shared/config/environment';
+import { logger } from '@/shared/utils/logger';
 
 // Mock dependencies
 jest.mock('@google/generative-ai');
@@ -84,7 +84,7 @@ describe('GeminiService - 全面单元测试', () => {
           topK: 40,
           topP: 0.95,
           maxOutputTokens: 2048,
-        }
+        },
       });
     });
 
@@ -102,8 +102,8 @@ describe('GeminiService - 全面单元测试', () => {
       // Arrange
       const mockResponse = {
         response: {
-          text: () => '这是一个测试响应内容'
-        }
+          text: () => '这是一个测试响应内容',
+        },
       };
       mockGenerateContent.mockResolvedValue(mockResponse);
       mockRedis.get.mockResolvedValue(null); // 无缓存
@@ -112,7 +112,7 @@ describe('GeminiService - 全面单元测试', () => {
       const options: AIGenerationOptions = {
         temperature: 0.8,
         maxTokens: 1000,
-        useCache: true
+        useCache: true,
       };
 
       // Act
@@ -127,15 +127,15 @@ describe('GeminiService - 全面单元测试', () => {
           totalTokens: 0,
         },
         model: 'gemini-1.5-flash',
-        cached: false
+        cached: false,
       });
       expect(mockGenerateContent).toHaveBeenCalledTimes(1);
       expect(mockLogger.info).toHaveBeenCalledWith(
         'AI generation completed',
         expect.objectContaining({
           model: 'gemini-1.5-flash',
-          cached: false
-        })
+          cached: false,
+        }),
       );
     });
 
@@ -145,7 +145,7 @@ describe('GeminiService - 全面单元测试', () => {
         content: '缓存的内容',
         usage: { promptTokens: 10, completionTokens: 20, totalTokens: 30 },
         model: 'gemini-1.5-flash',
-        cached: false
+        cached: false,
       };
       mockRedis.get.mockResolvedValue(JSON.stringify(cachedResult));
 
@@ -159,7 +159,7 @@ describe('GeminiService - 全面单元测试', () => {
       expect(mockGenerateContent).not.toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
         'AI generation cache hit',
-        expect.objectContaining({ cached: true })
+        expect.objectContaining({ cached: true }),
       );
     });
 
@@ -167,8 +167,8 @@ describe('GeminiService - 全面单元测试', () => {
       // Arrange
       const mockResponse = {
         response: {
-          text: () => ''
-        }
+          text: () => '',
+        },
       };
       mockGenerateContent.mockResolvedValue(mockResponse);
       mockRedis.get.mockResolvedValue(null);
@@ -181,8 +181,8 @@ describe('GeminiService - 全面单元测试', () => {
       // Arrange
       const mockResponse = {
         response: {
-          text: () => '   \n\t  '
-        }
+          text: () => '   \n\t  ',
+        },
       };
       mockGenerateContent.mockResolvedValue(mockResponse);
       mockRedis.get.mockResolvedValue(null);
@@ -195,8 +195,8 @@ describe('GeminiService - 全面单元测试', () => {
       // Arrange
       const mockResponse = {
         response: {
-          text: () => '配置测试响应'
-        }
+          text: () => '配置测试响应',
+        },
       };
       mockGenerateContent.mockResolvedValue(mockResponse);
       mockRedis.get.mockResolvedValue(null);
@@ -205,7 +205,7 @@ describe('GeminiService - 全面单元测试', () => {
         temperature: 0.9,
         maxTokens: 500,
         topP: 0.8,
-        topK: 30
+        topK: 30,
       };
 
       // Act
@@ -219,7 +219,7 @@ describe('GeminiService - 全面单元测试', () => {
           topK: 30,
           topP: 0.8,
           maxOutputTokens: 500,
-        }
+        },
       });
     });
   });
@@ -281,8 +281,8 @@ describe('GeminiService - 全面单元测试', () => {
         'AI generation failed',
         expect.objectContaining({
           error: 'Test error',
-          model: 'gemini-1.5-flash'
-        })
+          model: 'gemini-1.5-flash',
+        }),
       );
     });
   });
@@ -301,8 +301,8 @@ describe('GeminiService - 全面单元测试', () => {
         .mockRejectedValueOnce(new Error('Another temporary failure'))
         .mockResolvedValueOnce({
           response: {
-            text: () => '重试成功的内容'
-          }
+            text: () => '重试成功的内容',
+          },
         });
 
       // Act
@@ -347,7 +347,7 @@ describe('GeminiService - 全面单元测试', () => {
       mockRedis.get.mockResolvedValue(null);
       mockRedis.setex.mockResolvedValue('OK');
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '测试内容' }
+        response: { text: () => '测试内容' },
       });
 
       const prompt = '测试提示词';
@@ -362,7 +362,7 @@ describe('GeminiService - 全面单元测试', () => {
       expect(mockRedis.setex).toHaveBeenCalledWith(
         expectedCacheKey,
         3600,
-        expect.any(String)
+        expect.any(String),
       );
     });
 
@@ -371,7 +371,7 @@ describe('GeminiService - 全面单元测试', () => {
       mockRedis.get.mockRejectedValue(new Error('Redis error'));
       mockRedis.setex.mockRejectedValue(new Error('Redis error'));
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '测试内容' }
+        response: { text: () => '测试内容' },
       });
 
       // Act
@@ -381,7 +381,7 @@ describe('GeminiService - 全面单元测试', () => {
       expect(result.content).toBe('测试内容');
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Failed to get cached AI result',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -390,7 +390,7 @@ describe('GeminiService - 全面单元测试', () => {
       mockRedis.get.mockResolvedValue(null);
       mockRedis.setex.mockResolvedValue('OK');
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '测试内容' }
+        response: { text: () => '测试内容' },
       });
 
       const customTTL = 7200;
@@ -402,14 +402,14 @@ describe('GeminiService - 全面单元测试', () => {
       expect(mockRedis.setex).toHaveBeenCalledWith(
         expect.any(String),
         customTTL,
-        expect.any(String)
+        expect.any(String),
       );
     });
 
     it('应该支持禁用缓存', async () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '测试内容' }
+        response: { text: () => '测试内容' },
       });
 
       // Act
@@ -425,8 +425,8 @@ describe('GeminiService - 全面单元测试', () => {
     it('应该在超时时抛出错误', async () => {
       // Arrange
       mockRedis.get.mockResolvedValue(null);
-      mockGenerateContent.mockImplementation(() => 
-        new Promise(resolve => setTimeout(resolve, 35000)) // 超过30秒超时
+      mockGenerateContent.mockImplementation(() =>
+        new Promise(resolve => setTimeout(resolve, 35000)), // 超过30秒超时
       );
 
       // Act & Assert
@@ -436,10 +436,10 @@ describe('GeminiService - 全面单元测试', () => {
     it('应该在超时前正常返回', async () => {
       // Arrange
       mockRedis.get.mockResolvedValue(null);
-      mockGenerateContent.mockImplementation(() => 
+      mockGenerateContent.mockImplementation(() =>
         new Promise(resolve => setTimeout(() => resolve({
-          response: { text: () => '快速响应' }
-        }), 100))
+          response: { text: () => '快速响应' },
+        }), 100)),
       );
 
       // Act
@@ -459,7 +459,7 @@ describe('GeminiService - 全面单元测试', () => {
       // Arrange
       const longPrompt = 'a'.repeat(10000);
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '长提示词响应' }
+        response: { text: () => '长提示词响应' },
       });
 
       // Act
@@ -473,7 +473,7 @@ describe('GeminiService - 全面单元测试', () => {
       // Arrange
       const specialPrompt = '测试特殊字符: !@#$%^&*()_+{}|:"<>?[]\\;\',./ 🚀🎯💡';
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '特殊字符响应' }
+        response: { text: () => '特殊字符响应' },
       });
 
       // Act
@@ -486,14 +486,14 @@ describe('GeminiService - 全面单元测试', () => {
     it('应该处理极端的生成参数', async () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '极端参数响应' }
+        response: { text: () => '极端参数响应' },
       });
 
       const extremeOptions: AIGenerationOptions = {
         temperature: 0,
         maxTokens: 1,
         topP: 0.1,
-        topK: 1
+        topK: 1,
       };
 
       // Act
@@ -506,14 +506,14 @@ describe('GeminiService - 全面单元测试', () => {
     it('应该处理无效的生成参数', async () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '默认参数响应' }
+        response: { text: () => '默认参数响应' },
       });
 
       const invalidOptions: AIGenerationOptions = {
         temperature: -1, // 无效值
         maxTokens: -100, // 无效值
         topP: 2, // 无效值
-        topK: -5 // 无效值
+        topK: -5, // 无效值
       };
 
       // Act
@@ -528,8 +528,8 @@ describe('GeminiService - 全面单元测试', () => {
           temperature: 0.7, // 默认值
           topK: 40, // 默认值
           topP: 0.95, // 默认值
-          maxOutputTokens: 2048 // 默认值
-        })
+          maxOutputTokens: 2048, // 默认值
+        }),
       });
     });
   });
@@ -539,7 +539,7 @@ describe('GeminiService - 全面单元测试', () => {
       // Arrange
       mockRedis.get.mockResolvedValue(null);
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => 'Hello' }
+        response: { text: () => 'Hello' },
       });
 
       // Act
@@ -561,7 +561,7 @@ describe('GeminiService - 全面单元测试', () => {
       expect(isHealthy).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
         'AI service health check failed',
-        expect.objectContaining({ error: expect.any(Error) })
+        expect.objectContaining({ error: expect.any(Error) }),
       );
     });
 
@@ -569,7 +569,7 @@ describe('GeminiService - 全面单元测试', () => {
       // Arrange
       mockRedis.get.mockResolvedValue(null);
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '' }
+        response: { text: () => '' },
       });
 
       // Act
@@ -615,7 +615,7 @@ describe('GeminiService - 全面单元测试', () => {
     it('应该在合理时间内完成生成', async () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '性能测试响应' }
+        response: { text: () => '性能测试响应' },
       });
 
       const startTime = Date.now();
@@ -631,7 +631,7 @@ describe('GeminiService - 全面单元测试', () => {
     it('应该正确记录性能指标', async () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '指标测试响应' }
+        response: { text: () => '指标测试响应' },
       });
 
       // Act
@@ -642,20 +642,20 @@ describe('GeminiService - 全面单元测试', () => {
         'AI generation completed',
         expect.objectContaining({
           duration: expect.any(Number),
-          model: 'gemini-1.5-flash'
-        })
+          model: 'gemini-1.5-flash',
+        }),
       );
     });
 
     it('应该处理并发请求', async () => {
       // Arrange
-      mockGenerateContent.mockImplementation(() => 
-        Promise.resolve({ response: { text: () => '并发响应' } })
+      mockGenerateContent.mockImplementation(() =>
+        Promise.resolve({ response: { text: () => '并发响应' } }),
       );
 
       const concurrentRequests = 10;
-      const promises = Array(concurrentRequests).fill(null).map((_, index) => 
-        geminiService.generateContent(`并发测试 ${index}`)
+      const promises = Array(concurrentRequests).fill(null).map((_, index) =>
+        geminiService.generateContent(`并发测试 ${index}`),
       );
 
       // Act
@@ -676,7 +676,7 @@ describe('GeminiService - 全面单元测试', () => {
       const largeContent = 'x'.repeat(100000); // 100KB内容
       mockRedis.get.mockResolvedValue(null);
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => largeContent }
+        response: { text: () => largeContent },
       });
 
       // Act
@@ -706,7 +706,7 @@ describe('GeminiService - 全面单元测试', () => {
       // Arrange
       const maliciousPrompt = '<script>alert("xss")</script>恶意输入';
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '安全响应' }
+        response: { text: () => '安全响应' },
       });
 
       // Act
@@ -721,7 +721,7 @@ describe('GeminiService - 全面单元测试', () => {
       // Arrange
       const injectionPrompt = "'; DROP TABLE users; --";
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '注入防护响应' }
+        response: { text: () => '注入防护响应' },
       });
 
       // Act
@@ -735,7 +735,7 @@ describe('GeminiService - 全面单元测试', () => {
       // Arrange
       const hugeContent = 'x'.repeat(10000000); // 10MB内容
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => hugeContent }
+        response: { text: () => hugeContent },
       });
 
       // Act
@@ -755,7 +755,7 @@ describe('GeminiService - 全面单元测试', () => {
         content: '缓存集成测试',
         usage: { promptTokens: 5, completionTokens: 10, totalTokens: 15 },
         model: 'gemini-1.5-flash',
-        cached: false
+        cached: false,
       };
 
       mockRedis.get.mockResolvedValue(JSON.stringify(cachedData));
@@ -772,7 +772,7 @@ describe('GeminiService - 全面单元测试', () => {
       // Arrange
       mockRedis.get.mockResolvedValue(null);
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '日志集成测试' }
+        response: { text: () => '日志集成测试' },
       });
 
       // Act
@@ -783,8 +783,8 @@ describe('GeminiService - 全面单元测试', () => {
         'AI generation completed',
         expect.objectContaining({
           model: 'gemini-1.5-flash',
-          cached: false
-        })
+          cached: false,
+        }),
       );
     });
   });
@@ -794,7 +794,7 @@ describe('GeminiService - 全面单元测试', () => {
       // Arrange
       mockRedis.get.mockResolvedValue(null);
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '兼容性测试' }
+        response: { text: () => '兼容性测试' },
       });
 
       // Act - 使用旧版本的调用方式
@@ -814,7 +814,7 @@ describe('GeminiService - 全面单元测试', () => {
 
       mockRedis.get.mockResolvedValue(null);
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '配置变更测试' }
+        response: { text: () => '配置变更测试' },
       });
 
       // Act

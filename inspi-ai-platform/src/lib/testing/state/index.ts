@@ -1,6 +1,6 @@
 /**
  * State Management Testing Framework
- * 
+ *
  * Comprehensive state management testing utilities including
  * Zustand store testing, state consistency validation, persistence testing,
  * and concurrency testing.
@@ -28,7 +28,7 @@ export {
   type StateConcurrencyTest,
   type ConcurrentOperation,
   type ConsistencyCheck,
-  type StateSnapshot
+  type StateSnapshot,
 } from './StateTestFramework';
 
 // Zustand utilities
@@ -42,7 +42,7 @@ export {
   type ZustandPersistConfig,
   type ZustandTestBuilder,
   type ZustandStateSnapshot,
-  type ZustandTestSuite
+  type ZustandTestSuite,
 } from './ZustandTestUtils';
 
 // Consistency testing
@@ -56,7 +56,7 @@ export {
   type SnapshotMetadata,
   type ConsistencyViolation,
   type ConsistencyReport,
-  type ConcurrencyTestResult
+  type ConcurrencyTestResult,
 } from './StateConsistencyTester';
 
 // Convenience functions
@@ -66,23 +66,23 @@ export const createDefaultStateTestConfig = (): StateTestConfig => ({
   concurrency: {
     enabled: true,
     maxConcurrentOperations: 10,
-    stressTestDuration: 5000
+    stressTestDuration: 5000,
   },
   persistence: {
     enabled: true,
     storageType: 'memory',
-    testDataSize: 1000
+    testDataSize: 1000,
   },
   consistency: {
     enabled: true,
     snapshotInterval: 100,
-    maxSnapshots: 100
+    maxSnapshots: 100,
   },
   performance: {
     enabled: true,
     maxStateUpdateTime: 10,
-    maxMemoryUsage: 100
-  }
+    maxMemoryUsage: 100,
+  },
 });
 
 export const createDefaultConsistencyConfig = (): ConsistencyTestConfig => ({
@@ -91,7 +91,7 @@ export const createDefaultConsistencyConfig = (): ConsistencyTestConfig => ({
   invariantChecks: true,
   transitionValidation: true,
   concurrencyTesting: true,
-  performanceMonitoring: true
+  performanceMonitoring: true,
 });
 
 // Common test scenarios
@@ -116,9 +116,9 @@ export const CommonStateScenarios = {
             return JSON.stringify(state) === JSON.stringify(initialState);
           },
           expected: initialState,
-          message: 'Initial state should match the provided initial state'
-        }
-      ]
+          message: 'Initial state should match the provided initial state',
+        },
+      ],
     },
     {
       name: 'State Update',
@@ -132,8 +132,8 @@ export const CommonStateScenarios = {
           type: 'sync',
           execute: (store) => {
             store.setState({ ...store.getState(), updated: true } as any);
-          }
-        }
+          },
+        },
       ],
       assertions: [
         {
@@ -143,10 +143,10 @@ export const CommonStateScenarios = {
             const state = store.getState() as any;
             return state.updated === true;
           },
-          message: 'State should reflect the update'
-        }
-      ]
-    }
+          message: 'State should reflect the update',
+        },
+      ],
+    },
   ],
 
   /**
@@ -164,7 +164,7 @@ export const CommonStateScenarios = {
         type: 'sync' as const,
         execute: (store: StateStore<T>) => {
           store.setState({ ...store.getState(), counter: i + 1 } as any);
-        }
+        },
       })),
       assertions: [
         {
@@ -173,10 +173,10 @@ export const CommonStateScenarios = {
           check: (store, context) => {
             return context.performanceMetrics.averageUpdateTime < 1;
           },
-          message: 'Average update time should be less than 1ms'
-        }
-      ]
-    }
+          message: 'Average update time should be less than 1ms',
+        },
+      ],
+    },
   ],
 
   /**
@@ -197,7 +197,7 @@ export const CommonStateScenarios = {
           execute: async (store) => {
             await new Promise(resolve => setTimeout(resolve, 10));
             store.setState({ ...store.getState(), value1: 'updated1' } as any);
-          }
+          },
         },
         {
           name: 'Concurrent update 2',
@@ -206,8 +206,8 @@ export const CommonStateScenarios = {
           execute: async (store) => {
             await new Promise(resolve => setTimeout(resolve, 15));
             store.setState({ ...store.getState(), value2: 'updated2' } as any);
-          }
-        }
+          },
+        },
       ],
       assertions: [
         {
@@ -217,10 +217,10 @@ export const CommonStateScenarios = {
             const state = store.getState() as any;
             return state.value1 === 'updated1' && state.value2 === 'updated2';
           },
-          message: 'Both concurrent updates should be present in final state'
-        }
-      ]
-    }
+          message: 'Both concurrent updates should be present in final state',
+        },
+      ],
+    },
   ],
 
   /**
@@ -239,8 +239,8 @@ export const CommonStateScenarios = {
           type: 'sync',
           execute: (store) => {
             store.setState({ ...store.getState(), persisted: true } as any);
-          }
-        }
+          },
+        },
       ],
       assertions: [
         {
@@ -249,11 +249,11 @@ export const CommonStateScenarios = {
           check: (store, context) => {
             return context.persistenceData && Object.keys(context.persistenceData).length > 0;
           },
-          message: 'State should be persisted'
-        }
-      ]
-    }
-  ]
+          message: 'State should be persisted',
+        },
+      ],
+    },
+  ],
 };
 
 // Test utilities
@@ -288,7 +288,7 @@ export const StateTestUtils = {
       },
       destroy: () => {
         listeners.splice(0, listeners.length);
-      }
+      },
     };
   },
 
@@ -302,7 +302,7 @@ export const StateTestUtils = {
           id: 1,
           name: 'Test',
           active: true,
-          count: 0
+          count: 0,
         };
       case 'complex':
         return {
@@ -312,37 +312,37 @@ export const StateTestUtils = {
             email: 'john@example.com',
             preferences: {
               theme: 'dark',
-              notifications: true
-            }
+              notifications: true,
+            },
           },
           data: {
             items: [],
             loading: false,
-            error: null
+            error: null,
           },
           ui: {
             sidebarOpen: false,
-            modalVisible: false
-          }
+            modalVisible: false,
+          },
         };
       case 'nested':
         return {
           level1: {
             level2: {
               level3: {
-                value: 'deep'
-              }
-            }
-          }
+                value: 'deep',
+              },
+            },
+          },
         };
       case 'array':
         return {
           items: [
             { id: 1, name: 'Item 1' },
             { id: 2, name: 'Item 2' },
-            { id: 3, name: 'Item 3' }
+            { id: 3, name: 'Item 3' },
           ],
-          selectedIds: [1, 3]
+          selectedIds: [1, 3],
         };
       default:
         return {};
@@ -353,14 +353,14 @@ export const StateTestUtils = {
    * Generate stress test operations
    */
   generateStressOperations: <T>(
-    store: StateStore<T>, 
-    count: number
+    store: StateStore<T>,
+    count: number,
   ): Array<() => void> => {
     return Array.from({ length: count }, (_, i) => () => {
-      store.setState({ 
-        ...store.getState(), 
+      store.setState({
+        ...store.getState(),
         stressCounter: i + 1,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       } as any);
     });
   },
@@ -370,7 +370,7 @@ export const StateTestUtils = {
    */
   measurePerformance: async <T>(
     operation: () => Promise<T> | T,
-    iterations: number = 100
+    iterations: number = 100,
   ): Promise<{
     averageTime: number;
     minTime: number;
@@ -395,13 +395,13 @@ export const StateTestUtils = {
       averageTime,
       minTime,
       maxTime,
-      totalTime
+      totalTime,
     };
-  }
+  },
 };
 
 // Export default configuration
-export default {
+const stateTestingToolkit = {
   StateTestFramework,
   ZustandTestUtils,
   StateConsistencyTester,
@@ -410,5 +410,7 @@ export default {
   createDefaultStateTestConfig,
   createDefaultConsistencyConfig,
   CommonStateScenarios,
-  StateTestUtils
+  StateTestUtils,
 };
+
+export default stateTestingToolkit;

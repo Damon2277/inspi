@@ -10,7 +10,7 @@ import {
   MockDatabaseService,
   BaseMockService,
   MockService,
-  MockServiceStatus
+  MockServiceStatus,
 } from '@/lib/testing';
 
 describe('MockServiceManager', () => {
@@ -22,7 +22,7 @@ describe('MockServiceManager', () => {
   beforeEach(() => {
     manager = MockServiceManager.getInstance();
     manager.cleanup(); // 清理之前的状态
-    
+
     mockGeminiService = new MockGeminiService();
     mockEmailService = new MockEmailService();
     mockDatabaseService = new MockDatabaseService();
@@ -36,7 +36,7 @@ describe('MockServiceManager', () => {
     it('应该能够注册Mock服务', () => {
       // Arrange & Act
       manager.registerMock(mockGeminiService);
-      
+
       // Assert
       expect(manager.hasMock('GeminiService')).toBe(true);
       const retrievedService = manager.getMock<MockGeminiService>('GeminiService');
@@ -48,7 +48,7 @@ describe('MockServiceManager', () => {
       manager.registerMock(mockGeminiService);
       manager.registerMock(mockEmailService);
       manager.registerMock(mockDatabaseService);
-      
+
       // Assert
       expect(manager.hasMock('GeminiService')).toBe(true);
       expect(manager.hasMock('EmailService')).toBe(true);
@@ -59,11 +59,11 @@ describe('MockServiceManager', () => {
       // Arrange
       const firstService = new MockGeminiService();
       const secondService = new MockGeminiService();
-      
+
       // Act
       manager.registerMock(firstService);
       manager.registerMock(secondService);
-      
+
       // Assert
       const retrievedService = manager.getMock<MockGeminiService>('GeminiService');
       expect(retrievedService).toBe(secondService);
@@ -76,12 +76,12 @@ describe('MockServiceManager', () => {
         name: 'GeminiService',
         autoReset: true,
         trackCalls: true,
-        validateConsistency: true
+        validateConsistency: true,
       };
-      
+
       // Act
       manager.registerMock(mockGeminiService, config);
-      
+
       // Assert
       expect(manager.hasMock('GeminiService')).toBe(true);
     });
@@ -89,7 +89,7 @@ describe('MockServiceManager', () => {
     it('获取不存在的服务应该返回null', () => {
       // Act
       const service = manager.getMock('NonExistentService');
-      
+
       // Assert
       expect(service).toBeNull();
     });
@@ -106,14 +106,14 @@ describe('MockServiceManager', () => {
       // Arrange
       mockGeminiService.setFailureRate(0.5);
       mockEmailService.setFailureRate(0.3);
-      
+
       // Act
       manager.resetAllMocks();
-      
+
       // Assert
       const geminiStats = mockGeminiService.getStats();
       const emailStats = mockEmailService.getDetailedStats();
-      
+
       expect(geminiStats.callCount).toBe(0);
       expect(emailStats.callCount).toBe(0);
       expect(geminiStats.failureRate).toBe(0);
@@ -124,14 +124,14 @@ describe('MockServiceManager', () => {
       // Arrange
       mockGeminiService.setFailureRate(0.5);
       mockEmailService.setFailureRate(0.3);
-      
+
       // Act
       manager.resetMock('GeminiService');
-      
+
       // Assert
       const geminiStats = mockGeminiService.getStats();
       const emailStats = mockEmailService.getDetailedStats();
-      
+
       expect(geminiStats.callCount).toBe(0);
       expect(geminiStats.failureRate).toBe(0);
       expect(emailStats.config.failureRate).toBe(0.3); // 未重置
@@ -155,12 +155,12 @@ describe('MockServiceManager', () => {
     it('应该能够验证所有Mock服务', async () => {
       // Act
       const result = await manager.verifyAllMocks();
-      
+
       // Assert
       expect(result.allValid).toBe(true);
       expect(result.results).toHaveLength(3);
       expect(result.timestamp).toBeInstanceOf(Date);
-      
+
       result.results.forEach(serviceResult => {
         expect(serviceResult.isValid).toBe(true);
         expect(serviceResult.errors).toHaveLength(0);
@@ -170,7 +170,7 @@ describe('MockServiceManager', () => {
     it('应该能够验证特定Mock服务', async () => {
       // Act
       const result = await manager.verifyMock('GeminiService');
-      
+
       // Assert
       expect(result.serviceName).toBe('GeminiService');
       expect(result.isValid).toBe(true);
@@ -180,10 +180,10 @@ describe('MockServiceManager', () => {
     it('验证失败的服务应该返回错误信息', async () => {
       // Arrange
       mockGeminiService.setFailureRate(1); // 100% 失败率
-      
+
       // Act
       const result = await manager.verifyMock('GeminiService');
-      
+
       // Assert
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
@@ -192,7 +192,7 @@ describe('MockServiceManager', () => {
     it('验证不存在的服务应该返回错误', async () => {
       // Act
       const result = await manager.verifyMock('NonExistentService');
-      
+
       // Assert
       expect(result.serviceName).toBe('NonExistentService');
       expect(result.isValid).toBe(false);
@@ -209,13 +209,13 @@ describe('MockServiceManager', () => {
     it('应该能够获取所有服务状态', () => {
       // Act
       const statuses = manager.getAllMockStatus();
-      
+
       // Assert
       expect(statuses).toHaveLength(2);
-      
+
       const geminiStatus = statuses.find(s => s.name === 'GeminiService');
       const emailStatus = statuses.find(s => s.name === 'EmailService');
-      
+
       expect(geminiStatus).toBeDefined();
       expect(emailStatus).toBeDefined();
       expect(geminiStatus!.isActive).toBe(true);
@@ -225,7 +225,7 @@ describe('MockServiceManager', () => {
     it('应该能够获取管理器统计信息', () => {
       // Act
       const stats = manager.getStats();
-      
+
       // Assert
       expect(stats.totalServices).toBe(2);
       expect(stats.activeServices).toBe(2);
@@ -239,14 +239,14 @@ describe('MockServiceManager', () => {
       // Arrange
       const config = {
         name: 'GeminiService',
-        trackCalls: true
+        trackCalls: true,
       };
       manager.registerMock(mockGeminiService, config);
-      
+
       // Act
       manager.getMock('GeminiService');
       manager.getMock('GeminiService');
-      
+
       // Assert
       const history = manager.getCallHistory('GeminiService');
       expect(history.has('GeminiService')).toBe(true);
@@ -257,14 +257,14 @@ describe('MockServiceManager', () => {
       // Arrange
       const geminiConfig = { name: 'GeminiService', trackCalls: true };
       const emailConfig = { name: 'EmailService', trackCalls: true };
-      
+
       manager.registerMock(mockGeminiService, geminiConfig);
       manager.registerMock(mockEmailService, emailConfig);
-      
+
       // Act
       manager.getMock('GeminiService');
       manager.getMock('EmailService');
-      
+
       // Assert
       const allHistory = manager.getCallHistory();
       expect(allHistory.size).toBe(2);
@@ -278,14 +278,14 @@ describe('MockServiceManager', () => {
       // Arrange
       manager.registerMock(mockGeminiService);
       manager.registerMock(mockEmailService);
-      
+
       // Act
       manager.cleanup();
-      
+
       // Assert
       expect(manager.hasMock('GeminiService')).toBe(false);
       expect(manager.hasMock('EmailService')).toBe(false);
-      
+
       const stats = manager.getStats();
       expect(stats.totalServices).toBe(0);
       expect(stats.activeServices).toBe(0);
@@ -299,18 +299,18 @@ describe('MockServiceManager', () => {
         constructor() {
           super('FaultyService', '1.0.0');
         }
-        
+
         reset(): void {
           throw new Error('Reset failed');
         }
-        
+
         protected async onVerify(): Promise<boolean> {
           return true;
         }
       })();
-      
+
       manager.registerMock(faultyService);
-      
+
       // Act & Assert
       expect(() => {
         manager.resetAllMocks();
@@ -323,17 +323,17 @@ describe('MockServiceManager', () => {
         constructor() {
           super('FaultyService', '1.0.0');
         }
-        
+
         protected async onVerify(): Promise<boolean> {
           throw new Error('Verification failed');
         }
       })();
-      
+
       manager.registerMock(faultyService);
-      
+
       // Act
       const result = await manager.verifyMock('FaultyService');
-      
+
       // Assert
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
@@ -345,7 +345,7 @@ describe('MockServiceManager', () => {
       // Act
       const instance1 = MockServiceManager.getInstance();
       const instance2 = MockServiceManager.getInstance();
-      
+
       // Assert
       expect(instance1).toBe(instance2);
     });

@@ -1,22 +1,23 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
+import React from 'react';
+
 import SquarePage from '@/app/square/page';
 
 // Mock Next.js hooks
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
-  useSearchParams: jest.fn()
+  useSearchParams: jest.fn(),
 }));
 
 // Mock hooks
 jest.mock('@/hooks/useDebounce', () => ({
-  useDebounce: jest.fn((value) => value)
+  useDebounce: jest.fn((value) => value),
 }));
 
 jest.mock('@/hooks/useInfiniteScroll', () => ({
-  useInfiniteScroll: jest.fn(() => ({ loadingRef: { current: null } }))
+  useInfiniteScroll: jest.fn(() => ({ loadingRef: { current: null } })),
 }));
 
 // Mock fetch
@@ -24,11 +25,11 @@ global.fetch = jest.fn();
 
 const mockRouter = {
   push: jest.fn(),
-  replace: jest.fn()
+  replace: jest.fn(),
 };
 
 const mockSearchParams = {
-  get: jest.fn()
+  get: jest.fn(),
 };
 
 const mockWorksResponse = {
@@ -44,15 +45,15 @@ const mockWorksResponse = {
         author: {
           id: 'user1',
           name: '张老师',
-          avatar: null
+          avatar: null,
         },
         reuseCount: 5,
         createdAt: '2024-01-01T00:00:00.000Z',
         updatedAt: '2024-01-01T00:00:00.000Z',
         tags: ['数学', '加法'],
         cardCount: 4,
-        cardTypes: ['visualization', 'analogy', 'thinking', 'interaction']
-      }
+        cardTypes: ['visualization', 'analogy', 'thinking', 'interaction'],
+      },
     ],
     pagination: {
       page: 1,
@@ -60,18 +61,18 @@ const mockWorksResponse = {
       total: 1,
       totalPages: 1,
       hasNext: false,
-      hasPrev: false
+      hasPrev: false,
     },
     filters: {
       subjects: [
-        { value: '数学', label: '数学', count: 1 }
+        { value: '数学', label: '数学', count: 1 },
       ],
       gradeLevels: [
-        { value: '小学二年级', label: '小学二年级', count: 1 }
+        { value: '小学二年级', label: '小学二年级', count: 1 },
       ],
-      availableTags: ['数学', '加法']
-    }
-  }
+      availableTags: ['数学', '加法'],
+    },
+  },
 };
 
 describe('SquarePage', () => {
@@ -80,14 +81,14 @@ describe('SquarePage', () => {
     (useSearchParams as jest.Mock).mockReturnValue(mockSearchParams);
     (mockSearchParams.get as jest.Mock).mockReturnValue(null);
     (global.fetch as jest.Mock).mockResolvedValue({
-      json: () => Promise.resolve(mockWorksResponse)
+      json: () => Promise.resolve(mockWorksResponse),
     });
     jest.clearAllMocks();
   });
 
   it('renders page title and description', async () => {
     render(<SquarePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('智慧广场')).toBeInTheDocument();
       expect(screen.getByText(/探索全球教师的教学智慧/)).toBeInTheDocument();
@@ -96,7 +97,7 @@ describe('SquarePage', () => {
 
   it('renders search bar', async () => {
     render(<SquarePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByPlaceholderText('搜索知识点、标题或作者...')).toBeInTheDocument();
     });
@@ -104,7 +105,7 @@ describe('SquarePage', () => {
 
   it('renders filter bar', async () => {
     render(<SquarePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('筛选')).toBeInTheDocument();
     });
@@ -112,69 +113,69 @@ describe('SquarePage', () => {
 
   it('fetches and displays works on initial load', async () => {
     render(<SquarePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('数学加法教学')).toBeInTheDocument();
       expect(screen.getByText('知识点：两位数加法')).toBeInTheDocument();
     });
-    
+
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/works?')
+      expect.stringContaining('/api/works?'),
     );
   });
 
   it('updates URL when search is performed', async () => {
     render(<SquarePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByPlaceholderText('搜索知识点、标题或作者...')).toBeInTheDocument();
     });
-    
+
     const searchInput = screen.getByPlaceholderText('搜索知识点、标题或作者...');
     fireEvent.change(searchInput, { target: { value: '数学' } });
     fireEvent.submit(searchInput.closest('form')!);
-    
+
     await waitFor(() => {
       expect(mockRouter.replace).toHaveBeenCalledWith(
         expect.stringContaining('search=数学'),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });
 
   it('handles work reuse action', async () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-    
+
     render(<SquarePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('复用')).toBeInTheDocument();
     });
-    
+
     const reuseButton = screen.getByText('复用');
     fireEvent.click(reuseButton);
-    
+
     expect(consoleSpy).toHaveBeenCalledWith('复用作品:', '1');
-    
+
     consoleSpy.mockRestore();
   });
 
   it('handles work view action', async () => {
     render(<SquarePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('数学加法教学')).toBeInTheDocument();
     });
-    
+
     const workCard = screen.getByText('数学加法教学').closest('div');
     fireEvent.click(workCard!);
-    
+
     expect(mockRouter.push).toHaveBeenCalledWith('/works/1');
   });
 
   it('shows loading state initially', () => {
     render(<SquarePage />);
-    
+
     // Should show loading skeletons
     const skeletons = document.querySelectorAll('.animate-pulse');
     expect(skeletons.length).toBeGreaterThan(0);
@@ -192,19 +193,19 @@ describe('SquarePage', () => {
             total: 0,
             totalPages: 0,
             hasNext: false,
-            hasPrev: false
+            hasPrev: false,
           },
           filters: {
             subjects: [],
             gradeLevels: [],
-            availableTags: []
-          }
-        }
-      })
+            availableTags: [],
+          },
+        },
+      }),
     });
-    
+
     render(<SquarePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('暂无作品')).toBeInTheDocument();
       expect(screen.getByText(/还没有找到符合条件的作品/)).toBeInTheDocument();
@@ -217,26 +218,26 @@ describe('SquarePage', () => {
       .mockReturnValueOnce('小学二年级') // gradeLevel
       .mockReturnValueOnce('popular') // sortBy
       .mockReturnValueOnce('加法'); // search
-    
+
     render(<SquarePage />);
-    
+
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('subject=数学')
+      expect.stringContaining('subject=数学'),
     );
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('gradeLevel=小学二年级')
+      expect.stringContaining('gradeLevel=小学二年级'),
     );
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('sortBy=popular')
+      expect.stringContaining('sortBy=popular'),
     );
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('search=加法')
+      expect.stringContaining('search=加法'),
     );
   });
 
   it('shows result count when works are loaded', async () => {
     render(<SquarePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText(/找到 1 个作品/)).toBeInTheDocument();
     });
@@ -245,13 +246,13 @@ describe('SquarePage', () => {
   it('handles API error gracefully', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
     (global.fetch as jest.Mock).mockRejectedValue(new Error('API Error'));
-    
+
     render(<SquarePage />);
-    
+
     await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith('获取作品失败:', expect.any(Error));
     });
-    
+
     consoleSpy.mockRestore();
   });
 });

@@ -3,7 +3,7 @@
  * 用于生成和验证设备指纹，帮助识别重复设备
  */
 
-import crypto from 'crypto'
+import crypto from 'crypto';
 
 export interface DeviceFingerprint {
   userAgent: string
@@ -42,28 +42,28 @@ export class DeviceFingerprintGenerator {
       language: clientInfo.language || 'en',
       platform: clientInfo.platform || '',
       cookieEnabled: clientInfo.cookieEnabled !== false,
-      hash: ''
-    }
+      hash: '',
+    };
 
     // 生成指纹哈希
-    fingerprint.hash = this.calculateHash(fingerprint, clientInfo)
+    fingerprint.hash = this.calculateHash(fingerprint, clientInfo);
 
-    return fingerprint
+    return fingerprint;
   }
 
   /**
    * 从HTTP请求头生成基础设备指纹
    */
   static generateFromHeaders(headers: Record<string, string | string[] | undefined>): DeviceFingerprint {
-    const userAgent = Array.isArray(headers['user-agent']) 
-      ? headers['user-agent'][0] 
-      : headers['user-agent'] || ''
-    
+    const userAgent = Array.isArray(headers['user-agent'])
+      ? headers['user-agent'][0]
+      : headers['user-agent'] || '';
+
     const acceptLanguage = Array.isArray(headers['accept-language'])
       ? headers['accept-language'][0]
-      : headers['accept-language'] || 'en'
+      : headers['accept-language'] || 'en';
 
-    const language = acceptLanguage.split(',')[0].split('-')[0]
+    const language = acceptLanguage.split(',')[0].split('-')[0];
 
     const fingerprint: DeviceFingerprint = {
       userAgent,
@@ -72,12 +72,12 @@ export class DeviceFingerprintGenerator {
       language,
       platform: this.extractPlatformFromUserAgent(userAgent),
       cookieEnabled: true, // 默认值
-      hash: ''
-    }
+      hash: '',
+    };
 
-    fingerprint.hash = this.calculateHash(fingerprint)
+    fingerprint.hash = this.calculateHash(fingerprint);
 
-    return fingerprint
+    return fingerprint;
   }
 
   /**
@@ -85,56 +85,54 @@ export class DeviceFingerprintGenerator {
    */
   static validateFingerprint(fingerprint: DeviceFingerprint): boolean {
     if (!fingerprint.hash) {
-      return false
+      return false;
     }
 
     // 重新计算哈希验证
-    const expectedHash = this.calculateHash({
-      ...fingerprint,
-      hash: ''
-    })
+    const { hash: _ignored, ...fingerprintWithoutHash } = fingerprint;
+    const expectedHash = this.calculateHash(fingerprintWithoutHash);
 
-    return expectedHash === fingerprint.hash
+    return expectedHash === fingerprint.hash;
   }
 
   /**
    * 比较两个设备指纹的相似度
    */
   static calculateSimilarity(fp1: DeviceFingerprint, fp2: DeviceFingerprint): number {
-    let score = 0
-    let totalWeight = 0
+    let score = 0;
+    let totalWeight = 0;
 
     // 用户代理相似度 (权重: 40%)
-    const uaWeight = 0.4
-    const uaSimilarity = this.calculateStringSimilarity(fp1.userAgent, fp2.userAgent)
-    score += uaSimilarity * uaWeight
-    totalWeight += uaWeight
+    const uaWeight = 0.4;
+    const uaSimilarity = this.calculateStringSimilarity(fp1.userAgent, fp2.userAgent);
+    score += uaSimilarity * uaWeight;
+    totalWeight += uaWeight;
 
     // 屏幕分辨率 (权重: 20%)
-    const screenWeight = 0.2
-    const screenSimilarity = fp1.screenResolution === fp2.screenResolution ? 1 : 0
-    score += screenSimilarity * screenWeight
-    totalWeight += screenWeight
+    const screenWeight = 0.2;
+    const screenSimilarity = fp1.screenResolution === fp2.screenResolution ? 1 : 0;
+    score += screenSimilarity * screenWeight;
+    totalWeight += screenWeight;
 
     // 时区 (权重: 15%)
-    const timezoneWeight = 0.15
-    const timezoneSimilarity = fp1.timezone === fp2.timezone ? 1 : 0
-    score += timezoneSimilarity * timezoneWeight
-    totalWeight += timezoneWeight
+    const timezoneWeight = 0.15;
+    const timezoneSimilarity = fp1.timezone === fp2.timezone ? 1 : 0;
+    score += timezoneSimilarity * timezoneWeight;
+    totalWeight += timezoneWeight;
 
     // 语言 (权重: 15%)
-    const languageWeight = 0.15
-    const languageSimilarity = fp1.language === fp2.language ? 1 : 0
-    score += languageSimilarity * languageWeight
-    totalWeight += languageWeight
+    const languageWeight = 0.15;
+    const languageSimilarity = fp1.language === fp2.language ? 1 : 0;
+    score += languageSimilarity * languageWeight;
+    totalWeight += languageWeight;
 
     // 平台 (权重: 10%)
-    const platformWeight = 0.1
-    const platformSimilarity = fp1.platform === fp2.platform ? 1 : 0
-    score += platformSimilarity * platformWeight
-    totalWeight += platformWeight
+    const platformWeight = 0.1;
+    const platformSimilarity = fp1.platform === fp2.platform ? 1 : 0;
+    score += platformSimilarity * platformWeight;
+    totalWeight += platformWeight;
 
-    return totalWeight > 0 ? score / totalWeight : 0
+    return totalWeight > 0 ? score / totalWeight : 0;
   }
 
   /**
@@ -144,16 +142,16 @@ export class DeviceFingerprintGenerator {
     isSuspicious: boolean
     reasons: string[]
   } {
-    const reasons: string[] = []
+    const reasons: string[] = [];
 
     // 检查用户代理
     if (!fingerprint.userAgent || fingerprint.userAgent.length < 10) {
-      reasons.push('用户代理信息异常或缺失')
+      reasons.push('用户代理信息异常或缺失');
     }
 
     // 检查屏幕分辨率
     if (fingerprint.screenResolution === '0x0' || fingerprint.screenResolution === 'x') {
-      reasons.push('屏幕分辨率信息缺失')
+      reasons.push('屏幕分辨率信息缺失');
     }
 
     // 检查常见的自动化工具特征
@@ -164,25 +162,25 @@ export class DeviceFingerprintGenerator {
       /webdriver/i,
       /bot/i,
       /crawler/i,
-      /spider/i
-    ]
+      /spider/i,
+    ];
 
     if (suspiciousUAPatterns.some(pattern => pattern.test(fingerprint.userAgent))) {
-      reasons.push('检测到自动化工具特征')
+      reasons.push('检测到自动化工具特征');
     }
 
     // 检查异常的屏幕分辨率
-    const [width, height] = fingerprint.screenResolution.split('x').map(Number)
+    const [width, height] = fingerprint.screenResolution.split('x').map(Number);
     if (width && height && !isNaN(width) && !isNaN(height)) {
       if (width < 100 || height < 100 || width > 10000 || height > 10000) {
-        reasons.push('屏幕分辨率异常')
+        reasons.push('屏幕分辨率异常');
       }
     }
 
     return {
       isSuspicious: reasons.length > 0,
-      reasons
-    }
+      reasons,
+    };
   }
 
   /**
@@ -219,7 +217,7 @@ export class DeviceFingerprintGenerator {
     deviceInfoField.value = JSON.stringify(collectDeviceInfo());
   }
 })();
-    `.trim()
+    `.trim();
   }
 
   // 私有方法
@@ -234,8 +232,8 @@ export class DeviceFingerprintGenerator {
       fingerprint.timezone,
       fingerprint.language,
       fingerprint.platform,
-      fingerprint.cookieEnabled.toString()
-    ]
+      fingerprint.cookieEnabled.toString(),
+    ];
 
     // 添加额外的客户端信息（如果有）
     if (clientInfo) {
@@ -244,74 +242,74 @@ export class DeviceFingerprintGenerator {
         (clientInfo.pixelRatio || 0).toString(),
         (clientInfo.touchSupport || false).toString(),
         (clientInfo.hardwareConcurrency || 0).toString(),
-        (clientInfo.maxTouchPoints || 0).toString()
-      )
+        (clientInfo.maxTouchPoints || 0).toString(),
+      );
     }
 
-    const combined = components.join('|')
-    return crypto.createHash('sha256').update(combined).digest('hex')
+    const combined = components.join('|');
+    return crypto.createHash('sha256').update(combined).digest('hex');
   }
 
   /**
    * 从用户代理提取平台信息
    */
   private static extractPlatformFromUserAgent(userAgent: string): string {
-    const ua = userAgent.toLowerCase()
-    
+    const ua = userAgent.toLowerCase();
+
     // 优先检查移动平台
-    if (ua.includes('android')) return 'Android'
-    if (ua.includes('iphone') || ua.includes('ipad')) return 'iOS'
-    
+    if (ua.includes('android')) return 'Android';
+    if (ua.includes('iphone') || ua.includes('ipad')) return 'iOS';
+
     // 然后检查桌面平台
-    if (ua.includes('windows')) return 'Windows'
-    if (ua.includes('macintosh') || ua.includes('mac os')) return 'macOS'
-    if (ua.includes('linux')) return 'Linux'
-    
-    return 'Unknown'
+    if (ua.includes('windows')) return 'Windows';
+    if (ua.includes('macintosh') || ua.includes('mac os')) return 'macOS';
+    if (ua.includes('linux')) return 'Linux';
+
+    return 'Unknown';
   }
 
   /**
    * 计算字符串相似度
    */
   private static calculateStringSimilarity(str1: string, str2: string): number {
-    if (str1 === str2) return 1
-    if (!str1 || !str2) return 0
+    if (str1 === str2) return 1;
+    if (!str1 || !str2) return 0;
 
-    const longer = str1.length > str2.length ? str1 : str2
-    const shorter = str1.length > str2.length ? str2 : str1
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
 
-    if (longer.length === 0) return 1
+    if (longer.length === 0) return 1;
 
-    const editDistance = this.calculateEditDistance(longer, shorter)
-    return (longer.length - editDistance) / longer.length
+    const editDistance = this.calculateEditDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
   }
 
   /**
    * 计算编辑距离
    */
   private static calculateEditDistance(str1: string, str2: string): number {
-    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null))
-    
+    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+
     for (let i = 0; i <= str1.length; i++) {
-      matrix[0][i] = i
+      matrix[0][i] = i;
     }
-    
+
     for (let j = 0; j <= str2.length; j++) {
-      matrix[j][0] = j
+      matrix[j][0] = j;
     }
-    
+
     for (let j = 1; j <= str2.length; j++) {
       for (let i = 1; i <= str1.length; i++) {
-        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1
+        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
         matrix[j][i] = Math.min(
           matrix[j][i - 1] + 1,
           matrix[j - 1][i] + 1,
-          matrix[j - 1][i - 1] + indicator
-        )
+          matrix[j - 1][i - 1] + indicator,
+        );
       }
     }
-    
-    return matrix[str2.length][str1.length]
+
+    return matrix[str2.length][str1.length];
   }
 }
 
@@ -331,8 +329,8 @@ export class DeviceFingerprintManager {
           user_id, fingerprint_hash, user_agent, screen_resolution,
           timezone, language, platform, cookie_enabled
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `
-      
+      `;
+
       await this.db.execute(query, [
         userId,
         fingerprint.hash,
@@ -341,10 +339,10 @@ export class DeviceFingerprintManager {
         fingerprint.timezone,
         fingerprint.language,
         fingerprint.platform,
-        fingerprint.cookieEnabled
-      ])
+        fingerprint.cookieEnabled,
+      ]);
     } catch (error) {
-      console.error('Failed to save device fingerprint:', error)
+      console.error('Failed to save device fingerprint:', error);
     }
   }
 
@@ -361,16 +359,16 @@ export class DeviceFingerprintManager {
         FROM device_fingerprints
         WHERE fingerprint_hash = ?
         ORDER BY created_at DESC
-      `
-      
-      const results = await this.db.query(query, [fingerprintHash])
+      `;
+
+      const results = await this.db.query(query, [fingerprintHash]);
       return results.map((row: any) => ({
         userId: row.user_id,
-        createdAt: new Date(row.created_at)
-      }))
+        createdAt: new Date(row.created_at),
+      }));
     } catch (error) {
-      console.error('Failed to get device fingerprint history:', error)
-      return []
+      console.error('Failed to get device fingerprint history:', error);
+      return [];
     }
   }
 
@@ -383,19 +381,19 @@ export class DeviceFingerprintManager {
         SELECT COUNT(*) as count
         FROM device_fingerprints
         WHERE fingerprint_hash = ?
-      `
-      const params = [fingerprintHash]
+      `;
+      const params = [fingerprintHash];
 
       if (excludeUserId) {
-        query += ' AND user_id != ?'
-        params.push(excludeUserId)
+        query += ' AND user_id != ?';
+        params.push(excludeUserId);
       }
 
-      const result = await this.db.queryOne(query, params)
-      return parseInt(result?.count) > 0
+      const result = await this.db.queryOne(query, params);
+      return parseInt(result?.count, 10) > 0;
     } catch (error) {
-      console.error('Failed to check device fingerprint usage:', error)
-      return false
+      console.error('Failed to check device fingerprint usage:', error);
+      return false;
     }
   }
 }

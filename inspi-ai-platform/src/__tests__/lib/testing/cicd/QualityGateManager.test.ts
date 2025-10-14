@@ -20,7 +20,7 @@ describe('QualityGateManager', () => {
         threshold: 80,
         operator: 'gte',
         blocking: true,
-        message: 'Code coverage must be at least 80%'
+        message: 'Code coverage must be at least 80%',
       };
 
       manager.registerGate(gate);
@@ -30,14 +30,14 @@ describe('QualityGateManager', () => {
         passed: 95,
         failed: 5,
         skipped: 0,
-        duration: 30000
+        duration: 30000,
       };
 
       const coverage: CoverageInfo = {
         statements: 85,
         branches: 80,
         functions: 90,
-        lines: 85
+        lines: 85,
       };
 
       const results = await manager.evaluateGates(testSummary, coverage);
@@ -54,7 +54,7 @@ describe('QualityGateManager', () => {
         type: 'custom',
         threshold: 95,
         operator: 'gte',
-        blocking: true
+        blocking: true,
       };
 
       manager.registerGate(gate);
@@ -64,11 +64,11 @@ describe('QualityGateManager', () => {
         passed: 90, // 90% pass rate, below 95% threshold
         failed: 10,
         skipped: 0,
-        duration: 30000
+        duration: 30000,
       };
 
       const customMetrics = {
-        'test-pass-rate': 90
+        'test-pass-rate': 90,
       };
 
       const results = await manager.evaluateGates(testSummary, undefined, customMetrics);
@@ -84,15 +84,15 @@ describe('QualityGateManager', () => {
           type: 'performance',
           threshold: 300000, // 5 minutes
           operator: 'lte',
-          blocking: false
+          blocking: false,
         },
         {
           name: 'min-coverage',
           type: 'coverage',
           threshold: 70,
           operator: 'gte',
-          blocking: true
-        }
+          blocking: true,
+        },
       ];
 
       gates.forEach(gate => manager.registerGate(gate));
@@ -102,23 +102,23 @@ describe('QualityGateManager', () => {
         passed: 50,
         failed: 0,
         skipped: 0,
-        duration: 240000 // 4 minutes
+        duration: 240000, // 4 minutes
       };
 
       const coverage: CoverageInfo = {
         statements: 75,
         branches: 70,
         functions: 80,
-        lines: 75
+        lines: 75,
       };
 
       const results = await manager.evaluateGates(testSummary, coverage);
 
       expect(results).toHaveLength(2);
-      
+
       const durationGate = results.find(r => r.name === 'max-duration');
       expect(durationGate?.status).toBe('passed'); // 4 min <= 5 min
-      
+
       const coverageGate = results.find(r => r.name === 'min-coverage');
       expect(coverageGate?.status).toBe('passed'); // 75% >= 70%
     });
@@ -131,7 +131,7 @@ describe('QualityGateManager', () => {
         type: 'custom',
         threshold: 100,
         operator: 'eq',
-        blocking: true
+        blocking: true,
       };
 
       const nonBlockingGate: QualityGateConfig = {
@@ -139,7 +139,7 @@ describe('QualityGateManager', () => {
         type: 'custom',
         threshold: 50,
         operator: 'gte',
-        blocking: false
+        blocking: false,
       };
 
       manager.registerGate(blockingGate);
@@ -150,21 +150,21 @@ describe('QualityGateManager', () => {
         passed: 10,
         failed: 0,
         skipped: 0,
-        duration: 10000
+        duration: 10000,
       };
 
       const customMetrics = {
         'blocking-gate': 90, // Fails blocking gate
-        'warning-gate': 30   // Fails non-blocking gate
+        'warning-gate': 30,   // Fails non-blocking gate
       };
 
       await manager.evaluateGates(testSummary, undefined, customMetrics);
 
       expect(manager.canProceed()).toBe(false); // Blocking gate failed
-      
+
       const failedGates = manager.getFailedGates();
       expect(failedGates).toHaveLength(2);
-      
+
       const blockingFailedGates = manager.getBlockingFailedGates();
       expect(blockingFailedGates).toHaveLength(1);
       expect(blockingFailedGates[0].name).toBe('blocking-gate');
@@ -179,19 +179,19 @@ describe('QualityGateManager', () => {
         passed: 96,
         failed: 4,
         skipped: 0,
-        duration: 180000
+        duration: 180000,
       };
 
       const coverage: CoverageInfo = {
         statements: 85,
         branches: 80,
         functions: 90,
-        lines: 85
+        lines: 85,
       };
 
       const customMetrics = {
         'test-pass-rate': 96,
-        'security-score': 9
+        'security-score': 9,
       };
 
       await manager.evaluateGates(testSummary, coverage, customMetrics);
@@ -213,7 +213,7 @@ describe('QualityGateManager', () => {
       const defaultGates = QualityGateManager.createDefaultGates();
 
       expect(defaultGates.length).toBeGreaterThan(0);
-      
+
       // Should have coverage gate
       const coverageGate = defaultGates.find(g => g.type === 'coverage');
       expect(coverageGate).toBeDefined();
@@ -236,8 +236,8 @@ describe('QualityGateManager', () => {
           type: 'custom',
           threshold: 100,
           operator: 'eq',
-          blocking: false
-        }
+          blocking: false,
+        },
       ];
 
       manager.loadGatesFromConfig(config);
@@ -255,7 +255,7 @@ describe('QualityGateManager', () => {
         type: 'coverage',
         threshold: 70,
         operator: 'gte',
-        blocking: true
+        blocking: true,
       };
 
       manager.registerGate(gate);
@@ -273,7 +273,7 @@ describe('QualityGateManager', () => {
         type: 'custom',
         threshold: 50,
         operator: 'gte',
-        blocking: true
+        blocking: true,
       };
 
       manager.registerGate(gate);
@@ -300,7 +300,7 @@ describe('QualityGateManager', () => {
         { name: 'statements', type: 'coverage', threshold: 80, operator: 'gte', blocking: true },
         { name: 'branches', type: 'coverage', threshold: 75, operator: 'gte', blocking: true },
         { name: 'functions', type: 'coverage', threshold: 85, operator: 'gte', blocking: true },
-        { name: 'lines', type: 'coverage', threshold: 80, operator: 'gte', blocking: true }
+        { name: 'lines', type: 'coverage', threshold: 80, operator: 'gte', blocking: true },
       ];
 
       gates.forEach(gate => manager.registerGate(gate));
@@ -310,20 +310,20 @@ describe('QualityGateManager', () => {
         passed: 100,
         failed: 0,
         skipped: 0,
-        duration: 30000
+        duration: 30000,
       };
 
       const coverage: CoverageInfo = {
         statements: 85,
         branches: 78,
         functions: 90,
-        lines: 82
+        lines: 82,
       };
 
       const results = await manager.evaluateGates(testSummary, coverage);
 
       expect(results).toHaveLength(4);
-      
+
       const statementsResult = results.find(r => r.name === 'statements');
       expect(statementsResult?.status).toBe('passed');
       expect(statementsResult?.value).toBe(85);

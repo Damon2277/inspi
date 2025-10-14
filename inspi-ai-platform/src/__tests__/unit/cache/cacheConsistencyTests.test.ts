@@ -17,7 +17,7 @@ describe('Cache Consistency Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
-    
+
     // Mock Redis client
     mockRedisClient = {
       get: jest.fn(),
@@ -38,13 +38,13 @@ describe('Cache Consistency Tests', () => {
       on: jest.fn(),
       isReady: true,
       status: 'ready',
-      quit: jest.fn()
+      quit: jest.fn(),
     };
 
     // Mock redisManager
     (redisManager as any).getClient = jest.fn().mockReturnValue(mockRedisClient);
     (redisManager as any).isReady = jest.fn().mockReturnValue(true);
-    
+
     consistencyManager = new CacheConsistencyManager();
   });
 
@@ -67,7 +67,7 @@ describe('Cache Consistency Tests', () => {
       mockRedisClient.del.mockResolvedValueOnce(1); // 释放锁
 
       const mockDataSource = {
-        update: jest.fn().mockResolvedValue(updatedValue)
+        update: jest.fn().mockResolvedValue(updatedValue),
       };
 
       // Act
@@ -75,7 +75,7 @@ describe('Cache Consistency Tests', () => {
         key,
         updatedValue,
         mockDataSource.update,
-        { lockTimeout: 5000 }
+        { lockTimeout: 5000 },
       );
 
       // Assert
@@ -84,7 +84,7 @@ describe('Cache Consistency Tests', () => {
         expect.any(String),
         'PX',
         5000,
-        'NX'
+        'NX',
       );
       expect(mockDataSource.update).toHaveBeenCalledWith(updatedValue);
       expect(mockRedisClient.set).toHaveBeenCalledWith(key, JSON.stringify(updatedValue));
@@ -102,7 +102,7 @@ describe('Cache Consistency Tests', () => {
       mockRedisClient.set.mockResolvedValue(null);
 
       const mockDataSource = {
-        update: jest.fn()
+        update: jest.fn(),
       };
 
       // Act & Assert
@@ -111,8 +111,8 @@ describe('Cache Consistency Tests', () => {
           key,
           value,
           mockDataSource.update,
-          { lockTimeout: 1000, retryAttempts: 2, retryDelay: 100 }
-        )
+          { lockTimeout: 1000, retryAttempts: 2, retryDelay: 100 },
+        ),
       ).rejects.toThrow('Failed to acquire lock');
 
       expect(mockDataSource.update).not.toHaveBeenCalled();
@@ -129,9 +129,9 @@ describe('Cache Consistency Tests', () => {
       mockRedisClient.del.mockResolvedValueOnce(1); // 释放锁
 
       const mockDataSource = {
-        longOperation: jest.fn().mockImplementation(() => 
-          new Promise(resolve => setTimeout(() => resolve(value), 3000))
-        )
+        longOperation: jest.fn().mockImplementation(() =>
+          new Promise(resolve => setTimeout(() => resolve(value), 3000)),
+        ),
       };
 
       // Act
@@ -139,7 +139,7 @@ describe('Cache Consistency Tests', () => {
         key,
         value,
         mockDataSource.longOperation,
-        { lockTimeout: 2000, renewInterval: 1000 }
+        { lockTimeout: 2000, renewInterval: 1000 },
       );
 
       // Assert
@@ -160,14 +160,14 @@ describe('Cache Consistency Tests', () => {
 
       const mockDataSource = {
         get: jest.fn().mockResolvedValue(dbValue),
-        getLastModified: jest.fn().mockResolvedValue(dbValue.timestamp)
+        getLastModified: jest.fn().mockResolvedValue(dbValue.timestamp),
       };
 
       // Act
       const result = await consistencyManager.syncWithDataSource(
         key,
         mockDataSource,
-        { syncInterval: 5000 }
+        { syncInterval: 5000 },
       );
 
       // Assert
@@ -187,7 +187,7 @@ describe('Cache Consistency Tests', () => {
       mockRedisClient.set.mockResolvedValue('OK');
 
       const mockDataSource = {
-        get: jest.fn().mockResolvedValue(dbValue)
+        get: jest.fn().mockResolvedValue(dbValue),
       };
 
       const conflictResolver = {
@@ -195,8 +195,8 @@ describe('Cache Consistency Tests', () => {
           id: 5,
           data: 'resolved_version',
           version: 4,
-          timestamp: Date.now()
-        })
+          timestamp: Date.now(),
+        }),
       };
 
       // Act
@@ -204,7 +204,7 @@ describe('Cache Consistency Tests', () => {
         key,
         cacheValue,
         dbValue,
-        conflictResolver.resolve
+        conflictResolver.resolve,
       );
 
       // Assert
@@ -217,7 +217,7 @@ describe('Cache Consistency Tests', () => {
       // Arrange
       const events = [
         { type: 'user_updated', userId: 'user123', timestamp: Date.now() },
-        { type: 'user_deleted', userId: 'user456', timestamp: Date.now() }
+        { type: 'user_deleted', userId: 'user456', timestamp: Date.now() },
       ];
 
       mockRedisClient.del.mockResolvedValue(1);
@@ -225,7 +225,7 @@ describe('Cache Consistency Tests', () => {
 
       const mockEventHandler = {
         handleUserUpdated: jest.fn().mockResolvedValue({ id: 'user123', name: 'Updated User' }),
-        handleUserDeleted: jest.fn().mockResolvedValue(true)
+        handleUserDeleted: jest.fn().mockResolvedValue(true),
       };
 
       // Act
@@ -251,7 +251,7 @@ describe('Cache Consistency Tests', () => {
       mockRedisClient.set.mockResolvedValue('OK');
 
       const mockDataSource = {
-        updateWithVersion: jest.fn().mockResolvedValue(updateValue)
+        updateWithVersion: jest.fn().mockResolvedValue(updateValue),
       };
 
       // Act
@@ -259,7 +259,7 @@ describe('Cache Consistency Tests', () => {
         key,
         updateValue,
         mockDataSource.updateWithVersion,
-        { expectedVersion: 1 }
+        { expectedVersion: 1 },
       );
 
       // Assert
@@ -278,7 +278,7 @@ describe('Cache Consistency Tests', () => {
       mockRedisClient.get.mockResolvedValue(JSON.stringify(currentValue));
 
       const mockDataSource = {
-        updateWithVersion: jest.fn()
+        updateWithVersion: jest.fn(),
       };
 
       // Act
@@ -286,7 +286,7 @@ describe('Cache Consistency Tests', () => {
         key,
         updateValue,
         mockDataSource.updateWithVersion,
-        { expectedVersion: 2 } // 期望版本与实际版本不匹配
+        { expectedVersion: 2 }, // 期望版本与实际版本不匹配
       );
 
       // Assert
@@ -313,12 +313,12 @@ describe('Cache Consistency Tests', () => {
       const mockDataSource = {
         updateWithVersion: jest.fn()
           .mockRejectedValueOnce(new Error('Version conflict'))
-          .mockResolvedValueOnce(finalValue)
+          .mockResolvedValueOnce(finalValue),
       };
 
       const retryStrategy = {
         shouldRetry: jest.fn().mockReturnValue(true),
-        mergeChanges: jest.fn().mockReturnValue({ id: 8, data: 'merged', version: 3 })
+        mergeChanges: jest.fn().mockReturnValue({ id: 8, data: 'merged', version: 3 }),
       };
 
       // Act
@@ -327,7 +327,7 @@ describe('Cache Consistency Tests', () => {
         { id: 8, data: 'update_attempt' },
         mockDataSource.updateWithVersion,
         retryStrategy,
-        { maxRetries: 2 }
+        { maxRetries: 2 },
       );
 
       // Assert
@@ -344,7 +344,7 @@ describe('Cache Consistency Tests', () => {
       const dbData = [
         { id: 1, data: 'db_data1', checksum: 'abc123' },
         { id: 2, data: 'db_data2', checksum: 'def456' },
-        { id: 3, data: 'db_data3', checksum: 'ghi789' }
+        { id: 3, data: 'db_data3', checksum: 'ghi789' },
       ];
 
       mockRedisClient.mget.mockResolvedValue([null, null, null]); // 缓存为空
@@ -352,14 +352,14 @@ describe('Cache Consistency Tests', () => {
 
       const mockDataSource = {
         batchGet: jest.fn().mockResolvedValue(dbData),
-        getChecksums: jest.fn().mockResolvedValue(['abc123', 'def456', 'ghi789'])
+        getChecksums: jest.fn().mockResolvedValue(['abc123', 'def456', 'ghi789']),
       };
 
       // Act
       const result = await consistencyManager.consistentWarmUp(
         keys,
         mockDataSource,
-        { verifyChecksums: true }
+        { verifyChecksums: true },
       );
 
       // Assert
@@ -380,14 +380,14 @@ describe('Cache Consistency Tests', () => {
 
       const mockDataSource = {
         batchGet: jest.fn().mockResolvedValue(dbData),
-        getChecksums: jest.fn().mockResolvedValue(expectedChecksums)
+        getChecksums: jest.fn().mockResolvedValue(expectedChecksums),
       };
 
       // Act
       const result = await consistencyManager.consistentWarmUp(
         keys,
         mockDataSource,
-        { verifyChecksums: true }
+        { verifyChecksums: true },
       );
 
       // Assert
@@ -406,7 +406,7 @@ describe('Cache Consistency Tests', () => {
         type: 'invalidate',
         key,
         nodeId: 'node1',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       mockRedisClient.publish.mockResolvedValue(2); // 2个订阅者
@@ -421,8 +421,8 @@ describe('Cache Consistency Tests', () => {
         JSON.stringify(expect.objectContaining({
           type: 'invalidate',
           key,
-          nodeId: 'node1'
-        }))
+          nodeId: 'node1',
+        })),
       );
     });
 
@@ -432,7 +432,7 @@ describe('Cache Consistency Tests', () => {
         type: 'invalidate',
         key: 'remote_key',
         nodeId: 'node2',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       mockRedisClient.del.mockResolvedValue(1);
@@ -440,7 +440,7 @@ describe('Cache Consistency Tests', () => {
       // Act
       await consistencyManager.handleInvalidationMessage(
         JSON.stringify(invalidationMessage),
-        'node1' // 当前节点ID
+        'node1', // 当前节点ID
       );
 
       // Assert
@@ -453,13 +453,13 @@ describe('Cache Consistency Tests', () => {
         type: 'invalidate',
         key: 'self_key',
         nodeId: 'node1', // 来自自己的消息
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       // Act
       await consistencyManager.handleInvalidationMessage(
         JSON.stringify(invalidationMessage),
-        'node1' // 当前节点ID相同
+        'node1', // 当前节点ID相同
       );
 
       // Assert
@@ -473,26 +473,26 @@ describe('Cache Consistency Tests', () => {
       const keys = ['check_key1', 'check_key2'];
       const cacheData = [
         { id: 1, data: 'cache_data1', checksum: 'old_checksum1' },
-        { id: 2, data: 'cache_data2', checksum: 'old_checksum2' }
+        { id: 2, data: 'cache_data2', checksum: 'old_checksum2' },
       ];
       const dbData = [
         { id: 1, data: 'db_data1', checksum: 'new_checksum1' },
-        { id: 2, data: 'cache_data2', checksum: 'old_checksum2' } // 一致
+        { id: 2, data: 'cache_data2', checksum: 'old_checksum2' }, // 一致
       ];
 
       mockRedisClient.mget.mockResolvedValue([
         JSON.stringify(cacheData[0]),
-        JSON.stringify(cacheData[1])
+        JSON.stringify(cacheData[1]),
       ]);
 
       const mockDataSource = {
-        batchGet: jest.fn().mockResolvedValue(dbData)
+        batchGet: jest.fn().mockResolvedValue(dbData),
       };
 
       // Act
       const inconsistencies = await consistencyManager.detectInconsistencies(
         keys,
-        mockDataSource
+        mockDataSource,
       );
 
       // Assert
@@ -508,13 +508,13 @@ describe('Cache Consistency Tests', () => {
         {
           key: 'repair_key1',
           cacheData: { id: 1, data: 'old_data' },
-          dbData: { id: 1, data: 'new_data' }
+          dbData: { id: 1, data: 'new_data' },
         },
         {
           key: 'repair_key2',
           cacheData: { id: 2, data: 'stale_data' },
-          dbData: { id: 2, data: 'fresh_data' }
-        }
+          dbData: { id: 2, data: 'fresh_data' },
+        },
       ];
 
       mockRedisClient.set.mockResolvedValue('OK');
@@ -522,7 +522,7 @@ describe('Cache Consistency Tests', () => {
       // Act
       const repairResult = await consistencyManager.repairInconsistencies(
         inconsistencies,
-        { strategy: 'prefer_database' }
+        { strategy: 'prefer_database' },
       );
 
       // Assert
@@ -530,11 +530,11 @@ describe('Cache Consistency Tests', () => {
       expect(mockRedisClient.set).toHaveBeenCalledTimes(2);
       expect(mockRedisClient.set).toHaveBeenCalledWith(
         'repair_key1',
-        JSON.stringify({ id: 1, data: 'new_data' })
+        JSON.stringify({ id: 1, data: 'new_data' }),
       );
       expect(mockRedisClient.set).toHaveBeenCalledWith(
         'repair_key2',
-        JSON.stringify({ id: 2, data: 'fresh_data' })
+        JSON.stringify({ id: 2, data: 'fresh_data' }),
       );
     });
 
@@ -545,7 +545,7 @@ describe('Cache Consistency Tests', () => {
         consistentKeys: 95,
         inconsistentKeys: 5,
         errorKeys: 0,
-        checkDuration: 2500
+        checkDuration: 2500,
       };
 
       // Act
@@ -565,24 +565,24 @@ describe('Cache Consistency Tests', () => {
       // Arrange
       const updates = [
         { key: 'tx_key1', value: { id: 1, data: 'tx_data1' } },
-        { key: 'tx_key2', value: { id: 2, data: 'tx_data2' } }
+        { key: 'tx_key2', value: { id: 2, data: 'tx_data2' } },
       ];
 
       const mockMulti = {
         set: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue(['OK', 'OK'])
+        exec: jest.fn().mockResolvedValue(['OK', 'OK']),
       };
 
       mockRedisClient.multi.mockReturnValue(mockMulti);
 
       const mockDataSource = {
-        transactionalUpdate: jest.fn().mockResolvedValue(true)
+        transactionalUpdate: jest.fn().mockResolvedValue(true),
       };
 
       // Act
       const result = await consistencyManager.transactionalUpdate(
         updates,
-        mockDataSource.transactionalUpdate
+        mockDataSource.transactionalUpdate,
       );
 
       // Assert
@@ -596,16 +596,16 @@ describe('Cache Consistency Tests', () => {
     it('应该在数据源事务失败时回滚缓存', async () => {
       // Arrange
       const updates = [
-        { key: 'rollback_key1', value: { id: 1, data: 'rollback_data1' } }
+        { key: 'rollback_key1', value: { id: 1, data: 'rollback_data1' } },
       ];
 
       const mockDataSource = {
-        transactionalUpdate: jest.fn().mockRejectedValue(new Error('DB transaction failed'))
+        transactionalUpdate: jest.fn().mockRejectedValue(new Error('DB transaction failed')),
       };
 
       // Act & Assert
       await expect(
-        consistencyManager.transactionalUpdate(updates, mockDataSource.transactionalUpdate)
+        consistencyManager.transactionalUpdate(updates, mockDataSource.transactionalUpdate),
       ).rejects.toThrow('DB transaction failed');
 
       expect(mockRedisClient.multi).not.toHaveBeenCalled(); // 不应该更新缓存
@@ -625,48 +625,48 @@ class CacheConsistencyManager {
     key: string,
     value: any,
     updateFn: (value: any) => Promise<any>,
-    options: { lockTimeout: number; retryAttempts?: number; retryDelay?: number }
+    options: { lockTimeout: number; retryAttempts?: number; retryDelay?: number },
   ): Promise<any> {
     const lockKey = `lock:${key}`;
     const lockValue = `${this.nodeId}:${Date.now()}`;
     const client = redisManager.getClient();
-    
+
     if (!client) throw new Error('Redis client not available');
 
     // 尝试获取锁
     let attempts = 0;
     const maxAttempts = options.retryAttempts || 3;
-    
+
     while (attempts < maxAttempts) {
       const lockResult = await client.set(
         lockKey,
         lockValue,
         'PX',
         options.lockTimeout,
-        'NX'
+        'NX',
       );
-      
+
       if (lockResult === 'OK') {
         try {
           // 执行更新操作
           const result = await updateFn(value);
-          
+
           // 更新缓存
           await client.set(key, JSON.stringify(result));
-          
+
           return result;
         } finally {
           // 释放锁
           await client.del(lockKey);
         }
       }
-      
+
       attempts++;
       if (attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, options.retryDelay || 100));
       }
     }
-    
+
     throw new Error('Failed to acquire lock');
   }
 
@@ -674,12 +674,12 @@ class CacheConsistencyManager {
     key: string,
     value: any,
     updateFn: (value: any) => Promise<any>,
-    options: { lockTimeout: number; renewInterval: number }
+    options: { lockTimeout: number; renewInterval: number },
   ): Promise<any> {
     const lockKey = `lock:${key}`;
     const lockValue = `${this.nodeId}:${Date.now()}`;
     const client = redisManager.getClient();
-    
+
     if (!client) throw new Error('Redis client not available');
 
     // 获取锁
@@ -688,9 +688,9 @@ class CacheConsistencyManager {
       lockValue,
       'PX',
       options.lockTimeout,
-      'NX'
+      'NX',
     );
-    
+
     if (lockResult !== 'OK') {
       throw new Error('Failed to acquire lock');
     }
@@ -713,27 +713,27 @@ class CacheConsistencyManager {
   async syncWithDataSource(
     key: string,
     dataSource: any,
-    options: { syncInterval: number }
+    options: { syncInterval: number },
   ): Promise<any> {
     const client = redisManager.getClient();
     if (!client) return { synced: false, reason: 'redis_unavailable' };
 
     const cachedData = await client.get(key);
     const dbData = await dataSource.get(key);
-    
+
     if (!cachedData) {
       await client.set(key, JSON.stringify(dbData));
       return { synced: true, reason: 'cache_empty' };
     }
-    
+
     const cached = JSON.parse(cachedData);
     const dbLastModified = await dataSource.getLastModified(key);
-    
+
     if (dbLastModified > cached.timestamp) {
       await client.set(key, JSON.stringify(dbData));
       return { synced: true, reason: 'data_newer_in_source' };
     }
-    
+
     return { synced: false, reason: 'cache_up_to_date' };
   }
 
@@ -741,15 +741,15 @@ class CacheConsistencyManager {
     key: string,
     cacheValue: any,
     dbValue: any,
-    resolver: (cache: any, db: any) => Promise<any>
+    resolver: (cache: any, db: any) => Promise<any>,
   ): Promise<any> {
     const resolvedValue = await resolver(cacheValue, dbValue);
-    
+
     const client = redisManager.getClient();
     if (client) {
       await client.set(key, JSON.stringify(resolvedValue));
     }
-    
+
     return { resolved: true, finalValue: resolvedValue };
   }
 
@@ -773,7 +773,7 @@ class CacheConsistencyManager {
     key: string,
     value: any,
     updateFn: (value: any, expectedVersion: number) => Promise<any>,
-    options: { expectedVersion: number }
+    options: { expectedVersion: number },
   ): Promise<any> {
     const client = redisManager.getClient();
     if (!client) throw new Error('Redis client not available');
@@ -782,20 +782,20 @@ class CacheConsistencyManager {
     if (!currentData) {
       return { success: false, error: 'key_not_found' };
     }
-    
+
     const current = JSON.parse(currentData);
     if (current.version !== options.expectedVersion) {
       return {
         success: false,
         error: 'version_conflict',
         currentVersion: current.version,
-        expectedVersion: options.expectedVersion
+        expectedVersion: options.expectedVersion,
       };
     }
-    
+
     const result = await updateFn(value, options.expectedVersion);
     await client.set(key, JSON.stringify(result));
-    
+
     return { success: true, newVersion: result.version };
   }
 
@@ -804,10 +804,10 @@ class CacheConsistencyManager {
     value: any,
     updateFn: (value: any, expectedVersion?: number) => Promise<any>,
     retryStrategy: any,
-    options: { maxRetries: number }
+    options: { maxRetries: number },
   ): Promise<any> {
     let attempts = 0;
-    
+
     while (attempts < options.maxRetries) {
       try {
         const client = redisManager.getClient();
@@ -815,15 +815,15 @@ class CacheConsistencyManager {
 
         const currentData = await client.get(key);
         const current = currentData ? JSON.parse(currentData) : null;
-        
+
         if (attempts > 0 && retryStrategy.shouldRetry()) {
           // 合并变更
           value = retryStrategy.mergeChanges(value, current);
         }
-        
+
         const result = await updateFn(value, current?.version);
         await client.set(key, JSON.stringify(result));
-        
+
         return { success: true, attempts: attempts + 1, result };
       } catch (error) {
         attempts++;
@@ -837,40 +837,40 @@ class CacheConsistencyManager {
   async consistentWarmUp(
     keys: string[],
     dataSource: any,
-    options: { verifyChecksums: boolean }
+    options: { verifyChecksums: boolean },
   ): Promise<any> {
     const client = redisManager.getClient();
     if (!client) return { warmedKeys: 0, verified: false };
 
     const dbData = await dataSource.batchGet(keys);
-    
+
     if (options.verifyChecksums) {
       const expectedChecksums = await dataSource.getChecksums(keys);
       const actualChecksums = dbData.map((item: any) => item.checksum);
-      
-      const inconsistentKeys = keys.filter((key, index) => 
-        expectedChecksums[index] !== actualChecksums[index]
+
+      const inconsistentKeys = keys.filter((key, index) =>
+        expectedChecksums[index] !== actualChecksums[index],
       );
-      
+
       if (inconsistentKeys.length > 0) {
         return {
           warmedKeys: 0,
           verified: false,
-          inconsistentKeys
+          inconsistentKeys,
         };
       }
     }
-    
+
     const keyValuePairs = keys.flatMap((key, index) => [
       key,
-      JSON.stringify(dbData[index])
+      JSON.stringify(dbData[index]),
     ]);
-    
+
     await client.mset(...keyValuePairs);
-    
+
     return {
       warmedKeys: keys.length,
-      verified: options.verifyChecksums
+      verified: options.verifyChecksums,
     };
   }
 
@@ -882,20 +882,20 @@ class CacheConsistencyManager {
       type: 'invalidate',
       key,
       nodeId,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
-    
+
     await client.publish('cache_invalidation', JSON.stringify(message));
   }
 
   async handleInvalidationMessage(message: string, currentNodeId: string): Promise<void> {
     const data = JSON.parse(message);
-    
+
     // 忽略来自自己的消息
     if (data.nodeId === currentNodeId) {
       return;
     }
-    
+
     if (data.type === 'invalidate') {
       const client = redisManager.getClient();
       if (client) {
@@ -910,90 +910,90 @@ class CacheConsistencyManager {
 
     const cacheData = await client.mget(...keys);
     const dbData = await dataSource.batchGet(keys);
-    
+
     const inconsistencies = [];
-    
+
     for (let i = 0; i < keys.length; i++) {
       const cached = cacheData[i] ? JSON.parse(cacheData[i]) : null;
       const db = dbData[i];
-      
+
       if (cached && db && cached.checksum !== db.checksum) {
         inconsistencies.push({
           key: keys[i],
           cacheChecksum: cached.checksum,
           dbChecksum: db.checksum,
           cacheData: cached,
-          dbData: db
+          dbData: db,
         });
       }
     }
-    
+
     return inconsistencies;
   }
 
   async repairInconsistencies(
     inconsistencies: any[],
-    options: { strategy: string }
+    options: { strategy: string },
   ): Promise<any> {
     const client = redisManager.getClient();
     if (!client) return { repairedCount: 0 };
 
     let repairedCount = 0;
-    
+
     for (const inconsistency of inconsistencies) {
       if (options.strategy === 'prefer_database') {
         await client.set(
           inconsistency.key,
-          JSON.stringify(inconsistency.dbData)
+          JSON.stringify(inconsistency.dbData),
         );
         repairedCount++;
       }
     }
-    
+
     return { repairedCount };
   }
 
   async generateConsistencyReport(checkResult: any): Promise<any> {
     const consistencyRate = checkResult.consistentKeys / checkResult.totalKeys;
     const status = consistencyRate > 0.9 ? 'good' : 'needs_attention';
-    
+
     const recommendations = [];
     if (consistencyRate > 0.9) {
       recommendations.push('一致性率良好');
     } else {
       recommendations.push('需要关注数据一致性问题');
     }
-    
+
     return {
       summary: { consistencyRate, status },
       recommendations,
       metrics: {
         totalKeys: checkResult.totalKeys,
         consistentKeys: checkResult.consistentKeys,
-        inconsistentKeys: checkResult.inconsistentKeys
-      }
+        inconsistentKeys: checkResult.inconsistentKeys,
+      },
     };
   }
 
   async transactionalUpdate(
     updates: any[],
-    dataSourceUpdateFn: (updates: any[]) => Promise<boolean>
+    dataSourceUpdateFn: (updates: any[]) => Promise<boolean>,
   ): Promise<any> {
     // 先更新数据源
     await dataSourceUpdateFn(updates);
-    
+
     // 数据源更新成功后，更新缓存
     const client = redisManager.getClient();
     if (!client) return { success: false, reason: 'redis_unavailable' };
 
     const multi = client.multi();
-    
+
     updates.forEach(update => {
       multi.set(update.key, JSON.stringify(update.value));
     });
-    
+
     await multi.exec();
-    
+
     return { success: true };
   }
 }

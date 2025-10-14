@@ -21,7 +21,7 @@ export function DesktopLayout({
   header,
   className = '',
   layout = 'default',
-  maxWidth = 'xl'
+  maxWidth = 'xl',
 }: DesktopLayoutProps) {
   const maxWidthClasses = {
     sm: 'max-w-3xl',
@@ -29,7 +29,7 @@ export function DesktopLayout({
     lg: 'max-w-5xl',
     xl: 'max-w-6xl',
     '2xl': 'max-w-7xl',
-    full: 'max-w-none'
+    full: 'max-w-none',
   };
 
   if (layout === 'sidebar' && sidebar) {
@@ -39,7 +39,7 @@ export function DesktopLayout({
         <aside className="desktop-sidebar">
           {sidebar}
         </aside>
-        
+
         {/* 主内容区域 */}
         <main className="flex-1 min-h-screen">
           {header && (

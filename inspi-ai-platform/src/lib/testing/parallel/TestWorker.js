@@ -1,7 +1,7 @@
-const { parentPort, workerData } = require('worker_threads');
 const { execSync } = require('child_process');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
+const { parentPort, workerData } = require('worker_threads');
 
 /**
  * 测试工作进程
@@ -12,7 +12,7 @@ class TestWorker {
     this.workerId = workerData.workerId;
     this.options = workerData.options;
     this.isShuttingDown = false;
-    
+
     this.setupMessageHandlers();
     this.notifyReady();
   }
@@ -73,7 +73,7 @@ class TestWorker {
 
       // 执行测试
       const result = await this.runTestSuite(suite);
-      
+
       const duration = Date.now() - startTime;
       result.workerId = this.workerId;
 
@@ -82,7 +82,7 @@ class TestWorker {
     } catch (error) {
       const duration = Date.now() - startTime;
       const testError = this.createTestError(error);
-      
+
       this.sendTaskError(taskId, testError);
     }
   }
@@ -104,29 +104,29 @@ class TestWorker {
   async runTestSuite(suite) {
     const testFiles = suite.files.join(' ');
     const jestConfig = this.createJestConfig(suite);
-    
+
     try {
       // 创建临时配置文件
       const configPath = await this.createTempConfig(jestConfig);
-      
+
       // 构建Jest命令
       const jestCommand = this.buildJestCommand(testFiles, configPath, suite.config);
-      
+
       this.sendProgress(suite.id, 'running', 50);
-      
+
       // 执行Jest
       const output = execSync(jestCommand, {
         encoding: 'utf8',
         timeout: suite.config.timeout,
-        cwd: process.cwd()
+        cwd: process.cwd(),
       });
 
       // 解析Jest输出
       const result = this.parseJestOutput(output, suite);
-      
+
       // 清理临时文件
       this.cleanupTempConfig(configPath);
-      
+
       return result;
 
     } catch (error) {
@@ -151,8 +151,8 @@ class TestWorker {
       forceExit: true,
       detectOpenHandles: true,
       setupFilesAfterEnv: [
-        path.join(__dirname, '../setup/jest-setup-tools.ts')
-      ]
+        path.join(__dirname, '../setup/jest-setup-tools.ts'),
+      ],
     };
   }
 
@@ -162,7 +162,7 @@ class TestWorker {
   async createTempConfig(config) {
     const configPath = path.join(process.cwd(), `jest.worker.${this.workerId}.${Date.now()}.js`);
     const configContent = `module.exports = ${JSON.stringify(config, null, 2)};`;
-    
+
     fs.writeFileSync(configPath, configContent);
     return configPath;
   }
@@ -172,15 +172,15 @@ class TestWorker {
    */
   buildJestCommand(testFiles, configPath, config) {
     const jestPath = path.join(process.cwd(), 'node_modules/.bin/jest');
-    
+
     let command = `${jestPath} --config="${configPath}" --json --coverage`;
-    
+
     if (config.timeout) {
       command += ` --testTimeout=${config.timeout}`;
     }
-    
+
     command += ` ${testFiles}`;
-    
+
     return command;
   }
 
@@ -190,23 +190,23 @@ class TestWorker {
   parseJestOutput(output, suite) {
     try {
       const jestResult = JSON.parse(output);
-      
+
       const tests = [];
       let totalDuration = 0;
-      
+
       // 解析测试结果
       if (jestResult.testResults) {
         for (const fileResult of jestResult.testResults) {
           totalDuration += (fileResult.perfStats?.end - fileResult.perfStats?.start) || 0;
-          
+
           if (fileResult.assertionResults) {
             for (const assertion of fileResult.assertionResults) {
               tests.push({
                 name: assertion.fullName || assertion.title,
-                status: assertion.status === 'passed' ? 'passed' : 
+                status: assertion.status === 'passed' ? 'passed' :
                        assertion.status === 'failed' ? 'failed' : 'skipped',
                 duration: assertion.duration || 0,
-                error: assertion.failureMessages?.join('\n')
+                error: assertion.failureMessages?.join('\n'),
               });
             }
           }
@@ -224,8 +224,8 @@ class TestWorker {
         coverage,
         error: jestResult.success ? undefined : {
           message: 'Test suite failed',
-          type: 'assertion'
-        }
+          type: 'assertion',
+        },
       };
 
     } catch (error) {
@@ -248,19 +248,19 @@ class TestWorker {
 
     for (const filePath in coverageMap) {
       const fileCoverage = coverageMap[filePath];
-      
+
       if (fileCoverage.s) {
         totalStatements += Object.keys(fileCoverage.s).length;
         coveredStatements += Object.values(fileCoverage.s).filter(count => count > 0).length;
       }
-      
+
       if (fileCoverage.b) {
         for (const branchData of Object.values(fileCoverage.b)) {
           totalBranches += branchData.length;
           coveredBranches += branchData.filter(count => count > 0).length;
         }
       }
-      
+
       if (fileCoverage.f) {
         totalFunctions += Object.keys(fileCoverage.f).length;
         coveredFunctions += Object.values(fileCoverage.f).filter(count => count > 0).length;
@@ -271,7 +271,7 @@ class TestWorker {
       statements: totalStatements > 0 ? (coveredStatements / totalStatements) * 100 : 0,
       branches: totalBranches > 0 ? (coveredBranches / totalBranches) * 100 : 0,
       functions: totalFunctions > 0 ? (coveredFunctions / totalFunctions) * 100 : 0,
-      lines: 0 // 简化实现
+      lines: 0, // 简化实现
     };
   }
 
@@ -283,7 +283,7 @@ class TestWorker {
       return {
         message: 'Test execution timeout',
         type: 'timeout',
-        stack: error.stack
+        stack: error.stack,
       };
     }
 
@@ -291,14 +291,14 @@ class TestWorker {
       return {
         message: error.stderr || error.stdout || 'Test execution failed',
         type: 'assertion',
-        stack: error.stack
+        stack: error.stack,
       };
     }
 
     return {
       message: error.message || 'Unknown test error',
       type: 'runtime',
-      stack: error.stack
+      stack: error.stack,
     };
   }
 
@@ -321,7 +321,7 @@ class TestWorker {
   notifyReady() {
     this.sendMessage({
       type: 'ready',
-      data: { workerId: this.workerId }
+      data: { workerId: this.workerId },
     });
   }
 
@@ -331,7 +331,7 @@ class TestWorker {
   sendProgress(taskId, stage, progress) {
     this.sendMessage({
       type: 'task:progress',
-      data: { taskId, stage, progress }
+      data: { taskId, stage, progress },
     });
   }
 
@@ -341,7 +341,7 @@ class TestWorker {
   sendTaskComplete(taskId, result, duration) {
     this.sendMessage({
       type: 'task:complete',
-      data: { taskId, workerId: this.workerId, result, duration }
+      data: { taskId, workerId: this.workerId, result, duration },
     });
   }
 
@@ -351,7 +351,7 @@ class TestWorker {
   sendTaskError(taskId, error) {
     this.sendMessage({
       type: 'task:error',
-      data: { taskId, error }
+      data: { taskId, error },
     });
   }
 
@@ -366,9 +366,9 @@ class TestWorker {
         error: {
           message: error.message,
           stack: error.stack,
-          type: 'runtime'
-        }
-      }
+          type: 'runtime',
+        },
+      },
     });
   }
 

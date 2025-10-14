@@ -1,13 +1,14 @@
 /**
  * Type Coverage Analyzer
- * 
+ *
  * Analyzes TypeScript type coverage across the project,
  * identifies untested types, and generates coverage reports.
  */
 
-import * as ts from 'typescript';
 import * as fs from 'fs';
 import * as path from 'path';
+
+import * as ts from 'typescript';
 
 export interface TypeCoverageConfig {
   sourceRoot: string;
@@ -98,18 +99,18 @@ export class TypeCoverageAnalyzer {
   async initialize(): Promise<void> {
     const sourceFiles = await this.getSourceFiles();
     const testFiles = await this.getTestFiles();
-    
+
     this.testFiles = new Set(testFiles);
-    
+
     // Create TypeScript program
     this.program = ts.createProgram(sourceFiles, {
       target: ts.ScriptTarget.Latest,
       module: ts.ModuleKind.CommonJS,
       strict: true,
       esModuleInterop: true,
-      skipLibCheck: true
+      skipLibCheck: true,
     });
-    
+
     this.typeChecker = this.program.getTypeChecker();
   }
 
@@ -123,10 +124,10 @@ export class TypeCoverageAnalyzer {
 
     // Extract type definitions from source files
     await this.extractTypeDefinitions();
-    
+
     // Analyze test coverage
     await this.analyzeTestCoverage();
-    
+
     // Generate coverage report
     return this.generateReport();
   }
@@ -177,8 +178,8 @@ export class TypeCoverageAnalyzer {
    */
   private extractTypeUsage(node: ts.Node, sourceFile: ts.SourceFile): TypeUsage | null {
     let typeName: string | undefined;
-    
-    if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node) || 
+
+    if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node) ||
         ts.isClassDeclaration(node) || ts.isEnumDeclaration(node)) {
       typeName = node.name?.text;
     } else if (ts.isFunctionDeclaration(node)) {
@@ -190,7 +191,7 @@ export class TypeCoverageAnalyzer {
     if (!typeName) return null;
 
     const position = sourceFile.getLineAndCharacterOfPosition(node.getStart());
-    
+
     return {
       typeName,
       kind: node.kind,
@@ -199,7 +200,7 @@ export class TypeCoverageAnalyzer {
       column: position.character + 1,
       isTested: false,
       testFiles: [],
-      usageCount: 0
+      usageCount: 0,
     };
   }
 
@@ -218,7 +219,7 @@ export class TypeCoverageAnalyzer {
   private async analyzeTestFile(testFilePath: string): Promise<void> {
     try {
       const content = fs.readFileSync(testFilePath, 'utf8');
-      
+
       // Find type references in test file
       for (const [typeName, typeUsage] of this.typeUsages) {
         if (this.isTypeTestedInFile(typeName, content)) {
@@ -242,7 +243,7 @@ export class TypeCoverageAnalyzer {
       new RegExp(`expect.*${typeName}`, 'g'),
       new RegExp(`describe.*${typeName}`, 'g'),
       new RegExp(`it.*${typeName}`, 'g'),
-      new RegExp(`test.*${typeName}`, 'g')
+      new RegExp(`test.*${typeName}`, 'g'),
     ];
 
     return patterns.some(pattern => pattern.test(content));
@@ -257,7 +258,7 @@ export class TypeCoverageAnalyzer {
     const coverage = totalTypes > 0 ? (testedTypes / totalTypes) * 100 : 100;
 
     const uncoveredTypes = Array.from(this.typeUsages.values()).filter(t => !t.isTested);
-    
+
     const modules = this.generateModuleCoverage();
     const files = this.generateFileCoverage();
     const recommendations = this.generateRecommendations(uncoveredTypes);
@@ -268,13 +269,13 @@ export class TypeCoverageAnalyzer {
       overall: {
         totalTypes,
         testedTypes,
-        coverage
+        coverage,
       },
       modules,
       files,
       uncoveredTypes,
       recommendations,
-      trends
+      trends,
     };
   }
 
@@ -306,7 +307,7 @@ export class TypeCoverageAnalyzer {
         testedTypes,
         coverage,
         types,
-        uncoveredTypes
+        uncoveredTypes,
       };
     });
   }
@@ -339,7 +340,7 @@ export class TypeCoverageAnalyzer {
         testedTypes,
         coverage,
         types,
-        uncoveredTypes
+        uncoveredTypes,
       };
     });
   }
@@ -351,9 +352,9 @@ export class TypeCoverageAnalyzer {
     const recommendations: CoverageRecommendation[] = [];
 
     // Critical: Core types without tests
-    const coreTypes = uncoveredTypes.filter(t => 
-      t.sourceFile.includes('/types/') || 
-      t.sourceFile.includes('/models/')
+    const coreTypes = uncoveredTypes.filter(t =>
+      t.sourceFile.includes('/types/') ||
+      t.sourceFile.includes('/models/'),
     );
 
     for (const type of coreTypes) {
@@ -362,15 +363,15 @@ export class TypeCoverageAnalyzer {
         message: `Core type '${type.typeName}' has no test coverage`,
         typeName: type.typeName,
         fileName: type.sourceFile,
-        action: `Create unit tests for ${type.typeName} interface/type`
+        action: `Create unit tests for ${type.typeName} interface/type`,
       });
     }
 
     // Important: Public API types
-    const apiTypes = uncoveredTypes.filter(t => 
+    const apiTypes = uncoveredTypes.filter(t =>
       t.sourceFile.includes('/api/') ||
       t.sourceFile.includes('Request') ||
-      t.sourceFile.includes('Response')
+      t.sourceFile.includes('Response'),
     );
 
     for (const type of apiTypes) {
@@ -379,13 +380,13 @@ export class TypeCoverageAnalyzer {
         message: `API type '${type.typeName}' should have test coverage`,
         typeName: type.typeName,
         fileName: type.sourceFile,
-        action: `Add integration tests for ${type.typeName} API type`
+        action: `Add integration tests for ${type.typeName} API type`,
       });
     }
 
     // Suggestions: Other uncovered types
-    const otherTypes = uncoveredTypes.filter(t => 
-      !coreTypes.includes(t) && !apiTypes.includes(t)
+    const otherTypes = uncoveredTypes.filter(t =>
+      !coreTypes.includes(t) && !apiTypes.includes(t),
     );
 
     for (const type of otherTypes.slice(0, 10)) { // Limit to top 10
@@ -394,7 +395,7 @@ export class TypeCoverageAnalyzer {
         message: `Consider adding tests for '${type.typeName}'`,
         typeName: type.typeName,
         fileName: type.sourceFile,
-        action: `Add test coverage for ${type.typeName}`
+        action: `Add test coverage for ${type.typeName}`,
       });
     }
 
@@ -415,11 +416,11 @@ export class TypeCoverageAnalyzer {
   private getModuleName(filePath: string): string {
     const relativePath = path.relative(this.config.sourceRoot, filePath);
     const parts = relativePath.split(path.sep);
-    
+
     if (parts.length > 1) {
       return parts[0];
     }
-    
+
     return 'root';
   }
 
@@ -433,13 +434,13 @@ export class TypeCoverageAnalyzer {
     }
 
     // Check include patterns
-    const included = this.config.includePatterns.some(pattern => 
-      fileName.includes(pattern)
+    const included = this.config.includePatterns.some(pattern =>
+      fileName.includes(pattern),
     );
 
     // Check exclude patterns
-    const excluded = this.config.excludePatterns.some(pattern => 
-      fileName.includes(pattern)
+    const excluded = this.config.excludePatterns.some(pattern =>
+      fileName.includes(pattern),
     );
 
     return included && !excluded;
@@ -450,14 +451,14 @@ export class TypeCoverageAnalyzer {
    */
   private async getSourceFiles(): Promise<string[]> {
     const files: string[] = [];
-    
+
     for (const pattern of this.config.includePatterns) {
       const patternFiles = await this.globFiles(pattern);
       files.push(...patternFiles);
     }
 
-    return files.filter(file => 
-      !this.config.excludePatterns.some(pattern => file.includes(pattern))
+    return files.filter(file =>
+      !this.config.excludePatterns.some(pattern => file.includes(pattern)),
     );
   }
 
@@ -466,7 +467,7 @@ export class TypeCoverageAnalyzer {
    */
   private async getTestFiles(): Promise<string[]> {
     const files: string[] = [];
-    
+
     for (const pattern of this.config.testPatterns) {
       const patternFiles = await this.globFiles(pattern);
       files.push(...patternFiles);
@@ -481,14 +482,14 @@ export class TypeCoverageAnalyzer {
   private async globFiles(pattern: string): Promise<string[]> {
     // Simplified implementation - in real code, use a proper glob library
     const files: string[] = [];
-    
+
     const walkDir = (dir: string) => {
       try {
         const entries = fs.readdirSync(dir, { withFileTypes: true });
-        
+
         for (const entry of entries) {
           const fullPath = path.join(dir, entry.name);
-          
+
           if (entry.isDirectory()) {
             walkDir(fullPath);
           } else if (entry.isFile() && this.matchesPattern(fullPath, pattern)) {
@@ -500,12 +501,12 @@ export class TypeCoverageAnalyzer {
       }
     };
 
-    const baseDir = pattern.includes('*') 
+    const baseDir = pattern.includes('*')
       ? pattern.substring(0, pattern.indexOf('*'))
       : path.dirname(pattern);
-      
+
     walkDir(baseDir);
-    
+
     return files;
   }
 
@@ -518,12 +519,12 @@ export class TypeCoverageAnalyzer {
       const basePattern = pattern.replace('**/', '').replace('**', '');
       return filePath.includes(basePattern) || filePath.endsWith(basePattern);
     }
-    
+
     if (pattern.includes('*')) {
       const regex = new RegExp(pattern.replace(/\*/g, '.*'));
       return regex.test(filePath);
     }
-    
+
     return filePath.includes(pattern);
   }
 
@@ -636,20 +637,20 @@ export class TypeCoverageAnalyzer {
 
 | Module | Coverage | Tested/Total | Uncovered Types |
 |--------|----------|--------------|-----------------|
-${report.modules.map(module => 
-  `| ${module.moduleName} | ${module.coverage.toFixed(1)}% | ${module.testedTypes}/${module.totalTypes} | ${module.uncoveredTypes.join(', ')} |`
+${report.modules.map(module =>
+  `| ${module.moduleName} | ${module.coverage.toFixed(1)}% | ${module.testedTypes}/${module.totalTypes} | ${module.uncoveredTypes.join(', ')} |`,
 ).join('\n')}
 
 ## Recommendations
 
-${report.recommendations.map(rec => 
-  `- **${rec.type.toUpperCase()}:** ${rec.message}\n  - Action: ${rec.action}`
+${report.recommendations.map(rec =>
+  `- **${rec.type.toUpperCase()}:** ${rec.message}\n  - Action: ${rec.action}`,
 ).join('\n\n')}
 
 ## Uncovered Types
 
-${report.uncoveredTypes.map(type => 
-  `- \`${type.typeName}\` in ${type.sourceFile}:${type.line}`
+${report.uncoveredTypes.map(type =>
+  `- \`${type.typeName}\` in ${type.sourceFile}:${type.line}`,
 ).join('\n')}
 `;
   }

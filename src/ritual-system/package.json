@@ -1,0 +1,58 @@
+{
+  "name": "@inspi/ritual-design-system",
+  "version": "1.0.0",
+  "description": "智能仪式感设计系统 - 为用户创造有意义的数字体验",
+  "main": "core/index.js",
+  "types": "core/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "example:basic": "ts-node examples/basic-usage.ts",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write ."
+  },
+  "keywords": [
+    "ritual",
+    "design-system",
+    "user-experience",
+    "animation",
+    "interaction",
+    "ai",
+    "personalization"
+  ],
+  "author": "Inspi AI Team",
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.0.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.0.0",
+    "ts-node": "^10.0.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.ts"
+    ],
+    "collectCoverageFrom": [
+      "core/**/*.ts",
+      "!core/**/*.d.ts",
+      "!**/__tests__/**"
+    ]
+  },
+  "files": [
+    "core/",
+    "types/",
+    "README.md"
+  ]
+}

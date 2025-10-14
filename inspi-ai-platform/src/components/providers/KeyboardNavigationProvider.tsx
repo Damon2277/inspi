@@ -1,6 +1,7 @@
 'use client';
 import React, { createContext, useContext, useRef } from 'react';
-import { useKeyboardNavigation, useFocusManagement } from '@/hooks/useKeyboardNavigation';
+
+import { useKeyboardNavigation, useFocusManagement } from '@/shared/hooks/useKeyboardNavigation';
 
 interface KeyboardNavigationContextType {
   containerRef: React.RefObject<HTMLElement>;
@@ -25,14 +26,24 @@ interface KeyboardNavigationProviderProps {
 }
 
 export function KeyboardNavigationProvider({ children }: KeyboardNavigationProviderProps) {
-  const containerRef = useRef<HTMLElement>(null);
-  const { focusFirst, focusLast, focusNext, focusPrevious } = useFocusManagement(containerRef);
+  const containerRef = useRef<HTMLElement>(null!);
+  const { focusFirst, focusLast, focusNext, focusPrevious } = useFocusManagement(containerRef as React.RefObject<HTMLElement>);
 
   // 设置全局键盘导航
   useKeyboardNavigation({
-    onArrowUp: focusPrevious,
-    onArrowDown: focusNext,
-    enabled: true
+    shortcuts: [
+      {
+        key: 'ArrowUp',
+        action: focusPrevious,
+        description: '上一个焦点',
+      },
+      {
+        key: 'ArrowDown',
+        action: focusNext,
+        description: '下一个焦点',
+      },
+    ],
+    disabled: false,
   });
 
   const value = {
@@ -40,7 +51,7 @@ export function KeyboardNavigationProvider({ children }: KeyboardNavigationProvi
     focusFirst,
     focusLast,
     focusNext,
-    focusPrevious
+    focusPrevious,
   };
 
   return (

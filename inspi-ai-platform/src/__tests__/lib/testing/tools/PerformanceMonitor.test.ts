@@ -2,12 +2,12 @@
  * Tests for Performance Monitoring Tools
  */
 
-import { 
-  PerformanceMonitor, 
-  measurePerformance, 
-  createPerformanceBenchmark 
-} from '../../../../lib/testing/performance/PerformanceMonitor';
 import { TestError, TestErrorType } from '../../../../lib/testing/errors/TestError';
+import {
+  PerformanceMonitor,
+  measurePerformance,
+  createPerformanceBenchmark,
+} from '../../../../lib/testing/performance/PerformanceMonitor';
 
 describe('PerformanceMonitor', () => {
   let monitor: PerformanceMonitor;
@@ -20,11 +20,11 @@ describe('PerformanceMonitor', () => {
   describe('basic measurement', () => {
     it('should measure execution time correctly', async () => {
       const testName = 'test-execution-time';
-      
+
       monitor.startMeasurement(testName);
       await new Promise(resolve => setTimeout(resolve, 100));
       const metrics = monitor.stopMeasurement(testName);
-      
+
       expect(metrics.executionTime).toBeGreaterThan(90);
       expect(metrics.executionTime).toBeLessThan(200);
       expect(metrics.timestamp).toBeInstanceOf(Date);
@@ -32,16 +32,16 @@ describe('PerformanceMonitor', () => {
 
     it('should measure memory usage', async () => {
       const testName = 'test-memory-usage';
-      
+
       monitor.startMeasurement(testName);
       // Create some objects to use memory
       const largeArray = new Array(10000).fill('test');
       const metrics = monitor.stopMeasurement(testName);
-      
+
       expect(metrics.memoryUsage).toBeDefined();
       expect(typeof metrics.memoryUsage.heapUsed).toBe('number');
       expect(typeof metrics.memoryUsage.heapTotal).toBe('number');
-      
+
       // Clean up
       largeArray.length = 0;
     });
@@ -57,9 +57,9 @@ describe('PerformanceMonitor', () => {
         await new Promise(resolve => setTimeout(resolve, 50));
         return 'result';
       };
-      
+
       const { result, metrics } = await monitor.measureFunction('test-function', testFunction);
-      
+
       expect(result).toBe('result');
       expect(metrics.executionTime).toBeGreaterThan(40);
       expect(metrics.executionTime).toBeLessThan(100);
@@ -69,11 +69,11 @@ describe('PerformanceMonitor', () => {
       const errorFunction = async () => {
         throw new Error('Test error');
       };
-      
+
       await expect(
-        monitor.measureFunction('error-function', errorFunction)
+        monitor.measureFunction('error-function', errorFunction),
       ).rejects.toThrow('Test error');
-      
+
       // Should not have active timer after error
       expect(() => monitor.stopMeasurement('error-function')).toThrow(TestError);
     });
@@ -86,9 +86,9 @@ describe('PerformanceMonitor', () => {
         }
         return sum;
       };
-      
+
       const { result, metrics } = await monitor.measureFunction('sync-function', syncFunction);
-      
+
       expect(result).toBe(499500); // Sum of 0 to 999
       expect(metrics.executionTime).toBeGreaterThan(0);
     });
@@ -101,14 +101,14 @@ describe('PerformanceMonitor', () => {
         {
           executionTime: 100,
           memoryUsage: { heapUsed: 1000, heapTotal: 2000, external: 500, rss: 3000 },
-          timestamp: new Date()
+          timestamp: new Date(),
         },
-        { executionTime: 20, memoryUsage: 15 }
+        { executionTime: 20, memoryUsage: 15 },
       );
-      
+
       monitor.setBenchmark(benchmark);
       const retrieved = monitor.getBenchmark('test-benchmark');
-      
+
       expect(retrieved).toEqual(benchmark);
     });
 
@@ -116,34 +116,34 @@ describe('PerformanceMonitor', () => {
       const baseline = {
         executionTime: 100,
         memoryUsage: { heapUsed: 1000, heapTotal: 2000, external: 500, rss: 3000 },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
+
       const benchmark = createPerformanceBenchmark(
         'validation-test',
         baseline,
-        { executionTime: 20, memoryUsage: 15 }
+        { executionTime: 20, memoryUsage: 15 },
       );
-      
+
       monitor.setBenchmark(benchmark);
-      
+
       // Test within limits
       const goodMetrics = {
         executionTime: 110, // 10% increase, within 20% limit
         memoryUsage: { heapUsed: 1100, heapTotal: 2000, external: 500, rss: 3000 }, // 10% increase
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
+
       const report = monitor.validatePerformance('validation-test', goodMetrics);
       expect(report.regression).toBeUndefined();
-      
+
       // Test exceeding limits
       const badMetrics = {
         executionTime: 150, // 50% increase, exceeds 20% limit
         memoryUsage: { heapUsed: 1000, heapTotal: 2000, external: 500, rss: 3000 },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
+
       const badReport = monitor.validatePerformance('validation-test', badMetrics);
       expect(badReport.regression).toBeDefined();
       expect(badReport.regression?.type).toBe('execution_time');
@@ -155,14 +155,14 @@ describe('PerformanceMonitor', () => {
       const metrics = {
         executionTime: 50,
         memoryUsage: { heapUsed: 1000, heapTotal: 2000, external: 500, rss: 3000 },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
-      expect(() => 
+
+      expect(() =>
         monitor.assertPerformanceWithinLimits('test', metrics, {
           maxExecutionTime: 100,
-          maxMemoryUsage: 2000
-        })
+          maxMemoryUsage: 2000,
+        }),
       ).not.toThrow();
     });
 
@@ -170,13 +170,13 @@ describe('PerformanceMonitor', () => {
       const metrics = {
         executionTime: 150,
         memoryUsage: { heapUsed: 1000, heapTotal: 2000, external: 500, rss: 3000 },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
-      expect(() => 
+
+      expect(() =>
         monitor.assertPerformanceWithinLimits('test', metrics, {
-          maxExecutionTime: 100
-        })
+          maxExecutionTime: 100,
+        }),
       ).toThrow(TestError);
     });
 
@@ -184,13 +184,13 @@ describe('PerformanceMonitor', () => {
       const metrics = {
         executionTime: 50,
         memoryUsage: { heapUsed: 3000, heapTotal: 4000, external: 500, rss: 5000 },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
-      expect(() => 
+
+      expect(() =>
         monitor.assertPerformanceWithinLimits('test', metrics, {
-          maxMemoryUsage: 2000
-        })
+          maxMemoryUsage: 2000,
+        }),
       ).toThrow(TestError);
     });
   });
@@ -198,7 +198,7 @@ describe('PerformanceMonitor', () => {
   describe('performance statistics', () => {
     it('should calculate performance statistics', async () => {
       const testName = 'stats-test';
-      
+
       // Generate multiple measurements
       for (let i = 0; i < 5; i++) {
         const { metrics } = await monitor.measureFunction(testName, async () => {
@@ -206,9 +206,9 @@ describe('PerformanceMonitor', () => {
           return i;
         });
       }
-      
+
       const stats = monitor.getPerformanceStats(testName);
-      
+
       expect(stats).toBeDefined();
       expect(stats!.count).toBe(5);
       expect(stats!.average.executionTime).toBeGreaterThan(0);
@@ -225,35 +225,35 @@ describe('PerformanceMonitor', () => {
   describe('data export/import', () => {
     it('should export and import performance data', async () => {
       const testName = 'export-test';
-      
+
       // Create some data
       await monitor.measureFunction(testName, () => 'result');
-      
+
       const benchmark = createPerformanceBenchmark(
         'export-benchmark',
         {
           executionTime: 100,
           memoryUsage: { heapUsed: 1000, heapTotal: 2000, external: 500, rss: 3000 },
-          timestamp: new Date()
+          timestamp: new Date(),
         },
-        { executionTime: 20 }
+        { executionTime: 20 },
       );
       monitor.setBenchmark(benchmark);
-      
+
       // Export data
       const exportedData = monitor.exportData();
-      
+
       expect(exportedData.measurements[testName]).toBeDefined();
       expect(exportedData.benchmarks['export-benchmark']).toBeDefined();
-      
+
       // Clear and import
       monitor.clearMeasurements();
       monitor.importData(exportedData);
-      
+
       // Verify data was restored
       const stats = monitor.getPerformanceStats(testName);
       expect(stats).toBeDefined();
-      
+
       const restoredBenchmark = monitor.getBenchmark('export-benchmark');
       expect(restoredBenchmark).toBeDefined();
     });

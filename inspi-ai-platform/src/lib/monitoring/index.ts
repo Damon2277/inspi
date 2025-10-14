@@ -16,10 +16,10 @@ export type { PerformanceMetric, WebVitalsMetric, ResourceMetric, MemoryMetric }
 export type { HealthCheckResult, SystemHealth, HealthCheckFunction } from './health';
 export type { MonitoringConfig } from './config';
 
-import { initSentry } from './sentry';
+import { getMonitoringConfig } from './config';
 import { initializeMonitoringContext } from './context';
 import { performanceMonitor } from './performance';
-import { getMonitoringConfig } from './config';
+import { initSentry } from './sentry';
 
 /**
  * 初始化监控系统
@@ -43,7 +43,7 @@ export function initializeMonitoring() {
   console.log('Monitoring system initialized', {
     sentry: config.sentry.enabled,
     performance: config.performance.enabled,
-    health: config.health.enabled
+    health: config.health.enabled,
   });
 }
 
@@ -52,27 +52,27 @@ export function initializeMonitoring() {
  */
 export function getMonitoringStatus() {
   const config = getMonitoringConfig();
-  
+
   return {
     sentry: {
       enabled: config.sentry.enabled,
       environment: config.sentry.environment,
-      debug: config.sentry.debug
+      debug: config.sentry.debug,
     },
     performance: {
       enabled: config.performance.enabled,
-      sampleRate: config.performance.sampleRate
+      sampleRate: config.performance.sampleRate,
     },
     health: {
       enabled: config.health.enabled,
-      interval: config.health.interval
+      interval: config.health.interval,
     },
     alerts: {
       enabled: config.alerts.enabled,
       channels: Object.keys(config.alerts.channels).filter(
-        key => config.alerts.channels[key as keyof typeof config.alerts.channels]
-      )
-    }
+        key => config.alerts.channels[key as keyof typeof config.alerts.channels],
+      ),
+    },
   };
 }
 
@@ -86,5 +86,5 @@ if (typeof window !== 'undefined') {
 
 export default {
   initializeMonitoring,
-  getMonitoringStatus
+  getMonitoringStatus,
 };

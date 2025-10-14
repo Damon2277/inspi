@@ -1,12 +1,13 @@
 import { renderHook, act } from '@testing-library/react';
-import { useErrorHandler, useApiErrorHandler } from '@/hooks/useErrorHandler';
+
+import { useErrorHandler, useApiErrorHandler } from '@/shared/hooks/useErrorHandler';
 
 // 模拟日志记录器
 jest.mock('@/lib/logging/logger', () => ({
   logger: {
     error: jest.fn(),
-    info: jest.fn()
-  }
+    info: jest.fn(),
+  },
 }));
 
 // 模拟CustomError
@@ -15,9 +16,9 @@ jest.mock('@/lib/errors/CustomError', () => ({
     fromError: jest.fn((error) => ({
       ...error,
       message: error.message,
-      toJSON: () => ({ message: error.message })
-    }))
-  }
+      toJSON: () => ({ message: error.message }),
+    })),
+  },
 }));
 
 describe('useErrorHandler', () => {
@@ -73,7 +74,7 @@ describe('useErrorHandler', () => {
       const { result } = renderHook(() => useErrorHandler({
         enableRetry: true,
         maxRetries: 2,
-        retryDelay: 0
+        retryDelay: 0,
       }));
 
       // 先触发错误
@@ -95,7 +96,7 @@ describe('useErrorHandler', () => {
       const { result } = renderHook(() => useErrorHandler({
         enableRetry: true,
         maxRetries: 2,
-        retryDelay: 0
+        retryDelay: 0,
       }));
 
       // 先触发错误
@@ -235,11 +236,11 @@ describe('useErrorHandler', () => {
 describe('useApiErrorHandler', () => {
   // 模拟window.location
   const mockLocation = {
-    href: 'http://localhost:3000'
+    href: 'http://localhost:3000',
   };
   Object.defineProperty(window, 'location', {
     value: mockLocation,
-    writable: true
+    writable: true,
   });
 
   it('应该处理401认证错误', () => {

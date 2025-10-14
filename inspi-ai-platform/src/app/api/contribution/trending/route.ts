@@ -3,6 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
 import contributionService from '@/lib/services/contributionService';
 
 /**
@@ -11,20 +12,20 @@ import contributionService from '@/lib/services/contributionService';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
+
     // 解析查询参数
     const period = (searchParams.get('period') as 'daily' | 'weekly' | 'monthly') || 'weekly';
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 50);
 
     // 验证时间段参数
     const validPeriods = ['daily', 'weekly', 'monthly'];
     if (!validPeriods.includes(period)) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: `无效的时间段。支持的时间段: ${validPeriods.join(', ')}` 
+        {
+          success: false,
+          error: `无效的时间段。支持的时间段: ${validPeriods.join(', ')}`,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -33,18 +34,18 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: trendingWorks
+      data: trendingWorks,
     });
 
   } catch (error) {
     console.error('获取热门作品失败:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: '获取热门作品失败',
-        details: error instanceof Error ? error.message : '未知错误'
+        details: error instanceof Error ? error.message : '未知错误',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -55,13 +56,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // TODO: 添加管理员权限验证
-    
+
     const { period } = await request.json();
-    
+
     if (period && !['daily', 'weekly', 'monthly'].includes(period)) {
       return NextResponse.json(
         { success: false, error: '无效的时间段参数' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -73,24 +74,24 @@ export async function POST(request: NextRequest) {
       await Promise.all([
         contributionService.getTrendingWorks('daily', 20),
         contributionService.getTrendingWorks('weekly', 20),
-        contributionService.getTrendingWorks('monthly', 20)
+        contributionService.getTrendingWorks('monthly', 20),
       ]);
     }
 
     return NextResponse.json({
       success: true,
-      message: '热门作品缓存刷新成功'
+      message: '热门作品缓存刷新成功',
     });
 
   } catch (error) {
     console.error('刷新热门作品缓存失败:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: '刷新热门作品缓存失败',
-        details: error instanceof Error ? error.message : '未知错误'
+        details: error instanceof Error ? error.message : '未知错误',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

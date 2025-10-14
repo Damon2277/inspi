@@ -73,7 +73,8 @@ class DevTools {
       
       // Get commits since last tag
       try {
-        const commitsSinceTag = this.exec('git rev-list --count HEAD ^$(git describe --tags --abbrev=0)', { silent: true });
+        const commitsSinceTag = this.exec('git rev-list --
+          count HEAD ^$(git describe --tags --abbrev=0)', { silent: true });
         console.log(`📝 Commits since last tag: ${commitsSinceTag}`);
       } catch (error) {
         const totalCommits = this.exec('git rev-list --count HEAD', { silent: true });

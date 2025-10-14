@@ -4,20 +4,21 @@
  */
 
 import jwt from 'jsonwebtoken';
-import { 
-  generateToken, 
-  verifyToken, 
-  extractTokenFromHeader, 
-  generateRefreshToken, 
-  decodeToken 
-} from '@/lib/auth/jwt';
+
+import {
+  generateToken,
+  verifyToken,
+  extractTokenFromHeader,
+  generateRefreshToken,
+  decodeToken,
+} from '@/core/auth/jwt';
 import { UserDocument } from '@/lib/models/User';
 
 // Mock environment variables
 const mockEnv = {
   JWT_SECRET: 'test-jwt-secret-key-for-testing',
   JWT_EXPIRES_IN: '7d',
-  NEXTAUTH_SECRET: 'test-nextauth-secret'
+  NEXTAUTH_SECRET: 'test-nextauth-secret',
 };
 
 describe('JWT安全性测试', () => {
@@ -33,7 +34,7 @@ describe('JWT安全性测试', () => {
     mockUser = {
       _id: 'user123' as any,
       email: 'test@example.com',
-      name: 'Test User'
+      name: 'Test User',
     };
   });
 
@@ -158,7 +159,7 @@ describe('JWT安全性测试', () => {
         email: 'test@example.com',
         name: 'Test User',
         iat: Math.floor(Date.now() / 1000) - 3600,
-        exp: Math.floor(Date.now() / 1000) - 1800 // 30分钟前过期
+        exp: Math.floor(Date.now() / 1000) - 1800, // 30分钟前过期
       };
       const expiredToken = jwt.sign(expiredPayload, mockEnv.JWT_SECRET);
 
@@ -173,7 +174,7 @@ describe('JWT安全性测试', () => {
       // Arrange
       const wrongSecretToken = jwt.sign(
         { userId: 'user123', email: 'test@example.com' },
-        'wrong-secret-key'
+        'wrong-secret-key',
       );
 
       // Act
@@ -190,7 +191,7 @@ describe('JWT安全性测试', () => {
         'only.two.parts',
         'too.many.parts.here.invalid',
         '',
-        'single-string-token'
+        'single-string-token',
       ];
 
       // Act & Assert
@@ -223,7 +224,7 @@ describe('JWT安全性测试', () => {
         'Token valid.jwt.token', // 错误的前缀
         'Bearer token1 token2', // 多个令牌
         'valid.jwt.token', // 缺少Bearer前缀
-        ''
+        '',
       ];
 
       // Act & Assert
@@ -312,7 +313,7 @@ describe('JWT安全性测试', () => {
         userId: 'user123',
         email: 'test@example.com',
         name: 'Test User',
-        exp: Math.floor(Date.now() / 1000) - 1800 // 已过期
+        exp: Math.floor(Date.now() / 1000) - 1800, // 已过期
       };
       const expiredToken = jwt.sign(expiredPayload, mockEnv.JWT_SECRET);
 
@@ -445,7 +446,7 @@ describe('JWT安全性测试', () => {
       const longUser = {
         ...mockUser,
         name: 'A'.repeat(1000),
-        email: 'very.long.email.address.that.might.cause.issues@example.com'
+        email: 'very.long.email.address.that.might.cause.issues@example.com',
       };
 
       // Act
@@ -462,7 +463,7 @@ describe('JWT安全性测试', () => {
       const specialUser = {
         ...mockUser,
         name: '测试用户 🚀 @#$%^&*()',
-        email: 'test+special@example.com'
+        email: 'test+special@example.com',
       };
 
       // Act
@@ -480,7 +481,7 @@ describe('JWT安全性测试', () => {
       const emptyUser = {
         ...mockUser,
         name: '',
-        email: 'test@example.com'
+        email: 'test@example.com',
       };
 
       // Act
@@ -497,7 +498,7 @@ describe('JWT安全性测试', () => {
       const undefinedUser = {
         _id: 'user123' as any,
         email: 'test@example.com',
-        name: undefined as any
+        name: undefined as any,
       };
 
       // Act & Assert
@@ -521,7 +522,7 @@ describe('JWT安全性测试', () => {
       const noneAlgToken = jwt.sign(
         { userId: 'user123', email: 'test@example.com' },
         '',
-        { algorithm: 'none' }
+        { algorithm: 'none' },
       );
 
       // Act

@@ -1,6 +1,7 @@
-import { ResultAggregator, TestResult, AggregationOptions } from '../../../../lib/testing/parallel/ResultAggregator';
 import * as fs from 'fs';
 import * as path from 'path';
+
+import { ResultAggregator, TestResult, AggregationOptions } from '../../../../lib/testing/parallel/ResultAggregator';
 
 // Mock fs module
 jest.mock('fs');
@@ -18,8 +19,8 @@ describe('ResultAggregator', () => {
         statements: 80,
         branches: 75,
         functions: 85,
-        lines: 80
-      }
+        lines: 80,
+      },
     };
 
     aggregator = new ResultAggregator(options);
@@ -31,15 +32,15 @@ describe('ResultAggregator', () => {
         duration: 1000,
         tests: [
           { name: 'test-1', status: 'passed', duration: 500 },
-          { name: 'test-2', status: 'passed', duration: 500 }
+          { name: 'test-2', status: 'passed', duration: 500 },
         ],
         coverage: {
           statements: 85,
           branches: 80,
           functions: 90,
-          lines: 85
+          lines: 85,
         },
-        workerId: 1
+        workerId: 1,
       },
       {
         suiteId: 'suite-2',
@@ -47,20 +48,20 @@ describe('ResultAggregator', () => {
         duration: 800,
         tests: [
           { name: 'test-3', status: 'passed', duration: 300 },
-          { name: 'test-4', status: 'failed', duration: 500, error: 'Assertion failed' }
+          { name: 'test-4', status: 'failed', duration: 500, error: 'Assertion failed' },
         ],
         coverage: {
           statements: 75,
           branches: 70,
           functions: 80,
-          lines: 75
+          lines: 75,
         },
         error: {
           message: 'Test suite failed',
-          type: 'assertion'
+          type: 'assertion',
         },
-        workerId: 2
-      }
+        workerId: 2,
+      },
     ];
 
     // Mock fs methods
@@ -85,7 +86,7 @@ describe('ResultAggregator', () => {
 
     it('should add results and track timeline', () => {
       aggregator.startAggregation();
-      
+
       const addSpy = jest.fn();
       aggregator.on('result:added', addSpy);
 
@@ -94,13 +95,13 @@ describe('ResultAggregator', () => {
 
       expect(addSpy).toHaveBeenCalledWith({
         suiteId: 'suite-1',
-        status: 'passed'
+        status: 'passed',
       });
     });
 
     it('should finalize and generate aggregated results', async () => {
       aggregator.startAggregation();
-      
+
       mockResults.forEach(result => {
         aggregator.recordExecutionStart(result.suiteId, result.workerId!);
         aggregator.addResult(result);
@@ -121,7 +122,7 @@ describe('ResultAggregator', () => {
   describe('coverage aggregation', () => {
     it('should aggregate coverage correctly', async () => {
       aggregator.startAggregation();
-      
+
       mockResults.forEach(result => {
         aggregator.addResult(result);
       });
@@ -137,7 +138,7 @@ describe('ResultAggregator', () => {
 
     it('should check coverage thresholds', async () => {
       aggregator.startAggregation();
-      
+
       mockResults.forEach(result => {
         aggregator.addResult(result);
       });
@@ -151,11 +152,11 @@ describe('ResultAggregator', () => {
     it('should handle missing coverage data', async () => {
       const resultsWithoutCoverage = mockResults.map(result => ({
         ...result,
-        coverage: undefined
+        coverage: undefined,
       }));
 
       aggregator.startAggregation();
-      
+
       resultsWithoutCoverage.forEach(result => {
         aggregator.addResult(result);
       });
@@ -170,7 +171,7 @@ describe('ResultAggregator', () => {
   describe('performance analysis', () => {
     it('should calculate performance metrics', async () => {
       aggregator.startAggregation();
-      
+
       // Record execution timeline
       mockResults.forEach(result => {
         aggregator.recordExecutionStart(result.suiteId, result.workerId!);
@@ -189,11 +190,11 @@ describe('ResultAggregator', () => {
       // Create results with uneven worker utilization
       const unevenResults = [
         { ...mockResults[0], workerId: 1, duration: 5000 }, // Long running
-        { ...mockResults[1], workerId: 2, duration: 500 }   // Short running
+        { ...mockResults[1], workerId: 2, duration: 500 },   // Short running
       ];
 
       aggregator.startAggregation();
-      
+
       unevenResults.forEach(result => {
         aggregator.recordExecutionStart(result.suiteId, result.workerId!);
         aggregator.addResult(result);
@@ -211,9 +212,9 @@ describe('ResultAggregator', () => {
         status: 'passed',
         duration: 70000, // 70 seconds - exceeds default threshold
         tests: [
-          { name: 'slow-test', status: 'passed', duration: 70000 }
+          { name: 'slow-test', status: 'passed', duration: 70000 },
         ],
-        workerId: 1
+        workerId: 1,
       };
 
       aggregator.startAggregation();
@@ -223,7 +224,7 @@ describe('ResultAggregator', () => {
 
       const slowTestBottleneck = finalResult.performance.bottlenecks
         .find(b => b.type === 'test');
-      
+
       expect(slowTestBottleneck).toBeDefined();
       expect(slowTestBottleneck?.description).toContain('exceeded performance threshold');
     });
@@ -232,7 +233,7 @@ describe('ResultAggregator', () => {
   describe('error analysis', () => {
     it('should analyze errors correctly', async () => {
       aggregator.startAggregation();
-      
+
       mockResults.forEach(result => {
         aggregator.addResult(result);
       });
@@ -252,9 +253,9 @@ describe('ResultAggregator', () => {
         tests: [],
         error: {
           message: 'Setup failed',
-          type: 'setup'
+          type: 'setup',
         },
-        workerId: 1
+        workerId: 1,
       };
 
       aggregator.startAggregation();
@@ -273,23 +274,23 @@ describe('ResultAggregator', () => {
           status: 'failed' as const,
           duration: 1000,
           tests: [
-            { name: 'flaky-test', status: 'failed' as const, duration: 500, error: 'Random failure' }
+            { name: 'flaky-test', status: 'failed' as const, duration: 500, error: 'Random failure' },
           ],
-          workerId: 1
+          workerId: 1,
         },
         {
           suiteId: 'flaky-suite-2',
           status: 'failed' as const,
           duration: 1000,
           tests: [
-            { name: 'flaky-test', status: 'failed' as const, duration: 500, error: 'Another failure' }
+            { name: 'flaky-test', status: 'failed' as const, duration: 500, error: 'Another failure' },
           ],
-          workerId: 2
-        }
+          workerId: 2,
+        },
       ];
 
       aggregator.startAggregation();
-      
+
       flakyResults.forEach(result => {
         aggregator.addResult(result);
       });
@@ -303,7 +304,7 @@ describe('ResultAggregator', () => {
   describe('report generation', () => {
     it('should generate JSON report', async () => {
       aggregator.startAggregation();
-      
+
       mockResults.forEach(result => {
         aggregator.addResult(result);
       });
@@ -313,18 +314,18 @@ describe('ResultAggregator', () => {
       expect(mockFs.mkdirSync).toHaveBeenCalledWith('test-output', { recursive: true });
       expect(mockFs.writeFileSync).toHaveBeenCalledWith(
         expect.stringMatching(/test-output\/test-results-.*\.json$/),
-        expect.any(String)
+        expect.any(String),
       );
     });
 
     it('should generate HTML report', async () => {
       const htmlAggregator = new ResultAggregator({
         outputDir: 'test-output',
-        outputFormats: ['html']
+        outputFormats: ['html'],
       });
 
       htmlAggregator.startAggregation();
-      
+
       mockResults.forEach(result => {
         htmlAggregator.addResult(result);
       });
@@ -333,18 +334,18 @@ describe('ResultAggregator', () => {
 
       expect(mockFs.writeFileSync).toHaveBeenCalledWith(
         expect.stringMatching(/test-output\/test-results-.*\.html$/),
-        expect.stringContaining('<!DOCTYPE html>')
+        expect.stringContaining('<!DOCTYPE html>'),
       );
     });
 
     it('should generate XML report', async () => {
       const xmlAggregator = new ResultAggregator({
         outputDir: 'test-output',
-        outputFormats: ['xml']
+        outputFormats: ['xml'],
       });
 
       xmlAggregator.startAggregation();
-      
+
       mockResults.forEach(result => {
         xmlAggregator.addResult(result);
       });
@@ -353,18 +354,18 @@ describe('ResultAggregator', () => {
 
       expect(mockFs.writeFileSync).toHaveBeenCalledWith(
         expect.stringMatching(/test-output\/test-results-.*\.xml$/),
-        expect.stringContaining('<?xml version="1.0"')
+        expect.stringContaining('<?xml version="1.0"'),
       );
     });
 
     it('should generate Markdown report', async () => {
       const markdownAggregator = new ResultAggregator({
         outputDir: 'test-output',
-        outputFormats: ['markdown']
+        outputFormats: ['markdown'],
       });
 
       markdownAggregator.startAggregation();
-      
+
       mockResults.forEach(result => {
         markdownAggregator.addResult(result);
       });
@@ -373,7 +374,7 @@ describe('ResultAggregator', () => {
 
       expect(mockFs.writeFileSync).toHaveBeenCalledWith(
         expect.stringMatching(/test-output\/test-results-.*\.md$/),
-        expect.stringContaining('# Test Results Report')
+        expect.stringContaining('# Test Results Report'),
       );
     });
 
@@ -394,7 +395,7 @@ describe('ResultAggregator', () => {
 
       expect(errorSpy).toHaveBeenCalledWith({
         format: 'json',
-        error: expect.any(Error)
+        error: expect.any(Error),
       });
     });
   });
@@ -402,7 +403,7 @@ describe('ResultAggregator', () => {
   describe('timeline tracking', () => {
     it('should track execution timeline', async () => {
       aggregator.startAggregation();
-      
+
       aggregator.recordExecutionStart('suite-1', 1);
       aggregator.addResult(mockResults[0]);
 
@@ -417,7 +418,7 @@ describe('ResultAggregator', () => {
 
     it('should track error events in timeline', async () => {
       aggregator.startAggregation();
-      
+
       aggregator.recordExecutionStart('suite-2', 2);
       aggregator.addResult(mockResults[1]); // Failed result
 
@@ -432,16 +433,16 @@ describe('ResultAggregator', () => {
   describe('worker metrics', () => {
     it('should track worker metrics correctly', async () => {
       aggregator.startAggregation();
-      
+
       // Record multiple tasks for same worker
       aggregator.recordExecutionStart('suite-1', 1);
       aggregator.addResult(mockResults[0]);
-      
+
       aggregator.recordExecutionStart('suite-2', 1);
       aggregator.addResult({
         ...mockResults[1],
         workerId: 1,
-        status: 'passed'
+        status: 'passed',
       });
 
       const finalResult = await aggregator.finalize();

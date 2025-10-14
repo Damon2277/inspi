@@ -3,20 +3,20 @@
  * Orchestrates testing across different platforms, Node versions, browsers, and containers
  */
 
-import { 
-  CompatibilityTestResult, 
-  CompatibilityReport, 
+import { BrowserCompatibilityTester } from './BrowserCompatibilityTester';
+import { ContainerTestRunner } from './ContainerTestRunner';
+import { EnvironmentDetector } from './EnvironmentDetector';
+import { NodeVersionTester } from './NodeVersionTester';
+import {
+  CompatibilityTestResult,
+  CompatibilityReport,
   TestEnvironmentConfig,
   SupportMatrix,
   PlatformSupport,
   NodeVersionSupport,
   BrowserSupport,
-  ContainerSupport
+  ContainerSupport,
 } from './types';
-import { EnvironmentDetector } from './EnvironmentDetector';
-import { NodeVersionTester } from './NodeVersionTester';
-import { BrowserCompatibilityTester } from './BrowserCompatibilityTester';
-import { ContainerTestRunner } from './ContainerTestRunner';
 
 export class CrossPlatformTestRunner {
   private nodeVersionTester: NodeVersionTester;
@@ -34,7 +34,7 @@ export class CrossPlatformTestRunner {
    */
   async runComprehensiveTests(
     testCommand: string,
-    config?: Partial<TestEnvironmentConfig>
+    config?: Partial<TestEnvironmentConfig>,
   ): Promise<CompatibilityReport> {
     const startTime = Date.now();
     console.log('🚀 Starting comprehensive cross-platform compatibility tests...');
@@ -44,15 +44,15 @@ export class CrossPlatformTestRunner {
       nodeVersions: ['18.17.0', '18.18.0', '20.5.0', '20.8.0'],
       browsers: [
         { name: 'chrome', versions: ['latest', '119'], headless: true },
-        { name: 'firefox', versions: ['latest', '118'], headless: true }
+        { name: 'firefox', versions: ['latest', '118'], headless: true },
       ],
       containers: [
         { runtime: 'docker', image: 'node:18-alpine', nodeVersion: '18.18.0' },
-        { runtime: 'docker', image: 'node:20-alpine', nodeVersion: '20.8.0' }
+        { runtime: 'docker', image: 'node:20-alpine', nodeVersion: '20.8.0' },
       ],
       parallel: true,
       timeout: 600000,
-      retries: 2
+      retries: 2,
     };
 
     const finalConfig = { ...defaultConfig, ...config };
@@ -78,10 +78,10 @@ export class CrossPlatformTestRunner {
 
       // 4. Generate comprehensive report
       const report = await this.generateCompatibilityReport(results, finalConfig);
-      
+
       const duration = Date.now() - startTime;
       console.log(`✅ Cross-platform testing completed in ${duration}ms`);
-      
+
       return report;
     } catch (error) {
       console.error('❌ Cross-platform testing failed:', error);
@@ -113,9 +113,9 @@ export class CrossPlatformTestRunner {
     try {
       const nodeResult = await this.nodeVersionTester.testSingleVersion(
         process.version.slice(1), // Remove 'v' prefix
-        testCommand
+        testCommand,
       );
-      
+
       if (!nodeResult.passed) {
         issues.push(`Tests fail with current Node.js version ${process.version}`);
       }
@@ -126,7 +126,7 @@ export class CrossPlatformTestRunner {
     // Check container availability
     const isContainer = EnvironmentDetector.isContainer();
     const containerInfo = EnvironmentDetector.getContainerInfo();
-    
+
     if (isContainer && containerInfo) {
       recommendations.push(`Running in ${containerInfo.runtime} container`);
     } else {
@@ -136,7 +136,7 @@ export class CrossPlatformTestRunner {
     return {
       compatible: issues.length === 0,
       issues,
-      recommendations
+      recommendations,
     };
   }
 
@@ -152,21 +152,21 @@ export class CrossPlatformTestRunner {
         platform: 'darwin',
         supported: true,
         minNodeVersion: '18.0.0',
-        recommendations: ['Use latest macOS for best compatibility']
+        recommendations: ['Use latest macOS for best compatibility'],
       },
       {
         platform: 'linux',
         supported: true,
         minNodeVersion: '18.0.0',
-        recommendations: ['Ubuntu 20.04+ or equivalent recommended']
+        recommendations: ['Ubuntu 20.04+ or equivalent recommended'],
       },
       {
         platform: 'win32',
         supported: true,
         minNodeVersion: '18.0.0',
         limitations: ['Path separator differences may cause issues'],
-        recommendations: ['Use WSL2 for better compatibility']
-      }
+        recommendations: ['Use WSL2 for better compatibility'],
+      },
     ];
 
     // Node.js version support
@@ -176,8 +176,8 @@ export class CrossPlatformTestRunner {
       supported: item.compatible,
       tested: true,
       issues: item.issues,
-      recommendations: item.features.length > 0 ? 
-        [`Supports features: ${item.features.join(', ')}`] : []
+      recommendations: item.features.length > 0 ?
+        [`Supports features: ${item.features.join(', ')}`] : [],
     }));
 
     // Browser support
@@ -190,21 +190,21 @@ export class CrossPlatformTestRunner {
         runtime: 'docker',
         baseImages: ['node:18-alpine', 'node:20-alpine', 'node:18-slim', 'node:20-slim'],
         supported: true,
-        recommendations: ['Alpine images are smaller but may have compatibility issues']
+        recommendations: ['Alpine images are smaller but may have compatibility issues'],
       },
       {
         runtime: 'podman',
         baseImages: ['node:18-alpine', 'node:20-alpine'],
         supported: true,
-        recommendations: ['Drop-in replacement for Docker']
-      }
+        recommendations: ['Drop-in replacement for Docker'],
+      },
     ];
 
     return {
       platforms,
       nodeVersions,
       browsers,
-      containers
+      containers,
     };
   }
 
@@ -213,7 +213,7 @@ export class CrossPlatformTestRunner {
    */
   private async testNodeVersions(
     testCommand: string,
-    config: TestEnvironmentConfig
+    config: TestEnvironmentConfig,
   ): Promise<CompatibilityTestResult[]> {
     if (config.parallel) {
       // Run tests in parallel for better performance
@@ -227,9 +227,9 @@ export class CrossPlatformTestRunner {
             duration: 0,
             errors: [{ type: 'version' as const, message: `Failed to test Node.js ${version}: ${error}`, severity: 'critical' as const, affectedTests: ['all'] }],
             warnings: [],
-            performance: { executionTime: 0, memoryUsage: { peak: 0, average: 0, final: 0 }, cpuUsage: { peak: 0, average: 0 } }
+            performance: { executionTime: 0, memoryUsage: { peak: 0, average: 0, final: 0 }, cpuUsage: { peak: 0, average: 0 } },
           };
-        })
+        }),
       );
       return await Promise.all(promises);
     } else {
@@ -247,7 +247,7 @@ export class CrossPlatformTestRunner {
             duration: 0,
             errors: [{ type: 'version' as const, message: `Failed to test Node.js ${version}: ${error}`, severity: 'critical' as const, affectedTests: ['all'] }],
             warnings: [],
-            performance: { executionTime: 0, memoryUsage: { peak: 0, average: 0, final: 0 }, cpuUsage: { peak: 0, average: 0 } }
+            performance: { executionTime: 0, memoryUsage: { peak: 0, average: 0, final: 0 }, cpuUsage: { peak: 0, average: 0 } },
           });
         }
       }
@@ -260,11 +260,11 @@ export class CrossPlatformTestRunner {
    */
   private async testBrowsers(
     testCommand: string,
-    config: TestEnvironmentConfig
+    config: TestEnvironmentConfig,
   ): Promise<CompatibilityTestResult[]> {
     if (config.parallel) {
       const promises = config.browsers.map(browser =>
-        this.browserTester.testMultipleBrowsers(testCommand, [browser])
+        this.browserTester.testMultipleBrowsers(testCommand, [browser]),
       );
       const results = await Promise.all(promises);
       return results.flat();
@@ -283,7 +283,7 @@ export class CrossPlatformTestRunner {
    */
   private async testContainers(
     testCommand: string,
-    config: TestEnvironmentConfig
+    config: TestEnvironmentConfig,
   ): Promise<CompatibilityTestResult[]> {
     if (config.parallel) {
       const promises = config.containers.map(container =>
@@ -296,9 +296,9 @@ export class CrossPlatformTestRunner {
             duration: 0,
             errors: [{ type: 'platform' as const, message: `Failed to test container ${container.image}: ${error}`, severity: 'critical' as const, affectedTests: ['all'] }],
             warnings: [],
-            performance: { executionTime: 0, memoryUsage: { peak: 0, average: 0, final: 0 }, cpuUsage: { peak: 0, average: 0 } }
+            performance: { executionTime: 0, memoryUsage: { peak: 0, average: 0, final: 0 }, cpuUsage: { peak: 0, average: 0 } },
           };
-        })
+        }),
       );
       return await Promise.all(promises);
     } else {
@@ -315,7 +315,7 @@ export class CrossPlatformTestRunner {
             duration: 0,
             errors: [{ type: 'platform' as const, message: `Failed to test container ${container.image}: ${error}`, severity: 'critical' as const, affectedTests: ['all'] }],
             warnings: [],
-            performance: { executionTime: 0, memoryUsage: { peak: 0, average: 0, final: 0 }, cpuUsage: { peak: 0, average: 0 } }
+            performance: { executionTime: 0, memoryUsage: { peak: 0, average: 0, final: 0 }, cpuUsage: { peak: 0, average: 0 } },
           });
         }
       }
@@ -337,7 +337,7 @@ export class CrossPlatformTestRunner {
    */
   private async generateCompatibilityReport(
     results: CompatibilityTestResult[],
-    config: TestEnvironmentConfig
+    config: TestEnvironmentConfig,
   ): Promise<CompatibilityReport> {
     const totalEnvironments = results.length;
     const passedEnvironments = results.filter(r => r.passed).length;
@@ -355,11 +355,11 @@ export class CrossPlatformTestRunner {
         totalEnvironments,
         passedEnvironments,
         failedEnvironments,
-        warningEnvironments
+        warningEnvironments,
       },
       results,
       recommendations,
-      supportMatrix
+      supportMatrix,
     };
   }
 
@@ -374,7 +374,7 @@ export class CrossPlatformTestRunner {
       recommendations.push('✅ All environments passed! Your code has excellent cross-platform compatibility.');
     } else {
       recommendations.push(`❌ ${failedResults.length} environments failed. Consider the following:`);
-      
+
       // Analyze failure patterns
       const nodeFailures = failedResults.filter(r => r.testSuite.startsWith('node-'));
       const browserFailures = failedResults.filter(r => r.testSuite.includes('chrome') || r.testSuite.includes('firefox'));
@@ -415,7 +415,7 @@ export class CrossPlatformTestRunner {
           versions: [],
           supported: true,
           polyfillsRequired: [],
-          limitations: []
+          limitations: [],
         });
       }
 
@@ -427,7 +427,7 @@ export class CrossPlatformTestRunner {
       if (polyfillFeatures.length > 0) {
         support.polyfillsRequired = [...new Set([
           ...support.polyfillsRequired || [],
-          ...polyfillFeatures.map((f: any) => f.name)
+          ...polyfillFeatures.map((f: any) => f.name),
         ])];
       }
     }

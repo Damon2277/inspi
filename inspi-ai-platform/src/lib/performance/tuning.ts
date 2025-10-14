@@ -64,36 +64,36 @@ export class PerformanceTuner {
           user: 3600,      // 1小时
           work: 1800,      // 30分钟
           ranking: 300,    // 5分钟
-          graph: 7200      // 2小时
+          graph: 7200,      // 2小时
         },
         maxSize: {
           user: 1000,
           work: 5000,
           ranking: 100,
-          graph: 500
+          graph: 500,
         },
         strategy: {
           user: 'lru',
           work: 'lfu',
           ranking: 'ttl',
-          graph: 'lru'
-        }
+          graph: 'lru',
+        },
       },
       network: {
         preloadThreshold: 0.7,
         compressionLevel: 6,
-        cdnEnabled: true
+        cdnEnabled: true,
       },
       rendering: {
         virtualScrollThreshold: 100,
         lazyLoadOffset: 200,
-        imageQuality: 80
+        imageQuality: 80,
       },
       memory: {
         gcThreshold: 100 * 1024 * 1024, // 100MB
         maxHeapSize: 512 * 1024 * 1024, // 512MB
-        cleanupInterval: 60000 // 1分钟
-      }
+        cleanupInterval: 60000, // 1分钟
+      },
     };
   }
 
@@ -165,7 +165,7 @@ const optimizedImage = {
   fallback: '/image.jpg',
   loading: 'eager', // 关键图片立即加载
   sizes: '(max-width: 768px) 100vw, 50vw'
-};`
+};`,
       });
     } else if (metrics.lcp > 2500) {
       recommendations.push({
@@ -182,7 +182,7 @@ const cacheConfig = {
   staticAssets: { ttl: 31536000 }, // 1年
   apiResponses: { ttl: 300 },      // 5分钟
   userContent: { ttl: 1800 }       // 30分钟
-};`
+};`,
       });
     }
 
@@ -210,7 +210,7 @@ const cacheConfig = {
 
 // 异步加载非关键CSS
 <link rel="preload" href="/non-critical.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="/non-critical.css"></noscript>`
+<noscript><link rel="stylesheet" href="/non-critical.css"></noscript>`,
       });
     }
 
@@ -240,7 +240,7 @@ const cacheConfig = {
 .dynamic-content {
   min-height: 200px;
   transition: height 0.3s ease;
-}`
+}`,
       });
     } else if (metrics.cls > 0.1) {
       recommendations.push({
@@ -263,7 +263,7 @@ const cacheConfig = {
 .smooth-animation {
   transform: translateY(0);
   transition: transform 0.3s ease;
-}`
+}`,
       });
     }
 
@@ -299,7 +299,7 @@ const dbConfig = {
   maxPoolSize: 10,
   minPoolSize: 2,
   maxIdleTimeMS: 30000
-};`
+};`,
       });
     } else if (metrics.ttfb > 800) {
       recommendations.push({
@@ -319,7 +319,7 @@ const cacheStrategy = {
 };
 
 // API响应缓存
-app.get('/api/data', cache('5 minutes'), handler);`
+app.get('/api/data', cache('5 minutes'), handler);`,
       });
     }
 
@@ -350,7 +350,7 @@ const warmupStrategy = {
 const cachePolicy = {
   user: { strategy: 'lru', size: 2000, ttl: 7200 },
   content: { strategy: 'lfu', size: 5000, ttl: 3600 }
-};`
+};`,
       });
     }
 
@@ -377,7 +377,7 @@ class ObjectPool {
   private pool: any[] = [];
   
   acquire() {
-    return this.pool.pop() || this.create();
+    return this.pool.pop() || (this.create as any)();
   }
   
   release(obj: any) {
@@ -396,7 +396,7 @@ useEffect(() => {
   };
   
   return cleanup;
-}, []);`
+}, []);`,
       });
     }
 
@@ -438,7 +438,7 @@ const bundleConfig = {
       }
     }
   }
-};`
+};`,
       });
     }
 
@@ -467,7 +467,7 @@ const imageOptimization = {
   quality: 80,
   progressive: true,
   sizes: [320, 640, 1024, 1920]
-};`
+};`,
       });
     }
 
@@ -479,9 +479,9 @@ const imageOptimization = {
       // 优先级排序
       const priorityOrder = { high: 3, medium: 2, low: 1 };
       const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
-      
+
       if (priorityDiff !== 0) return priorityDiff;
-      
+
       // 努力程度排序（低努力优先）
       const effortOrder = { low: 3, medium: 2, high: 1 };
       return effortOrder[b.effort] - effortOrder[a.effort];
@@ -495,11 +495,11 @@ const imageOptimization = {
     timeline: string;
   } {
     const recommendations = this.analyzePerformance(metrics);
-    
+
     // 估算整体改进效果
     const highPriorityCount = recommendations.filter(r => r.priority === 'high').length;
     const mediumPriorityCount = recommendations.filter(r => r.priority === 'medium').length;
-    
+
     let estimatedImprovement = '10-20%';
     if (highPriorityCount >= 3) {
       estimatedImprovement = '40-60%';
@@ -514,7 +514,7 @@ const imageOptimization = {
       .concat(
         recommendations
           .filter(r => r.priority === 'medium' && r.effort === 'low')
-          .map(r => r.title)
+          .map(r => r.title),
       );
 
     // 时间线估算
@@ -534,7 +534,7 @@ const imageOptimization = {
       recommendations,
       estimatedImprovement,
       implementationOrder,
-      timeline
+      timeline,
     };
   }
 
@@ -552,24 +552,24 @@ const imageOptimization = {
     // 自动调整虚拟滚动阈值
     if (metrics.memoryUsage > 100 * 1024 * 1024) {
       // 降低阈值以减少内存使用
-      newConfig.rendering.virtualScrollThreshold = Math.max(50, 
-        newConfig.rendering.virtualScrollThreshold * 0.8
+      newConfig.rendering.virtualScrollThreshold = Math.max(50,
+        newConfig.rendering.virtualScrollThreshold * 0.8,
       );
     }
 
     // 自动调整图片质量
     if (metrics.totalBytes > 2 * 1024 * 1024) {
       // 降低图片质量以减少传输量
-      newConfig.rendering.imageQuality = Math.max(60, 
-        newConfig.rendering.imageQuality - 10
+      newConfig.rendering.imageQuality = Math.max(60,
+        newConfig.rendering.imageQuality - 10,
       );
     }
 
     // 自动调整预加载阈值
     if (metrics.lcp > 3000) {
       // 提高预加载阈值以改善LCP
-      newConfig.network.preloadThreshold = Math.min(0.9, 
-        newConfig.network.preloadThreshold + 0.1
+      newConfig.network.preloadThreshold = Math.min(0.9,
+        newConfig.network.preloadThreshold + 0.1,
       );
     }
 
@@ -602,7 +602,7 @@ const imageOptimization = {
     const regressions: { [key: string]: number } = {};
 
     const metrics = [
-      'lcp', 'fcp', 'cls', 'ttfb', 'loadTime', 'memoryUsage'
+      'lcp', 'fcp', 'cls', 'ttfb', 'loadTime', 'memoryUsage',
     ] as const;
 
     metrics.forEach(metric => {

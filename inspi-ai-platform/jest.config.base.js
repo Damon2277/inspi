@@ -2,11 +2,11 @@
  * Jest 基础配置
  * 所有测试环境的共同配置
  */
-const nextJest = require('next/jest')
+const nextJest = require('next/jest');
 
 const createJestConfig = nextJest({
   dir: './',
-})
+});
 
 const baseConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
@@ -26,6 +26,6 @@ const baseConfig = {
   coverageDirectory: 'coverage',
   testTimeout: 30000,
   verbose: true,
-}
+};
 
-module.exports = { createJestConfig, baseConfig }
+module.exports = { createJestConfig, baseConfig };

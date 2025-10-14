@@ -1,9 +1,11 @@
-import { GitChangeDetector, ChangeAnalysis } from './GitChangeDetector';
-import { DependencyAnalyzer, ImpactAnalysis } from './DependencyAnalyzer';
-import { TestCacheManager, TestResult, CacheStats } from './TestCacheManager';
 import { execSync } from 'child_process';
-import * as path from 'path';
 import * as fs from 'fs';
+import * as path from 'path';
+
+import { DependencyAnalyzer, ImpactAnalysis } from './DependencyAnalyzer';
+import { GitChangeDetector, ChangeAnalysis } from './GitChangeDetector';
+import { TestCacheManager, TestResult, CacheStats } from './TestCacheManager';
+
 
 export interface IncrementalTestOptions {
   projectRoot: string;
@@ -65,12 +67,12 @@ export class IncrementalTestRunner {
       dependencyPatterns: ['**/*.{ts,tsx,js,jsx}'],
       forceFullRun: false,
       parallelExecution: true,
-      ...options
+      ...options,
     };
 
     this.gitDetector = new GitChangeDetector(this.options.projectRoot);
     this.dependencyAnalyzer = new DependencyAnalyzer(this.options.projectRoot);
-    
+
     if (this.options.cacheEnabled) {
       this.cacheManager = new TestCacheManager(this.options.cacheOptions);
     }
@@ -81,7 +83,7 @@ export class IncrementalTestRunner {
    */
   async run(): Promise<IncrementalTestResult> {
     const startTime = Date.now();
-    
+
     try {
       // 1. 分析代码变更
       const analysisStartTime = Date.now();
@@ -116,10 +118,10 @@ export class IncrementalTestRunner {
           testExecutionTime,
           cacheTime,
           analysisTime,
-          timeSaved
+          timeSaved,
         },
         changeAnalysis,
-        impactAnalysis
+        impactAnalysis,
       };
 
     } catch (error) {
@@ -133,7 +135,7 @@ export class IncrementalTestRunner {
   private analyzeChanges(): ChangeAnalysis {
     return this.gitDetector.analyzeChanges(
       this.options.baseBranch,
-      this.options.includeWorkingDirectory
+      this.options.includeWorkingDirectory,
     );
   }
 
@@ -163,7 +165,7 @@ export class IncrementalTestRunner {
         estimatedDuration: this.estimateTestDuration(allTests),
         cacheHitRate: 0,
         affectedFiles: impactAnalysis.changedFiles,
-        reason: 'Force full run requested'
+        reason: 'Force full run requested',
       };
     }
 
@@ -176,7 +178,7 @@ export class IncrementalTestRunner {
         estimatedDuration: 0,
         cacheHitRate: 1,
         affectedFiles: [],
-        reason: 'No changes detected'
+        reason: 'No changes detected',
       };
     }
 
@@ -188,11 +190,11 @@ export class IncrementalTestRunner {
     // 分析受影响的测试
     for (const testFile of impactAnalysis.affectedTestFiles) {
       totalTests++;
-      
+
       if (this.options.cacheEnabled) {
         const coveredFiles = impactAnalysis.testCoverage.get(testFile) || [];
         const dependencies = this.getDependencies(testFile);
-        
+
         if (this.cacheManager.isCacheValid(testFile, coveredFiles, dependencies)) {
           testsFromCache.push(testFile);
           cacheHits++;
@@ -222,7 +224,7 @@ export class IncrementalTestRunner {
       estimatedDuration: this.estimateTestDuration(testsToRun),
       cacheHitRate,
       affectedFiles: impactAnalysis.changedFiles,
-      reason: `${impactAnalysis.changedFiles.length} files changed, ${impactAnalysis.affectedTestFiles.length} tests affected`
+      reason: `${impactAnalysis.changedFiles.length} files changed, ${impactAnalysis.affectedTestFiles.length} tests affected`,
     };
   }
 
@@ -278,7 +280,7 @@ export class IncrementalTestRunner {
     const maxWorkers = this.options.maxWorkers || Math.min(testFiles.length, 4);
     const chunks = this.chunkArray(testFiles, maxWorkers);
     const promises = chunks.map(chunk => this.runTestChunk(chunk));
-    
+
     const chunkResults = await Promise.all(promises);
     return chunkResults.flat();
   }
@@ -288,12 +290,12 @@ export class IncrementalTestRunner {
    */
   private async runTestChunk(testFiles: string[]): Promise<TestResult[]> {
     const results: TestResult[] = [];
-    
+
     for (const testFile of testFiles) {
       const result = await this.runSingleTest(testFile);
       results.push(result);
     }
-    
+
     return results;
   }
 
@@ -302,26 +304,26 @@ export class IncrementalTestRunner {
    */
   private async runSingleTest(testFile: string): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       // 构建测试命令
       const command = this.buildTestCommand(testFile);
-      
+
       // 执行测试
       const output = execSync(command, {
         cwd: this.options.projectRoot,
         encoding: 'utf8',
-        timeout: 60000 // 60秒超时
+        timeout: 60000, // 60秒超时
       });
 
       const duration = Date.now() - startTime;
-      
+
       // 解析测试结果
       return this.parseTestOutput(testFile, output, duration, 'passed');
 
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       // 解析失败的测试结果
       return this.parseTestOutput(testFile, error.stdout || error.message, duration, 'failed');
     }
@@ -332,7 +334,7 @@ export class IncrementalTestRunner {
    */
   private buildTestCommand(testFile: string): string {
     const relativePath = path.relative(this.options.projectRoot, testFile);
-    
+
     // 根据测试框架构建命令
     if (this.options.testCommand.includes('jest')) {
       return `npx jest "${relativePath}" --json --coverage`;
@@ -347,22 +349,22 @@ export class IncrementalTestRunner {
    * 解析测试输出
    */
   private parseTestOutput(
-    testFile: string, 
-    output: string, 
-    duration: number, 
-    status: 'passed' | 'failed'
+    testFile: string,
+    output: string,
+    duration: number,
+    status: 'passed' | 'failed',
   ): TestResult {
     try {
       // 尝试解析JSON输出
       const jsonOutput = JSON.parse(output);
-      
+
       return {
         testFile,
         status: jsonOutput.success ? 'passed' : 'failed',
         duration,
         timestamp: new Date(),
         coverage: this.parseCoverage(jsonOutput.coverageMap),
-        errors: this.parseErrors(jsonOutput.testResults)
+        errors: this.parseErrors(jsonOutput.testResults),
       };
     } catch {
       // 如果不是JSON格式，创建基本结果
@@ -371,7 +373,7 @@ export class IncrementalTestRunner {
         status,
         duration,
         timestamp: new Date(),
-        errors: status === 'failed' ? [{ message: output }] : undefined
+        errors: status === 'failed' ? [{ message: output }] : undefined,
       };
     }
   }
@@ -388,7 +390,7 @@ export class IncrementalTestRunner {
       branches: 0,
       functions: 0,
       lines: 0,
-      files: {}
+      files: {},
     };
   }
 
@@ -399,7 +401,7 @@ export class IncrementalTestRunner {
     if (!testResults) return [];
 
     const errors: any[] = [];
-    
+
     for (const result of testResults) {
       if (result.assertionResults) {
         for (const assertion of result.assertionResults) {
@@ -409,8 +411,8 @@ export class IncrementalTestRunner {
               location: {
                 file: result.name,
                 line: 0,
-                column: 0
-              }
+                column: 0,
+              },
             });
           }
         }
@@ -427,7 +429,7 @@ export class IncrementalTestRunner {
     for (const result of results) {
       const coveredFiles = impactAnalysis.testCoverage.get(result.testFile) || [];
       const dependencies = this.getDependencies(result.testFile);
-      
+
       this.cacheManager.cacheResult(result.testFile, coveredFiles, result, dependencies);
     }
 
@@ -448,15 +450,15 @@ export class IncrementalTestRunner {
    */
   private async findAllTests(): Promise<string[]> {
     const glob = require('glob');
-    
+
     return glob.sync(this.options.testPattern, {
       cwd: this.options.projectRoot,
       absolute: true,
       ignore: [
         '**/node_modules/**',
         '**/dist/**',
-        '**/build/**'
-      ]
+        '**/build/**',
+      ],
     });
   }
 
@@ -467,7 +469,7 @@ export class IncrementalTestRunner {
     const testPatterns = [
       /\.test\.(ts|tsx|js|jsx)$/,
       /\.spec\.(ts|tsx|js|jsx)$/,
-      /\/__tests__\//
+      /\/__tests__\//,
     ];
 
     return testPatterns.some(pattern => pattern.test(filePath));
@@ -511,7 +513,7 @@ export class IncrementalTestRunner {
       totalMisses: 0,
       cacheSize: 0,
       oldestEntry: null,
-      newestEntry: null
+      newestEntry: null,
     };
   }
 

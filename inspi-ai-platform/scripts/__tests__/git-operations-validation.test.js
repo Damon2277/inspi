@@ -317,14 +317,16 @@ describe('Git Operations Validation Tests', () => {
       expect(tags).toContain(testTag);
       
       // 获取标签信息
-      const tagInfo = execSync(`git show ${testTag} --format="%H|%s|%an|%ad" --no-patch`, { encoding: 'utf8' }).trim();
+      const tagInfo = execSync(`git show ${testTag} --format="%H|%s|%an|%ad" --
+        no-patch`, { encoding: 'utf8' }).trim();
       expect(tagInfo).toContain(tagMessage);
       
       // 删除测试标签
       execSync(`git tag -d ${testTag}`);
       
       // 验证标签已删除
-      const tagsAfterDelete = execSync('git tag', { encoding: 'utf8' }).trim().split('\n').filter(t => t);
+      const tagsAfterDelete = execSync('git tag',
+        { encoding: 'utf8' }).trim().split('\n').filter(t => t);
       expect(tagsAfterDelete).not.toContain(testTag);
     });
 
@@ -410,7 +412,8 @@ describe('Git Operations Validation Tests', () => {
       execSync('git commit -m "feat(test): add parse test functionality"');
       
       // 获取详细提交信息
-      const commitInfo = execSync('git log -1 --format="%H|%s|%an|%ad|%B"', { encoding: 'utf8' }).trim();
+      const commitInfo = execSync('git log -1 --format="%H|%s|%an|%ad|%B"',
+        { encoding: 'utf8' }).trim();
       const [hash, subject, author, date, body] = commitInfo.split('|');
       
       expect(hash).toMatch(/^[a-f0-9]{40}$/); // 完整SHA
@@ -437,7 +440,8 @@ describe('Git Operations Validation Tests', () => {
       execSync('git commit -m "fix: add range2"');
       
       // 查询标签到HEAD的提交
-      const rangeCommits = execSync('git log test-start..HEAD --oneline --no-merges', { encoding: 'utf8' })
+      const rangeCommits = execSync('git log test-start..HEAD --oneline --no-
+        merges', { encoding: 'utf8' })
         .trim().split('\n').filter(line => line);
       
       expect(rangeCommits.length).toBe(2);

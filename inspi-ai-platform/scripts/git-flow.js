@@ -119,7 +119,8 @@ function getWorkingDirectoryStatus() {
     
     try {
       const currentBranch = getCurrentBranch();
-      const trackingInfo = execGit(`rev-list --left-right --count origin/${currentBranch}...HEAD`, true);
+      const trackingInfo = execGit(`rev-list --left-right --
+        count origin/${currentBranch}...HEAD`, true);
       const [behindCount, aheadCount] = trackingInfo.split('\t').map(Number);
       ahead = aheadCount || 0;
       behind = behindCount || 0;
@@ -475,7 +476,8 @@ function showHelp() {
   console.log('  help               - Show this help message\n');
   console.log('Options:');
   console.log('  --force            - Force operation (use with delete)');
-  console.log('  --base <branch>    - Specify base branch (default: develop for features, main for hotfixes)\n');
+  console.log('  --base <branch>    - Specify base branch (default:
+    develop for features, main for hotfixes)\n');
   console.log('Examples:');
   console.log('  node git-flow.js feature user-authentication');
   console.log('  node git-flow.js hotfix critical-security-fix');

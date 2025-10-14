@@ -2,52 +2,52 @@
  * Tests for Assertion Helper Functions
  */
 
-import { AssertionHelpers } from '../../../../lib/testing/helpers/AssertionHelpers';
 import { TestError, TestErrorType } from '../../../../lib/testing/errors/TestError';
+import { AssertionHelpers } from '../../../../lib/testing/helpers/AssertionHelpers';
 
 describe('AssertionHelpers', () => {
   describe('assertThrows', () => {
     it('should pass when function throws expected error', async () => {
       const error = await AssertionHelpers.assertThrows(
         () => { throw new Error('Test error'); },
-        { message: 'Test error' }
+        { message: 'Test error' },
       );
-      
+
       expect(error.message).toBe('Test error');
     });
 
     it('should pass when async function throws expected error', async () => {
       const error = await AssertionHelpers.assertThrows(
         async () => { throw new Error('Async error'); },
-        { message: 'Async error' }
+        { message: 'Async error' },
       );
-      
+
       expect(error.message).toBe('Async error');
     });
 
     it('should fail when function does not throw', async () => {
       await expect(
-        AssertionHelpers.assertThrows(() => 'no error')
+        AssertionHelpers.assertThrows(() => 'no error'),
       ).rejects.toThrow(TestError);
     });
 
     it('should validate error type', async () => {
       class CustomError extends Error {}
-      
+
       const error = await AssertionHelpers.assertThrows(
         () => { throw new CustomError('Custom error'); },
-        { type: CustomError }
+        { type: CustomError },
       );
-      
+
       expect(error).toBeInstanceOf(CustomError);
     });
 
     it('should validate error message with regex', async () => {
       const error = await AssertionHelpers.assertThrows(
         () => { throw new Error('Error code: 404'); },
-        { message: /Error code: \d+/ }
+        { message: /Error code: \d+/ },
       );
-      
+
       expect(error.message).toMatch(/Error code: \d+/);
     });
   });
@@ -56,16 +56,16 @@ describe('AssertionHelpers', () => {
     it('should pass when condition becomes true', async () => {
       let counter = 0;
       const condition = () => ++counter > 3;
-      
+
       await AssertionHelpers.assertEventually(condition, { timeout: 1000, interval: 50 });
       expect(counter).toBeGreaterThan(3);
     });
 
     it('should fail when condition never becomes true', async () => {
       const condition = () => false;
-      
+
       await expect(
-        AssertionHelpers.assertEventually(condition, { timeout: 100, interval: 10 })
+        AssertionHelpers.assertEventually(condition, { timeout: 100, interval: 10 }),
       ).rejects.toThrow(TestError);
     });
 
@@ -75,7 +75,7 @@ describe('AssertionHelpers', () => {
         await new Promise(resolve => setTimeout(resolve, 10));
         return ++counter > 2;
       };
-      
+
       await AssertionHelpers.assertEventually(condition, { timeout: 1000, interval: 50 });
       expect(counter).toBeGreaterThan(2);
     });
@@ -87,7 +87,7 @@ describe('AssertionHelpers', () => {
         await new Promise(resolve => setTimeout(resolve, 50));
         return 'completed';
       };
-      
+
       const result = await AssertionHelpers.assertCompletesWithin(operation, 200);
       expect(result).toBe('completed');
     });
@@ -97,9 +97,9 @@ describe('AssertionHelpers', () => {
         await new Promise(resolve => setTimeout(resolve, 200));
         return 'completed';
       };
-      
+
       await expect(
-        AssertionHelpers.assertCompletesWithin(operation, 50)
+        AssertionHelpers.assertCompletesWithin(operation, 50),
       ).rejects.toThrow(TestError);
     });
   });
@@ -112,14 +112,14 @@ describe('AssertionHelpers', () => {
 
     it('should fail when array does not contain matching element', () => {
       const array = [1, 2, 3];
-      expect(() => 
-        AssertionHelpers.assertArrayContains(array, x => x > 5)
+      expect(() =>
+        AssertionHelpers.assertArrayContains(array, x => x > 5),
       ).toThrow(TestError);
     });
 
     it('should fail when input is not an array', () => {
-      expect(() => 
-        AssertionHelpers.assertArrayContains('not-array' as any, x => true)
+      expect(() =>
+        AssertionHelpers.assertArrayContains('not-array' as any, x => true),
       ).toThrow(TestError);
     });
   });
@@ -132,8 +132,8 @@ describe('AssertionHelpers', () => {
 
     it('should fail when not all elements match predicate', () => {
       const array = [2, 4, 5, 8];
-      expect(() => 
-        AssertionHelpers.assertArrayAll(array, x => x % 2 === 0)
+      expect(() =>
+        AssertionHelpers.assertArrayAll(array, x => x % 2 === 0),
       ).toThrow(TestError);
     });
   });
@@ -146,37 +146,37 @@ describe('AssertionHelpers', () => {
 
     it('should fail when object is missing properties', () => {
       const obj = { name: 'John' };
-      expect(() => 
-        AssertionHelpers.assertObjectHasProperties(obj, { name: 'John', age: 30 })
+      expect(() =>
+        AssertionHelpers.assertObjectHasProperties(obj, { name: 'John', age: 30 }),
       ).toThrow(TestError);
     });
 
     it('should fail when property values do not match', () => {
       const obj = { name: 'John', age: 25 };
-      expect(() => 
-        AssertionHelpers.assertObjectHasProperties(obj, { name: 'John', age: 30 })
+      expect(() =>
+        AssertionHelpers.assertObjectHasProperties(obj, { name: 'John', age: 30 }),
       ).toThrow(TestError);
     });
   });
 
   describe('assertObjectMatches', () => {
     it('should pass when object matches partial structure', () => {
-      const obj = { 
-        user: { name: 'John', age: 30 }, 
+      const obj = {
+        user: { name: 'John', age: 30 },
         settings: { theme: 'dark' },
-        extra: 'data'
+        extra: 'data',
       };
-      
+
       AssertionHelpers.assertObjectMatches(obj, {
         user: { name: 'John' },
-        settings: { theme: 'dark' }
+        settings: { theme: 'dark' },
       });
     });
 
     it('should fail when object does not match structure', () => {
       const obj = { user: { name: 'John' } };
-      expect(() => 
-        AssertionHelpers.assertObjectMatches(obj, { user: { name: 'Jane' } })
+      expect(() =>
+        AssertionHelpers.assertObjectMatches(obj, { user: { name: 'Jane' } }),
       ).toThrow(TestError);
     });
   });
@@ -185,24 +185,24 @@ describe('AssertionHelpers', () => {
     it('should pass when mock was called with expected arguments', () => {
       const mockFn = jest.fn();
       mockFn('arg1', 'arg2');
-      
+
       AssertionHelpers.assertMockCalledWith(mockFn, ['arg1', 'arg2']);
     });
 
     it('should fail when mock was not called enough times', () => {
       const mockFn = jest.fn();
-      
-      expect(() => 
-        AssertionHelpers.assertMockCalledWith(mockFn, ['arg1'])
+
+      expect(() =>
+        AssertionHelpers.assertMockCalledWith(mockFn, ['arg1']),
       ).toThrow(TestError);
     });
 
     it('should fail when mock was called with different arguments', () => {
       const mockFn = jest.fn();
       mockFn('wrong', 'args');
-      
-      expect(() => 
-        AssertionHelpers.assertMockCalledWith(mockFn, ['arg1', 'arg2'])
+
+      expect(() =>
+        AssertionHelpers.assertMockCalledWith(mockFn, ['arg1', 'arg2']),
       ).toThrow(TestError);
     });
 
@@ -210,7 +210,7 @@ describe('AssertionHelpers', () => {
       const mockFn = jest.fn();
       mockFn('first', 'call');
       mockFn('second', 'call');
-      
+
       AssertionHelpers.assertMockCalledWith(mockFn, ['second', 'call'], 1);
     });
   });
@@ -238,7 +238,7 @@ describe('AssertionHelpers', () => {
       const start = new Date('2023-01-01');
       const end = new Date('2023-12-31');
       const middle = new Date('2023-06-15');
-      
+
       AssertionHelpers.assertDateInRange(middle, start, end);
     });
 
@@ -246,18 +246,18 @@ describe('AssertionHelpers', () => {
       const start = new Date('2023-01-01');
       const end = new Date('2023-12-31');
       const before = new Date('2022-12-31');
-      
-      expect(() => 
-        AssertionHelpers.assertDateInRange(before, start, end)
+
+      expect(() =>
+        AssertionHelpers.assertDateInRange(before, start, end),
       ).toThrow(TestError);
     });
 
     it('should fail when input is not a valid date', () => {
       const start = new Date('2023-01-01');
       const end = new Date('2023-12-31');
-      
-      expect(() => 
-        AssertionHelpers.assertDateInRange(new Date('invalid'), start, end)
+
+      expect(() =>
+        AssertionHelpers.assertDateInRange(new Date('invalid'), start, end),
       ).toThrow(TestError);
     });
   });
@@ -269,14 +269,14 @@ describe('AssertionHelpers', () => {
     });
 
     it('should fail when string does not match pattern', () => {
-      expect(() => 
-        AssertionHelpers.assertStringMatches('hello world', /goodbye/)
+      expect(() =>
+        AssertionHelpers.assertStringMatches('hello world', /goodbye/),
       ).toThrow(TestError);
     });
 
     it('should fail when input is not a string', () => {
-      expect(() => 
-        AssertionHelpers.assertStringMatches(123 as any, /\d+/)
+      expect(() =>
+        AssertionHelpers.assertStringMatches(123 as any, /\d+/),
       ).toThrow(TestError);
     });
   });
@@ -288,7 +288,7 @@ describe('AssertionHelpers', () => {
         counter++;
         return { result: 'constant', timestamp: '2023-01-01' };
       };
-      
+
       await AssertionHelpers.assertIdempotent(operation, 3);
       expect(counter).toBe(3);
     });
@@ -296,9 +296,9 @@ describe('AssertionHelpers', () => {
     it('should fail when operation is not idempotent', async () => {
       let counter = 0;
       const operation = () => ({ timestamp: Date.now(), counter: ++counter });
-      
+
       await expect(
-        AssertionHelpers.assertIdempotent(operation, 3)
+        AssertionHelpers.assertIdempotent(operation, 3),
       ).rejects.toThrow(TestError);
     });
 
@@ -307,7 +307,7 @@ describe('AssertionHelpers', () => {
         await new Promise(resolve => setTimeout(resolve, 10));
         return { result: 'constant' };
       };
-      
+
       await AssertionHelpers.assertIdempotent(operation, 2);
     });
   });

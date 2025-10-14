@@ -1,6 +1,6 @@
 /**
  * 并行测试执行引擎
- * 
+ *
  * 这个模块提供了完整的并行测试执行解决方案，包括：
  * - 多进程并行测试执行器
  * - 智能负载均衡和任务分配
@@ -22,14 +22,14 @@ export type {
   TestError,
   ParallelExecutionOptions,
   WorkerTask,
-  WorkerResult
+  WorkerResult,
 } from './ParallelTestExecutor';
 
 export type {
   WorkerNode,
   Task,
   LoadBalancingStrategy,
-  LoadBalancingMetrics
+  LoadBalancingMetrics,
 } from './LoadBalancer';
 
 export type {
@@ -39,7 +39,7 @@ export type {
   PerformanceMetrics,
   ErrorSummary,
   ExecutionTimeline,
-  AggregationOptions
+  AggregationOptions,
 } from './ResultAggregator';
 
 export type {
@@ -48,7 +48,7 @@ export type {
   IsolationPolicy,
   WorkerHealth,
   ErrorHandlingResult,
-  ErrorStatistics
+  ErrorStatistics,
 } from './ErrorIsolation';
 
 /**
@@ -75,7 +75,7 @@ export class ParallelTestEngine {
     // 初始化并行执行器
     this.executor = new ParallelTestExecutor({
       ...options.executionOptions,
-      loadBalancing: strategy.name as any
+      loadBalancing: strategy.name as any,
     });
 
     this.setupEventHandlers();
@@ -93,7 +93,7 @@ export class ParallelTestEngine {
         severity: 'medium',
         workerId: data.workerId,
         timestamp: Date.now(),
-        stack: data.error.stack
+        stack: data.error.stack,
       });
     });
 
@@ -145,7 +145,7 @@ export class ParallelTestEngine {
     return {
       executor: this.executor.getExecutionStats(),
       loadBalancer: this.loadBalancer.getMetrics(),
-      errorIsolation: this.errorIsolation.getErrorStatistics()
+      errorIsolation: this.errorIsolation.getErrorStatistics(),
     };
   }
 
@@ -171,13 +171,11 @@ export interface ParallelTestEngineOptions {
 }
 
 // 重新导出类型
-import type { ParallelExecutionOptions } from './ParallelTestExecutor';
-import type { LoadBalancingStrategy } from './LoadBalancer';
-import type { AggregationOptions } from './ResultAggregator';
 import type { IsolationPolicy } from './ErrorIsolation';
-import type { TestSuite, AggregatedResult } from './ParallelTestExecutor';
-import { WeightedStrategy } from './LoadBalancer';
 import { ErrorIsolation } from './ErrorIsolation';
-import { LoadBalancer } from './LoadBalancer';
-import { ResultAggregator } from './ResultAggregator';
+import type { LoadBalancingStrategy } from './LoadBalancer';
+import { WeightedStrategy, LoadBalancer } from './LoadBalancer';
+import type { TestSuite, AggregatedResult, ParallelExecutionOptions } from './ParallelTestExecutor';
 import { ParallelTestExecutor } from './ParallelTestExecutor';
+import type { AggregationOptions } from './ResultAggregator';
+import { ResultAggregator } from './ResultAggregator';

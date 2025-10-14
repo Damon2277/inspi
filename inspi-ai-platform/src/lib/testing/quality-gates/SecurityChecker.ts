@@ -1,12 +1,13 @@
 /**
  * Security Checker
- * 
+ *
  * Implements security test compliance verification with automated
  * scanning for common security vulnerabilities and best practices.
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
+
 import { glob } from 'glob';
 
 export interface SecurityViolation {
@@ -81,10 +82,10 @@ export class SecurityChecker {
     try {
       const violations: SecurityViolation[] = [];
       const allRules = [...this.builtInRules, ...this.config.customRules];
-      
+
       // Get all files to scan
       const filesToScan = await this.getFilesToScan();
-      
+
       // Apply each rule to each file
       for (const rule of allRules) {
         if (this.isRuleEnabled(rule)) {
@@ -103,7 +104,7 @@ export class SecurityChecker {
         violations,
         riskLevel,
         summary,
-        categories
+        categories,
       };
     } catch (error) {
       return {
@@ -115,7 +116,7 @@ export class SecurityChecker {
           line: 0,
           message: `Security check failed: ${(error as Error).message}`,
           recommendation: 'Fix security checker configuration',
-          evidence: ''
+          evidence: '',
         }],
         riskLevel: 'high',
         summary: { total: 1, critical: 0, high: 1, medium: 0, low: 0 },
@@ -125,8 +126,8 @@ export class SecurityChecker {
           crypto: [],
           auth: [],
           xss: [],
-          other: []
-        }
+          other: [],
+        },
       };
     }
   }
@@ -154,7 +155,7 @@ export class SecurityChecker {
       `- High: ${result.summary.high}`,
       `- Medium: ${result.summary.medium}`,
       `- Low: ${result.summary.low}`,
-      ''
+      '',
     ];
 
     // Violations by category
@@ -162,7 +163,7 @@ export class SecurityChecker {
     for (const [category, violations] of categories) {
       if (violations.length > 0) {
         lines.push(`## ${category.charAt(0).toUpperCase() + category.slice(1)} Violations`);
-        
+
         violations.slice(0, 10).forEach(violation => {
           lines.push(`### ${violation.rule} (${violation.severity.toUpperCase()})`);
           lines.push(`**File:** ${violation.file}:${violation.line}`);
@@ -335,7 +336,7 @@ export class SecurityChecker {
         filePatterns: ['**/*.ts', '**/*.js', '**/*.tsx', '**/*.jsx'],
         recommendation: 'Remove console statements or use proper logging libraries',
         cweId: 'CWE-532',
-      }
+      },
     ];
   }
 
@@ -350,7 +351,7 @@ export class SecurityChecker {
       '!node_modules/**',
       '!coverage/**',
       '!dist/**',
-      '!build/**'
+      '!build/**',
     ];
 
     // Add exclude patterns from config
@@ -386,24 +387,24 @@ export class SecurityChecker {
 
   private async applyRule(rule: SecurityRule, files: string[]): Promise<SecurityViolation[]> {
     const violations: SecurityViolation[] = [];
-    
+
     // Filter files based on rule's file patterns
-    const applicableFiles = files.filter(file => 
-      rule.filePatterns.some(pattern => 
-        file.includes(pattern.replace('**/', '').replace('*', ''))
-      )
+    const applicableFiles = files.filter(file =>
+      rule.filePatterns.some(pattern =>
+        file.includes(pattern.replace('**/', '').replace('*', '')),
+      ),
     );
 
     for (const file of applicableFiles) {
       try {
         const content = fs.readFileSync(file, 'utf8');
         const lines = content.split('\n');
-        
+
         let match;
         while ((match = rule.pattern.exec(content)) !== null) {
           const lineNumber = this.getLineNumber(content, match.index);
           const evidence = match[0].length > 100 ? match[0].substring(0, 100) + '...' : match[0];
-          
+
           violations.push({
             rule: rule.id,
             severity: rule.severity,
@@ -412,10 +413,10 @@ export class SecurityChecker {
             message: rule.description,
             recommendation: rule.recommendation,
             cweId: rule.cweId,
-            evidence: evidence
+            evidence: evidence,
           });
         }
-        
+
         // Reset regex lastIndex to avoid issues with global regex
         rule.pattern.lastIndex = 0;
       } catch (error) {
@@ -438,7 +439,7 @@ export class SecurityChecker {
       critical: 0,
       high: 0,
       medium: 0,
-      low: 0
+      low: 0,
     };
 
     violations.forEach(violation => {
@@ -462,7 +463,7 @@ export class SecurityChecker {
       crypto: [],
       auth: [],
       xss: [],
-      other: []
+      other: [],
     };
 
     violations.forEach(violation => {
@@ -495,7 +496,7 @@ export class SecurityChecker {
 
   private generateTopRecommendations(violations: SecurityViolation[]): string[] {
     const recommendations = new Map<string, number>();
-    
+
     violations.forEach(violation => {
       const count = recommendations.get(violation.recommendation) || 0;
       recommendations.set(violation.recommendation, count + 1);

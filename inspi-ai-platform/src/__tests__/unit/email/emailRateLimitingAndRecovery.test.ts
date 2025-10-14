@@ -3,12 +3,13 @@
  * 测试邮件服务的限流机制、错误恢复策略和服务降级
  */
 
-import { EmailService } from '@/lib/email/service';
-import { MockEmailService } from '@/lib/testing/mocks/MockEmailService';
-import { TestDataFactory } from '@/lib/testing/TestDataFactory';
-import { PerformanceMonitor } from '@/lib/testing/performance/PerformanceMonitor';
-import { AssertionHelpers } from '@/lib/testing/helpers/AssertionHelpers';
 import nodemailer from 'nodemailer';
+
+import { EmailService } from '@/lib/email/service';
+import { AssertionHelpers } from '@/lib/testing/helpers/AssertionHelpers';
+import { MockEmailService } from '@/lib/testing/mocks/MockEmailService';
+import { PerformanceMonitor } from '@/lib/testing/performance/PerformanceMonitor';
+import { TestDataFactory } from '@/lib/testing/TestDataFactory';
 
 // Mock dependencies
 jest.mock('nodemailer');
@@ -30,7 +31,7 @@ describe('Email Rate Limiting and Recovery Tests', () => {
     expire: jest.fn(),
     del: jest.fn(),
     exists: jest.fn(),
-    ttl: jest.fn()
+    ttl: jest.fn(),
   };
 
   beforeEach(() => {
@@ -41,7 +42,7 @@ describe('Email Rate Limiting and Recovery Tests', () => {
     mockTransporter = {
       sendMail: jest.fn(),
       verify: jest.fn(),
-      close: jest.fn()
+      close: jest.fn(),
     };
 
     (nodemailer.createTransporter as jest.Mock).mockReturnValue(mockTransporter);
@@ -67,7 +68,7 @@ describe('Email Rate Limiting and Recovery Tests', () => {
   afterEach(() => {
     jest.useRealTimers();
     jest.clearAllMocks();
-    
+
     // Clean up environment
     delete process.env.EMAIL_SMTP_HOST;
     delete process.env.EMAIL_SMTP_PORT;
@@ -83,13 +84,13 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'ratelimit@example.com',
-        name: 'Rate Limited User'
+        name: 'Rate Limited User',
       });
 
       const emailOptions = {
         to: user.email,
         subject: 'Rate Limit Test',
-        html: '<p>Test content</p>'
+        html: '<p>Test content</p>',
       };
 
       // Mock Redis responses for rate limiting
@@ -112,13 +113,13 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'overlimit@example.com',
-        name: 'Over Limit User'
+        name: 'Over Limit User',
       });
 
       const emailOptions = {
         to: user.email,
         subject: 'Over Limit Test',
-        html: '<p>This should be rejected</p>'
+        html: '<p>This should be rejected</p>',
       };
 
       // Mock Redis - 用户已达到限制
@@ -137,21 +138,21 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'typelimit@example.com',
-        name: 'Type Limit User'
+        name: 'Type Limit User',
       });
 
       const verificationEmail = {
         to: user.email,
         subject: 'Verification Code',
         html: '<p>Code: 123456</p>',
-        headers: { 'X-Email-Type': 'verification' }
+        headers: { 'X-Email-Type': 'verification' },
       };
 
       const marketingEmail = {
         to: user.email,
         subject: 'Marketing Newsletter',
         html: '<p>Check our features!</p>',
-        headers: { 'X-Email-Type': 'marketing' }
+        headers: { 'X-Email-Type': 'marketing' },
       };
 
       // Mock Redis - 验证邮件限制更宽松
@@ -177,13 +178,13 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'window@example.com',
-        name: 'Window User'
+        name: 'Window User',
       });
 
       const emailOptions = {
         to: user.email,
         subject: 'Window Test',
-        html: '<p>Window test</p>'
+        html: '<p>Window test</p>',
       };
 
       // Mock Redis - 初始状态接近限制
@@ -215,8 +216,8 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       const users = Array.from({ length: 20 }, (_, i) =>
         testDataFactory.user.create({
           email: `global${i}@example.com`,
-          name: `Global User ${i}`
-        })
+          name: `Global User ${i}`,
+        }),
       );
 
       // Mock Redis - 全局计数器
@@ -244,15 +245,15 @@ describe('Email Rate Limiting and Recovery Tests', () => {
           emailService.sendEmail({
             to: user.email,
             subject: 'Global Test',
-            html: '<p>Global test</p>'
-          })
-        )
+            html: '<p>Global test</p>',
+          }),
+        ),
       );
 
       // Assert
       const successCount = results.filter(r => r.success).length;
-      const rateLimitedCount = results.filter(r => 
-        !r.success && r.error?.includes('Global rate limit')
+      const rateLimitedCount = results.filter(r =>
+        !r.success && r.error?.includes('Global rate limit'),
       ).length;
 
       expect(successCount).toBeLessThan(20); // 应该有全局限制
@@ -263,14 +264,14 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'loadtest@example.com',
-        name: 'Load Test User'
+        name: 'Load Test User',
       });
 
       // Mock系统负载检测
       const mockSystemLoad = {
         cpu: 0.9,  // 90% CPU使用率
         memory: 0.8, // 80% 内存使用率
-        queue: 100   // 100个待处理任务
+        queue: 100,   // 100个待处理任务
       };
 
       // Mock Redis - 基于负载调整限制
@@ -281,10 +282,10 @@ describe('Email Rate Limiting and Recovery Tests', () => {
         return Promise.resolve('0');
       });
 
-      mockTransporter.sendMail.mockImplementation(() => 
-        new Promise(resolve => 
-          setTimeout(() => resolve({ messageId: 'load-test' }), 1000)
-        )
+      mockTransporter.sendMail.mockImplementation(() =>
+        new Promise(resolve =>
+          setTimeout(() => resolve({ messageId: 'load-test' }), 1000),
+        ),
       );
 
       // Act
@@ -292,7 +293,7 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       const result = await emailService.sendEmail({
         to: user.email,
         subject: 'Load Test',
-        html: '<p>Load test</p>'
+        html: '<p>Load test</p>',
       });
       const duration = Date.now() - startTime;
 
@@ -307,14 +308,14 @@ describe('Email Rate Limiting and Recovery Tests', () => {
         to: 'high@example.com',
         subject: 'High Priority',
         html: '<p>High priority content</p>',
-        headers: { 'X-Priority': 'high' }
+        headers: { 'X-Priority': 'high' },
       };
 
       const lowPriorityEmail = {
         to: 'low@example.com',
         subject: 'Low Priority',
         html: '<p>Low priority content</p>',
-        headers: { 'X-Priority': 'low' }
+        headers: { 'X-Priority': 'low' },
       };
 
       const sendOrder: string[] = [];
@@ -341,13 +342,13 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'retry@example.com',
-        name: 'Retry User'
+        name: 'Retry User',
       });
 
       const emailOptions = {
         to: user.email,
         subject: 'Retry Test',
-        html: '<p>Retry test</p>'
+        html: '<p>Retry test</p>',
       };
 
       const retryDelays: number[] = [];
@@ -379,30 +380,30 @@ describe('Email Rate Limiting and Recovery Tests', () => {
         {
           error: Object.assign(new Error('Network timeout'), { code: 'ETIMEDOUT' }),
           shouldRetry: true,
-          description: '网络超时'
+          description: '网络超时',
         },
         {
           error: Object.assign(new Error('Connection reset'), { code: 'ECONNRESET' }),
           shouldRetry: true,
-          description: '连接重置'
+          description: '连接重置',
         },
         {
           error: Object.assign(new Error('Authentication failed'), { code: 'EAUTH' }),
           shouldRetry: false,
-          description: '认证失败'
+          description: '认证失败',
         },
         {
           error: Object.assign(new Error('Invalid recipient'), { responseCode: 550 }),
           shouldRetry: false,
-          description: '无效收件人'
-        }
+          description: '无效收件人',
+        },
       ];
 
       for (const testCase of testCases) {
         // Arrange
         const user = testDataFactory.user.create({
           email: `${testCase.error.code}@example.com`,
-          name: 'Error Test User'
+          name: 'Error Test User',
         });
 
         let attemptCount = 0;
@@ -415,12 +416,12 @@ describe('Email Rate Limiting and Recovery Tests', () => {
         const result = await emailService.sendEmail({
           to: user.email,
           subject: 'Error Test',
-          html: '<p>Error test</p>'
+          html: '<p>Error test</p>',
         });
 
         // Assert
         expect(result.success).toBe(false);
-        
+
         if (testCase.shouldRetry) {
           expect(attemptCount).toBeGreaterThan(1); // 应该重试
         } else {
@@ -436,13 +437,13 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'circuit@example.com',
-        name: 'Circuit Breaker User'
+        name: 'Circuit Breaker User',
       });
 
       const emailOptions = {
         to: user.email,
         subject: 'Circuit Breaker Test',
-        html: '<p>Circuit breaker test</p>'
+        html: '<p>Circuit breaker test</p>',
       };
 
       // Mock连续失败
@@ -454,7 +455,7 @@ describe('Email Rate Limiting and Recovery Tests', () => {
         emailService.sendEmail(emailOptions),
         emailService.sendEmail(emailOptions),
         emailService.sendEmail(emailOptions),
-        emailService.sendEmail(emailOptions)
+        emailService.sendEmail(emailOptions),
       ]);
 
       // Assert
@@ -471,13 +472,13 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'recovery@example.com',
-        name: 'Recovery User'
+        name: 'Recovery User',
       });
 
       const emailOptions = {
         to: user.email,
         subject: 'Recovery Test',
-        html: '<p>Recovery test</p>'
+        html: '<p>Recovery test</p>',
       };
 
       // Mock初始失败，然后恢复
@@ -491,8 +492,8 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       });
 
       // Act - 触发断路器
-      await Promise.all(Array(5).fill(null).map(() => 
-        emailService.sendEmail(emailOptions)
+      await Promise.all(Array(5).fill(null).map(() =>
+        emailService.sendEmail(emailOptions),
       ));
 
       // 等待断路器半开状态
@@ -510,7 +511,7 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'degraded@example.com',
-        name: 'Degraded User'
+        name: 'Degraded User',
       });
 
       // Mock服务不可用
@@ -518,17 +519,17 @@ describe('Email Rate Limiting and Recovery Tests', () => {
 
       // Mock降级存储（如文件系统或备用队列）
       const mockDegradedStorage = {
-        store: jest.fn().mockResolvedValue(true)
+        store: jest.fn().mockResolvedValue(true),
       };
 
       // Act
       const result = await emailService.sendEmail({
         to: user.email,
         subject: 'Degraded Test',
-        html: '<p>Degraded test</p>'
-      }, { 
+        html: '<p>Degraded test</p>',
+      }, {
         allowDegradation: true,
-        degradedStorage: mockDegradedStorage 
+        degradedStorage: mockDegradedStorage,
       });
 
       // Assert
@@ -544,19 +545,19 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       const emails = Array.from({ length: 10 }, (_, i) => ({
         to: `queue${i}@example.com`,
         subject: `Queue Test ${i}`,
-        html: `<p>Queue test ${i}</p>`
+        html: `<p>Queue test ${i}</p>`,
       }));
 
       const processedOrder: number[] = [];
       mockTransporter.sendMail.mockImplementation((options) => {
-        const index = parseInt(options.subject.match(/\d+/)?.[0] || '0');
+        const index = parseInt(options.subject.match(/\d+/)?.[0] || '0', 10);
         processedOrder.push(index);
         return Promise.resolve({ messageId: `queue-${index}` });
       });
 
       // Act
       const results = await Promise.all(
-        emails.map(email => emailService.sendEmail(email))
+        emails.map(email => emailService.sendEmail(email)),
       );
 
       // Assert
@@ -568,7 +569,7 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'queuefull@example.com',
-        name: 'Queue Full User'
+        name: 'Queue Full User',
       });
 
       // Mock队列满
@@ -578,7 +579,7 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       const result = await emailService.sendEmail({
         to: user.email,
         subject: 'Queue Full Test',
-        html: '<p>Queue full test</p>'
+        html: '<p>Queue full test</p>',
       });
 
       // Assert
@@ -590,25 +591,25 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'delayed@example.com',
-        name: 'Delayed User'
+        name: 'Delayed User',
       });
 
       const delayMs = 5000; // 5秒延迟
       const sendTime = Date.now();
 
-      mockTransporter.sendMail.mockImplementation(() => 
-        new Promise(resolve => 
-          setTimeout(() => resolve({ messageId: 'delayed-test' }), delayMs)
-        )
+      mockTransporter.sendMail.mockImplementation(() =>
+        new Promise(resolve =>
+          setTimeout(() => resolve({ messageId: 'delayed-test' }), delayMs),
+        ),
       );
 
       // Act
       const result = await emailService.sendEmail({
         to: user.email,
         subject: 'Delayed Test',
-        html: '<p>Delayed test</p>'
-      }, { 
-        delay: delayMs 
+        html: '<p>Delayed test</p>',
+      }, {
+        delay: delayMs,
       });
 
       const actualDelay = Date.now() - sendTime;
@@ -620,14 +621,14 @@ describe('Email Rate Limiting and Recovery Tests', () => {
 
     it('应该支持批量发送优化', async () => {
       // Arrange
-      const recipients = Array.from({ length: 100 }, (_, i) => 
-        `batch${i}@example.com`
+      const recipients = Array.from({ length: 100 }, (_, i) =>
+        `batch${i}@example.com`,
       );
 
       const batchEmail = {
         to: recipients,
         subject: 'Batch Test',
-        html: '<p>Batch test</p>'
+        html: '<p>Batch test</p>',
       };
 
       let batchCount = 0;
@@ -652,7 +653,7 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'metrics@example.com',
-        name: 'Metrics User'
+        name: 'Metrics User',
       });
 
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'metrics-test' });
@@ -661,7 +662,7 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       await emailService.sendEmail({
         to: user.email,
         subject: 'Metrics Test',
-        html: '<p>Metrics test</p>'
+        html: '<p>Metrics test</p>',
       });
 
       const metrics = emailService.getMetrics();
@@ -678,14 +679,14 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'performance@example.com',
-        name: 'Performance User'
+        name: 'Performance User',
       });
 
       const responseTime = 500;
-      mockTransporter.sendMail.mockImplementation(() => 
-        new Promise(resolve => 
-          setTimeout(() => resolve({ messageId: 'perf-test' }), responseTime)
-        )
+      mockTransporter.sendMail.mockImplementation(() =>
+        new Promise(resolve =>
+          setTimeout(() => resolve({ messageId: 'perf-test' }), responseTime),
+        ),
       );
 
       // Act
@@ -693,13 +694,13 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       await emailService.sendEmail({
         to: user.email,
         subject: 'Performance Test',
-        html: '<p>Performance test</p>'
+        html: '<p>Performance test</p>',
       });
       const duration = performanceMonitor.endTimer('email-performance');
 
       // Assert
       expect(duration).toBeGreaterThanOrEqual(responseTime);
-      
+
       const performanceMetrics = performanceMonitor.getMetrics();
       expect(performanceMetrics).toHaveProperty('email-performance');
     });
@@ -728,12 +729,12 @@ describe('Email Rate Limiting and Recovery Tests', () => {
         rateLimits: {
           perUser: 10,
           perHour: 100,
-          global: 1000
+          global: 1000,
         },
         retryPolicy: {
           maxAttempts: 5,
-          backoffMultiplier: 2
-        }
+          backoffMultiplier: 2,
+        },
       };
 
       // Act
@@ -751,12 +752,12 @@ describe('Email Rate Limiting and Recovery Tests', () => {
         rateLimits: {
           perUser: -1, // 无效值
           perHour: 'invalid', // 无效类型
-        }
+        },
       };
 
       // Act & Assert
       await expect(
-        emailService.updateConfig(invalidConfig)
+        emailService.updateConfig(invalidConfig),
       ).rejects.toThrow('Invalid configuration');
     });
 
@@ -764,7 +765,7 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'reset@example.com',
-        name: 'Reset User'
+        name: 'Reset User',
       });
 
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'reset-test' });
@@ -773,7 +774,7 @@ describe('Email Rate Limiting and Recovery Tests', () => {
       await emailService.sendEmail({
         to: user.email,
         subject: 'Reset Test',
-        html: '<p>Reset test</p>'
+        html: '<p>Reset test</p>',
       });
 
       // Act

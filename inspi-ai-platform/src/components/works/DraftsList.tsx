@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+
 import { WorkDocument } from '@/lib/models/Work';
 
 interface DraftsListProps {
@@ -9,10 +10,10 @@ interface DraftsListProps {
   className?: string;
 }
 
-export default function DraftsList({ 
-  onSelectDraft, 
+export default function DraftsList({
+  onSelectDraft,
   onDeleteDraft,
-  className = '' 
+  className = '',
 }: DraftsListProps) {
   const [drafts, setDrafts] = useState<WorkDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,21 +43,21 @@ export default function DraftsList({
 
   const handleDelete = async (draftId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     if (!confirm('确定要删除这个草稿吗？此操作不可恢复。')) {
       return;
     }
 
     try {
       const response = await fetch(`/api/works/${draftId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
-        setDrafts(prev => prev.filter(draft => String(draft._id) !== draftId));
-        onDeleteDraft?.(draftId);
+        setDrafts(drafts.filter(draft => String(draft._id) !== draftId));
+        onDeleteDraft && onDeleteDraft(draftId);
       } else {
         alert(data.message || '删除失败');
       }
@@ -70,7 +71,7 @@ export default function DraftsList({
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -122,7 +123,7 @@ export default function DraftsList({
         {drafts.map((draft) => (
           <div
             key={String(draft._id)}
-            onClick={() => onSelectDraft?.(draft)}
+            onClick={() => onSelectDraft && onSelectDraft(draft)}
             className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer group"
           >
             <div className="flex justify-between items-start">
@@ -133,7 +134,7 @@ export default function DraftsList({
                 <p className="text-sm text-gray-600 mt-1 truncate">
                   {draft.knowledgePoint || '暂无知识点'}
                 </p>
-                
+
                 <div className="flex items-center mt-2 text-xs text-gray-500 space-x-3">
                   <span>{draft.subject || '未选择学科'}</span>
                   <span>•</span>
@@ -141,12 +142,12 @@ export default function DraftsList({
                   <span>•</span>
                   <span>{draft.cards?.length || 0} 张卡片</span>
                 </div>
-                
+
                 <div className="flex items-center justify-between mt-2">
                   <span className="text-xs text-gray-400">
                     更新于 {formatDate(draft.updatedAt)}
                   </span>
-                  
+
                   <div className="flex items-center space-x-1">
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                       草稿
@@ -154,7 +155,7 @@ export default function DraftsList({
                   </div>
                 </div>
               </div>
-              
+
               <div className="ml-3 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={(e) => handleDelete(String(draft._id), e)}
@@ -170,7 +171,7 @@ export default function DraftsList({
           </div>
         ))}
       </div>
-      
+
       {drafts.length > 0 && (
         <div className="text-center mt-4">
           <p className="text-xs text-gray-500">

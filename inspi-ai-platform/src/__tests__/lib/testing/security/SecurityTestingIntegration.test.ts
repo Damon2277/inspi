@@ -1,6 +1,6 @@
 /**
  * Security Testing Integration Tests
- * 
+ *
  * 测试安全测试框架的集成功能
  */
 
@@ -9,7 +9,7 @@ import {
   InputValidationTester,
   AuthorizationTester,
   EncryptionValidator,
-  VulnerabilityScanner
+  VulnerabilityScanner,
 } from '../../../../lib/testing/security';
 
 describe('安全测试集成', () => {
@@ -29,37 +29,37 @@ describe('安全测试集成', () => {
               payload: '<script>alert("test")</script>',
               description: 'Basic XSS test',
               severity: 'high' as const,
-              expectedBehavior: 'block' as const
-            }
+              expectedBehavior: 'block' as const,
+            },
           ],
           sanitizationTests: true,
-          encodingTests: true
+          encodingTests: true,
         },
         authorizationTests: {
           enabled: true,
           roleBasedTests: true,
           resourceAccessTests: true,
-          elevationTests: true
+          elevationTests: true,
         },
         encryptionTests: {
           enabled: true,
           algorithmTests: true,
           keyManagementTests: true,
-          dataIntegrityTests: true
+          dataIntegrityTests: true,
         },
         vulnerabilityScanning: {
           enabled: true,
           sqlInjection: true,
           xssInjection: true,
           commandInjection: true,
-          pathTraversal: true
+          pathTraversal: true,
         },
         reporting: {
           enabled: true,
           detailedLogs: true,
           vulnerabilityScoring: true,
-          complianceChecks: true
-        }
+          complianceChecks: true,
+        },
       };
 
       framework = new SecurityTestFramework(config);
@@ -67,7 +67,7 @@ describe('安全测试集成', () => {
 
     it('应该能够运行完整的安全测试套件', async () => {
       const results = await framework.runSecurityTestSuite();
-      
+
       expect(results).toBeDefined();
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBeGreaterThan(0);
@@ -76,7 +76,7 @@ describe('安全测试集成', () => {
     it('应该能够生成安全测试报告', async () => {
       await framework.runSecurityTestSuite();
       const report = framework.generateSecurityReport();
-      
+
       expect(report).toBeDefined();
       expect(report.summary).toBeDefined();
       expect(report.vulnerabilities).toBeDefined();
@@ -88,10 +88,10 @@ describe('安全测试集成', () => {
     it('应该能够检测到安全漏洞', async () => {
       const results = await framework.runSecurityTestSuite();
       const report = framework.generateSecurityReport();
-      
+
       // 检查是否有漏洞被检测到
       expect(report.vulnerabilities.total).toBeGreaterThanOrEqual(0);
-      
+
       if (report.vulnerabilities.total > 0) {
         expect(report.vulnerabilityDetails.length).toBeGreaterThan(0);
         expect(report.recommendations.length).toBeGreaterThan(0);
@@ -116,9 +116,9 @@ describe('安全测试集成', () => {
             name: 'Remove Scripts',
             pattern: /<script[^>]*>.*?<\/script>/gi,
             replacement: '',
-            description: 'Remove script tags'
-          }
-        ]
+            description: 'Remove script tags',
+          },
+        ],
       };
 
       tester = new InputValidationTester(config);
@@ -130,14 +130,14 @@ describe('安全测试集成', () => {
           sanitized: 'test input',
           escaped: 'test input',
           errors: [],
-          warnings: []
-        })
+          warnings: [],
+        }),
       };
     });
 
     it('应该能够运行输入验证测试', async () => {
       const results = await tester.runValidationTests(mockValidator);
-      
+
       expect(results).toBeDefined();
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBeGreaterThan(0);
@@ -151,14 +151,14 @@ describe('安全测试集成', () => {
         sanitized: '<script>alert("xss")</script>',
         escaped: '<script>alert("xss")</script>',
         errors: [],
-        warnings: []
+        warnings: [],
       });
 
       const results = await tester.runValidationTests(mockValidator);
       const xssResults = results.filter(r => r.payload.type === 'xss');
-      
+
       expect(xssResults.length).toBeGreaterThan(0);
-      
+
       // 检查是否有失败的XSS测试（表示检测到漏洞）
       const failedXssTests = xssResults.filter(r => !r.passed);
       expect(failedXssTests.length).toBeGreaterThanOrEqual(0);
@@ -167,7 +167,7 @@ describe('安全测试集成', () => {
     it('应该能够生成验证报告', async () => {
       const results = await tester.runValidationTests(mockValidator);
       const report = tester.generateValidationReport(results);
-      
+
       expect(report).toBeDefined();
       expect(report.summary).toBeDefined();
       expect(report.riskDistribution).toBeDefined();
@@ -190,7 +190,7 @@ describe('安全测试集成', () => {
         enableTokenTests: true,
         customRoles: [],
         customResources: [],
-        testScenarios: []
+        testScenarios: [],
       };
 
       tester = new AuthorizationTester(config);
@@ -200,14 +200,14 @@ describe('安全测试集成', () => {
           allowed: true,
           decision: 'allow',
           reasonCode: 'valid_permissions',
-          additionalInfo: {}
-        })
+          additionalInfo: {},
+        }),
       };
     });
 
     it('应该能够运行授权测试', async () => {
       const results = await tester.runAuthorizationTests(mockAuthService);
-      
+
       expect(results).toBeDefined();
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBeGreaterThan(0);
@@ -221,15 +221,15 @@ describe('安全测试集成', () => {
           allowed: true, // 错误地允许访问
           decision: 'allow',
           reasonCode: 'bypass_detected',
-          additionalInfo: {}
+          additionalInfo: {},
         });
       });
 
       const results = await tester.runAuthorizationTests(mockAuthService);
       const privilegeEscalationTests = results.filter(r => r.scenario.testType === 'privilege_escalation');
-      
+
       expect(privilegeEscalationTests.length).toBeGreaterThan(0);
-      
+
       // 检查是否有失败的权限提升测试
       const failedTests = privilegeEscalationTests.filter(r => !r.passed);
       expect(failedTests.length).toBeGreaterThan(0);
@@ -238,7 +238,7 @@ describe('安全测试集成', () => {
     it('应该能够生成授权报告', async () => {
       const results = await tester.runAuthorizationTests(mockAuthService);
       const report = tester.generateAuthorizationReport(results);
-      
+
       expect(report).toBeDefined();
       expect(report.summary).toBeDefined();
       expect(report.riskDistribution).toBeDefined();
@@ -267,14 +267,14 @@ describe('安全测试集成', () => {
             blockSize: 128,
             mode: 'CBC',
             padding: 'PKCS7',
-            description: 'AES 256-bit encryption'
-          }
+            description: 'AES 256-bit encryption',
+          },
         ],
         keyStrengthRequirements: {
           minimumSymmetricKeySize: 128,
           minimumAsymmetricKeySize: 2048,
           requiredRandomness: 128,
-          keyRotationInterval: 86400
+          keyRotationInterval: 86400,
         },
         testDataSets: [
           {
@@ -282,9 +282,9 @@ describe('安全测试集成', () => {
             data: 'Hello, World!',
             size: 13,
             type: 'text' as const,
-            sensitivityLevel: 'low' as const
-          }
-        ]
+            sensitivityLevel: 'low' as const,
+          },
+        ],
       };
 
       validator = new EncryptionValidator(config);
@@ -295,13 +295,13 @@ describe('安全测试集成', () => {
         generateKey: jest.fn().mockResolvedValue('generated_key_base64'),
         storeKey: jest.fn().mockResolvedValue(undefined),
         retrieveKey: jest.fn().mockResolvedValue('stored_key_base64'),
-        deleteKey: jest.fn().mockResolvedValue(undefined)
+        deleteKey: jest.fn().mockResolvedValue(undefined),
       };
     });
 
     it('应该能够运行加密测试', async () => {
       const results = await validator.runEncryptionTests(mockEncryptionService);
-      
+
       expect(results).toBeDefined();
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBeGreaterThan(0);
@@ -315,14 +315,14 @@ describe('安全测试集成', () => {
 
       const results = await validator.runEncryptionTests(mockEncryptionService);
       const failedTests = results.filter(r => r.status === 'failed' || r.status === 'error');
-      
+
       expect(failedTests.length).toBeGreaterThan(0);
     });
 
     it('应该能够生成加密报告', async () => {
       const results = await validator.runEncryptionTests(mockEncryptionService);
       const report = validator.generateEncryptionReport(results);
-      
+
       expect(report).toBeDefined();
       expect(report.summary).toBeDefined();
       expect(report.securityLevels).toBeDefined();
@@ -346,7 +346,7 @@ describe('安全测试集成', () => {
         timeout: 10000,
         maxConcurrentScans: 5,
         customRules: [],
-        excludePatterns: []
+        excludePatterns: [],
       };
 
       scanner = new VulnerabilityScanner(config);
@@ -360,12 +360,12 @@ describe('安全测试集成', () => {
           method: 'GET',
           parameters: [],
           headers: {},
-          authentication: { type: 'none' as const }
-        }
+          authentication: { type: 'none' as const },
+        },
       ];
 
       const results = await scanner.runVulnerabilityScan(targets);
-      
+
       expect(results).toBeDefined();
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBe(targets.length);
@@ -382,18 +382,18 @@ describe('安全测试集成', () => {
               name: 'input',
               type: 'string' as const,
               required: true,
-              testValues: ['<script>alert("xss")</script>', "'; DROP TABLE users; --"]
-            }
+              testValues: ['<script>alert("xss")</script>', "'; DROP TABLE users; --"],
+            },
           ],
           headers: {},
-          authentication: { type: 'none' as const }
-        }
+          authentication: { type: 'none' as const },
+        },
       ];
 
       const results = await scanner.runVulnerabilityScan(targets);
-      
+
       expect(results.length).toBeGreaterThan(0);
-      
+
       const vulnerabilities = results.flatMap(r => r.vulnerabilities);
       expect(vulnerabilities.length).toBeGreaterThanOrEqual(0);
     });
@@ -406,13 +406,13 @@ describe('安全测试集成', () => {
           method: 'GET',
           parameters: [],
           headers: {},
-          authentication: { type: 'none' as const }
-        }
+          authentication: { type: 'none' as const },
+        },
       ];
 
       const results = await scanner.runVulnerabilityScan(targets);
       const report = scanner.generateVulnerabilityReport(results);
-      
+
       expect(report).toBeDefined();
       expect(report.summary).toBeDefined();
       expect(report.severityDistribution).toBeDefined();
@@ -434,7 +434,7 @@ describe('安全测试集成', () => {
         authorizationTests: { enabled: true, roleBasedTests: true, resourceAccessTests: true, elevationTests: true },
         encryptionTests: { enabled: true, algorithmTests: true, keyManagementTests: true, dataIntegrityTests: true },
         vulnerabilityScanning: { enabled: true, sqlInjection: true, xssInjection: true, commandInjection: true, pathTraversal: true },
-        reporting: { enabled: true, detailedLogs: true, vulnerabilityScoring: true, complianceChecks: true }
+        reporting: { enabled: true, detailedLogs: true, vulnerabilityScoring: true, complianceChecks: true },
       });
 
       const inputValidator = new InputValidationTester({
@@ -444,7 +444,7 @@ describe('安全测试集成', () => {
         enablePathTraversalTests: false,
         enableFileUploadTests: false,
         customPayloads: [],
-        sanitizationRules: []
+        sanitizationRules: [],
       });
 
       const vulnerabilityScanner = new VulnerabilityScanner({
@@ -456,7 +456,7 @@ describe('安全测试集成', () => {
         timeout: 5000,
         maxConcurrentScans: 2,
         customRules: [],
-        excludePatterns: []
+        excludePatterns: [],
       });
 
       // 运行测试
@@ -470,8 +470,8 @@ describe('安全测试集成', () => {
           sanitized: 'test',
           escaped: 'test',
           errors: [],
-          warnings: []
-        })
+          warnings: [],
+        }),
       };
       const validationResults = await inputValidator.runValidationTests(mockValidator);
       const validationReport = inputValidator.generateValidationReport(validationResults);
@@ -483,8 +483,8 @@ describe('安全测试集成', () => {
           method: 'GET',
           parameters: [],
           headers: {},
-          authentication: { type: 'none' as const }
-        }
+          authentication: { type: 'none' as const },
+        },
       ];
       const scanResults = await vulnerabilityScanner.runVulnerabilityScan(scanTargets);
       const scanReport = vulnerabilityScanner.generateVulnerabilityReport(scanResults);
@@ -511,7 +511,7 @@ describe('安全测试集成', () => {
         authorizationTests: { enabled: false, roleBasedTests: false, resourceAccessTests: false, elevationTests: false },
         encryptionTests: { enabled: false, algorithmTests: false, keyManagementTests: false, dataIntegrityTests: false },
         vulnerabilityScanning: { enabled: false, sqlInjection: false, xssInjection: false, commandInjection: false, pathTraversal: false },
-        reporting: { enabled: true, detailedLogs: true, vulnerabilityScoring: true, complianceChecks: true }
+        reporting: { enabled: true, detailedLogs: true, vulnerabilityScoring: true, complianceChecks: true },
       });
 
       const results = await framework.runSecurityTestSuite();

@@ -3,45 +3,45 @@
  * 提供完整的邀请数据统计和分析功能
  */
 
-import { 
-  InviteEvent, 
-  InviteReport, 
-  LeaderboardEntry, 
-  PlatformStats, 
+import { DatabaseService } from '../database';
+import {
+  InviteEvent,
+  InviteReport,
+  LeaderboardEntry,
+  PlatformStats,
   TimePeriod,
   InviteStats,
   InviteHistory,
   RewardSummary,
   InviteEventType,
-  SharePlatform
-} from '../types'
-import { DatabaseService } from '../database'
+  SharePlatform,
+} from '../types';
 
 export interface IAnalyticsService {
   // 记录邀请事件
   trackInviteEvent(event: InviteEvent): Promise<void>
-  
+
   // 生成邀请报告
   generateInviteReport(userId: string, period: TimePeriod): Promise<InviteReport>
-  
+
   // 获取排行榜
   getInviteLeaderboard(period: TimePeriod, limit: number): Promise<LeaderboardEntry[]>
-  
+
   // 获取平台邀请统计
   getPlatformStats(period: TimePeriod): Promise<PlatformStats>
-  
+
   // 更新用户统计
   updateUserStats(userId: string): Promise<void>
-  
+
   // 获取转化率统计
   getConversionStats(period: TimePeriod): Promise<{ [key: string]: number }>
-  
+
   // 获取用户邀请统计
   getUserInviteStats(userId: string): Promise<InviteStats>
-  
+
   // 获取邀请历史
   getInviteHistory(userId: string, limit?: number): Promise<InviteHistory[]>
-  
+
   // 获取实时统计数据
   getRealTimeStats(): Promise<{
     totalInvites: number
@@ -50,7 +50,7 @@ export interface IAnalyticsService {
     todayRegistrations: number
     conversionRate: number
   }>
-  
+
   // 获取趋势数据
   getTrendData(userId: string, days: number): Promise<Array<{
     date: string
@@ -73,26 +73,26 @@ export class AnalyticsService implements IAnalyticsService {
           type, inviter_id, invitee_id, invite_code_id, 
           timestamp, metadata
         ) VALUES (?, ?, ?, ?, ?, ?)
-      `
-      
+      `;
+
       await this.db.execute(query, [
         event.type,
         event.inviterId,
         event.inviteeId || null,
         event.inviteCodeId,
         event.timestamp,
-        event.metadata ? JSON.stringify(event.metadata) : null
-      ])
+        event.metadata ? JSON.stringify(event.metadata) : null,
+      ]);
 
       // 异步更新用户统计
       if (event.inviterId) {
         this.updateUserStats(event.inviterId).catch(error => {
-          console.error('Failed to update user stats:', error)
-        })
+          console.error('Failed to update user stats:', error);
+        });
       }
     } catch (error) {
-      console.error('Failed to track invite event:', error)
-      throw new Error('Failed to track invite event')
+      console.error('Failed to track invite event:', error);
+      throw new Error('Failed to track invite event');
     }
   }
 
@@ -101,20 +101,20 @@ export class AnalyticsService implements IAnalyticsService {
    */
   async generateInviteReport(userId: string, period: TimePeriod): Promise<InviteReport> {
     try {
-      const stats = await this.getUserInviteStats(userId)
-      const history = await this.getInviteHistory(userId, 10)
-      const rewardsSummary = await this.getUserRewardsSummary(userId, period)
+      const stats = await this.getUserInviteStats(userId);
+      const history = await this.getInviteHistory(userId, 10);
+      const rewardsSummary = await this.getUserRewardsSummary(userId, period);
 
       return {
         userId,
         period,
         stats,
         topInvitees: history,
-        rewardsSummary
-      }
+        rewardsSummary,
+      };
     } catch (error) {
-      console.error('Failed to generate invite report:', error)
-      throw new Error('Failed to generate invite report')
+      console.error('Failed to generate invite report:', error);
+      throw new Error('Failed to generate invite report');
     }
   }
 
@@ -142,31 +142,36 @@ export class AnalyticsService implements IAnalyticsService {
         HAVING invite_count > 0
         ORDER BY invite_count DESC, total_credits DESC
         LIMIT ?
-      `
+      `;
 
-      const results = await this.db.query(query, [
+      const results = await this.db.query<{
+        user_id: string;
+        user_name: string;
+        invite_count: number;
+        total_credits: number;
+      }>(query, [
         period.start,
         period.end,
         period.start,
         period.end,
-        limit
-      ])
+        limit,
+      ]);
 
-      return results.map((row: any, index: number) => ({
+      return results.map((row, index: number) => ({
         userId: row.user_id,
         userName: row.user_name,
-        inviteCount: parseInt(row.invite_count) || 0,
+        inviteCount: Number(row.invite_count) || 0,
         rank: index + 1,
         rewards: {
-          totalCredits: parseInt(row.total_credits) || 0,
+          totalCredits: Number(row.total_credits) || 0,
           badges: [], // 需要单独查询具体徽章
           titles: [], // 需要单独查询具体称号
-          premiumDays: 0
-        }
-      }))
+          premiumDays: 0,
+        },
+      }));
     } catch (error) {
-      console.error('Failed to get invite leaderboard:', error)
-      throw new Error('Failed to get invite leaderboard')
+      console.error('Failed to get invite leaderboard:', error);
+      throw new Error('Failed to get invite leaderboard');
     }
   }
 
@@ -180,13 +185,13 @@ export class AnalyticsService implements IAnalyticsService {
         FROM invite_events 
         WHERE type = 'code_generated' 
         AND timestamp BETWEEN ? AND ?
-      `
-      
+      `;
+
       const totalRegistrationsQuery = `
         SELECT COUNT(*) as total_registrations
         FROM invite_registrations 
         WHERE registered_at BETWEEN ? AND ?
-      `
+      `;
 
       const topInvitersQuery = `
         SELECT 
@@ -201,28 +206,39 @@ export class AnalyticsService implements IAnalyticsService {
         GROUP BY u.id, u.name
         ORDER BY invite_count DESC
         LIMIT 10
-      `
+      `;
 
-      const [totalInvitesResult] = await this.db.query(totalInvitesQuery, [period.start, period.end])
-      const [totalRegistrationsResult] = await this.db.query(totalRegistrationsQuery, [period.start, period.end])
-      const topInvitersResults = await this.db.query(topInvitersQuery, [period.start, period.end])
+      const [totalInvitesResult] = await this.db.query<{ total_invites: number | string }>(
+        totalInvitesQuery,
+        [period.start, period.end],
+      );
+      const [totalRegistrationsResult] = await this.db.query<{ total_registrations: number | string }>(
+        totalRegistrationsQuery,
+        [period.start, period.end],
+      );
+      const topInvitersResults = await this.db.query<{
+        user_id: string;
+        user_name: string;
+        invite_count: number | string;
+        rank: number | string;
+      }>(topInvitersQuery, [period.start, period.end]);
 
-      const totalInvites = parseInt(totalInvitesResult?.total_invites) || 0
-      const totalRegistrations = parseInt(totalRegistrationsResult?.total_registrations) || 0
-      const conversionRate = totalInvites > 0 ? (totalRegistrations / totalInvites) * 100 : 0
+      const totalInvites = Number(totalInvitesResult?.total_invites) || 0;
+      const totalRegistrations = Number(totalRegistrationsResult?.total_registrations) || 0;
+      const conversionRate = totalInvites > 0 ? (totalRegistrations / totalInvites) * 100 : 0;
 
-      const topInviters: LeaderboardEntry[] = topInvitersResults.map((row: any) => ({
+      const topInviters: LeaderboardEntry[] = topInvitersResults.map(row => ({
         userId: row.user_id,
         userName: row.user_name,
-        inviteCount: parseInt(row.invite_count),
-        rank: parseInt(row.rank),
+        inviteCount: Number(row.invite_count) || 0,
+        rank: Number(row.rank) || 0,
         rewards: {
           totalCredits: 0,
           badges: [],
           titles: [],
-          premiumDays: 0
-        }
-      }))
+          premiumDays: 0,
+        },
+      }));
 
       return {
         period,
@@ -234,12 +250,12 @@ export class AnalyticsService implements IAnalyticsService {
           totalCredits: 0, // 需要单独计算
           badges: [],
           titles: [],
-          premiumDays: 0
-        }
-      }
+          premiumDays: 0,
+        },
+      };
     } catch (error) {
-      console.error('Failed to get platform stats:', error)
-      throw new Error('Failed to get platform stats')
+      console.error('Failed to get platform stats:', error);
+      throw new Error('Failed to get platform stats');
     }
   }
 
@@ -270,12 +286,12 @@ export class AnalyticsService implements IAnalyticsService {
           active_invitees = VALUES(active_invitees),
           total_rewards_earned = VALUES(total_rewards_earned),
           last_updated = VALUES(last_updated)
-      `
+      `;
 
-      await this.db.execute(query, [userId, userId, userId])
+      await this.db.execute(query, [userId, userId, userId]);
     } catch (error) {
-      console.error('Failed to update user stats:', error)
-      throw new Error('Failed to update user stats')
+      console.error('Failed to update user stats:', error);
+      throw new Error('Failed to update user stats');
     }
   }
 
@@ -294,29 +310,34 @@ export class AnalyticsService implements IAnalyticsService {
         WHERE ie.timestamp BETWEEN ? AND ?
         GROUP BY DATE(ie.timestamp)
         ORDER BY date
-      `
+      `;
 
-      const results = await this.db.query(query, [period.start, period.end])
-      
-      const stats: { [key: string]: number } = {}
-      
-      results.forEach((row: any) => {
-        const date = row.date
-        const invites = parseInt(row.invites) || 0
-        const registrations = parseInt(row.registrations) || 0
-        const activations = parseInt(row.activations) || 0
-        
-        stats[`${date}_invites`] = invites
-        stats[`${date}_registrations`] = registrations
-        stats[`${date}_activations`] = activations
-        stats[`${date}_conversion_rate`] = invites > 0 ? (registrations / invites) * 100 : 0
-        stats[`${date}_activation_rate`] = registrations > 0 ? (activations / registrations) * 100 : 0
-      })
+      const results = await this.db.query<{
+        date: string;
+        invites: number | string;
+        registrations: number | string;
+        activations: number | string;
+      }>(query, [period.start, period.end]);
 
-      return stats
+      const stats: { [key: string]: number } = {};
+
+      results.forEach(row => {
+        const date = row.date;
+        const invites = Number(row.invites) || 0;
+        const registrations = Number(row.registrations) || 0;
+        const activations = Number(row.activations) || 0;
+
+        stats[`${date}_invites`] = invites;
+        stats[`${date}_registrations`] = registrations;
+        stats[`${date}_activations`] = activations;
+        stats[`${date}_conversion_rate`] = invites > 0 ? (registrations / invites) * 100 : 0;
+        stats[`${date}_activation_rate`] = registrations > 0 ? (activations / registrations) * 100 : 0;
+      });
+
+      return stats;
     } catch (error) {
-      console.error('Failed to get conversion stats:', error)
-      throw new Error('Failed to get conversion stats')
+      console.error('Failed to get conversion stats:', error);
+      throw new Error('Failed to get conversion stats');
     }
   }
 
@@ -327,15 +348,15 @@ export class AnalyticsService implements IAnalyticsService {
     try {
       const query = `
         SELECT * FROM invite_stats WHERE user_id = ?
-      `
-      
-      const result = await this.db.queryOne(query, [userId])
-      
+      `;
+
+      const result = await this.db.queryOne<InviteStats>(query, [userId]);
+
       if (!result) {
         // 如果没有统计数据，先更新一次
-        await this.updateUserStats(userId)
-        const updatedResult = await this.db.queryOne(query, [userId])
-        
+        await this.updateUserStats(userId);
+        const updatedResult = await this.db.queryOne<InviteStats>(query, [userId]);
+
         if (!updatedResult) {
           return {
             userId,
@@ -343,17 +364,17 @@ export class AnalyticsService implements IAnalyticsService {
             successfulRegistrations: 0,
             activeInvitees: 0,
             totalRewardsEarned: 0,
-            lastUpdated: new Date()
-          }
+            lastUpdated: new Date(),
+          };
         }
-        
-        return this.mapToInviteStats(updatedResult)
+
+        return this.mapToInviteStats(updatedResult);
       }
-      
-      return this.mapToInviteStats(result)
+
+      return this.mapToInviteStats(result);
     } catch (error) {
-      console.error('Failed to get user invite stats:', error)
-      throw new Error('Failed to get user invite stats')
+      console.error('Failed to get user invite stats:', error);
+      throw new Error('Failed to get user invite stats');
     }
   }
 
@@ -378,11 +399,20 @@ export class AnalyticsService implements IAnalyticsService {
         WHERE ic.inviter_id = ?
         ORDER BY ir.registered_at DESC
         LIMIT ?
-      `
+      `;
 
-      const results = await this.db.query(query, [userId, limit])
-      
-      return results.map((row: any) => ({
+      const results = await this.db.query<{
+        id: string;
+        invite_code: string;
+        invitee_email: string;
+        invitee_name: string;
+        registered_at: string;
+        is_activated: number;
+        activated_at: string | null;
+        rewards_claimed: number;
+      }>(query, [userId, limit]);
+
+      return results.map(row => ({
         id: row.id,
         inviteCode: row.invite_code,
         inviteeEmail: row.invitee_email,
@@ -390,11 +420,11 @@ export class AnalyticsService implements IAnalyticsService {
         registeredAt: new Date(row.registered_at),
         isActivated: Boolean(row.is_activated),
         activatedAt: row.activated_at ? new Date(row.activated_at) : undefined,
-        rewardsClaimed: Boolean(row.rewards_claimed)
-      }))
+        rewardsClaimed: Boolean(row.rewards_claimed),
+      }));
     } catch (error) {
-      console.error('Failed to get invite history:', error)
-      throw new Error('Failed to get invite history')
+      console.error('Failed to get invite history:', error);
+      throw new Error('Failed to get invite history');
     }
   }
 
@@ -409,48 +439,48 @@ export class AnalyticsService implements IAnalyticsService {
     conversionRate: number
   }> {
     try {
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      const tomorrow = new Date(today)
-      tomorrow.setDate(tomorrow.getDate() + 1)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
 
       const totalInvitesQuery = `
         SELECT COUNT(*) as count FROM invite_codes
-      `
-      
+      `;
+
       const todayInvitesQuery = `
         SELECT COUNT(*) as count FROM invite_codes 
         WHERE created_at >= ?
-      `
-      
+      `;
+
       const totalRegistrationsQuery = `
         SELECT COUNT(*) as count FROM invite_registrations
-      `
-      
+      `;
+
       const todayRegistrationsQuery = `
         SELECT COUNT(*) as count FROM invite_registrations 
         WHERE registered_at >= ?
-      `
+      `;
 
-      const [totalInvites] = await this.db.query(totalInvitesQuery)
-      const [todayInvites] = await this.db.query(todayInvitesQuery, [today])
-      const [totalRegistrations] = await this.db.query(totalRegistrationsQuery)
-      const [todayRegistrations] = await this.db.query(todayRegistrationsQuery, [today])
+      const [totalInvites] = await this.db.query<{ count: number | string }>(totalInvitesQuery);
+      const [todayInvites] = await this.db.query<{ count: number | string }>(todayInvitesQuery, [today]);
+      const [totalRegistrations] = await this.db.query<{ count: number | string }>(totalRegistrationsQuery);
+      const [todayRegistrations] = await this.db.query<{ count: number | string }>(todayRegistrationsQuery, [today]);
 
-      const totalInvitesCount = parseInt(totalInvites?.count) || 0
-      const totalRegistrationsCount = parseInt(totalRegistrations?.count) || 0
-      const conversionRate = totalInvitesCount > 0 ? (totalRegistrationsCount / totalInvitesCount) * 100 : 0
+      const totalInvitesCount = Number(totalInvites?.count) || 0;
+      const totalRegistrationsCount = Number(totalRegistrations?.count) || 0;
+      const conversionRate = totalInvitesCount > 0 ? (totalRegistrationsCount / totalInvitesCount) * 100 : 0;
 
       return {
         totalInvites: totalInvitesCount,
-        todayInvites: parseInt(todayInvites?.count) || 0,
+        todayInvites: Number(todayInvites?.count) || 0,
         totalRegistrations: totalRegistrationsCount,
-        todayRegistrations: parseInt(todayRegistrations?.count) || 0,
-        conversionRate
-      }
+        todayRegistrations: Number(todayRegistrations?.count) || 0,
+        conversionRate,
+      };
     } catch (error) {
-      console.error('Failed to get real-time stats:', error)
-      throw new Error('Failed to get real-time stats')
+      console.error('Failed to get real-time stats:', error);
+      throw new Error('Failed to get real-time stats');
     }
   }
 
@@ -464,8 +494,8 @@ export class AnalyticsService implements IAnalyticsService {
     rewards: number
   }>> {
     try {
-      const startDate = new Date()
-      startDate.setDate(startDate.getDate() - days)
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
 
       const query = `
         SELECT 
@@ -506,21 +536,26 @@ export class AnalyticsService implements IAnalyticsService {
           GROUP BY DATE(granted_at)
         ) r_count ON d.date = r_count.date
         ORDER BY d.date
-      `
+      `;
 
-      const results = await this.db.query(query, [
-        startDate, days, userId, startDate, userId, startDate, userId, startDate
-      ])
+      const results = await this.db.query<{
+        date: string;
+        invites: number | string;
+        registrations: number | string;
+        rewards: number | string;
+      }>(query, [
+        startDate, days, userId, startDate, userId, startDate, userId, startDate,
+      ]);
 
-      return results.map((row: any) => ({
+      return results.map(row => ({
         date: row.date,
-        invites: parseInt(row.invites) || 0,
-        registrations: parseInt(row.registrations) || 0,
-        rewards: parseInt(row.rewards) || 0
-      }))
+        invites: Number(row.invites) || 0,
+        registrations: Number(row.registrations) || 0,
+        rewards: Number(row.rewards) || 0,
+      }));
     } catch (error) {
-      console.error('Failed to get trend data:', error)
-      throw new Error('Failed to get trend data')
+      console.error('Failed to get trend data:', error);
+      throw new Error('Failed to get trend data');
     }
   }
 
@@ -539,41 +574,47 @@ export class AnalyticsService implements IAnalyticsService {
         FROM rewards 
         WHERE user_id = ? AND granted_at BETWEEN ? AND ?
         GROUP BY type
-      `
+      `;
 
-      const results = await this.db.query(query, [userId, period.start, period.end])
-      
-      let totalCredits = 0
-      let badges: string[] = []
-      let titles: string[] = []
-      let premiumDays = 0
+      const results = await this.db.query<{
+        type: string;
+        total_credits: number | string;
+        badges: string | null;
+        titles: string | null;
+        premium_days: number | string;
+      }>(query, [userId, period.start, period.end]);
 
-      results.forEach((row: any) => {
+      let totalCredits = 0;
+      let badges: string[] = [];
+      let titles: string[] = [];
+      let premiumDays = 0;
+
+      results.forEach(row => {
         if (row.type === 'ai_credits') {
-          totalCredits += parseInt(row.total_credits) || 0
+          totalCredits += Number(row.total_credits) || 0;
         } else if (row.type === 'badge' && row.badges) {
-          badges = row.badges.split(',').filter((id: string) => id)
+          badges = row.badges.toString().split(',').filter(Boolean);
         } else if (row.type === 'title' && row.titles) {
-          titles = row.titles.split(',').filter((id: string) => id)
+          titles = row.titles.toString().split(',').filter(Boolean);
         } else if (row.type === 'premium_access') {
-          premiumDays += parseInt(row.premium_days) || 0
+          premiumDays += Number(row.premium_days) || 0;
         }
-      })
+      });
 
       return {
         totalCredits,
         badges,
         titles,
-        premiumDays
-      }
+        premiumDays,
+      };
     } catch (error) {
-      console.error('Failed to get user rewards summary:', error)
+      console.error('Failed to get user rewards summary:', error);
       return {
         totalCredits: 0,
         badges: [],
         titles: [],
-        premiumDays: 0
-      }
+        premiumDays: 0,
+      };
     }
   }
 
@@ -583,11 +624,11 @@ export class AnalyticsService implements IAnalyticsService {
   private mapToInviteStats(row: any): InviteStats {
     return {
       userId: row.user_id,
-      totalInvites: parseInt(row.total_invites) || 0,
-      successfulRegistrations: parseInt(row.successful_registrations) || 0,
-      activeInvitees: parseInt(row.active_invitees) || 0,
-      totalRewardsEarned: parseInt(row.total_rewards_earned) || 0,
-      lastUpdated: new Date(row.last_updated)
-    }
+      totalInvites: parseInt(row.total_invites, 10) || 0,
+      successfulRegistrations: parseInt(row.successful_registrations, 10) || 0,
+      activeInvitees: parseInt(row.active_invitees, 10) || 0,
+      totalRewardsEarned: parseInt(row.total_rewards_earned, 10) || 0,
+      lastUpdated: new Date(row.last_updated),
+    };
   }
 }

@@ -81,7 +81,8 @@ describe('CompatibilityChecker', () => {
     it('should detect added, modified, and removed API files', () => {
       mockExecSync
         .mockReturnValueOnce('v1.0.0') // getPreviousVersion
-        .mockReturnValueOnce('A\tsrc/app/api/new-endpoint/route.ts\nM\tsrc/app/api/users/route.ts\nD\tsrc/app/api/old-endpoint/route.ts');
+        .mockReturnValueOnce('A\tsrc/app/api/new-
+          endpoint/route.ts\nM\tsrc/app/api/users/route.ts\nD\tsrc/app/api/old-endpoint/route.ts');
       
       const changes = checker.detectAPIChanges();
       
@@ -162,7 +163,8 @@ describe('CompatibilityChecker', () => {
     it('should detect breaking changes from commit messages', () => {
       mockExecSync
         .mockReturnValueOnce('v1.0.0') // getPreviousVersion
-        .mockReturnValueOnce('abc123 feat: BREAKING CHANGE add new feature\ndef456 fix: minor bug fix');
+        .mockReturnValueOnce('abc123 feat:
+          BREAKING CHANGE add new feature\ndef456 fix: minor bug fix');
       
       const breakingChanges = checker.analyzeCommitBreakingChanges();
       
@@ -174,7 +176,8 @@ describe('CompatibilityChecker', () => {
     it('should detect potential breaking changes from keywords', () => {
       mockExecSync
         .mockReturnValueOnce('v1.0.0') // getPreviousVersion
-        .mockReturnValueOnce('abc123 feat: remove deprecated function\ndef456 fix: delete unused code');
+        .mockReturnValueOnce('abc123 feat:
+          remove deprecated function\ndef456 fix: delete unused code');
       
       const breakingChanges = checker.analyzeCommitBreakingChanges();
       
@@ -251,7 +254,8 @@ describe('CompatibilityChecker', () => {
         added: ['src/app/api/new/route.ts'],
         modified: ['src/app/api/users/route.ts'],
         removed: ['src/app/api/old/route.ts'],
-        breaking: [{ file: 'src/app/api/old/route.ts', type: 'removal', description: 'API removed' }]
+        breaking: [{ file: 'src/app/api/old/route.ts', type: 'removal',
+          description: 'API removed' }]
       };
       
       const commitBreakingChanges = [

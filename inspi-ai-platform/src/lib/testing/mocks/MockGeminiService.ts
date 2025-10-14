@@ -3,8 +3,9 @@
  * 提供AI服务的模拟功能，支持预设响应和智能回复
  */
 
+import { AIGenerationOptions, AIGenerationResult } from '@/core/ai/geminiService';
+
 import { BaseMockService } from './BaseMockService';
-import { AIGenerationOptions, AIGenerationResult } from '@/lib/ai/geminiService';
 
 export interface MockAIResponse {
   content: string;
@@ -39,8 +40,8 @@ export class MockGeminiService extends BaseMockService {
       usage: {
         promptTokens: 10,
         completionTokens: 8,
-        totalTokens: 18
-      }
+        totalTokens: 18,
+      },
     });
 
     // 卡片生成响应
@@ -50,13 +51,13 @@ export class MockGeminiService extends BaseMockService {
         content: 'This is a mock teaching card generated for testing purposes.',
         tags: ['mock', 'testing', 'ai'],
         difficulty: 'beginner',
-        estimatedTime: '5 minutes'
+        estimatedTime: '5 minutes',
       }),
       usage: {
         promptTokens: 50,
         completionTokens: 100,
-        totalTokens: 150
-      }
+        totalTokens: 150,
+      },
     });
 
     // 健康检查响应
@@ -65,8 +66,8 @@ export class MockGeminiService extends BaseMockService {
       usage: {
         promptTokens: 1,
         completionTokens: 1,
-        totalTokens: 2
-      }
+        totalTokens: 2,
+      },
     });
   }
 
@@ -75,7 +76,7 @@ export class MockGeminiService extends BaseMockService {
    */
   async generateContent(
     prompt: string,
-    options: AIGenerationOptions = {}
+    options: AIGenerationOptions = {},
   ): Promise<AIGenerationResult> {
     this.ensureActive();
     this.recordCall('generateContent', [prompt, options]);
@@ -91,7 +92,7 @@ export class MockGeminiService extends BaseMockService {
 
     // 查找匹配的响应
     const response = this.findMatchingResponse(prompt);
-    
+
     if (response.shouldFail) {
       throw new Error(response.errorMessage || 'Mock AI generation failed');
     }
@@ -104,10 +105,10 @@ export class MockGeminiService extends BaseMockService {
       usage: response.usage || {
         promptTokens: prompt.length / 4, // 粗略估算
         completionTokens: modifiedContent.length / 4,
-        totalTokens: (prompt.length + modifiedContent.length) / 4
+        totalTokens: (prompt.length + modifiedContent.length) / 4,
       },
       model: 'gemini-pro-mock',
-      cached: options.useCache === true && Math.random() > 0.7 // 30% 缓存命中率
+      cached: options.useCache === true && Math.random() > 0.7, // 30% 缓存命中率
     };
   }
 
@@ -137,7 +138,7 @@ export class MockGeminiService extends BaseMockService {
       timeout: 5000,
       maxRetries: 3,
       mockMode: true,
-      failureRate: this.failureRate
+      failureRate: this.failureRate,
     };
   }
 
@@ -291,7 +292,7 @@ export class MockGeminiService extends BaseMockService {
       customResponses: this.responses.size,
       responsePatterns: this.responsePatterns.length,
       failureRate: this.failureRate,
-      defaultDelay: this.defaultDelay
+      defaultDelay: this.defaultDelay,
     };
   }
 }

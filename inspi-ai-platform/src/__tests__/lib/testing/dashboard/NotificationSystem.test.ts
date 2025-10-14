@@ -1,6 +1,6 @@
 /**
  * NotificationSystem Unit Tests
- * 
+ *
  * Comprehensive test suite for the notification system,
  * covering notification creation, channel management, rules,
  * and various notification types.
@@ -39,7 +39,7 @@ describe('NotificationSystem', () => {
         category: 'test_failure',
         title: 'Test Notification',
         message: 'This is a test notification',
-        priority: 'medium'
+        priority: 'medium',
       });
 
       expect(notificationId).toBeDefined();
@@ -56,7 +56,7 @@ describe('NotificationSystem', () => {
         category: 'coverage_drop',
         title: 'Coverage Drop',
         message: 'Coverage decreased by 5%',
-        priority: 'high'
+        priority: 'high',
       });
 
       const notifications = notificationSystem.getActiveNotifications();
@@ -80,9 +80,9 @@ describe('NotificationSystem', () => {
             id: 'retry',
             label: 'Retry Test',
             type: 'primary',
-            handler: actionHandler
-          }
-        ]
+            handler: actionHandler,
+          },
+        ],
       });
 
       const notifications = notificationSystem.getActiveNotifications();
@@ -103,7 +103,7 @@ describe('NotificationSystem', () => {
         title: 'Persistent Notification',
         message: 'This notification should persist',
         priority: 'low',
-        persistent: true
+        persistent: true,
       });
 
       const notifications = notificationSystem.getActiveNotifications();
@@ -117,7 +117,7 @@ describe('NotificationSystem', () => {
         title: 'Auto-close Notification',
         message: 'This notification will auto-close',
         priority: 'low',
-        autoClose: 100 // 100ms
+        autoClose: 100, // 100ms
       });
 
       expect(notificationSystem.getActiveNotifications()).toHaveLength(1);
@@ -139,7 +139,7 @@ describe('NotificationSystem', () => {
         category: 'system',
         title: 'Event Test',
         message: 'Testing notification event',
-        priority: 'low'
+        priority: 'low',
       });
     });
   });
@@ -152,7 +152,7 @@ describe('NotificationSystem', () => {
         category: 'test_failure',
         title: 'Test 1',
         message: 'Message 1',
-        priority: 'low'
+        priority: 'low',
       });
 
       await notificationSystem.notify({
@@ -160,7 +160,7 @@ describe('NotificationSystem', () => {
         category: 'coverage_drop',
         title: 'Test 2',
         message: 'Message 2',
-        priority: 'high'
+        priority: 'high',
       });
 
       await notificationSystem.notify({
@@ -168,14 +168,14 @@ describe('NotificationSystem', () => {
         category: 'test_failure',
         title: 'Test 3',
         message: 'Message 3',
-        priority: 'critical'
+        priority: 'critical',
       });
     });
 
     it('should get active notifications', () => {
       const notifications = notificationSystem.getActiveNotifications();
       expect(notifications).toHaveLength(3);
-      
+
       // Should be sorted by timestamp (newest first)
       expect(notifications[0].title).toBe('Test 3');
       expect(notifications[2].title).toBe('Test 1');
@@ -246,7 +246,7 @@ describe('NotificationSystem', () => {
           category: 'system',
           title: `History Test ${i}`,
           message: `Message ${i}`,
-          priority: 'low'
+          priority: 'low',
         });
       }
     });
@@ -275,7 +275,7 @@ describe('NotificationSystem', () => {
         name: 'custom',
         enabled: true,
         config: { apiKey: 'test-key' },
-        send: jest.fn().mockResolvedValue(undefined)
+        send: jest.fn().mockResolvedValue(undefined),
       };
 
       notificationSystem.addChannel(customChannel);
@@ -289,7 +289,7 @@ describe('NotificationSystem', () => {
         name: 'removable',
         enabled: true,
         config: {},
-        send: jest.fn().mockResolvedValue(undefined)
+        send: jest.fn().mockResolvedValue(undefined),
       };
 
       notificationSystem.addChannel(testChannel);
@@ -303,7 +303,7 @@ describe('NotificationSystem', () => {
         name: 'configurable',
         enabled: true,
         config: { setting1: 'value1' },
-        send: jest.fn().mockResolvedValue(undefined)
+        send: jest.fn().mockResolvedValue(undefined),
       };
 
       notificationSystem.addChannel(testChannel);
@@ -319,7 +319,7 @@ describe('NotificationSystem', () => {
         name: 'toggleable',
         enabled: true,
         config: {},
-        send: jest.fn().mockResolvedValue(undefined)
+        send: jest.fn().mockResolvedValue(undefined),
       };
 
       notificationSystem.addChannel(testChannel);
@@ -340,11 +340,11 @@ describe('NotificationSystem', () => {
         enabled: true,
         conditions: {
           category: ['custom_category'],
-          priority: ['high']
+          priority: ['high'],
         },
         actions: {
-          channels: ['console']
-        }
+          channels: ['console'],
+        },
       };
 
       notificationSystem.addRule(customRule);
@@ -359,7 +359,7 @@ describe('NotificationSystem', () => {
         name: 'Removable Rule',
         enabled: true,
         conditions: {},
-        actions: { channels: [] }
+        actions: { channels: [] },
       };
 
       notificationSystem.addRule(testRule);
@@ -374,7 +374,7 @@ describe('NotificationSystem', () => {
         name: 'Toggleable Rule',
         enabled: true,
         conditions: {},
-        actions: { channels: [] }
+        actions: { channels: [] },
       };
 
       notificationSystem.addRule(testRule);
@@ -388,7 +388,7 @@ describe('NotificationSystem', () => {
         name: 'mock-channel',
         enabled: true,
         config: {},
-        send: jest.fn().mockResolvedValue(undefined)
+        send: jest.fn().mockResolvedValue(undefined),
       };
 
       const testRule: NotificationRule = {
@@ -397,11 +397,11 @@ describe('NotificationSystem', () => {
         enabled: true,
         conditions: {
           category: ['test_category'],
-          priority: ['high']
+          priority: ['high'],
         },
         actions: {
-          channels: ['mock-channel']
-        }
+          channels: ['mock-channel'],
+        },
       };
 
       notificationSystem.addChannel(mockChannel);
@@ -412,7 +412,7 @@ describe('NotificationSystem', () => {
         category: 'test_category',
         title: 'Rule Test',
         message: 'Testing rule processing',
-        priority: 'high'
+        priority: 'high',
       });
 
       expect(mockChannel.send).toHaveBeenCalled();
@@ -423,7 +423,7 @@ describe('NotificationSystem', () => {
         name: 'throttled-channel',
         enabled: true,
         config: {},
-        send: jest.fn().mockResolvedValue(undefined)
+        send: jest.fn().mockResolvedValue(undefined),
       };
 
       const throttledRule: NotificationRule = {
@@ -431,12 +431,12 @@ describe('NotificationSystem', () => {
         name: 'Throttled Rule',
         enabled: true,
         conditions: {
-          category: ['throttle_test']
+          category: ['throttle_test'],
         },
         actions: {
           channels: ['throttled-channel'],
-          throttle: 1000 // 1 second throttle
-        }
+          throttle: 1000, // 1 second throttle
+        },
       };
 
       notificationSystem.addChannel(mockChannel);
@@ -448,7 +448,7 @@ describe('NotificationSystem', () => {
         category: 'throttle_test',
         title: 'First',
         message: 'First message',
-        priority: 'low'
+        priority: 'low',
       });
 
       // Send second notification immediately (should be throttled)
@@ -457,7 +457,7 @@ describe('NotificationSystem', () => {
         category: 'throttle_test',
         title: 'Second',
         message: 'Second message',
-        priority: 'low'
+        priority: 'low',
       });
 
       expect(mockChannel.send).toHaveBeenCalledTimes(1);
@@ -471,7 +471,7 @@ describe('NotificationSystem', () => {
         category: 'test_failure',
         title: 'Stats Test 1',
         message: 'Message 1',
-        priority: 'low'
+        priority: 'low',
       });
 
       await notificationSystem.notify({
@@ -479,7 +479,7 @@ describe('NotificationSystem', () => {
         category: 'coverage_drop',
         title: 'Stats Test 2',
         message: 'Message 2',
-        priority: 'high'
+        priority: 'high',
       });
 
       await notificationSystem.notify({
@@ -487,7 +487,7 @@ describe('NotificationSystem', () => {
         category: 'test_failure',
         title: 'Stats Test 3',
         message: 'Message 3',
-        priority: 'critical'
+        priority: 'critical',
       });
     });
 
@@ -528,7 +528,7 @@ describe('NotificationSystem', () => {
         name: 'error-channel',
         enabled: true,
         config: {},
-        send: jest.fn().mockRejectedValue(new Error('Send failed'))
+        send: jest.fn().mockRejectedValue(new Error('Send failed')),
       };
 
       const errorRule: NotificationRule = {
@@ -536,11 +536,11 @@ describe('NotificationSystem', () => {
         name: 'Error Rule',
         enabled: true,
         conditions: {
-          category: ['error_test']
+          category: ['error_test'],
         },
         actions: {
-          channels: ['error-channel']
-        }
+          channels: ['error-channel'],
+        },
       };
 
       notificationSystem.addChannel(errorChannel);
@@ -553,7 +553,7 @@ describe('NotificationSystem', () => {
         category: 'error_test',
         title: 'Error Test',
         message: 'Testing error handling',
-        priority: 'low'
+        priority: 'low',
       });
 
       expect(consoleSpy).toHaveBeenCalled();
@@ -567,7 +567,7 @@ describe('NotificationSystem', () => {
           category: '',
           title: '',
           message: '',
-          priority: 'invalid' as any
+          priority: 'invalid' as any,
         });
       }).not.toThrow();
     });

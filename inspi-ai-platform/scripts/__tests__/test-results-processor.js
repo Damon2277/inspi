@@ -109,7 +109,8 @@ class TestResultsProcessor {
         duration: suite.perfStats.end - suite.perfStats.start,
         tests: suite.numPassingTests + suite.numFailingTests,
         avgTestTime: suite.assertionResults.length > 0 
-          ? suite.assertionResults.reduce((sum, test) => sum + (test.duration || 0), 0) / suite.assertionResults.length
+          ? suite.assertionResults.reduce((sum,
+            test) => sum + (test.duration || 0), 0) / suite.assertionResults.length
           : 0,
         slowestTest: suite.assertionResults.reduce((slowest, test) => {
           return (test.duration || 0) > (slowest.duration || 0) ? test : slowest;
@@ -216,7 +217,8 @@ class TestResultsProcessor {
     });
 
     // 计算验证的需求数量
-    requirementsReport.summary.verifiedRequirements = Object.keys(requirementsReport.requirements).length;
+    requirementsReport.summary.verifiedRequirements =
+      Object.keys(requirementsReport.requirements).length;
 
     const requirementsPath = path.join(this.reportDir, 'requirements-verification.json');
     fs.writeFileSync(requirementsPath, JSON.stringify(requirementsReport, null, 2));

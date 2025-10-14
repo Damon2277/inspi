@@ -3,17 +3,18 @@
  * 测试完整的邮件验证流程，包括发送、验证和错误处理
  */
 
-import { EmailService } from '@/lib/email/service';
-import { MockEmailService } from '@/lib/testing/mocks/MockEmailService';
-import { TestDataFactory } from '@/lib/testing/TestDataFactory';
-import { AssertionHelpers } from '@/lib/testing/helpers/AssertionHelpers';
-import { PerformanceMonitor } from '@/lib/testing/performance/PerformanceMonitor';
 import nodemailer from 'nodemailer';
+
+import { EmailService } from '@/lib/email/service';
+import { AssertionHelpers } from '@/lib/testing/helpers/AssertionHelpers';
+import { MockEmailService } from '@/lib/testing/mocks/MockEmailService';
+import { PerformanceMonitor } from '@/lib/testing/performance/PerformanceMonitor';
+import { TestDataFactory } from '@/lib/testing/TestDataFactory';
 
 // Mock dependencies
 jest.mock('nodemailer');
 jest.mock('@/lib/utils/logger');
-jest.mock('@/lib/auth/service');
+jest.mock('@/core/auth/service');
 jest.mock('@/lib/database/mongodb');
 
 describe('Email Verification Flow E2E Tests', () => {
@@ -29,7 +30,7 @@ describe('Email Verification Flow E2E Tests', () => {
     verifyCode: jest.fn(),
     updateUserVerificationStatus: jest.fn(),
     getUserByEmail: jest.fn(),
-    createUser: jest.fn()
+    createUser: jest.fn(),
   };
 
   // Mock database
@@ -37,14 +38,14 @@ describe('Email Verification Flow E2E Tests', () => {
     users: {
       findOne: jest.fn(),
       updateOne: jest.fn(),
-      insertOne: jest.fn()
+      insertOne: jest.fn(),
     },
     verificationCodes: {
       insertOne: jest.fn(),
       findOne: jest.fn(),
       deleteOne: jest.fn(),
-      deleteMany: jest.fn()
-    }
+      deleteMany: jest.fn(),
+    },
   };
 
   beforeEach(() => {
@@ -55,7 +56,7 @@ describe('Email Verification Flow E2E Tests', () => {
     mockTransporter = {
       sendMail: jest.fn(),
       verify: jest.fn(),
-      close: jest.fn()
+      close: jest.fn(),
     };
 
     (nodemailer.createTransporter as jest.Mock).mockReturnValue(mockTransporter);
@@ -74,14 +75,14 @@ describe('Email Verification Flow E2E Tests', () => {
     performanceMonitor = new PerformanceMonitor();
 
     // Setup mocks
-    require('@/lib/auth/service').authService = mockAuthService;
+    require('@/core/auth/service').authService = mockAuthService;
     require('@/lib/database/mongodb').database = mockDatabase;
   });
 
   afterEach(() => {
     jest.useRealTimers();
     jest.clearAllMocks();
-    
+
     // Clean up environment
     delete process.env.EMAIL_SMTP_HOST;
     delete process.env.EMAIL_SMTP_PORT;
@@ -97,32 +98,32 @@ describe('Email Verification Flow E2E Tests', () => {
       const user = testDataFactory.user.create({
         email: 'register@example.com',
         name: 'Register User',
-        isEmailVerified: false
+        isEmailVerified: false,
       });
 
       const verificationCode = '123456';
-      
+
       mockAuthService.generateVerificationCode.mockResolvedValue(verificationCode);
       mockAuthService.getUserByEmail.mockResolvedValue(user);
       mockAuthService.verifyCode.mockResolvedValue(true);
       mockAuthService.updateUserVerificationStatus.mockResolvedValue(true);
-      
-      mockTransporter.sendMail.mockResolvedValue({ 
-        messageId: 'registration-msg-id' 
+
+      mockTransporter.sendMail.mockResolvedValue({
+        messageId: 'registration-msg-id',
       });
 
-      mockDatabase.verificationCodes.insertOne.mockResolvedValue({ 
-        insertedId: 'code-id' 
+      mockDatabase.verificationCodes.insertOne.mockResolvedValue({
+        insertedId: 'code-id',
       });
       mockDatabase.verificationCodes.findOne.mockResolvedValue({
         code: verificationCode,
         email: user.email,
         type: 'registration',
         expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-        createdAt: new Date()
+        createdAt: new Date(),
       });
-      mockDatabase.users.updateOne.mockResolvedValue({ 
-        modifiedCount: 1 
+      mockDatabase.users.updateOne.mockResolvedValue({
+        modifiedCount: 1,
       });
 
       // Act - Step 1: 发送验证邮件
@@ -130,7 +131,7 @@ describe('Email Verification Flow E2E Tests', () => {
         to: user.email,
         subject: '【Inspi.AI】注册验证验证码：123456',
         html: '<p>Your verification code is 123456</p>',
-        text: 'Your verification code is 123456'
+        text: 'Your verification code is 123456',
       });
 
       // Act - Step 2: 验证验证码
@@ -149,8 +150,8 @@ describe('Email Verification Flow E2E Tests', () => {
       expect(mockTransporter.sendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           to: user.email,
-          subject: expect.stringContaining('注册验证')
-        })
+          subject: expect.stringContaining('注册验证'),
+        }),
       );
       expect(mockAuthService.verifyCode).toHaveBeenCalledWith(user.email, verificationCode);
       expect(mockAuthService.updateUserVerificationStatus).toHaveBeenCalledWith(user.email, true);
@@ -160,17 +161,17 @@ describe('Email Verification Flow E2E Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'expired@example.com',
-        name: 'Expired User'
+        name: 'Expired User',
       });
 
       const expiredCode = '654321';
-      
+
       mockDatabase.verificationCodes.findOne.mockResolvedValue({
         code: expiredCode,
         email: user.email,
         type: 'registration',
         expiresAt: new Date(Date.now() - 60 * 1000), // 过期1分钟
-        createdAt: new Date(Date.now() - 11 * 60 * 1000)
+        createdAt: new Date(Date.now() - 11 * 60 * 1000),
       });
 
       mockAuthService.verifyCode.mockResolvedValue(false);
@@ -183,7 +184,7 @@ describe('Email Verification Flow E2E Tests', () => {
       expect(mockDatabase.verificationCodes.findOne).toHaveBeenCalledWith({
         email: user.email,
         code: expiredCode,
-        type: 'registration'
+        type: 'registration',
       });
     });
 
@@ -191,7 +192,7 @@ describe('Email Verification Flow E2E Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'ratelimit@example.com',
-        name: 'Rate Limit User'
+        name: 'Rate Limit User',
       });
 
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'rate-limit-test' });
@@ -202,16 +203,16 @@ describe('Email Verification Flow E2E Tests', () => {
         emailService.sendEmail({
           to: user.email,
           subject: '验证码',
-          html: '<p>Code: 111111</p>'
-        })
+          html: '<p>Code: 111111</p>',
+        }),
       );
 
       const results = await Promise.all(sendPromises);
 
       // Assert
       const successCount = results.filter(r => r.success).length;
-      const rateLimitedCount = results.filter(r => 
-        !r.success && r.error?.includes('rate limit')
+      const rateLimitedCount = results.filter(r =>
+        !r.success && r.error?.includes('rate limit'),
       ).length;
 
       expect(successCount).toBeLessThan(5); // 应该有限流
@@ -222,22 +223,22 @@ describe('Email Verification Flow E2E Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'cleanup@example.com',
-        name: 'Cleanup User'
+        name: 'Cleanup User',
       });
 
-      mockDatabase.verificationCodes.deleteMany.mockResolvedValue({ 
-        deletedCount: 3 
+      mockDatabase.verificationCodes.deleteMany.mockResolvedValue({
+        deletedCount: 3,
       });
 
       // Act - 模拟清理任务
       const cleanupResult = await mockDatabase.verificationCodes.deleteMany({
-        expiresAt: { $lt: new Date() }
+        expiresAt: { $lt: new Date() },
       });
 
       // Assert
       expect(cleanupResult.deletedCount).toBe(3);
       expect(mockDatabase.verificationCodes.deleteMany).toHaveBeenCalledWith({
-        expiresAt: { $lt: expect.any(Date) }
+        expiresAt: { $lt: expect.any(Date) },
       });
     });
   });
@@ -249,11 +250,11 @@ describe('Email Verification Flow E2E Tests', () => {
         email: 'login@example.com',
         name: 'Login User',
         isEmailVerified: true,
-        twoFactorEnabled: true
+        twoFactorEnabled: true,
       });
 
       const loginCode = '789012';
-      
+
       mockAuthService.generateVerificationCode.mockResolvedValue(loginCode);
       mockAuthService.verifyCode.mockResolvedValue(true);
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'login-msg-id' });
@@ -262,7 +263,7 @@ describe('Email Verification Flow E2E Tests', () => {
       const sendResult = await emailService.sendEmail({
         to: user.email,
         subject: '【Inspi.AI】登录验证验证码：789012',
-        html: '<p>Your login code is 789012</p>'
+        html: '<p>Your login code is 789012</p>',
       });
 
       // Act - Step 2: 验证登录码
@@ -277,13 +278,13 @@ describe('Email Verification Flow E2E Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'suspicious@example.com',
-        name: 'Suspicious User'
+        name: 'Suspicious User',
       });
 
       const suspiciousLoginData = {
         ip: '192.168.1.100',
         userAgent: 'Suspicious Browser',
-        location: 'Unknown Location'
+        location: 'Unknown Location',
       };
 
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'suspicious-msg-id' });
@@ -292,7 +293,7 @@ describe('Email Verification Flow E2E Tests', () => {
       const alertResult = await emailService.sendEmail({
         to: user.email,
         subject: '【Inspi.AI】可疑登录活动警告',
-        html: `<p>检测到可疑登录活动：IP ${suspiciousLoginData.ip}</p>`
+        html: `<p>检测到可疑登录活动：IP ${suspiciousLoginData.ip}</p>`,
       });
 
       // Assert
@@ -300,8 +301,8 @@ describe('Email Verification Flow E2E Tests', () => {
       expect(mockTransporter.sendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           to: user.email,
-          subject: expect.stringContaining('可疑登录')
-        })
+          subject: expect.stringContaining('可疑登录'),
+        }),
       );
     });
   });
@@ -311,12 +312,12 @@ describe('Email Verification Flow E2E Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'reset@example.com',
-        name: 'Reset User'
+        name: 'Reset User',
       });
 
       const resetCode = '456789';
       const newPassword = 'newSecurePassword123!';
-      
+
       mockAuthService.generateVerificationCode.mockResolvedValue(resetCode);
       mockAuthService.verifyCode.mockResolvedValue(true);
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'reset-msg-id' });
@@ -327,7 +328,7 @@ describe('Email Verification Flow E2E Tests', () => {
       const sendResult = await emailService.sendEmail({
         to: user.email,
         subject: '【Inspi.AI】密码重置验证码：456789',
-        html: '<p>Your reset code is 456789</p>'
+        html: '<p>Your reset code is 456789</p>',
       });
 
       // Act - Step 2: 验证重置码
@@ -336,19 +337,19 @@ describe('Email Verification Flow E2E Tests', () => {
       // Act - Step 3: 更新密码
       const updateResult = await mockDatabase.users.updateOne(
         { email: user.email },
-        { 
-          $set: { 
+        {
+          $set: {
             password: newPassword,
-            passwordResetAt: new Date()
-          }
-        }
+            passwordResetAt: new Date(),
+          },
+        },
       );
 
       // Act - Step 4: 发送重置成功通知
       const notifyResult = await emailService.sendEmail({
         to: user.email,
         subject: '【Inspi.AI】密码重置成功通知',
-        html: '<p>您的密码已成功重置</p>'
+        html: '<p>您的密码已成功重置</p>',
       });
 
       // Assert
@@ -362,13 +363,13 @@ describe('Email Verification Flow E2E Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'attack@example.com',
-        name: 'Attack Target'
+        name: 'Attack Target',
       });
 
       // 模拟短时间内多次重置请求
       const resetRequests = Array.from({ length: 10 }, () => ({
         email: user.email,
-        ip: '192.168.1.100'
+        ip: '192.168.1.100',
       }));
 
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'attack-test' });
@@ -379,15 +380,15 @@ describe('Email Verification Flow E2E Tests', () => {
           emailService.sendEmail({
             to: user.email,
             subject: '密码重置',
-            html: '<p>Reset request</p>'
-          })
-        )
+            html: '<p>Reset request</p>',
+          }),
+        ),
       );
 
       // Assert
       const successCount = results.filter(r => r.success).length;
-      const blockedCount = results.filter(r => 
-        !r.success && r.error?.includes('too many requests')
+      const blockedCount = results.filter(r =>
+        !r.success && r.error?.includes('too many requests'),
       ).length;
 
       expect(successCount).toBeLessThan(10); // 应该阻止部分请求
@@ -400,7 +401,7 @@ describe('Email Verification Flow E2E Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'performance@example.com',
-        name: 'Performance User'
+        name: 'Performance User',
       });
 
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'perf-test' });
@@ -409,12 +410,12 @@ describe('Email Verification Flow E2E Tests', () => {
 
       // Act
       const timer = performanceMonitor.startTimer('verification-flow');
-      
+
       // Step 1: 发送验证邮件
       await emailService.sendEmail({
         to: user.email,
         subject: '验证码',
-        html: '<p>Code: 999999</p>'
+        html: '<p>Code: 999999</p>',
       });
 
       // Step 2: 验证码验证
@@ -431,8 +432,8 @@ describe('Email Verification Flow E2E Tests', () => {
       const users = Array.from({ length: 100 }, (_, i) =>
         testDataFactory.user.create({
           email: `concurrent${i}@example.com`,
-          name: `Concurrent User ${i}`
-        })
+          name: `Concurrent User ${i}`,
+        }),
       );
 
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'concurrent-test' });
@@ -445,9 +446,9 @@ describe('Email Verification Flow E2E Tests', () => {
           emailService.sendEmail({
             to: user.email,
             subject: '并发验证码',
-            html: '<p>Code: 888888</p>'
-          })
-        )
+            html: '<p>Code: 888888</p>',
+          }),
+        ),
       );
       const endTime = Date.now();
 
@@ -465,7 +466,7 @@ describe('Email Verification Flow E2E Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'failure@example.com',
-        name: 'Failure User'
+        name: 'Failure User',
       });
 
       mockTransporter.sendMail.mockRejectedValue(new Error('SMTP Error'));
@@ -474,7 +475,7 @@ describe('Email Verification Flow E2E Tests', () => {
       const result = await emailService.sendEmail({
         to: user.email,
         subject: '测试邮件',
-        html: '<p>Test content</p>'
+        html: '<p>Test content</p>',
       });
 
       // Assert
@@ -486,11 +487,11 @@ describe('Email Verification Flow E2E Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'dbfail@example.com',
-        name: 'DB Fail User'
+        name: 'DB Fail User',
       });
 
       mockDatabase.verificationCodes.insertOne.mockRejectedValue(
-        new Error('Database connection failed')
+        new Error('Database connection failed'),
       );
 
       // Act & Assert
@@ -498,8 +499,8 @@ describe('Email Verification Flow E2E Tests', () => {
         mockDatabase.verificationCodes.insertOne({
           email: user.email,
           code: '123456',
-          type: 'registration'
-        })
+          type: 'registration',
+        }),
       ).rejects.toThrow('Database connection failed');
     });
 
@@ -507,13 +508,13 @@ describe('Email Verification Flow E2E Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'transaction@example.com',
-        name: 'Transaction User'
+        name: 'Transaction User',
       });
 
       // 模拟部分操作失败
       mockTransporter.sendMail.mockResolvedValue({ messageId: 'tx-test' });
       mockDatabase.verificationCodes.insertOne.mockRejectedValue(
-        new Error('Database error')
+        new Error('Database error'),
       );
 
       // Act
@@ -523,13 +524,13 @@ describe('Email Verification Flow E2E Tests', () => {
         const emailResult = await emailService.sendEmail({
           to: user.email,
           subject: '事务测试',
-          html: '<p>Transaction test</p>'
+          html: '<p>Transaction test</p>',
         });
 
         // Step 2: 保存验证码（失败）
         await mockDatabase.verificationCodes.insertOne({
           email: user.email,
-          code: '123456'
+          code: '123456',
         });
 
         transactionSuccess = true;
@@ -548,7 +549,7 @@ describe('Email Verification Flow E2E Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'bruteforce@example.com',
-        name: 'Brute Force Target'
+        name: 'Brute Force Target',
       });
 
       const correctCode = '123456';
@@ -561,7 +562,7 @@ describe('Email Verification Flow E2E Tests', () => {
 
       // Act - 尝试多个错误验证码
       const results = await Promise.all(
-        wrongCodes.map(code => mockAuthService.verifyCode(user.email, code))
+        wrongCodes.map(code => mockAuthService.verifyCode(user.email, code)),
       );
 
       // 尝试正确验证码（应该被阻止）
@@ -570,7 +571,7 @@ describe('Email Verification Flow E2E Tests', () => {
       // Assert
       const failureCount = results.filter(r => !r).length;
       expect(failureCount).toBe(5);
-      
+
       // 在实际实现中，应该在多次失败后阻止验证
       // expect(finalResult).toBe(false); // 应该被阻止
     });
@@ -579,7 +580,7 @@ describe('Email Verification Flow E2E Tests', () => {
       // Arrange
       const realUser = testDataFactory.user.create({
         email: 'real@example.com',
-        name: 'Real User'
+        name: 'Real User',
       });
 
       const fakeEmail = 'fake@example.com';
@@ -602,7 +603,7 @@ describe('Email Verification Flow E2E Tests', () => {
       // Arrange
       const user = testDataFactory.user.create({
         email: 'timing@example.com',
-        name: 'Timing User'
+        name: 'Timing User',
       });
 
       const validCode = '123456';
@@ -627,7 +628,7 @@ describe('Email Verification Flow E2E Tests', () => {
       // Assert
       expect(validResult).toBe(true);
       expect(invalidResult).toBe(false);
-      
+
       // 验证时间差异应该很小（防止时序攻击）
       const timeDifference = Math.abs(validDuration - invalidDuration);
       expect(timeDifference).toBeLessThan(50); // 时间差应该小于50ms
@@ -640,12 +641,12 @@ describe('Email Verification Flow E2E Tests', () => {
       const testEmail = {
         to: 'mock-test@example.com',
         subject: 'Mock Consistency Test',
-        html: '<p>Mock test content</p>'
+        html: '<p>Mock test content</p>',
       };
 
       // Act - 使用Mock服务
       const mockResult = await mockEmailService.sendEmail(testEmail);
-      
+
       // Act - 验证Mock记录
       const sentEmails = mockEmailService.getSentEmails();
       const emailStats = mockEmailService.getEmailStats();
@@ -653,11 +654,11 @@ describe('Email Verification Flow E2E Tests', () => {
       // Assert
       expect(mockResult.success).toBe(true);
       expect(mockResult.messageId).toBeTruthy();
-      
+
       expect(sentEmails).toHaveLength(1);
       expect(sentEmails[0].to).toBe(testEmail.to);
       expect(sentEmails[0].subject).toBe(testEmail.subject);
-      
+
       expect(emailStats.total).toBe(1);
       expect(emailStats.successful).toBe(1);
       expect(emailStats.uniqueRecipients).toBe(1);
@@ -670,7 +671,7 @@ describe('Email Verification Flow E2E Tests', () => {
       const testEmail = {
         to: 'failure-test@example.com',
         subject: 'Failure Test',
-        html: '<p>This should fail</p>'
+        html: '<p>This should fail</p>',
       };
 
       // Act

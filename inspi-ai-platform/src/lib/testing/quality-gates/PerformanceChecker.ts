@@ -1,6 +1,6 @@
 /**
  * Performance Checker
- * 
+ *
  * Implements performance baseline regression detection with detailed
  * analysis of execution time, memory usage, and test performance metrics.
  */
@@ -89,7 +89,7 @@ export class PerformanceChecker {
     this.config = {
       trackSlowTests: true,
       slowTestThreshold: 1000, // 1 second
-      ...config
+      ...config,
     };
     this.baselineFile = config.baselineFile || 'performance-baseline.json';
   }
@@ -101,11 +101,11 @@ export class PerformanceChecker {
     try {
       const currentMetrics = await this.collectCurrentMetrics(testResults);
       const baseline = await this.loadBaseline();
-      
+
       const current = {
         executionTime: currentMetrics.executionTime,
         memoryUsage: currentMetrics.memoryUsage,
-        testCount: currentMetrics.testCount
+        testCount: currentMetrics.testCount,
       };
 
       let regressions = { executionTime: 0, memoryUsage: 0 };
@@ -115,7 +115,7 @@ export class PerformanceChecker {
         baselineData = {
           executionTime: baseline.metrics.executionTime,
           memoryUsage: baseline.metrics.memoryUsage,
-          testCount: baseline.metrics.testCount
+          testCount: baseline.metrics.testCount,
         };
 
         regressions = this.calculateRegressions(currentMetrics, baseline.metrics);
@@ -139,7 +139,7 @@ export class PerformanceChecker {
         regressions,
         violations,
         recommendations,
-        details
+        details,
       };
     } catch (error) {
       return {
@@ -148,7 +148,7 @@ export class PerformanceChecker {
         regressions: { executionTime: 0, memoryUsage: 0 },
         violations: [`Performance check failed: ${(error as Error).message}`],
         recommendations: ['Ensure test results are available for performance analysis'],
-        details: { slowestTests: [], memoryHotspots: [] }
+        details: { slowestTests: [], memoryHotspots: [] },
       };
     }
   }
@@ -174,7 +174,7 @@ export class PerformanceChecker {
       `- Execution Time: ${result.current.executionTime.toFixed(0)}ms`,
       `- Memory Usage: ${(result.current.memoryUsage / 1024 / 1024).toFixed(1)}MB`,
       `- Test Count: ${result.current.testCount}`,
-      ''
+      '',
     ];
 
     // Baseline comparison
@@ -236,7 +236,7 @@ export class PerformanceChecker {
   }> {
     try {
       const historyFile = this.baselineFile.replace('.json', '-history.json');
-      
+
       if (!fs.existsSync(historyFile)) {
         return { trend: 'stable', history: [] };
       }
@@ -246,7 +246,7 @@ export class PerformanceChecker {
         timestamp: new Date(entry.timestamp),
         executionTime: entry.metrics.executionTime,
         memoryUsage: entry.metrics.memoryUsage,
-        testCount: entry.metrics.testCount
+        testCount: entry.metrics.testCount,
       }));
 
       // Calculate trend based on recent entries
@@ -292,7 +292,7 @@ export class PerformanceChecker {
       testCount: 0,
       averageTestTime: 0,
       slowestTests: [],
-      memoryLeaks: []
+      memoryLeaks: [],
     };
   }
 
@@ -304,12 +304,12 @@ export class PerformanceChecker {
 
     // Extract slowest tests
     const slowestTests = (testResults.testResults || [])
-      .flatMap((suite: any) => 
+      .flatMap((suite: any) =>
         (suite.assertionResults || []).map((test: any) => ({
           name: test.title,
           duration: test.duration || 0,
-          file: suite.testFilePath || 'unknown'
-        }))
+          file: suite.testFilePath || 'unknown',
+        })),
       )
       .filter((test: any) => test.duration > this.config.slowTestThreshold)
       .sort((a: any, b: any) => b.duration - a.duration)
@@ -321,7 +321,7 @@ export class PerformanceChecker {
       testCount,
       averageTestTime,
       slowestTests,
-      memoryLeaks: [] // Would need more sophisticated tracking
+      memoryLeaks: [], // Would need more sophisticated tracking
     };
   }
 
@@ -334,7 +334,7 @@ export class PerformanceChecker {
       const baselineData = JSON.parse(fs.readFileSync(this.baselineFile, 'utf8'));
       return {
         ...baselineData,
-        timestamp: new Date(baselineData.timestamp)
+        timestamp: new Date(baselineData.timestamp),
       };
     } catch {
       return null;
@@ -350,8 +350,8 @@ export class PerformanceChecker {
           nodeVersion: process.version,
           platform: process.platform,
           cpuCores: require('os').cpus().length,
-          totalMemory: require('os').totalmem()
-        }
+          totalMemory: require('os').totalmem(),
+        },
       };
 
       fs.writeFileSync(this.baselineFile, JSON.stringify(baseline, null, 2));
@@ -389,7 +389,7 @@ export class PerformanceChecker {
     executionTime: number;
     memoryUsage: number;
   } {
-    const executionTime = baseline.executionTime > 0 
+    const executionTime = baseline.executionTime > 0
       ? ((current.executionTime - baseline.executionTime) / baseline.executionTime) * 100
       : 0;
 
@@ -402,20 +402,20 @@ export class PerformanceChecker {
 
   private checkThresholds(
     current: PerformanceCheckResult['current'],
-    regressions: { executionTime: number; memoryUsage: number }
+    regressions: { executionTime: number; memoryUsage: number },
   ): string[] {
     const violations: string[] = [];
 
     // Check absolute thresholds
     if (current.executionTime > this.config.thresholds.maxExecutionTime) {
       violations.push(
-        `Execution time ${current.executionTime}ms exceeds maximum ${this.config.thresholds.maxExecutionTime}ms`
+        `Execution time ${current.executionTime}ms exceeds maximum ${this.config.thresholds.maxExecutionTime}ms`,
       );
     }
 
     if (current.memoryUsage > this.config.thresholds.maxMemoryUsage) {
       violations.push(
-        `Memory usage ${(current.memoryUsage / 1024 / 1024).toFixed(1)}MB exceeds maximum ${(this.config.thresholds.maxMemoryUsage / 1024 / 1024).toFixed(1)}MB`
+        `Memory usage ${(current.memoryUsage / 1024 / 1024).toFixed(1)}MB exceeds maximum ${(this.config.thresholds.maxMemoryUsage / 1024 / 1024).toFixed(1)}MB`,
       );
     }
 
@@ -423,14 +423,14 @@ export class PerformanceChecker {
     if (Math.abs(regressions.executionTime) > this.config.thresholds.maxRegressionPercent) {
       const direction = regressions.executionTime > 0 ? 'increased' : 'decreased';
       violations.push(
-        `Execution time ${direction} by ${Math.abs(regressions.executionTime).toFixed(1)}%, exceeding threshold ${this.config.thresholds.maxRegressionPercent}%`
+        `Execution time ${direction} by ${Math.abs(regressions.executionTime).toFixed(1)}%, exceeding threshold ${this.config.thresholds.maxRegressionPercent}%`,
       );
     }
 
     if (Math.abs(regressions.memoryUsage) > this.config.thresholds.maxRegressionPercent) {
       const direction = regressions.memoryUsage > 0 ? 'increased' : 'decreased';
       violations.push(
-        `Memory usage ${direction} by ${Math.abs(regressions.memoryUsage).toFixed(1)}%, exceeding threshold ${this.config.thresholds.maxRegressionPercent}%`
+        `Memory usage ${direction} by ${Math.abs(regressions.memoryUsage).toFixed(1)}%, exceeding threshold ${this.config.thresholds.maxRegressionPercent}%`,
       );
     }
 
@@ -443,7 +443,7 @@ export class PerformanceChecker {
     // Slow tests recommendations
     if (current.slowestTests.length > 0) {
       recommendations.push(`Optimize ${current.slowestTests.length} slow tests (>${this.config.slowTestThreshold}ms)`);
-      
+
       if (current.slowestTests.length > 10) {
         recommendations.push('Consider parallel test execution to reduce overall runtime');
       }
@@ -457,11 +457,11 @@ export class PerformanceChecker {
     // Baseline comparison recommendations
     if (baseline) {
       const timeRegression = ((current.executionTime - baseline.executionTime) / baseline.executionTime) * 100;
-      
+
       if (timeRegression > 20) {
         recommendations.push('Significant performance regression detected - review recent changes');
       }
-      
+
       if (current.testCount > baseline.testCount * 1.5) {
         recommendations.push('Test count has increased significantly - consider test optimization');
       }
@@ -478,9 +478,9 @@ export class PerformanceChecker {
   private analyzeDetails(current: PerformanceMetrics, baseline?: PerformanceMetrics): PerformanceCheckResult['details'] {
     const slowestTests = current.slowestTests.map(test => {
       let regression;
-      
+
       if (baseline) {
-        const baselineTest = baseline.slowestTests.find(bt => bt.name === test.name);
+        const baselineTest = baseline(slowestTests.find as any)(bt => bt.name === test.name);
         if (baselineTest) {
           regression = ((test.duration - baselineTest.duration) / baselineTest.duration) * 100;
         }
@@ -492,7 +492,7 @@ export class PerformanceChecker {
     const memoryHotspots = current.memoryLeaks.map(leak => ({
       test: leak.test,
       memoryUsage: current.memoryUsage, // Simplified
-      increase: leak.memoryIncrease
+      increase: leak.memoryIncrease,
     }));
 
     return { slowestTests, memoryHotspots };

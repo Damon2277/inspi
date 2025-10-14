@@ -1,13 +1,14 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
+
 import { ErrorBoundary, useErrorBoundary, withErrorBoundary } from '@/components/errors/ErrorBoundary';
 
 // 模拟日志记录器
 jest.mock('@/lib/logging/logger', () => ({
   logger: {
     error: jest.fn(),
-    info: jest.fn()
-  }
+    info: jest.fn(),
+  },
 }));
 
 // 测试组件：会抛出错误
@@ -21,7 +22,7 @@ const ThrowError: React.FC<{ shouldThrow?: boolean }> = ({ shouldThrow = true })
 // 测试组件：使用错误边界Hook
 const UseErrorBoundaryComponent: React.FC = () => {
   const { captureError } = useErrorBoundary();
-  
+
   return (
     <button onClick={() => captureError(new Error('Hook error'))}>
       Trigger Error
@@ -35,7 +36,7 @@ describe('ErrorBoundary', () => {
   beforeAll(() => {
     console.error = jest.fn();
   });
-  
+
   afterAll(() => {
     console.error = originalError;
   });
@@ -49,7 +50,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText('组件加载失败')).toBeInTheDocument();
@@ -60,7 +61,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError shouldThrow={false} />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText('No error')).toBeInTheDocument();
@@ -72,7 +73,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary level="page">
           <ThrowError />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText('页面加载出错')).toBeInTheDocument();
@@ -84,7 +85,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary level="section">
           <ThrowError />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText('内容加载失败')).toBeInTheDocument();
@@ -104,14 +105,14 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <TestComponent />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText('组件加载失败')).toBeInTheDocument();
 
       // 模拟修复错误
       shouldThrow = false;
-      
+
       const retryButton = screen.getByText('重试');
       fireEvent.click(retryButton);
 
@@ -124,23 +125,23 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary>
           <ThrowError />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       const retryButton = screen.getByText('重试');
-      
+
       // 第一次重试
       fireEvent.click(retryButton);
       expect(screen.getByText('重试')).toBeInTheDocument();
-      
+
       // 第二次重试
       fireEvent.click(retryButton);
       expect(screen.getByText('重试')).toBeInTheDocument();
-      
+
       // 第三次重试
       fireEvent.click(retryButton);
       expect(screen.getByText('重试')).toBeInTheDocument();
-      
+
       // 第四次应该不能重试了
       fireEvent.click(retryButton);
       // 重试按钮应该仍然存在，但重试次数已达上限
@@ -154,7 +155,7 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary fallback={<CustomFallback />}>
           <ThrowError />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText('Custom Error UI')).toBeInTheDocument();
@@ -168,14 +169,14 @@ describe('ErrorBoundary', () => {
       render(
         <ErrorBoundary onError={onError}>
           <ThrowError />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(onError).toHaveBeenCalledWith(
         expect.any(Error),
         expect.objectContaining({
-          componentStack: expect.any(String)
-        })
+          componentStack: expect.any(String),
+        }),
       );
     });
   });
@@ -183,7 +184,7 @@ describe('ErrorBoundary', () => {
   describe('resetKeys功能', () => {
     it('应该在resetKeys改变时重置错误状态', async () => {
       let resetKey = 'key1';
-      
+
       const TestWrapper: React.FC = () => (
         <ErrorBoundary resetKeys={[resetKey]} resetOnPropsChange>
           <ThrowError />
@@ -211,7 +212,7 @@ describe('useErrorBoundary Hook', () => {
     render(
       <ErrorBoundary>
         <UseErrorBoundaryComponent />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     const button = screen.getByText('Trigger Error');
@@ -234,9 +235,9 @@ describe('withErrorBoundary HOC', () => {
   it('应该设置正确的displayName', () => {
     const TestComponent = () => <div>Test</div>;
     TestComponent.displayName = 'TestComponent';
-    
+
     const WrappedComponent = withErrorBoundary(TestComponent);
-    
+
     expect(WrappedComponent.displayName).toBe('withErrorBoundary(TestComponent)');
   });
 });

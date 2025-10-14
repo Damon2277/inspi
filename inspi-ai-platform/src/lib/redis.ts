@@ -55,13 +55,13 @@ export async function getRedisStatus() {
     return {
       isConnected: pong === 'PONG',
       status: client.status,
-      url: REDIS_URL.replace(/\/\/.*@/, '//***@') // Hide credentials
+      url: REDIS_URL.replace(/\/\/.*@/, '//***@'), // Hide credentials
     };
   } catch (error) {
     return {
       isConnected: false,
       status: 'error',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -81,7 +81,7 @@ export class RedisService {
    */
   async set(key: string, value: string | object, ttlSeconds?: number): Promise<void> {
     const serializedValue = typeof value === 'object' ? JSON.stringify(value) : value;
-    
+
     if (ttlSeconds) {
       await this.client.setex(key, ttlSeconds, serializedValue);
     } else {
@@ -102,7 +102,7 @@ export class RedisService {
   async getJSON<T>(key: string): Promise<T | null> {
     const value = await this.get(key);
     if (!value) return null;
-    
+
     try {
       return JSON.parse(value) as T;
     } catch {
@@ -154,7 +154,7 @@ export class RedisService {
       return {
         isConnected: false,
         status: 'error',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }

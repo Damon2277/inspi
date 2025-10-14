@@ -1,235 +1,354 @@
-/**
- * 管理后台仪表盘组件
- */
+'use client';
 
-'use client'
-
-import { useEffect, useState } from 'react'
 import {
-  UsersIcon,
-  UserPlusIcon,
-  GiftIcon,
   ChartBarIcon,
+  UserGroupIcon,
+  CurrencyDollarIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon
-} from '@heroicons/react/24/outline'
+  CheckCircleIcon,
+} from '@heroicons/react/24/outline';
+import React, { useState, useEffect } from 'react';
 
-interface DashboardData {
-  overview: {
-    totalUsers: number
-    totalInvites: number
-    totalRegistrations: number
-    totalRewards: number
-    conversionRate: number
-  }
-  recentActivity: Array<{
-    id: string
-    type: 'invite_created' | 'user_registered' | 'reward_granted'
-    description: string
-    timestamp: Date
-    userId?: string
-    userName?: string
-  }>
-  topPerformers: Array<{
-    userId: string
-    userName: string
-    inviteCount: number
-    rewardCount: number
-  }>
-  systemHealth: {
-    status: 'healthy' | 'warning' | 'error'
-    issues: string[]
-    lastCheck: Date
-  }
+// 类型定义
+interface DashboardStats {
+  totalUsers: number;
+  totalInvites: number;
+  totalRevenue: number;
+  activeSubscriptions: number;
 }
 
-export default function AdminDashboard() {
-  const [data, setData] = useState<DashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+interface SystemHealth {
+  status: 'healthy' | 'warning' | 'error';
+  issues: string[];
+  lastCheck: Date;
+}
 
+interface RecentActivity {
+  id: string;
+  type: string;
+  description: string;
+  timestamp: Date;
+  user?: string;
+}
+
+export function AdminDashboard() {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalUsers: 0,
+    totalInvites: 0,
+    totalRevenue: 0,
+    activeSubscriptions: 0,
+  });
+
+  const [systemHealth, setSystemHealth] = useState<SystemHealth>({
+    status: 'healthy',
+    issues: [],
+    lastCheck: new Date(),
+  });
+
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // 加载仪表板数据
   useEffect(() => {
-    fetchDashboardData()
-  }, [])
+    loadDashboardData();
+  }, []);
 
-  const fetchDashboardData = async () => {
+  const loadDashboardData = async () => {
     try {
-      setLoading(true)
-      const response = await fetch('/api/admin/dashboard')
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard data')
-      }
+      setIsLoading(true);
+      setError(null);
 
-      const result = await response.json()
-      setData(result.data)
-    } catch (error) {
-      console.error('Dashboard data fetch error:', error)
-      setError('Failed to load dashboard data')
+      // 模拟API调用 - 实际项目中应该调用真实的API
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // 模拟数据
+      setStats({
+        totalUsers: 1250,
+        totalInvites: 3420,
+        totalRevenue: 45600,
+        activeSubscriptions: 890,
+      });
+
+      setSystemHealth({
+        status: 'healthy',
+        issues: [],
+        lastCheck: new Date(),
+      });
+
+      setRecentActivity([
+        {
+          id: '1',
+          type: 'user_registration',
+          description: '新用户注册',
+          timestamp: new Date(Date.now() - 1000 * 60 * 5),
+          user: '张三',
+        },
+        {
+          id: '2',
+          type: 'subscription_created',
+          description: '用户订阅高级版',
+          timestamp: new Date(Date.now() - 1000 * 60 * 15),
+          user: '李四',
+        },
+        {
+          id: '3',
+          type: 'invite_sent',
+          description: '发送邀请码',
+          timestamp: new Date(Date.now() - 1000 * 60 * 30),
+          user: '王五',
+        },
+      ]);
+
+    } catch (err) {
+      console.error('加载仪表板数据失败:', err);
+      setError('加载数据失败，请重试');
     } finally {
-      setLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  if (loading) {
+  // 格式化数字
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('zh-CN').format(num);
+  };
+
+  // 格式化货币
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('zh-CN', {
+      style: 'currency',
+      currency: 'CNY',
+    }).format(amount);
+  };
+
+  // 格式化时间
+  const formatTime = (date: Date) => {
+    return new Intl.RelativeTimeFormat('zh-CN', { numeric: 'auto' }).format(
+      Math.floor((date.getTime() - Date.now()) / (1000 * 60)),
+      'minute',
+    );
+  };
+
+  // 获取系统健康状态图标
+  const getHealthIcon = () => {
+    switch (systemHealth.status) {
+      case 'healthy':
+        return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
+      case 'warning':
+        return <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />;
+      case 'error':
+        return <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />;
+      default:
+        return <CheckCircleIcon className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
+  if (isLoading) {
     return (
-      <div className=\"animate-pulse\">
-        <div className=\"grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4\">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className=\"bg-white overflow-hidden shadow rounded-lg\">
-              <div className=\"p-5\">
-                <div className=\"flex items-center\">
-                  <div className=\"flex-shrink-0\">
-                    <div className=\"h-8 w-8 bg-gray-300 rounded\"></div>
-                  </div>
-                  <div className=\"ml-5 w-0 flex-1\">
-                    <div className=\"h-4 bg-gray-300 rounded w-3/4 mb-2\"></div>
-                    <div className=\"h-6 bg-gray-300 rounded w-1/2\"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">加载仪表板数据中...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
-      <div className=\"bg-red-50 border border-red-200 rounded-md p-4\">
-        <div className=\"flex\">
-          <ExclamationTriangleIcon className=\"h-5 w-5 text-red-400\" />
-          <div className=\"ml-3\">
-            <h3 className=\"text-sm font-medium text-red-800\">错误</h3>
-            <p className=\"mt-1 text-sm text-red-700\">{error}</p>
-            <button
-              onClick={fetchDashboardData}
-              className=\"mt-2 text-sm text-red-800 underline hover:text-red-900\"
-            >
-              重试
-            </button>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <ExclamationTriangleIcon className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={loadDashboardData}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+          >
+            重新加载
+          </button>
         </div>
       </div>
-    )
-  }
-
-  if (!data) return null
-
-  const stats = [
-    {
-      name: '总用户数',
-      stat: data.overview.totalUsers.toLocaleString(),
-      icon: UsersIcon,
-      color: 'bg-blue-500'
-    },
-    {
-      name: '邀请码数',
-      stat: data.overview.totalInvites.toLocaleString(),
-      icon: UserPlusIcon,
-      color: 'bg-green-500'
-    },
-    {
-      name: '成功注册',
-      stat: data.overview.totalRegistrations.toLocaleString(),
-      icon: CheckCircleIcon,
-      color: 'bg-yellow-500'
-    },
-    {
-      name: '发放奖励',
-      stat: data.overview.totalRewards.toLocaleString(),
-      icon: GiftIcon,
-      color: 'bg-purple-500'
-    }
-  ]
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'healthy':
-        return 'text-green-600 bg-green-100'
-      case 'warning':
-        return 'text-yellow-600 bg-yellow-100'
-      case 'error':
-        return 'text-red-600 bg-red-100'
-      default:
-        return 'text-gray-600 bg-gray-100'
-    }
-  }
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'healthy':
-        return '正常'
-      case 'warning':
-        return '警告'
-      case 'error':
-        return '错误'
-      default:
-        return '未知'
-    }
+    );
   }
 
   return (
-    <div className=\"space-y-6\">
-      {/* 概览统计 */}
-      <div>
-        <h2 className=\"text-lg font-medium text-gray-900 mb-4\">系统概览</h2>
-        <div className=\"grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4\">
-          {stats.map((item) => (
-            <div key={item.name} className=\"bg-white overflow-hidden shadow rounded-lg\">
-              <div className=\"p-5\">
-                <div className=\"flex items-center\">
-                  <div className=\"flex-shrink-0\">
-                    <div className={`${item.color} p-2 rounded-md`}>
-                      <item.icon className=\"h-6 w-6 text-white\" />
-                    </div>
-                  </div>
-                  <div className=\"ml-5 w-0 flex-1\">
-                    <dl>
-                      <dt className=\"text-sm font-medium text-gray-500 truncate\">{item.name}</dt>
-                      <dd className=\"text-lg font-medium text-gray-900\">{item.stat}</dd>
-                    </dl>
-                  </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {/* 页面标题 */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">管理员仪表板</h1>
+          <p className="mt-2 text-gray-600">系统概览和关键指标</p>
+        </div>
+
+        {/* 统计卡片 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <UserGroupIcon className="h-6 w-6 text-gray-400" />
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      总用户数
+                    </dt>
+                    <dd className="text-lg font-medium text-gray-900">
+                      {formatNumber(stats.totalUsers)}
+                    </dd>
+                  </dl>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
 
-      {/* 转化率 */}
-      <div className=\"bg-white shadow rounded-lg p-6\">
-        <h3 className=\"text-lg font-medium text-gray-900 mb-4\">邀请转化率</h3>
-        <div className=\"flex items-center\">
-          <ChartBarIcon className=\"h-8 w-8 text-indigo-500 mr-3\" />
-          <div>
-            <div className=\"text-2xl font-bold text-gray-900\">
-              {data.overview.conversionRate.toFixed(1)}%
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <ChartBarIcon className="h-6 w-6 text-gray-400" />
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      邀请总数
+                    </dt>
+                    <dd className="text-lg font-medium text-gray-900">
+                      {formatNumber(stats.totalInvites)}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
             </div>
-            <div className=\"text-sm text-gray-500\">
-              {data.overview.totalRegistrations} / {data.overview.totalInvites} 邀请成功
+          </div>
+
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <CurrencyDollarIcon className="h-6 w-6 text-gray-400" />
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      总收入
+                    </dt>
+                    <dd className="text-lg font-medium text-gray-900">
+                      {formatCurrency(stats.totalRevenue)}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <CheckCircleIcon className="h-6 w-6 text-gray-400" />
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      活跃订阅
+                    </dt>
+                    <dd className="text-lg font-medium text-gray-900">
+                      {formatNumber(stats.activeSubscriptions)}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className=\"grid grid-cols-1 lg:grid-cols-2 gap-6\">
-        {/* 最近活动 */}
-        <div className=\"bg-white shadow rounded-lg\">
-          <div className=\"px-6 py-4 border-b border-gray-200\">
-            <h3 className=\"text-lg font-medium text-gray-900\">最近活动</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* 系统健康状态 */}
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                系统健康状态
+              </h3>
+              <div className="flex items-center mb-4">
+                {getHealthIcon()}
+                <span className="ml-2 text-sm font-medium text-gray-900">
+                  {systemHealth.status === 'healthy' && '系统正常'}
+                  {systemHealth.status === 'warning' && '系统警告'}
+                  {systemHealth.status === 'error' && '系统错误'}
+                </span>
+              </div>
+              <p className="text-sm text-gray-500 mb-4">
+                最后检查: {systemHealth.lastCheck.toLocaleString('zh-CN')}
+              </p>
+              {systemHealth.issues.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">发现的问题:</h4>
+                  <ul className="text-sm text-red-600 space-y-1">
+                    {systemHealth.issues.map((issue, index) => (
+                      <li key={index}>• {issue}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
-          <div className=\"divide-y divide-gray-200\">
-            {data.recentActivity.length > 0 ? (
-              data.recentActivity.map((activity) => (
-                <div key={activity.id} className=\"px-6 py-4\">
-                  <div className=\"flex items-center justify-between\">
-                    <div className=\"flex-1\">
-                      <p className=\"text-sm text-gray-900\">{activity.description}</p>
-                      <p className=\"text-xs text-gray-500\">
-                        {new Date(activity.timestamp).toLocaleString('zh-CN')}
+
+          {/* 最近活动 */}
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                最近活动
+              </h3>
+              <div className="space-y-4">
+                {recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-start space-x-3">
+                    <div className="flex-shrink-0">
+                      <div className="h-2 w-2 bg-indigo-600 rounded-full mt-2"></div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-900">
+                        {activity.user && (
+                          <span className="font-medium">{activity.user} </span>
+                        )}
+                        {activity.description}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {formatTime(activity.timestamp)}
                       </p>
                     </div>
-                    <div className=\"ml-4\">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${\n                        activity.type === 'invite_created'\n                          ? 'bg-blue-100 text-blue-800'\n                          : activity.type === 'user_registered'\n                          ? 'bg-green-100 text-green-800'\n                          : 'bg-purple-100 text-purple-800'\n                      }`}>\n                        {activity.type === 'invite_created'\n                          ? '邀请创建'\n                          : activity.type === 'user_registered'\n                          ? '用户注册'\n                          : '奖励发放'}\n                      </span>\n                    </div>\n                  </div>\n                </div>\n              ))\n            ) : (\n              <div className=\"px-6 py-8 text-center text-gray-500\">\n                暂无最近活动\n              </div>\n            )}\n          </div>\n        </div>\n\n        {/* 顶级表现者 */}\n        <div className=\"bg-white shadow rounded-lg\">\n          <div className=\"px-6 py-4 border-b border-gray-200\">\n            <h3 className=\"text-lg font-medium text-gray-900\">顶级邀请者</h3>\n          </div>\n          <div className=\"divide-y divide-gray-200\">\n            {data.topPerformers.length > 0 ? (\n              data.topPerformers.map((performer, index) => (\n                <div key={performer.userId} className=\"px-6 py-4\">\n                  <div className=\"flex items-center justify-between\">\n                    <div className=\"flex items-center\">\n                      <div className=\"flex-shrink-0\">\n                        <div className=\"h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center\">\n                          <span className=\"text-sm font-medium text-indigo-800\">\n                            {index + 1}\n                          </span>\n                        </div>\n                      </div>\n                      <div className=\"ml-3\">\n                        <p className=\"text-sm font-medium text-gray-900\">\n                          {performer.userName}\n                        </p>\n                        <p className=\"text-xs text-gray-500\">\n                          {performer.inviteCount} 个邀请 · {performer.rewardCount} 个奖励\n                        </p>\n                      </div>\n                    </div>\n                  </div>\n                </div>\n              ))\n            ) : (\n              <div className=\"px-6 py-8 text-center text-gray-500\">\n                暂无数据\n              </div>\n            )}\n          </div>\n        </div>\n      </div>\n\n      {/* 系统健康状态 */}\n      <div className=\"bg-white shadow rounded-lg p-6\">\n        <div className=\"flex items-center justify-between mb-4\">\n          <h3 className=\"text-lg font-medium text-gray-900\">系统健康状态</h3>\n          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(data.systemHealth.status)}`}>\n            {getStatusText(data.systemHealth.status)}\n          </span>\n        </div>\n        \n        {data.systemHealth.issues.length > 0 && (\n          <div className=\"mt-4\">\n            <h4 className=\"text-sm font-medium text-gray-900 mb-2\">发现的问题：</h4>\n            <ul className=\"list-disc list-inside space-y-1\">\n              {data.systemHealth.issues.map((issue, index) => (\n                <li key={index} className=\"text-sm text-gray-600\">{issue}</li>\n              ))}\n            </ul>\n          </div>\n        )}\n        \n        <p className=\"text-xs text-gray-500 mt-4\">\n          最后检查时间: {new Date(data.systemHealth.lastCheck).toLocaleString('zh-CN')}\n        </p>\n      </div>\n    </div>\n  )\n}"
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 快速操作 */}
+        <div className="mt-8">
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                快速操作
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+                  用户管理
+                </button>
+                <button className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+                  邀请管理
+                </button>
+                <button className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors">
+                  订阅管理
+                </button>
+                <button className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors">
+                  系统设置
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

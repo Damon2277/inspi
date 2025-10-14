@@ -1,5 +1,6 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
+
 import { DesktopButton, DesktopButtonGroup } from '@/components/desktop/DesktopButton';
 
 describe('DesktopButton', () => {
@@ -53,7 +54,7 @@ describe('DesktopButton', () => {
   it('calls onClick handler', () => {
     const handleClick = jest.fn();
     render(<DesktopButton onClick={handleClick}>Click me</DesktopButton>);
-    
+
     fireEvent.click(screen.getByRole('button'));
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
@@ -61,7 +62,7 @@ describe('DesktopButton', () => {
   it('does not call onClick when disabled', () => {
     const handleClick = jest.fn();
     render(<DesktopButton onClick={handleClick} disabled>Disabled</DesktopButton>);
-    
+
     fireEvent.click(screen.getByRole('button'));
     expect(handleClick).not.toHaveBeenCalled();
   });
@@ -69,7 +70,7 @@ describe('DesktopButton', () => {
   it('does not call onClick when loading', () => {
     const handleClick = jest.fn();
     render(<DesktopButton onClick={handleClick} loading>Loading</DesktopButton>);
-    
+
     fireEvent.click(screen.getByRole('button'));
     expect(handleClick).not.toHaveBeenCalled();
   });
@@ -82,12 +83,12 @@ describe('DesktopButtonGroup', () => {
         <DesktopButton>Button 1</DesktopButton>
         <DesktopButton>Button 2</DesktopButton>
         <DesktopButton>Button 3</DesktopButton>
-      </DesktopButtonGroup>
+      </DesktopButtonGroup>,
     );
 
     const group = screen.getByRole('group');
     expect(group).toHaveClass('flex', 'space-x-3');
-    
+
     const buttons = screen.getAllByRole('button');
     expect(buttons).toHaveLength(3);
   });
@@ -96,7 +97,7 @@ describe('DesktopButtonGroup', () => {
     render(
       <DesktopButtonGroup className="custom-class">
         <DesktopButton>Button</DesktopButton>
-      </DesktopButtonGroup>
+      </DesktopButtonGroup>,
     );
 
     expect(screen.getByRole('group')).toHaveClass('custom-class');

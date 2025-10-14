@@ -43,12 +43,12 @@ export const DEFAULT_RETRY_CONDITION = (error: Error, attempt: number): boolean 
     'ECONNREFUSED',
     'ENOTFOUND',
     'ETIMEDOUT',
-    'ECONNRESET'
+    'ECONNRESET',
   ];
 
   const errorMessage = error.message || error.toString();
-  const isRetryableError = retryableErrors.some(pattern => 
-    errorMessage.includes(pattern)
+  const isRetryableError = retryableErrors.some(pattern =>
+    errorMessage.includes(pattern),
   );
 
   // HTTP 5xx错误也可重试
@@ -74,7 +74,7 @@ export class ExponentialBackoffRetry {
       onRetry: () => {},
       onSuccess: () => {},
       onFailure: () => {},
-      ...config
+      ...config,
     };
   }
 
@@ -100,8 +100,8 @@ export class ExponentialBackoffRetry {
               attempt,
               maxRetries: this.config.maxRetries,
               delay,
-              lastError: lastError?.message
-            }
+              lastError: lastError?.message,
+            },
           });
 
           // 调用重试回调
@@ -123,7 +123,7 @@ export class ExponentialBackoffRetry {
           data: result,
           attempts,
           totalDuration,
-          retryDelays
+          retryDelays,
         };
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
@@ -145,12 +145,12 @@ export class ExponentialBackoffRetry {
       tags: {
         retry_failed: 'true',
         total_attempts: attempts.toString(),
-        total_duration: totalDuration.toString()
+        total_duration: totalDuration.toString(),
       },
       extra: {
         retryDelays,
-        config: this.config
-      }
+        config: this.config,
+      },
     });
 
     return {
@@ -158,7 +158,7 @@ export class ExponentialBackoffRetry {
       error: lastError!,
       attempts,
       totalDuration,
-      retryDelays
+      retryDelays,
     };
   }
 
@@ -215,7 +215,7 @@ export const RETRY_STRATEGIES = {
     baseDelay: 100,
     maxDelay: 1000,
     backoffFactor: 2,
-    jitter: true
+    jitter: true,
   },
 
   /**
@@ -226,7 +226,7 @@ export const RETRY_STRATEGIES = {
     baseDelay: 1000,
     maxDelay: 10000,
     backoffFactor: 2,
-    jitter: true
+    jitter: true,
   },
 
   /**
@@ -237,7 +237,7 @@ export const RETRY_STRATEGIES = {
     baseDelay: 2000,
     maxDelay: 30000,
     backoffFactor: 1.5,
-    jitter: true
+    jitter: true,
   },
 
   /**
@@ -248,15 +248,15 @@ export const RETRY_STRATEGIES = {
     baseDelay: 500,
     maxDelay: 60000,
     backoffFactor: 2.5,
-    jitter: true
-  }
+    jitter: true,
+  },
 } as const;
 
 /**
  * 创建指数退避重试器
  */
 export function createExponentialBackoffRetry(
-  config?: Partial<ExponentialBackoffConfig>
+  config?: Partial<ExponentialBackoffConfig>,
 ): ExponentialBackoffRetry {
   return new ExponentialBackoffRetry(config);
 }
@@ -266,18 +266,22 @@ export function createExponentialBackoffRetry(
  */
 export function withExponentialBackoff<T extends any[], R>(
   fn: (...args: T) => Promise<R>,
-  config?: Partial<ExponentialBackoffConfig>
+  config?: Partial<ExponentialBackoffConfig>,
 ): (...args: T) => Promise<R> {
   const retry = new ExponentialBackoffRetry(config);
 
   return async (...args: T): Promise<R> => {
     const result = await retry.execute(() => fn(...args));
-    
+
     if (result.success) {
       return result.data!;
-    } else {
-      throw result.error!;
     }
+
+    if (result.error instanceof Error) {
+      throw result.error;
+    }
+
+    throw new Error(String(result.error));
   };
 }
 
@@ -286,12 +290,12 @@ export function withExponentialBackoff<T extends any[], R>(
  */
 export async function retryBatch<T>(
   operations: Array<() => Promise<T>>,
-  config?: Partial<ExponentialBackoffConfig>
+  config?: Partial<ExponentialBackoffConfig>,
 ): Promise<Array<RetryResult<T>>> {
   const retry = new ExponentialBackoffRetry(config);
-  
+
   return Promise.all(
-    operations.map(operation => retry.execute(operation))
+    operations.map(operation => retry.execute(operation)),
   );
 }
 
@@ -300,11 +304,11 @@ export async function retryBatch<T>(
  */
 export function createConditionalRetry(
   condition: (error: Error, attempt: number) => boolean,
-  config?: Partial<ExponentialBackoffConfig>
+  config?: Partial<ExponentialBackoffConfig>,
 ): ExponentialBackoffRetry {
   return new ExponentialBackoffRetry({
     ...config,
-    retryCondition: condition
+    retryCondition: condition,
   });
 }
 
@@ -314,11 +318,11 @@ export function createConditionalRetry(
 export const networkRetry = createConditionalRetry(
   (error: Error) => {
     const networkErrors = ['NetworkError', 'fetch', 'ECONNREFUSED', 'ENOTFOUND'];
-    return networkErrors.some(pattern => 
-      error.message.toLowerCase().includes(pattern.toLowerCase())
+    return networkErrors.some(pattern =>
+      error.message.toLowerCase().includes(pattern.toLowerCase()),
     );
   },
-  RETRY_STRATEGIES.FAST
+  RETRY_STRATEGIES.FAST,
 );
 
 /**
@@ -328,7 +332,7 @@ export const serverErrorRetry = createConditionalRetry(
   (error: Error) => {
     return error.message.includes('5') && error.message.includes('0');
   },
-  RETRY_STRATEGIES.STANDARD
+  RETRY_STRATEGIES.STANDARD,
 );
 
 /**
@@ -337,11 +341,11 @@ export const serverErrorRetry = createConditionalRetry(
 export const timeoutRetry = createConditionalRetry(
   (error: Error) => {
     const timeoutErrors = ['timeout', 'ETIMEDOUT', 'AbortError'];
-    return timeoutErrors.some(pattern => 
-      error.message.toLowerCase().includes(pattern.toLowerCase())
+    return timeoutErrors.some(pattern =>
+      error.message.toLowerCase().includes(pattern.toLowerCase()),
     );
   },
-  RETRY_STRATEGIES.CONSERVATIVE
+  RETRY_STRATEGIES.CONSERVATIVE,
 );
 
 export default ExponentialBackoffRetry;

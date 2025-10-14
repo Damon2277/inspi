@@ -9,7 +9,7 @@ export {
   withAdvancedRetry,
   RetryStrategyType,
   DEFAULT_RETRY_CONDITIONS,
-  DELAY_CALCULATORS
+  DELAY_CALCULATORS,
 } from './advanced-retry';
 
 export type {
@@ -17,7 +17,7 @@ export type {
   RetryResult,
   RetryStats,
   RetryConditionFn,
-  DelayCalculatorFn
+  DelayCalculatorFn,
 } from './advanced-retry';
 
 // 恢复策略管理器
@@ -28,14 +28,14 @@ export {
   RecoveryStrategyType,
   RecoveryActionType,
   RECOVERY_ACTIONS,
-  RECOVERY_STRATEGIES
+  RECOVERY_STRATEGIES,
 } from './recovery-strategies';
 
 export type {
   RecoveryContext,
   RecoveryAction,
   RecoveryStrategy,
-  RecoveryResult
+  RecoveryResult,
 } from './recovery-strategies';
 
 // 创建默认实例
@@ -58,7 +58,7 @@ export const defaultRecoveryManager = createRecoveryStrategyManager();
 export class ErrorRecoverySystem {
   constructor(
     private retryManager = defaultRetryManager,
-    private recoveryManager = defaultRecoveryManager
+    private recoveryManager = defaultRecoveryManager,
   ) {}
 
   /**
@@ -68,28 +68,36 @@ export class ErrorRecoverySystem {
     operation: () => Promise<T>,
     operationName: string,
     retryConfig?: Partial<import('./advanced-retry').AdvancedRetryConfig>,
-    recoveryContext?: any
+    recoveryContext?: any,
   ): Promise<T> {
     try {
       const result = await this.retryManager.execute(operation, retryConfig);
       if (result.success) {
         return result.data!;
-      } else {
-        throw result.error!;
       }
+
+      if (result.error instanceof Error) {
+        throw result.error;
+      }
+
+      throw new Error(String(result.error));
     } catch (error) {
       // 尝试恢复
       const recoveryResult = await this.recoveryManager.recover(
         error instanceof Error ? error : new Error(String(error)),
         operationName,
-        recoveryContext
+        recoveryContext,
       );
 
       if (recoveryResult.success) {
         return recoveryResult.data;
-      } else {
-        throw recoveryResult.error || error;
       }
+
+      if (recoveryResult.error instanceof Error) {
+        throw recoveryResult.error;
+      }
+
+      throw error instanceof Error ? error : new Error(String(error));
     }
   }
 
@@ -99,7 +107,7 @@ export class ErrorRecoverySystem {
   getSystemStats() {
     return {
       retry: this.retryManager.getStats(),
-      recovery: this.recoveryManager.getStrategyStats()
+      recovery: this.recoveryManager.getStrategyStats(),
     };
   }
 
@@ -126,12 +134,12 @@ export async function executeWithRecovery<T>(
   options?: {
     retryConfig?: Partial<import('./advanced-retry').AdvancedRetryConfig>;
     recoveryContext?: any;
-  }
+  },
 ): Promise<T> {
   return defaultErrorRecoverySystem.executeWithRecovery(
     operation,
     operationName,
     options?.retryConfig,
-    options?.recoveryContext
+    options?.recoveryContext,
   );
 }

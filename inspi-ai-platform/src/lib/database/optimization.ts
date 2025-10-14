@@ -49,7 +49,7 @@ export const DEFAULT_SLOW_QUERY_CONFIG: SlowQueryConfig = {
   maxDocumentsExamined: 1000,
   minEfficiency: 50,
   enableProfiling: true,
-  sampleRate: 0.1
+  sampleRate: 0.1,
 };
 
 /**
@@ -72,18 +72,18 @@ export class QueryOptimizer {
   async analyzeQuery(
     collection: string,
     query: any,
-    options: any = {}
+    options: any = {},
   ): Promise<QueryPerformance> {
     const startTime = Date.now();
-    
+
     try {
       // 使用explain()分析查询计划
       const coll = this.db.collection(collection);
-      const explainResult = await coll.find(query, options).explain('executionStats');
-      
+      const explainResult = await (coll.find as any)(query, options).explain('executionStats');
+
       const executionTime = Date.now() - startTime;
       const stats = explainResult.executionStats;
-      
+
       const performance: QueryPerformance = {
         query: JSON.stringify(query),
         collection,
@@ -94,12 +94,12 @@ export class QueryOptimizer {
         indexName: this.getUsedIndexName(explainResult),
         efficiency: this.calculateQueryEfficiency(stats),
         recommendation: this.generateQueryRecommendation(stats, explainResult),
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       // 记录性能数据
       this.recordPerformance(performance);
-      
+
       // 如果是慢查询，记录警告
       if (this.isSlowQuery(performance)) {
         logger.warn('Slow query detected', {
@@ -107,7 +107,7 @@ export class QueryOptimizer {
           query: performance.query,
           executionTime,
           documentsExamined: performance.documentsExamined,
-          indexUsed: performance.indexUsed
+          indexUsed: performance.indexUsed,
         });
       }
 
@@ -115,7 +115,7 @@ export class QueryOptimizer {
     } catch (error) {
       logger.error('Failed to analyze query', error instanceof Error ? error : new Error(String(error)), {
         collection,
-        query: JSON.stringify(query)
+        query: JSON.stringify(query),
       });
       throw error;
     }
@@ -132,7 +132,7 @@ export class QueryOptimizer {
       limit?: number;
       skip?: number;
       projection?: Record<string, 1 | 0>;
-    } = {}
+    } = {},
   ): {
     query: Record<string, any>;
     mongoOptions: Record<string, any>;
@@ -145,7 +145,7 @@ export class QueryOptimizer {
     // 优化排序字段
     if (options.sort) {
       mongoOptions.sort = options.sort;
-      
+
       // 检查排序字段是否有对应索引
       const sortFields = Object.keys(options.sort);
       if (sortFields.length > 0) {
@@ -162,11 +162,11 @@ export class QueryOptimizer {
     // 优化分页
     if (options.limit) {
       mongoOptions.limit = options.limit;
-      
+
       if (options.skip && options.skip > 1000) {
         optimizations.push('大偏移量分页性能较差，建议使用基于游标的分页');
       }
-      
+
       if (options.skip) {
         mongoOptions.skip = options.skip;
       }
@@ -178,7 +178,7 @@ export class QueryOptimizer {
     return {
       query: optimizedQuery,
       mongoOptions,
-      optimizations
+      optimizations,
     };
   }
 
@@ -187,7 +187,7 @@ export class QueryOptimizer {
    */
   private optimizeQueryConditions(
     query: Record<string, any>,
-    optimizations: string[]
+    optimizations: string[],
   ): Record<string, any> {
     const optimized = { ...query };
 
@@ -196,14 +196,14 @@ export class QueryOptimizer {
       if (value instanceof RegExp) {
         // 建议使用文本索引替代正则表达式
         optimizations.push(`字段 ${field} 使用正则表达式，建议创建文本索引提高性能`);
-        
+
         // 如果是简单的前缀匹配，转换为范围查询
         const regexStr = value.source;
         if (regexStr.startsWith('^') && !regexStr.includes('*') && !regexStr.includes('+')) {
           const prefix = regexStr.substring(1);
           optimized[field] = {
             $gte: prefix,
-            $lt: prefix + '\uffff'
+            $lt: prefix + '\uffff',
           };
           optimizations.push(`将 ${field} 的正则表达式转换为范围查询`);
         }
@@ -232,7 +232,7 @@ export class QueryOptimizer {
    */
   optimizeAggregationPipeline(
     collection: string,
-    pipeline: any[]
+    pipeline: any[],
   ): {
     optimizedPipeline: any[];
     optimizations: string[];
@@ -243,7 +243,7 @@ export class QueryOptimizer {
     // 将 $match 阶段尽可能前移
     const matchStages = optimizedPipeline.filter(stage => stage.$match);
     const nonMatchStages = optimizedPipeline.filter(stage => !stage.$match);
-    
+
     if (matchStages.length > 0) {
       optimizedPipeline.splice(0, optimizedPipeline.length, ...matchStages, ...nonMatchStages);
       optimizations.push('将 $match 阶段前移以减少处理的文档数量');
@@ -252,7 +252,7 @@ export class QueryOptimizer {
     // 检查 $sort 和 $limit 的组合
     const sortIndex = optimizedPipeline.findIndex(stage => stage.$sort);
     const limitIndex = optimizedPipeline.findIndex(stage => stage.$limit);
-    
+
     if (sortIndex !== -1 && limitIndex !== -1 && limitIndex > sortIndex) {
       // 将 $limit 移到 $sort 之后
       const limitStage = optimizedPipeline.splice(limitIndex, 1)[0];
@@ -274,7 +274,7 @@ export class QueryOptimizer {
 
     return {
       optimizedPipeline,
-      optimizations
+      optimizations,
     };
   }
 
@@ -288,11 +288,11 @@ export class QueryOptimizer {
     recommendations: QueryOptimization[];
   } {
     const queriesInRange = this.performanceHistory.filter(
-      perf => perf.timestamp >= timeRange.start && perf.timestamp <= timeRange.end
+      perf => perf.timestamp >= timeRange.start && perf.timestamp <= timeRange.end,
     );
 
     const slowQueries = queriesInRange.filter(perf => this.isSlowQuery(perf));
-    
+
     // 按执行时间排序，取前10个最慢的查询
     const topSlowQueries = [...slowQueries]
       .sort((a, b) => b.executionTime - a.executionTime)
@@ -304,7 +304,7 @@ export class QueryOptimizer {
       totalQueries: queriesInRange.length,
       slowQueries,
       topSlowQueries,
-      recommendations
+      recommendations,
     };
   }
 
@@ -335,7 +335,7 @@ export class QueryOptimizer {
           priority: 'high',
           description: `查询模式 "${pattern}" 效率过低 (${avgEfficiency.toFixed(1)}%)`,
           impact: `影响 ${queries.length} 个查询，平均执行时间 ${avgExecutionTime.toFixed(1)}ms`,
-          implementation: '为查询条件字段创建复合索引'
+          implementation: '为查询条件字段创建复合索引',
         });
       }
 
@@ -345,7 +345,7 @@ export class QueryOptimizer {
           priority: 'high',
           description: `查询模式 "${pattern}" 执行时间过长`,
           impact: `平均执行时间 ${avgExecutionTime.toFixed(1)}ms`,
-          implementation: '优化查询条件，减少扫描的文档数量'
+          implementation: '优化查询条件，减少扫描的文档数量',
         });
       }
 
@@ -356,7 +356,7 @@ export class QueryOptimizer {
           priority: 'medium',
           description: `查询模式 "${pattern}" 未使用索引`,
           impact: `${noIndexQueries.length} 个查询进行全表扫描`,
-          implementation: '为查询字段创建适当的索引'
+          implementation: '为查询字段创建适当的索引',
         });
       }
     });
@@ -399,15 +399,15 @@ export class QueryOptimizer {
    */
   private getUsedIndexName(explainResult: any): string | undefined {
     const winningPlan = explainResult.queryPlanner?.winningPlan;
-    
+
     if (winningPlan?.stage === 'IXSCAN') {
       return winningPlan.indexName;
     }
-    
+
     if (winningPlan?.inputStage?.stage === 'IXSCAN') {
       return winningPlan.inputStage.indexName;
     }
-    
+
     return undefined;
   }
 
@@ -417,10 +417,10 @@ export class QueryOptimizer {
   private calculateQueryEfficiency(stats: any): number {
     const examined = stats.totalDocsExamined || 0;
     const returned = stats.totalDocsReturned || 0;
-    
+
     if (examined === 0) return 100;
     if (returned === 0) return 0;
-    
+
     return Math.round((returned / examined) * 100);
   }
 
@@ -466,7 +466,7 @@ export class QueryOptimizer {
    */
   private recordPerformance(performance: QueryPerformance): void {
     this.performanceHistory.push(performance);
-    
+
     // 限制历史记录大小
     if (this.performanceHistory.length > this.maxHistorySize) {
       this.performanceHistory.shift();
@@ -496,7 +496,7 @@ export class QueryOptimizer {
         averageExecutionTime: 0,
         slowQueryRate: 0,
         indexUsageRate: 0,
-        averageEfficiency: 0
+        averageEfficiency: 0,
       };
     }
 
@@ -511,7 +511,7 @@ export class QueryOptimizer {
       averageExecutionTime: totalExecutionTime / totalQueries,
       slowQueryRate: (slowQueries / totalQueries) * 100,
       indexUsageRate: (indexedQueries / totalQueries) * 100,
-      averageEfficiency: totalEfficiency / totalQueries
+      averageEfficiency: totalEfficiency / totalQueries,
     };
   }
 }
@@ -597,7 +597,7 @@ export class QueryBuilder {
   build(): { query: Record<string, any>; options: Record<string, any> } {
     return {
       query: this.query,
-      options: this.options
+      options: this.options,
     };
   }
 }

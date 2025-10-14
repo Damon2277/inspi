@@ -1,6 +1,7 @@
-import { TestCacheManager, TestResult, CacheEntry } from '../../../../lib/testing/incremental/TestCacheManager';
-import * as fs from 'fs';
 import * as crypto from 'crypto';
+import * as fs from 'fs';
+
+import { TestCacheManager, TestResult, CacheEntry } from '../../../../lib/testing/incremental/TestCacheManager';
 
 // Mock fs and crypto modules
 jest.mock('fs');
@@ -21,13 +22,13 @@ describe('TestCacheManager', () => {
     mockFs.writeFileSync.mockImplementation();
     mockFs.statSync.mockReturnValue({
       mtime: new Date('2023-01-01'),
-      size: 1000
+      size: 1000,
     } as any);
 
     // Mock crypto operations
     const mockHash = {
       update: jest.fn().mockReturnThis(),
-      digest: jest.fn().mockReturnValue('mockhash123')
+      digest: jest.fn().mockReturnValue('mockhash123'),
     };
     mockCrypto.createHash.mockReturnValue(mockHash as any);
 
@@ -35,7 +36,7 @@ describe('TestCacheManager', () => {
       cacheDir: mockCacheDir,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       maxSize: 10 * 1024 * 1024, // 10MB
-      compressionEnabled: false
+      compressionEnabled: false,
     });
   });
 
@@ -47,9 +48,9 @@ describe('TestCacheManager', () => {
   describe('initialization', () => {
     it('should create cache directory if not exists', () => {
       mockFs.existsSync.mockReturnValue(false);
-      
+
       new TestCacheManager({ cacheDir: '/new/cache' });
-      
+
       expect(mockFs.mkdirSync).toHaveBeenCalledWith('/new/cache', { recursive: true });
     });
 
@@ -66,20 +67,20 @@ describe('TestCacheManager', () => {
             testFile: 'test.spec.ts',
             status: 'passed',
             duration: 1000,
-            timestamp: '2023-01-01T00:00:00.000Z'
+            timestamp: '2023-01-01T00:00:00.000Z',
           },
           dependencies: [],
           createdAt: '2023-01-01T00:00:00.000Z',
           lastUsed: '2023-01-01T00:00:00.000Z',
-          useCount: 0
-        }]
+          useCount: 0,
+        }],
       };
 
       mockFs.readFileSync.mockReturnValue(JSON.stringify(mockCacheData));
 
       const manager = new TestCacheManager({ cacheDir: mockCacheDir });
       const entries = manager.getCacheEntries();
-      
+
       expect(entries).toHaveLength(1);
       expect(entries[0].testFile).toBe('test.spec.ts');
     });
@@ -89,17 +90,17 @@ describe('TestCacheManager', () => {
     it('should validate cache when files unchanged', () => {
       const testFile = 'test.spec.ts';
       const sourceFiles = ['src/file.ts'];
-      
+
       // Cache a result first
       const testResult: TestResult = {
         testFile,
         status: 'passed',
         duration: 1000,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
+
       cacheManager.cacheResult(testFile, sourceFiles, testResult);
-      
+
       // Should be valid since files haven't changed (same hash)
       const isValid = cacheManager.isCacheValid(testFile, sourceFiles);
       expect(isValid).toBe(true);
@@ -108,23 +109,23 @@ describe('TestCacheManager', () => {
     it('should invalidate cache when test file changed', () => {
       const testFile = 'test.spec.ts';
       const sourceFiles = ['src/file.ts'];
-      
+
       const testResult: TestResult = {
         testFile,
         status: 'passed',
         duration: 1000,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
+
       cacheManager.cacheResult(testFile, sourceFiles, testResult);
-      
+
       // Change the hash to simulate file change
       const mockHash = {
         update: jest.fn().mockReturnThis(),
-        digest: jest.fn().mockReturnValue('newhash456')
+        digest: jest.fn().mockReturnValue('newhash456'),
       };
       mockCrypto.createHash.mockReturnValue(mockHash as any);
-      
+
       const isValid = cacheManager.isCacheValid(testFile, sourceFiles);
       expect(isValid).toBe(false);
     });
@@ -132,16 +133,16 @@ describe('TestCacheManager', () => {
     it('should invalidate cache when source file changed', () => {
       const testFile = 'test.spec.ts';
       const sourceFiles = ['src/file.ts'];
-      
+
       const testResult: TestResult = {
         testFile,
         status: 'passed',
         duration: 1000,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
+
       cacheManager.cacheResult(testFile, sourceFiles, testResult);
-      
+
       // Simulate source file change by changing its hash
       let callCount = 0;
       const mockHash = {
@@ -149,10 +150,10 @@ describe('TestCacheManager', () => {
         digest: jest.fn().mockImplementation(() => {
           callCount++;
           return callCount === 1 ? 'mockhash123' : 'newhash456';
-        })
+        }),
       };
       mockCrypto.createHash.mockReturnValue(mockHash as any);
-      
+
       const isValid = cacheManager.isCacheValid(testFile, sourceFiles);
       expect(isValid).toBe(false);
     });
@@ -161,16 +162,16 @@ describe('TestCacheManager', () => {
       const testFile = 'test.spec.ts';
       const sourceFiles = ['src/file.ts'];
       const dependencies = ['src/dep1.ts'];
-      
+
       const testResult: TestResult = {
         testFile,
         status: 'passed',
         duration: 1000,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
+
       cacheManager.cacheResult(testFile, sourceFiles, testResult, dependencies);
-      
+
       // Check with different dependencies
       const newDependencies = ['src/dep1.ts', 'src/dep2.ts'];
       const isValid = cacheManager.isCacheValid(testFile, sourceFiles, newDependencies);
@@ -180,22 +181,22 @@ describe('TestCacheManager', () => {
     it('should invalidate expired cache', () => {
       const testFile = 'test.spec.ts';
       const sourceFiles = ['src/file.ts'];
-      
+
       // Create cache manager with very short max age
       const shortCacheManager = new TestCacheManager({
         cacheDir: mockCacheDir,
-        maxAge: 1 // 1ms
+        maxAge: 1, // 1ms
       });
-      
+
       const testResult: TestResult = {
         testFile,
         status: 'passed',
         duration: 1000,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
+
       shortCacheManager.cacheResult(testFile, sourceFiles, testResult);
-      
+
       // Wait for cache to expire
       setTimeout(() => {
         const isValid = shortCacheManager.isCacheValid(testFile, sourceFiles);
@@ -218,12 +219,12 @@ describe('TestCacheManager', () => {
           branches: 90,
           functions: 100,
           lines: 95,
-          files: {}
-        }
+          files: {},
+        },
       };
-      
+
       cacheManager.cacheResult(testFile, sourceFiles, testResult);
-      
+
       const cachedResult = cacheManager.getCachedResult(testFile, sourceFiles);
       expect(cachedResult).toEqual(testResult);
     });
@@ -231,7 +232,7 @@ describe('TestCacheManager', () => {
     it('should return null for cache miss', () => {
       const testFile = 'nonexistent.spec.ts';
       const sourceFiles = ['src/file.ts'];
-      
+
       const cachedResult = cacheManager.getCachedResult(testFile, sourceFiles);
       expect(cachedResult).toBeNull();
     });
@@ -239,22 +240,22 @@ describe('TestCacheManager', () => {
     it('should update cache statistics on hit and miss', () => {
       const testFile = 'test.spec.ts';
       const sourceFiles = ['src/file.ts'];
-      
+
       // Cache miss
       cacheManager.getCachedResult(testFile, sourceFiles);
-      
+
       // Cache result
       const testResult: TestResult = {
         testFile,
         status: 'passed',
         duration: 1000,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
       cacheManager.cacheResult(testFile, sourceFiles, testResult);
-      
+
       // Cache hit
       cacheManager.getCachedResult(testFile, sourceFiles);
-      
+
       const stats = cacheManager.getStats();
       expect(stats.totalHits).toBe(1);
       expect(stats.totalMisses).toBe(1);
@@ -268,7 +269,7 @@ describe('TestCacheManager', () => {
       const testResults = [
         { testFile: 'test1.spec.ts', sourceFiles: ['src/file1.ts'] },
         { testFile: 'test2.spec.ts', sourceFiles: ['src/file2.ts'] },
-        { testFile: 'test3.spec.ts', sourceFiles: ['src/file1.ts', 'src/file3.ts'] }
+        { testFile: 'test3.spec.ts', sourceFiles: ['src/file1.ts', 'src/file3.ts'] },
       ];
 
       testResults.forEach(({ testFile, sourceFiles }) => {
@@ -276,7 +277,7 @@ describe('TestCacheManager', () => {
           testFile,
           status: 'passed',
           duration: 1000,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
         cacheManager.cacheResult(testFile, sourceFiles, result);
       });
@@ -284,10 +285,10 @@ describe('TestCacheManager', () => {
 
     it('should invalidate specific test cache', () => {
       cacheManager.invalidateTest('test1.spec.ts');
-      
+
       const result = cacheManager.getCachedResult('test1.spec.ts', ['src/file1.ts']);
       expect(result).toBeNull();
-      
+
       // Other tests should still be cached
       const result2 = cacheManager.getCachedResult('test2.spec.ts', ['src/file2.ts']);
       expect(result2).not.toBeNull();
@@ -295,13 +296,13 @@ describe('TestCacheManager', () => {
 
     it('should invalidate affected tests', () => {
       cacheManager.invalidateAffectedTests(['src/file1.ts']);
-      
+
       // Tests that depend on file1.ts should be invalidated
       const result1 = cacheManager.getCachedResult('test1.spec.ts', ['src/file1.ts']);
       const result3 = cacheManager.getCachedResult('test3.spec.ts', ['src/file1.ts', 'src/file3.ts']);
       expect(result1).toBeNull();
       expect(result3).toBeNull();
-      
+
       // Test that doesn't depend on file1.ts should still be cached
       const result2 = cacheManager.getCachedResult('test2.spec.ts', ['src/file2.ts']);
       expect(result2).not.toBeNull();
@@ -309,7 +310,7 @@ describe('TestCacheManager', () => {
 
     it('should clear all cache', () => {
       cacheManager.clear();
-      
+
       const stats = cacheManager.getStats();
       expect(stats.totalEntries).toBe(0);
     });
@@ -319,7 +320,7 @@ describe('TestCacheManager', () => {
     it('should enforce maximum cache size', () => {
       const smallCacheManager = new TestCacheManager({
         cacheDir: mockCacheDir,
-        maxSize: 100 // Very small size
+        maxSize: 100, // Very small size
       });
 
       // Add many entries to exceed size limit
@@ -328,7 +329,7 @@ describe('TestCacheManager', () => {
           testFile: `test${i}.spec.ts`,
           status: 'passed',
           duration: 1000,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
         smallCacheManager.cacheResult(`test${i}.spec.ts`, [`src/file${i}.ts`], testResult);
       }
@@ -340,18 +341,18 @@ describe('TestCacheManager', () => {
     it('should cleanup expired entries', () => {
       const shortCacheManager = new TestCacheManager({
         cacheDir: mockCacheDir,
-        maxAge: 1 // 1ms
+        maxAge: 1, // 1ms
       });
 
       const testResult: TestResult = {
         testFile: 'test.spec.ts',
         status: 'passed',
         duration: 1000,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
+
       shortCacheManager.cacheResult('test.spec.ts', ['src/file.ts'], testResult);
-      
+
       // Wait for expiration
       setTimeout(() => {
         shortCacheManager.cleanup();
@@ -367,17 +368,17 @@ describe('TestCacheManager', () => {
         testFile: 'test.spec.ts',
         status: 'passed',
         duration: 1000,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
+
       cacheManager.cacheResult('test.spec.ts', ['src/file.ts'], testResult);
-      
+
       await cacheManager.saveCache();
-      
+
       expect(mockFs.writeFileSync).toHaveBeenCalledWith(
         expect.stringContaining('test-cache.json'),
         expect.any(String),
-        'utf8'
+        'utf8',
       );
     });
 
@@ -397,13 +398,13 @@ describe('TestCacheManager', () => {
         testFile: 'test.spec.ts',
         status: 'passed',
         duration: 1000,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
+
       cacheManager.cacheResult('test.spec.ts', ['src/file.ts'], testResult);
-      
+
       const exported = cacheManager.exportCache();
-      
+
       expect(exported.version).toBe('1.0.0');
       expect(exported.entries).toHaveLength(1);
       expect(exported.stats).toBeDefined();
@@ -423,18 +424,18 @@ describe('TestCacheManager', () => {
               testFile: 'imported.spec.ts',
               status: 'passed',
               duration: 1000,
-              timestamp: new Date()
+              timestamp: new Date(),
             },
             dependencies: [],
             createdAt: new Date(),
             lastUsed: new Date(),
-            useCount: 0
-          }
-        ]]
+            useCount: 0,
+          },
+        ]],
       };
 
       cacheManager.importCache(cacheData);
-      
+
       const entries = cacheManager.getCacheEntries();
       expect(entries).toHaveLength(1);
       expect(entries[0].testFile).toBe('imported.spec.ts');
@@ -449,7 +450,7 @@ describe('TestCacheManager', () => {
           testFile: `test${i}.spec.ts`,
           status: 'passed',
           duration: 1000,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
         cacheManager.cacheResult(`test${i}.spec.ts`, [`src/file${i}.ts`], testResult);
       }
@@ -459,7 +460,7 @@ describe('TestCacheManager', () => {
       cacheManager.getCachedResult('nonexistent.spec.ts', ['src/file.ts']); // miss
 
       const stats = cacheManager.getStats();
-      
+
       expect(stats.totalEntries).toBe(3);
       expect(stats.totalHits).toBe(1);
       expect(stats.totalMisses).toBe(1);

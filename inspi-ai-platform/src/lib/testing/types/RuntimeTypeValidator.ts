@@ -1,6 +1,6 @@
 /**
  * Runtime Type Validator
- * 
+ *
  * Provides runtime validation of TypeScript interfaces and types
  * to ensure type safety at runtime and catch type inconsistencies.
  */
@@ -54,7 +54,7 @@ export class RuntimeTypeValidator {
    */
   validate(typeName: string, value: any, options: { strict?: boolean; cache?: boolean } = {}): ValidationResult {
     const cacheKey = options.cache ? `${typeName}:${JSON.stringify(value)}` : null;
-    
+
     if (cacheKey && this.validationCache.has(cacheKey)) {
       return this.validationCache.get(cacheKey)!;
     }
@@ -65,7 +65,7 @@ export class RuntimeTypeValidator {
     }
 
     const result = this.validateAgainstSchema(schema, value, options.strict || false);
-    
+
     if (cacheKey) {
       this.validationCache.set(cacheKey, result);
     }
@@ -86,7 +86,7 @@ export class RuntimeTypeValidator {
         field: 'root',
         message: 'Value cannot be null or undefined',
         expected: schema.name,
-        actual: String(value)
+        actual: String(value),
       });
       return { isValid: false, errors, warnings };
     }
@@ -95,7 +95,7 @@ export class RuntimeTypeValidator {
     for (const rule of schema.rules) {
       const fieldValue = this.getNestedValue(value, rule.field);
       const validationResult = this.validateField(rule, fieldValue, strict);
-      
+
       errors.push(...validationResult.errors);
       warnings.push(...validationResult.warnings);
     }
@@ -104,13 +104,13 @@ export class RuntimeTypeValidator {
     if (strict) {
       const allowedFields = new Set(schema.rules.map(r => r.field.split('.')[0]));
       const actualFields = Object.keys(value);
-      
+
       for (const field of actualFields) {
         if (!allowedFields.has(field)) {
           warnings.push({
             field,
-            message: `Unexpected field in strict mode`,
-            suggestion: `Remove field '${field}' or update schema`
+            message: 'Unexpected field in strict mode',
+            suggestion: `Remove field '${field}' or update schema`,
           });
         }
       }
@@ -122,15 +122,15 @@ export class RuntimeTypeValidator {
         const nestedValue = this.getNestedValue(value, field);
         if (nestedValue !== undefined) {
           const nestedResult = this.validateAgainstSchema(nestedSchema, nestedValue, strict);
-          
+
           // Prefix field names with parent field
           errors.push(...nestedResult.errors.map(e => ({
             ...e,
-            field: `${field}.${e.field}`
+            field: `${field}.${e.field}`,
           })));
           warnings.push(...nestedResult.warnings.map(w => ({
             ...w,
-            field: `${field}.${w.field}`
+            field: `${field}.${w.field}`,
           })));
         }
       }
@@ -139,7 +139,7 @@ export class RuntimeTypeValidator {
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -156,7 +156,7 @@ export class RuntimeTypeValidator {
         field: rule.field,
         message: rule.message || `Field '${rule.field}' is required`,
         expected: rule.type,
-        actual: String(value)
+        actual: String(value),
       });
       return { isValid: false, errors, warnings };
     }
@@ -173,7 +173,7 @@ export class RuntimeTypeValidator {
         field: rule.field,
         message: rule.message || `Field '${rule.field}' must be of type '${rule.type}'`,
         expected: rule.type,
-        actual: typeof value
+        actual: typeof value,
       });
     }
 
@@ -183,14 +183,14 @@ export class RuntimeTypeValidator {
         field: rule.field,
         message: rule.message || `Field '${rule.field}' failed custom validation`,
         expected: 'valid value',
-        actual: String(value)
+        actual: String(value),
       });
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -221,7 +221,7 @@ export class RuntimeTypeValidator {
           return false;
         }
       case 'uuid':
-        return typeof value === 'string' && 
+        return typeof value === 'string' &&
                /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
       case 'objectid':
         return typeof value === 'string' && /^[0-9a-fA-F]{24}$/.test(value);
@@ -257,23 +257,23 @@ export class RuntimeTypeValidator {
     // This is a simplified implementation
     // In a real implementation, you would parse the TypeScript AST
     const rules: ValidationRule[] = [];
-    
+
     // Extract field definitions using regex (simplified)
     const fieldRegex = /(\w+)(\?)?:\s*([^;,\n]+)/g;
     let match;
-    
+
     while ((match = fieldRegex.exec(interfaceDefinition)) !== null) {
       const [, fieldName, optional, fieldType] = match;
       rules.push({
         field: fieldName,
         type: fieldType.trim(),
-        required: !optional
+        required: !optional,
       });
     }
 
     return {
       name: interfaceName,
-      rules
+      rules,
     };
   }
 
@@ -293,24 +293,24 @@ export class RuntimeTypeValidator {
     for (const testCase of testCases) {
       try {
         const result = this.validate(testCase.type, testCase.value, { strict: true });
-        
+
         if (!result.isValid) {
           errors.push(...result.errors.map(e => ({
             ...e,
-            field: `${testCase.type}.${e.field}`
+            field: `${testCase.type}.${e.field}`,
           })));
         }
-        
+
         warnings.push(...result.warnings.map(w => ({
           ...w,
-          field: `${testCase.type}.${w.field}`
+          field: `${testCase.type}.${w.field}`,
         })));
       } catch (error) {
         errors.push({
           field: testCase.type,
           message: `Failed to validate type: ${error instanceof Error ? error.message : String(error)}`,
           expected: 'valid schema',
-          actual: 'error'
+          actual: 'error',
         });
       }
     }
@@ -318,7 +318,7 @@ export class RuntimeTypeValidator {
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -336,7 +336,7 @@ export class RuntimeTypeValidator {
         { field: 'avatar', type: 'url', required: false },
         { field: 'subscription', type: 'object', required: true },
         { field: 'createdAt', type: 'date', required: true },
-        { field: 'updatedAt', type: 'date', required: true }
+        { field: 'updatedAt', type: 'date', required: true },
       ],
       nested: {
         subscription: {
@@ -344,10 +344,10 @@ export class RuntimeTypeValidator {
           rules: [
             { field: 'plan', type: 'string', required: true, validator: (v) => ['free', 'pro', 'super'].includes(v) },
             { field: 'expiresAt', type: 'date', required: false },
-            { field: 'features', type: 'object', required: true }
-          ]
-        }
-      }
+            { field: 'features', type: 'object', required: true },
+          ],
+        },
+      },
     });
 
     // Work schema
@@ -365,8 +365,8 @@ export class RuntimeTypeValidator {
         { field: 'isPublic', type: 'boolean', required: true },
         { field: 'tags', type: 'string[]', required: true },
         { field: 'createdAt', type: 'date', required: true },
-        { field: 'updatedAt', type: 'date', required: true }
-      ]
+        { field: 'updatedAt', type: 'date', required: true },
+      ],
     });
 
     // TeachingCard schema
@@ -377,8 +377,8 @@ export class RuntimeTypeValidator {
         { field: 'type', type: 'string', required: true, validator: (v) => ['visualization', 'analogy', 'thinking', 'interaction'].includes(v) },
         { field: 'title', type: 'string', required: true },
         { field: 'content', type: 'string', required: true },
-        { field: 'metadata', type: 'object', required: false }
-      ]
+        { field: 'metadata', type: 'object', required: false },
+      ],
     });
 
     // KnowledgeGraph schema
@@ -391,8 +391,8 @@ export class RuntimeTypeValidator {
         { field: 'edges', type: 'array', required: true },
         { field: 'metadata', type: 'object', required: false },
         { field: 'createdAt', type: 'date', required: true },
-        { field: 'updatedAt', type: 'date', required: true }
-      ]
+        { field: 'updatedAt', type: 'date', required: true },
+      ],
     });
   }
 
@@ -409,11 +409,11 @@ export class RuntimeTypeValidator {
           name: 'Test User',
           subscription: {
             plan: 'free',
-            features: {}
+            features: {},
           },
           createdAt: new Date(),
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       },
       {
         type: 'Work',
@@ -428,8 +428,8 @@ export class RuntimeTypeValidator {
           isPublic: true,
           tags: ['test'],
           createdAt: new Date(),
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       },
       {
         type: 'TeachingCard',
@@ -437,9 +437,9 @@ export class RuntimeTypeValidator {
           id: 'card-1',
           type: 'visualization',
           title: 'Test Card',
-          content: 'Test content'
-        }
-      }
+          content: 'Test content',
+        },
+      },
     ];
   }
 
@@ -461,7 +461,7 @@ export class RuntimeTypeValidator {
     return {
       registeredSchemas: this.schemas.size,
       cacheSize: this.validationCache.size,
-      cacheHitRate: 0 // Would need to track hits/misses for real implementation
+      cacheHitRate: 0, // Would need to track hits/misses for real implementation
     };
   }
 }

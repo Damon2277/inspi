@@ -113,7 +113,8 @@ class ImprovementTracker {
           if (line.includes('- [') && line.includes(']')) {
             totalTasks++;
             if (line.includes('[x]')) completedTasks++;
-            if (line.includes('[!]') || line.includes('[R]') || line.includes('[~]') || line.includes('[P]')) {
+            if (line.includes('[!]') || line.includes('[R]') ||
+              line.includes('[~]') || line.includes('[P]')) {
               blockedTasks++;
             }
           }
@@ -246,7 +247,8 @@ class ImprovementTracker {
     };
 
     // 基于分析结果生成建议
-    analysis.recommendations = this.generateRecommendations(analysis.trends, analysis.opportunities);
+    analysis.recommendations = this.generateRecommendations(analysis.trends,
+      analysis.opportunities);
 
     // 保存分析结果
     this.saveAnalysis(analysis);
@@ -402,7 +404,8 @@ class ImprovementTracker {
         type: IMPROVEMENT_TYPES.EFFICIENCY,
         priority: 'medium',
         title: 'Improve Task Completion Rate',
-        description: `Current completion rate is ${currentData.efficiency.completionRate}%, target is 80%+`,
+        description:
+          `Current completion rate is ${currentData.efficiency.completionRate}%, target is 80%+`,
         impact: 'medium',
         effort: 'medium'
       });
@@ -617,7 +620,8 @@ class ImprovementTracker {
     });
 
     // 保存报告
-    const reportFile = path.join(process.cwd(), 'docs', 'reports', `improvement-report-${Date.now()}.json`);
+    const reportFile = path.join(process.cwd(), 'docs', 'reports',
+      `improvement-report-${Date.now()}.json`);
     const reportDir = path.dirname(reportFile);
     
     if (!fs.existsSync(reportDir)) {
@@ -691,7 +695,8 @@ if (require.main === module) {
       console.log('Commands:');
       console.log('  collect                     - Collect current project data');
       console.log('  analyze                     - Analyze trends and identify opportunities');
-      console.log('  create <title> <desc> <type> <priority> <impact> <effort> - Create improvement');
+      console.log('  create <title> <desc> <type> <priority> <impact> <effort> -
+        Create improvement');
       console.log('  update <id> <status> [notes] - Update improvement status');
       console.log('  report                      - Generate comprehensive report');
       console.log('  list                        - List all improvements');

@@ -1,6 +1,7 @@
+import nodemailer from 'nodemailer';
+
 import { EmailService } from '@/lib/email/service';
 import { EmailTemplates } from '@/lib/email/templates';
-import nodemailer from 'nodemailer';
 
 // Mock nodemailer
 jest.mock('nodemailer');
@@ -11,22 +12,22 @@ describe('EmailService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Mock transporter
     mockTransporter = {
       sendMail: jest.fn(),
-      verify: jest.fn()
+      verify: jest.fn(),
     };
-    
+
     (nodemailer.createTransporter as jest.Mock).mockReturnValue(mockTransporter);
-    
+
     // Set up environment variables
     process.env.EMAIL_SERVER_HOST = 'smtp.test.com';
     process.env.EMAIL_SERVER_PORT = '587';
     process.env.EMAIL_SERVER_USER = 'test@example.com';
     process.env.EMAIL_SERVER_PASSWORD = 'password';
     process.env.EMAIL_FROM = 'noreply@inspi.ai';
-    
+
     emailService = new EmailService();
   });
 
@@ -48,8 +49,8 @@ describe('EmailService', () => {
         secure: false,
         auth: {
           user: 'test@example.com',
-          pass: 'password'
-        }
+          pass: 'password',
+        },
       });
     });
 
@@ -72,8 +73,8 @@ describe('EmailService', () => {
       expect(nodemailer.createTransporter).toHaveBeenCalledWith(
         expect.objectContaining({
           port: 465,
-          secure: true
-        })
+          secure: true,
+        }),
       );
     });
   });
@@ -93,14 +94,14 @@ describe('EmailService', () => {
       // Assert
       expect(result).toEqual({
         success: true,
-        messageId: 'test-message-id'
+        messageId: 'test-message-id',
       });
       expect(mockTransporter.sendMail).toHaveBeenCalledWith({
         from: 'noreply@inspi.ai',
         to: recipient,
         subject: '验证您的邮箱地址 - Inspi.AI',
         html: expect.stringContaining(verificationCode),
-        text: expect.stringContaining(verificationCode)
+        text: expect.stringContaining(verificationCode),
       });
     });
 
@@ -118,7 +119,7 @@ describe('EmailService', () => {
       // Assert
       expect(result).toEqual({
         success: false,
-        error: 'Failed to send verification email'
+        error: 'Failed to send verification email',
       });
     });
 
@@ -131,7 +132,7 @@ describe('EmailService', () => {
         const result = await emailService.sendVerificationEmail(email, '123456');
         expect(result).toEqual({
           success: false,
-          error: 'Invalid email address'
+          error: 'Invalid email address',
         });
       }
     });
@@ -145,7 +146,7 @@ describe('EmailService', () => {
         const result = await emailService.sendVerificationEmail('user@example.com', code);
         expect(result).toEqual({
           success: false,
-          error: 'Invalid verification code format'
+          error: 'Invalid verification code format',
         });
       }
     });
@@ -181,14 +182,14 @@ describe('EmailService', () => {
       // Assert
       expect(result).toEqual({
         success: true,
-        messageId: 'reset-message-id'
+        messageId: 'reset-message-id',
       });
       expect(mockTransporter.sendMail).toHaveBeenCalledWith({
         from: 'noreply@inspi.ai',
         to: recipient,
         subject: '重置您的密码 - Inspi.AI',
         html: expect.stringContaining(resetToken),
-        text: expect.stringContaining(resetToken)
+        text: expect.stringContaining(resetToken),
       });
     });
 
@@ -233,14 +234,14 @@ describe('EmailService', () => {
       // Assert
       expect(result).toEqual({
         success: true,
-        messageId: 'welcome-message-id'
+        messageId: 'welcome-message-id',
       });
       expect(mockTransporter.sendMail).toHaveBeenCalledWith({
         from: 'noreply@inspi.ai',
         to: recipient,
         subject: '欢迎加入 Inspi.AI！',
         html: expect.stringContaining(userName),
-        text: expect.stringContaining(userName)
+        text: expect.stringContaining(userName),
       });
     });
 
@@ -281,7 +282,7 @@ describe('EmailService', () => {
         to: 'user@example.com',
         subject: 'Custom Notification',
         html: '<p>Custom HTML content</p>',
-        text: 'Custom text content'
+        text: 'Custom text content',
       };
 
       // Act
@@ -290,11 +291,11 @@ describe('EmailService', () => {
       // Assert
       expect(result).toEqual({
         success: true,
-        messageId: 'notification-id'
+        messageId: 'notification-id',
       });
       expect(mockTransporter.sendMail).toHaveBeenCalledWith({
         from: 'noreply@inspi.ai',
-        ...options
+        ...options,
       });
     });
 
@@ -305,7 +306,7 @@ describe('EmailService', () => {
       const options = {
         to: ['user1@example.com', 'user2@example.com'],
         subject: 'Bulk Notification',
-        html: '<p>Bulk content</p>'
+        html: '<p>Bulk content</p>',
       };
 
       // Act
@@ -314,8 +315,8 @@ describe('EmailService', () => {
       // Assert
       expect(mockTransporter.sendMail).toHaveBeenCalledWith(
         expect.objectContaining({
-          to: ['user1@example.com', 'user2@example.com']
-        })
+          to: ['user1@example.com', 'user2@example.com'],
+        }),
       );
     });
 
@@ -328,7 +329,7 @@ describe('EmailService', () => {
         cc: 'cc@example.com',
         bcc: 'bcc@example.com',
         subject: 'Test',
-        html: '<p>Test</p>'
+        html: '<p>Test</p>',
       };
 
       // Act
@@ -338,8 +339,8 @@ describe('EmailService', () => {
       expect(mockTransporter.sendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           cc: 'cc@example.com',
-          bcc: 'bcc@example.com'
-        })
+          bcc: 'bcc@example.com',
+        }),
       );
     });
   });
@@ -355,7 +356,7 @@ describe('EmailService', () => {
       // Assert
       expect(result).toEqual({
         success: true,
-        message: 'SMTP connection verified'
+        message: 'SMTP connection verified',
       });
       expect(mockTransporter.verify).toHaveBeenCalled();
     });
@@ -371,7 +372,7 @@ describe('EmailService', () => {
       // Assert
       expect(result).toEqual({
         success: false,
-        error: 'SMTP connection failed'
+        error: 'SMTP connection failed',
       });
     });
   });
@@ -383,16 +384,16 @@ describe('EmailService', () => {
       const recipient = 'user@example.com';
 
       // Act - Send multiple emails rapidly
-      const promises = Array(5).fill(null).map(() => 
-        emailService.sendVerificationEmail(recipient, '123456')
+      const promises = Array(5).fill(null).map(() =>
+        emailService.sendVerificationEmail(recipient, '123456'),
       );
 
       const results = await Promise.all(promises);
 
       // Assert - Should allow first few but rate limit others
       const successCount = results.filter(r => r.success).length;
-      const rateLimitedCount = results.filter(r => 
-        !r.success && r.error?.includes('rate limit')
+      const rateLimitedCount = results.filter(r =>
+        !r.success && r.error?.includes('rate limit'),
       ).length;
 
       expect(successCount).toBeLessThan(5);
@@ -406,10 +407,10 @@ describe('EmailService', () => {
 
       // Act - Send email to trigger rate limit
       await emailService.sendVerificationEmail(recipient, '123456');
-      
+
       // Mock time passage
       jest.advanceTimersByTime(60000); // 1 minute
-      
+
       const result = await emailService.sendVerificationEmail(recipient, '654321');
 
       // Assert
@@ -441,7 +442,7 @@ describe('EmailService', () => {
         to: 'user@example.com',
         subject: 'Test',
         html: '<p>Test</p>',
-        includeUnsubscribe: true
+        includeUnsubscribe: true,
       });
 
       // Assert
@@ -457,9 +458,9 @@ describe('EmailService', () => {
 
       // Act
       await emailService.sendVerificationEmail(
-        'user@example.com', 
+        'user@example.com',
         '123456',
-        { template: customTemplate }
+        { template: customTemplate },
       );
 
       // Assert
@@ -481,7 +482,7 @@ describe('EmailService', () => {
       // Assert
       expect(result).toEqual({
         success: false,
-        error: 'Email service temporarily unavailable'
+        error: 'Email service temporarily unavailable',
       });
     });
 
@@ -497,7 +498,7 @@ describe('EmailService', () => {
       // Assert
       expect(result).toEqual({
         success: false,
-        error: 'Email authentication failed'
+        error: 'Email authentication failed',
       });
     });
 
@@ -513,7 +514,7 @@ describe('EmailService', () => {
       // Assert
       expect(result).toEqual({
         success: false,
-        error: 'Invalid recipient email address'
+        error: 'Invalid recipient email address',
       });
     });
   });
@@ -530,7 +531,7 @@ describe('EmailService', () => {
       // Assert
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('Email sent successfully'),
-        expect.objectContaining({ messageId: 'test-id' })
+        expect.objectContaining({ messageId: 'test-id' }),
       );
 
       consoleSpy.mockRestore();
@@ -548,7 +549,7 @@ describe('EmailService', () => {
       // Assert
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining('Email send failed'),
-        expect.objectContaining({ error: error.message })
+        expect.objectContaining({ error: error.message }),
       );
 
       consoleErrorSpy.mockRestore();
@@ -569,7 +570,7 @@ describe('EmailService', () => {
         verificationEmails: 1,
         passwordResetEmails: 0,
         welcomeEmails: 0,
-        notificationEmails: 0
+        notificationEmails: 0,
       });
     });
   });

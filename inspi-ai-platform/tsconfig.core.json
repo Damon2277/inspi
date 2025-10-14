@@ -1,0 +1,59 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/core/*": ["./src/core/*"],
+      "@/shared/types/subscription": ["./src/shared/types/subscription.ts"],
+      "@/shared/hooks/useAuth": ["./src/shared/hooks/useAuth.tsx"],
+      "@/lib/models/*": ["./src/lib/models/*"],
+      "@/lib/mongodb": ["./src/lib/mongodb.ts"],
+      "@/lib/cache/*": ["./src/lib/cache/*"],
+      "@/lib/services/*": ["./src/lib/services/*"],
+      "@/lib/*": [
+        "./src/lib/*"
+      ],
+      "@/shared/utils/*": [
+        "./src/shared/utils/*"
+      ]
+    }
+  },
+  "include": [
+    "src/core/auth/permission-middleware.ts",
+    "src/core/subscription/quota-checker.ts",
+    "src/core/subscription/quota-manager.ts",
+    "src/core/subscription/quota-monitor.ts",
+    "src/core/subscription/quota-usage.ts",
+    "src/core/subscription/plan-model.ts",
+    "src/core/subscription/plan-mapper.ts",
+    "src/core/subscription/plan-service.ts",
+    "src/core/subscription/payment-service.ts",
+    "src/core/subscription/subscription-service.ts",
+    "src/core/subscription/subscription-manager.ts",
+    "src/core/subscription/upgrade-engine.ts",
+    "src/core/subscription/upgrade-recommendation.ts",
+    "src/app/api/subscription/**/*",
+    "src/app/api/monitoring/metrics/**/*",
+    "src/lib/quota/**/*",
+    "src/lib/cache/redis.ts",
+    "src/lib/models/Subscription.ts",
+    "src/lib/models/Payment.ts",
+    "src/lib/models/Usage.ts",
+    "src/lib/models/User.ts",
+    "src/lib/models/KnowledgeGraph.ts",
+    "src/lib/models/WorkMount.ts",
+    "src/lib/models/GraphTemplate.ts",
+    "src/lib/database/operations.ts",
+    "src/lib/services/graphAnalysisService.ts",
+    "src/lib/services/workMountService.ts",
+    "src/app/api/knowledge-graph/**/*",
+    "src/app/api/works/**/*",
+    "src/shared/hooks/useAuth.tsx",
+    "src/shared/types/subscription.ts"
+  ],
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
+}

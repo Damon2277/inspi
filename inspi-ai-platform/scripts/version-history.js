@@ -39,7 +39,8 @@ class VersionHistoryManager {
       const commit = execSync(`git rev-list -n 1 ${tag}`, { encoding: 'utf8' }).trim();
       const date = execSync(`git log -1 --format=%ai ${tag}`, { encoding: 'utf8' }).trim();
       const author = execSync(`git log -1 --format=%an ${tag}`, { encoding: 'utf8' }).trim();
-      const message = execSync(`git tag -l --format='%(contents)' ${tag}`, { encoding: 'utf8' }).trim();
+      const message = execSync(`git tag -l --format='%(contents)' ${tag}`,
+        { encoding: 'utf8' }).trim();
       
       return {
         tag,
@@ -118,7 +119,8 @@ class VersionHistoryManager {
       versions.forEach(version => {
         const date = new Date(version.date).toLocaleDateString('zh-CN');
         const author = version.author.padEnd(10).substring(0, 10);
-        const hasNotes = fs.existsSync(path.join(this.releaseNotesDir, version.releaseNotesFile)) ? '✅' : '❌';
+        const hasNotes = fs.existsSync(path.join(this.releaseNotesDir,
+          version.releaseNotesFile)) ? '✅' : '❌';
         
         console.log(`${version.version.padEnd(10)} | ${date.padEnd(11)} | ${author} | ${version.commit} | ${hasNotes}`);
       });
@@ -198,8 +200,10 @@ class VersionHistoryManager {
     const toInfo = this.getTagInfo(toTag);
     
     console.log(`📊 版本信息对比:`);
-    console.log(`   ${fromVersion}: ${new Date(fromInfo.date).toLocaleDateString('zh-CN')} (${fromInfo.commit})`);
-    console.log(`   ${toVersion}: ${new Date(toInfo.date).toLocaleDateString('zh-CN')} (${toInfo.commit})`);
+    console.log(`   ${fromVersion}:
+      ${new Date(fromInfo.date).toLocaleDateString('zh-CN')} (${fromInfo.commit})`);
+    console.log(`   ${toVersion}:
+      ${new Date(toInfo.date).toLocaleDateString('zh-CN')} (${toInfo.commit})`);
     
     // 获取版本间的提交
     const commits = this.getCommitsBetweenVersions(fromTag, toTag);
@@ -215,7 +219,8 @@ class VersionHistoryManager {
     // 分类显示提交
     const features = commits.filter(c => c.message.toLowerCase().startsWith('feat'));
     const fixes = commits.filter(c => c.message.toLowerCase().startsWith('fix'));
-    const others = commits.filter(c => !c.message.toLowerCase().startsWith('feat') && !c.message.toLowerCase().startsWith('fix'));
+    const others = commits.filter(c =
+      > !c.message.toLowerCase().startsWith('feat') && !c.message.toLowerCase().startsWith('fix'));
     
     if (features.length > 0) {
       console.log('\n🚀 新功能:');
@@ -391,7 +396,7 @@ function main() {
       const listOptions = {};
       if (args.includes('--limit')) {
         const limitIndex = args.indexOf('--limit');
-        listOptions.limit = parseInt(args[limitIndex + 1]) || 10;
+        listOptions.limit = parseInt(args[limitIndex + 1], 10) || 10;
       }
       if (args.includes('--json')) {
         listOptions.format = 'json';
@@ -425,7 +430,8 @@ function main() {
     case 'find':
       if (args.length < 2) {
         console.error('❌ 请指定搜索关键词');
-        console.log('用法: node scripts/version-history.js search <query> [--type version|message|author|notes]');
+        console.log('用法:
+          node scripts/version-history.js search <query> [--type version|message|author|notes]');
         process.exit(1);
       }
       const searchOptions = {};

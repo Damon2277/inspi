@@ -316,7 +316,8 @@ describe('ReleaseDocGenerator', () => {
 
   describe('getCommitHistory', () => {
     it('should get commit history from tag to HEAD', () => {
-      const mockOutput = 'abc123|feat: add feature|User1|2025-01-04\ndef456|fix: fix bug|User2|2025-01-04';
+      const mockOutput = 'abc123|feat: add feature|User1|2025-01-04\ndef456|fix:
+        fix bug|User2|2025-01-04';
       mockExecSync.mockReturnValue(mockOutput);
 
       const commits = generator.getCommitHistory('v1.0.0');

@@ -3,9 +3,10 @@
  * Detects and analyzes the current testing environment
  */
 
+import { execSync } from 'child_process';
 import os from 'os';
 import process from 'process';
-import { execSync } from 'child_process';
+
 import { EnvironmentInfo, NodeVersionInfo } from './types';
 
 export class EnvironmentDetector {
@@ -34,7 +35,7 @@ export class EnvironmentDetector {
       totalMemory,
       availableMemory,
       timezone,
-      locale
+      locale,
     };
   }
 
@@ -44,7 +45,7 @@ export class EnvironmentDetector {
   static getNodeVersionInfo(): NodeVersionInfo {
     const version = process.version;
     const versionMatch = version.match(/^v(\d+)\.(\d+)\.(\d+)/);
-    
+
     if (!versionMatch) {
       throw new Error(`Invalid Node.js version format: ${version}`);
     }
@@ -66,7 +67,7 @@ export class EnvironmentDetector {
       patch,
       lts,
       supported,
-      features
+      features,
     };
   }
 
@@ -93,17 +94,17 @@ export class EnvironmentDetector {
     try {
       // Check for Docker
       if (process.env.DOCKER_CONTAINER) return true;
-      
+
       // Check for container-specific files
       const fs = require('fs');
       if (fs.existsSync('/.dockerenv')) return true;
-      
+
       // Check cgroup for container indicators
       if (fs.existsSync('/proc/1/cgroup')) {
         const cgroup = fs.readFileSync('/proc/1/cgroup', 'utf8');
         return cgroup.includes('docker') || cgroup.includes('containerd');
       }
-      
+
       return false;
     } catch {
       return false;
@@ -126,10 +127,10 @@ export class EnvironmentDetector {
       const runtimes = ['docker', 'podman', 'containerd'];
       for (const runtime of runtimes) {
         try {
-          const version = execSync(`${runtime} --version`, { 
-            encoding: 'utf8', 
+          const version = execSync(`${runtime} --version`, {
+            encoding: 'utf8',
             timeout: 5000,
-            stdio: 'pipe'
+            stdio: 'pipe',
           }).trim();
           return { runtime, version };
         } catch {
@@ -155,7 +156,7 @@ export class EnvironmentDetector {
     const warnings: string[] = [];
 
     const nodeInfo = this.getNodeVersionInfo();
-    
+
     // Check Node.js version
     if (!nodeInfo.supported) {
       issues.push(`Unsupported Node.js version: ${nodeInfo.version}`);
@@ -180,7 +181,7 @@ export class EnvironmentDetector {
     return {
       compatible: issues.length === 0,
       issues,
-      warnings
+      warnings,
     };
   }
 
@@ -189,10 +190,10 @@ export class EnvironmentDetector {
    */
   private static async getNpmVersion(): Promise<string> {
     try {
-      return execSync('npm --version', { 
-        encoding: 'utf8', 
+      return execSync('npm --version', {
+        encoding: 'utf8',
         timeout: 5000,
-        stdio: 'pipe'
+        stdio: 'pipe',
       }).trim();
     } catch {
       return 'unknown';
@@ -205,33 +206,33 @@ export class EnvironmentDetector {
   private static async getOSVersion(): Promise<string> {
     try {
       const platform = process.platform;
-      
+
       switch (platform) {
         case 'darwin':
-          return execSync('sw_vers -productVersion', { 
-            encoding: 'utf8', 
+          return execSync('sw_vers -productVersion', {
+            encoding: 'utf8',
             timeout: 5000,
-            stdio: 'pipe'
+            stdio: 'pipe',
           }).trim();
         case 'linux':
           try {
-            return execSync('lsb_release -d -s', { 
-              encoding: 'utf8', 
+            return execSync('lsb_release -d -s', {
+              encoding: 'utf8',
               timeout: 5000,
-              stdio: 'pipe'
+              stdio: 'pipe',
             }).trim().replace(/"/g, '');
           } catch {
-            return execSync('cat /etc/os-release | grep PRETTY_NAME', { 
-              encoding: 'utf8', 
+            return execSync('cat /etc/os-release | grep PRETTY_NAME', {
+              encoding: 'utf8',
               timeout: 5000,
-              stdio: 'pipe'
+              stdio: 'pipe',
             }).split('=')[1]?.replace(/"/g, '') || 'Linux';
           }
         case 'win32':
-          return execSync('ver', { 
-            encoding: 'utf8', 
+          return execSync('ver', {
+            encoding: 'utf8',
             timeout: 5000,
-            stdio: 'pipe'
+            stdio: 'pipe',
           }).trim();
         default:
           return `${platform} ${os.release()}`;

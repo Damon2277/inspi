@@ -3,9 +3,8 @@
  * 主要测试组件渲染和基本交互
  */
 
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { act } from 'react';
+import React, { act } from 'react';
 
 // 模拟页面组件
 const MockHomePage = () => (
@@ -63,7 +62,7 @@ describe('E2E用户流程测试', () => {
 
       expect(screen.getByText('欢迎来到Inspi AI平台')).toBeInTheDocument();
       expect(screen.getByText('开始创作')).toBeInTheDocument();
-      
+
       const featureCards = screen.getAllByText(/AI创作|智能分析|协作平台/);
       expect(featureCards).toHaveLength(3);
     });
@@ -74,7 +73,7 @@ describe('E2E用户流程测试', () => {
       });
 
       const ctaButton = screen.getByText('开始创作');
-      
+
       await act(async () => {
         fireEvent.click(ctaButton);
       });
@@ -125,7 +124,7 @@ describe('E2E用户流程测试', () => {
 
       expect(screen.getByText('创意广场')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('搜索作品...')).toBeInTheDocument();
-      
+
       const filterSelect = screen.getByDisplayValue('全部类型');
       expect(filterSelect).toBeInTheDocument();
     });
@@ -136,7 +135,7 @@ describe('E2E用户流程测试', () => {
       });
 
       const searchInput = screen.getByPlaceholderText('搜索作品...');
-      
+
       await act(async () => {
         fireEvent.change(searchInput, { target: { value: '测试搜索' } });
       });
@@ -185,7 +184,7 @@ describe('E2E用户流程测试', () => {
   describe('性能测试', () => {
     it('应该在合理时间内渲染', async () => {
       const startTime = performance.now();
-      
+
       await act(async () => {
         render(<MockHomePage />);
       });
@@ -207,7 +206,7 @@ describe('E2E用户流程测试', () => {
       );
 
       const startTime = performance.now();
-      
+
       await act(async () => {
         render(<LargeDataComponent />);
       });

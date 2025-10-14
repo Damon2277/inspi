@@ -7,24 +7,24 @@ export const breakpoints = {
   // 移动端 - 320px到767px
   mobile: {
     min: '320px',
-    max: '767px'
+    max: '767px',
   },
-  // 平板端 - 768px到1023px  
+  // 平板端 - 768px到1023px
   tablet: {
     min: '768px',
-    max: '1023px'
+    max: '1023px',
   },
   // 桌面端 - 1024px到1439px
   desktop: {
     min: '1024px',
-    max: '1439px'
+    max: '1439px',
   },
   // 宽屏 - 1440px以上
   wide: {
     min: '1440px',
-    max: '9999px'
-  }
-} as const
+    max: '9999px',
+  },
+} as const;
 
 // Tailwind CSS 断点配置
 export const tailwindBreakpoints = {
@@ -32,8 +32,8 @@ export const tailwindBreakpoints = {
   'md': '768px',   // 中等屏幕
   'lg': '1024px',  // 大屏幕
   'xl': '1280px',  // 超大屏幕
-  '2xl': '1536px'  // 超宽屏幕
-}
+  '2xl': '1536px',  // 超宽屏幕
+};
 
 // 媒体查询工具函数
 export const mediaQueries = {
@@ -41,13 +41,13 @@ export const mediaQueries = {
   tablet: `@media (min-width: ${breakpoints.tablet.min}) and (max-width: ${breakpoints.tablet.max})`,
   desktop: `@media (min-width: ${breakpoints.desktop.min}) and (max-width: ${breakpoints.desktop.max})`,
   wide: `@media (min-width: ${breakpoints.wide.min})`,
-  
+
   // 最小宽度查询（移动优先）
   minMobile: `@media (min-width: ${breakpoints.mobile.min})`,
   minTablet: `@media (min-width: ${breakpoints.tablet.min})`,
   minDesktop: `@media (min-width: ${breakpoints.desktop.min})`,
-  minWide: `@media (min-width: ${breakpoints.wide.min})`
-}
+  minWide: `@media (min-width: ${breakpoints.wide.min})`,
+};
 
 // React Hook for responsive detection
 export type BreakpointKey = keyof typeof breakpoints
@@ -64,11 +64,11 @@ export interface ResponsiveState {
 
 // 断点检测工具
 export const getBreakpoint = (width: number): BreakpointKey => {
-  if (width < 768) return 'mobile'
-  if (width < 1024) return 'tablet'
-  if (width < 1440) return 'desktop'
-  return 'wide'
-}
+  if (width < 768) return 'mobile';
+  if (width < 1024) return 'tablet';
+  if (width < 1440) return 'desktop';
+  return 'wide';
+};
 
 // 响应式值映射
 export interface ResponsiveValue<T> {
@@ -81,7 +81,7 @@ export interface ResponsiveValue<T> {
 
 export const getResponsiveValue = <T>(
   value: ResponsiveValue<T>,
-  breakpoint: BreakpointKey
+  breakpoint: BreakpointKey,
 ): T => {
-  return value[breakpoint] ?? value.default
-}
+  return value[breakpoint] ?? value.default;
+};

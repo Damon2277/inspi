@@ -17,7 +17,8 @@ const { TestReportGenerator } = require('../src/lib/testing/reporting/TestReport
 function transformJestResults(jestResults, coverageData) {
   const summary = {
     timestamp: new Date(),
-    duration: jestResults.testResults.reduce((sum, result) => sum + (result.perfStats?.end - result.perfStats?.start || 0), 0),
+    duration: jestResults.testResults.reduce((sum,
+      result) => sum + (result.perfStats?.end - result.perfStats?.start || 0), 0),
     totalTests: jestResults.numTotalTests,
     passedTests: jestResults.numPassedTests,
     failedTests: jestResults.numFailedTests,
@@ -30,7 +31,8 @@ function transformJestResults(jestResults, coverageData) {
     branches: coverageData.total.branches.pct,
     functions: coverageData.total.functions.pct,
     lines: coverageData.total.lines.pct,
-    files: Object.entries(coverageData).filter(([key]) => key !== 'total').map(([filePath, data]) => ({
+    files:
+      Object.entries(coverageData).filter(([key]) => key !== 'total').map(([filePath, data]) => ({
       path: filePath,
       statements: data.statements.pct,
       branches: data.branches.pct,
@@ -53,7 +55,8 @@ function transformJestResults(jestResults, coverageData) {
         testFile: path.relative(process.cwd(), testFile.testFilePath),
         testSuite: test.ancestorTitles.join(' > ') || 'Root',
         testName: test.title,
-        status: test.status === 'passed' ? 'passed' : test.status === 'failed' ? 'failed' : 'skipped',
+        status: test.status === 'passed' ? 'passed' : test.status === 'failed' ?
+          'failed' : 'skipped',
         duration: test.duration || 0,
         ...(test.failureMessages?.length > 0 && {
           error: {
@@ -84,7 +87,8 @@ function transformJestResults(jestResults, coverageData) {
   };
 
   const quality = {
-    qualityScore: Math.round((coverage.statements + coverage.branches + coverage.functions + coverage.lines) / 4),
+    qualityScore: Math.round((coverage.statements + coverage.branches +
+      coverage.functions + coverage.lines) / 4),
     securityIssues: 0, // Would be populated by security scanners
     codeSmells: 0, // Would be populated by code quality tools
     technicalDebt: '0h 0m' // Would be calculated from code analysis

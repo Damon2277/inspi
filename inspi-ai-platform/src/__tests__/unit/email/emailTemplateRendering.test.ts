@@ -9,17 +9,17 @@ import {
   getPasswordResetSuccessTemplate,
   renderTemplate,
   EmailTemplate,
-  TemplateVariables
+  TemplateVariables,
 } from '@/lib/email/templates';
-import { TestDataFactory } from '@/lib/testing/TestDataFactory';
 import { AssertionHelpers } from '@/lib/testing/helpers/AssertionHelpers';
+import { TestDataFactory } from '@/lib/testing/TestDataFactory';
 
 describe('Email Template Rendering Tests', () => {
   let testDataFactory: TestDataFactory;
 
   beforeEach(() => {
     testDataFactory = new TestDataFactory();
-    
+
     // Setup environment variables for template rendering
     process.env.NEXT_PUBLIC_APP_URL = 'https://inspi-ai.com';
   });
@@ -35,7 +35,7 @@ describe('Email Template Rendering Tests', () => {
         code: '123456',
         email: 'test@example.com',
         type: 'registration' as const,
-        expiryMinutes: 10
+        expiryMinutes: 10,
       };
 
       // Act
@@ -57,18 +57,18 @@ describe('Email Template Rendering Tests', () => {
         {
           type: 'registration' as const,
           expectedSubject: '注册验证',
-          expectedAction: '完成注册'
+          expectedAction: '完成注册',
         },
         {
           type: 'login' as const,
           expectedSubject: '登录验证',
-          expectedAction: '完成登录'
+          expectedAction: '完成登录',
         },
         {
           type: 'password_reset' as const,
           expectedSubject: '密码重置',
-          expectedAction: '重置密码'
-        }
+          expectedAction: '重置密码',
+        },
       ];
 
       testCases.forEach(testCase => {
@@ -76,7 +76,7 @@ describe('Email Template Rendering Tests', () => {
         const template = getVerificationEmailTemplate({
           code: '654321',
           email: 'user@example.com',
-          type: testCase.type
+          type: testCase.type,
         });
 
         // Assert
@@ -91,7 +91,7 @@ describe('Email Template Rendering Tests', () => {
       const variables = {
         code: '789012',
         email: 'security@example.com',
-        type: 'login' as const
+        type: 'login' as const,
       };
 
       // Act
@@ -111,7 +111,7 @@ describe('Email Template Rendering Tests', () => {
         code: '111111',
         email: 'custom@example.com',
         type: 'registration' as const,
-        expiryMinutes: customExpiryMinutes
+        expiryMinutes: customExpiryMinutes,
       };
 
       // Act
@@ -127,7 +127,7 @@ describe('Email Template Rendering Tests', () => {
       const variables = {
         code: '222222',
         email: 'html@example.com',
-        type: 'registration' as const
+        type: 'registration' as const,
       };
 
       // Act
@@ -139,7 +139,7 @@ describe('Email Template Rendering Tests', () => {
       expect(template.html).toContain('<head>');
       expect(template.html).toContain('<body>');
       expect(template.html).toContain('</html>');
-      
+
       // 验证CSS样式存在
       expect(template.html).toContain('<style>');
       expect(template.html).toContain('font-family');
@@ -152,7 +152,7 @@ describe('Email Template Rendering Tests', () => {
       // Arrange
       const variables = {
         name: 'John Doe',
-        email: 'john@example.com'
+        email: 'john@example.com',
       };
 
       // Act
@@ -169,7 +169,7 @@ describe('Email Template Rendering Tests', () => {
       // Arrange
       const variables = {
         name: 'Feature Tester',
-        email: 'features@example.com'
+        email: 'features@example.com',
       };
 
       // Act
@@ -180,7 +180,7 @@ describe('Email Template Rendering Tests', () => {
         'AI教学魔法师',
         '智慧广场',
         '知识图谱',
-        '贡献度系统'
+        '贡献度系统',
       ];
 
       expectedFeatures.forEach(feature => {
@@ -193,7 +193,7 @@ describe('Email Template Rendering Tests', () => {
       // Arrange
       const variables = {
         name: 'CTA Tester',
-        email: 'cta@example.com'
+        email: 'cta@example.com',
       };
 
       // Act
@@ -209,7 +209,7 @@ describe('Email Template Rendering Tests', () => {
       // Arrange
       const variables = {
         name: 'Test & <Script>',
-        email: 'special@example.com'
+        email: 'special@example.com',
       };
 
       // Act
@@ -228,7 +228,7 @@ describe('Email Template Rendering Tests', () => {
         { name: '张三', email: 'chinese@example.com' },
         { name: 'José García', email: 'spanish@example.com' },
         { name: 'محمد أحمد', email: 'arabic@example.com' },
-        { name: '田中太郎', email: 'japanese@example.com' }
+        { name: '田中太郎', email: 'japanese@example.com' },
       ];
 
       testCases.forEach(testCase => {
@@ -247,7 +247,7 @@ describe('Email Template Rendering Tests', () => {
       // Arrange
       const variables = {
         email: 'reset@example.com',
-        resetTime: '2024-01-15 14:30:00'
+        resetTime: '2024-01-15 14:30:00',
       };
 
       // Act
@@ -265,7 +265,7 @@ describe('Email Template Rendering Tests', () => {
       // Arrange
       const variables = {
         email: 'security@example.com',
-        resetTime: new Date().toISOString()
+        resetTime: new Date().toISOString(),
       };
 
       // Act
@@ -275,7 +275,7 @@ describe('Email Template Rendering Tests', () => {
       const securityTips = [
         '使用强密码',
         '不要在多个网站使用相同密码',
-        '定期更换密码'
+        '定期更换密码',
       ];
 
       securityTips.forEach(tip => {
@@ -288,7 +288,7 @@ describe('Email Template Rendering Tests', () => {
       // Arrange
       const variables = {
         email: 'warning@example.com',
-        resetTime: new Date().toISOString()
+        resetTime: new Date().toISOString(),
       };
 
       // Act
@@ -308,7 +308,7 @@ describe('Email Template Rendering Tests', () => {
       const variables: TemplateVariables = {
         name: 'John',
         code: '123456',
-        minutes: 10
+        minutes: 10,
       };
 
       // Act
@@ -324,7 +324,7 @@ describe('Email Template Rendering Tests', () => {
       const variables: TemplateVariables = {
         'user.name': 'Alice',
         'app.name': 'Inspi.AI',
-        'user.type': 'premium'
+        'user.type': 'premium',
       };
 
       // Act
@@ -338,7 +338,7 @@ describe('Email Template Rendering Tests', () => {
       // Arrange
       const template = 'Hello {{name}}, your {{missing}} is ready.';
       const variables: TemplateVariables = {
-        name: 'Bob'
+        name: 'Bob',
       };
 
       // Act
@@ -353,7 +353,7 @@ describe('Email Template Rendering Tests', () => {
       const template = 'Hello {{ name }}, your code is {{  code  }}.';
       const variables: TemplateVariables = {
         name: 'Charlie',
-        code: 'ABC-123'
+        code: 'ABC-123',
       };
 
       // Act
@@ -368,7 +368,7 @@ describe('Email Template Rendering Tests', () => {
       const template = 'Hello {{name}}{{#if premium}}, you have premium access{{/if}}.';
       const variables: TemplateVariables = {
         name: 'David',
-        premium: true
+        premium: true,
       };
 
       // Act
@@ -384,7 +384,7 @@ describe('Email Template Rendering Tests', () => {
       const variables: TemplateVariables = {
         'features.0': 'AI Magic',
         'features.1': 'Smart Square',
-        'features.2': 'Knowledge Graph'
+        'features.2': 'Knowledge Graph',
       };
 
       // Act
@@ -401,7 +401,7 @@ describe('Email Template Rendering Tests', () => {
       const variables = {
         code: '999999',
         email: 'validation@example.com',
-        type: 'registration' as const
+        type: 'registration' as const,
       };
 
       // Act
@@ -409,7 +409,7 @@ describe('Email Template Rendering Tests', () => {
 
       // Assert
       AssertionHelpers.assertValidHtml(template.html);
-      
+
       // 检查必要的HTML元素
       expect(template.html).toMatch(/<html[^>]*>/);
       expect(template.html).toMatch(/<head[^>]*>/);
@@ -421,7 +421,7 @@ describe('Email Template Rendering Tests', () => {
       // Arrange
       const variables = {
         name: 'Accessibility Tester',
-        email: 'a11y@example.com'
+        email: 'a11y@example.com',
       };
 
       // Act
@@ -446,7 +446,7 @@ describe('Email Template Rendering Tests', () => {
       const variables = {
         code: '777777',
         email: 'compat@example.com',
-        type: 'login' as const
+        type: 'login' as const,
       };
 
       // Act
@@ -455,10 +455,10 @@ describe('Email Template Rendering Tests', () => {
       // Assert
       // 检查内联样式（邮件客户端兼容性）
       expect(template.html).toContain('<style>');
-      
+
       // 检查表格布局（更好的邮件客户端支持）
       expect(template.html).toMatch(/<table[^>]*>/);
-      
+
       // 检查字体回退
       expect(template.html).toContain('font-family');
       expect(template.html).toContain('Arial');
@@ -469,7 +469,7 @@ describe('Email Template Rendering Tests', () => {
       // Arrange
       const variables = {
         name: 'Text Tester',
-        email: 'text@example.com'
+        email: 'text@example.com',
       };
 
       // Act
@@ -480,10 +480,10 @@ describe('Email Template Rendering Tests', () => {
       expect(template.text).toContain(variables.name);
       expect(template.text).toContain('欢迎');
       expect(template.text).toContain('Inspi.AI');
-      
+
       // 文本版本应该包含链接
       expect(template.text).toContain('http');
-      
+
       // 文本版本不应该包含HTML标签
       expect(template.text).not.toMatch(/<[^>]*>/);
     });
@@ -493,7 +493,7 @@ describe('Email Template Rendering Tests', () => {
       const variables = {
         code: '555555',
         email: 'performance@example.com',
-        type: 'registration' as const
+        type: 'registration' as const,
       };
 
       // Act
@@ -513,7 +513,7 @@ describe('Email Template Rendering Tests', () => {
       // Arrange
       const variables = {
         name: '测试用户',
-        email: 'chinese@example.com'
+        email: 'chinese@example.com',
       };
 
       // Act
@@ -530,7 +530,7 @@ describe('Email Template Rendering Tests', () => {
       const variables = {
         code: '666666',
         email: 'encoding@example.com',
-        type: 'registration' as const
+        type: 'registration' as const,
       };
 
       // Act
@@ -546,7 +546,7 @@ describe('Email Template Rendering Tests', () => {
       // Arrange - 模拟阿拉伯语环境
       const variables = {
         name: 'مستخدم تجريبي',
-        email: 'rtl@example.com'
+        email: 'rtl@example.com',
       };
 
       // Act
@@ -563,7 +563,7 @@ describe('Email Template Rendering Tests', () => {
       // Arrange
       const maliciousVariables = {
         name: '<script>alert("xss")</script>',
-        email: 'xss@example.com'
+        email: 'xss@example.com',
       };
 
       // Act
@@ -580,7 +580,7 @@ describe('Email Template Rendering Tests', () => {
       const maliciousVariables = {
         code: '123456<img src="x" onerror="alert(1)">',
         email: 'injection@example.com',
-        type: 'registration' as const
+        type: 'registration' as const,
       };
 
       // Act
@@ -600,13 +600,13 @@ describe('Email Template Rendering Tests', () => {
         '@example.com',
         'test..test@example.com',
         'test@example',
-        ''
+        '',
       ];
 
       invalidEmails.forEach(email => {
         const variables = {
           name: 'Test User',
-          email: email
+          email: email,
         };
 
         // Act & Assert

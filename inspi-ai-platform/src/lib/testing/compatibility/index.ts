@@ -1,6 +1,6 @@
 /**
  * Multi-Environment Compatibility Testing Framework
- * 
+ *
  * This module provides comprehensive testing capabilities across different:
  * - Operating systems (Windows, macOS, Linux)
  * - Node.js versions
@@ -21,5 +21,5 @@ export type {
   BrowserInfo,
   ContainerInfo,
   CompatibilityTestResult,
-  CompatibilityReport
+  CompatibilityReport,
 } from './types';

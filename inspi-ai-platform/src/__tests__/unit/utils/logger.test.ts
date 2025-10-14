@@ -1,6 +1,7 @@
-import { Logger } from '@/lib/utils/logger';
 import fs from 'fs';
 import path from 'path';
+
+import { Logger } from '@/shared/utils/logger';
 
 // Mock fs module
 jest.mock('fs');
@@ -15,11 +16,11 @@ describe('Logger', () => {
     jest.clearAllMocks();
     mockFs = fs as jest.Mocked<typeof fs>;
     consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-    
+
     // Mock environment
     process.env.NODE_ENV = 'development';
     process.env.LOG_LEVEL = 'info';
-    
+
     logger = new Logger();
   });
 
@@ -45,7 +46,7 @@ describe('Logger', () => {
         level: 'debug' as const,
         enableConsole: false,
         enableFile: true,
-        logDir: '/custom/logs'
+        logDir: '/custom/logs',
       };
 
       // Act
@@ -79,7 +80,7 @@ describe('Logger', () => {
       // Assert
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('[DEBUG]'),
-        expect.stringContaining('Debug message')
+        expect.stringContaining('Debug message'),
       );
     });
 
@@ -93,7 +94,7 @@ describe('Logger', () => {
       // Assert
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('[INFO]'),
-        expect.stringContaining('Info message')
+        expect.stringContaining('Info message'),
       );
     });
 
@@ -107,7 +108,7 @@ describe('Logger', () => {
       // Assert
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('[WARN]'),
-        expect.stringContaining('Warning message')
+        expect.stringContaining('Warning message'),
       );
     });
 
@@ -121,7 +122,7 @@ describe('Logger', () => {
       // Assert
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('[ERROR]'),
-        expect.stringContaining('Error message')
+        expect.stringContaining('Error message'),
       );
     });
 
@@ -160,7 +161,7 @@ describe('Logger', () => {
       // Assert
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('2023-01-01T12:00:00.000Z'),
-        expect.stringContaining('Test message')
+        expect.stringContaining('Test message'),
       );
     });
 
@@ -174,8 +175,8 @@ describe('Logger', () => {
         expect.stringContaining('Test message'),
         expect.objectContaining({
           userId: '123',
-          action: 'login'
-        })
+          action: 'login',
+        }),
       );
     });
 
@@ -194,9 +195,9 @@ describe('Logger', () => {
         expect.objectContaining({
           error: expect.objectContaining({
             message: 'Test error',
-            stack: 'Error stack trace'
-          })
-        })
+            stack: 'Error stack trace',
+          }),
+        }),
       );
     });
 
@@ -205,7 +206,7 @@ describe('Logger', () => {
       logger.info('User login', {
         email: 'user@example.com',
         password: 'secret123',
-        token: 'jwt-token-here'
+        token: 'jwt-token-here',
       });
 
       // Assert
@@ -215,8 +216,8 @@ describe('Logger', () => {
         expect.objectContaining({
           email: 'user@example.com',
           password: '[REDACTED]',
-          token: '[REDACTED]'
-        })
+          token: '[REDACTED]',
+        }),
       );
     });
   });
@@ -237,7 +238,7 @@ describe('Logger', () => {
       // Assert
       expect(mockFs.appendFileSync).toHaveBeenCalledWith(
         expect.stringContaining('app.log'),
-        expect.stringContaining('File log message')
+        expect.stringContaining('File log message'),
       );
     });
 
@@ -253,7 +254,7 @@ describe('Logger', () => {
       // Assert
       expect(mockFs.appendFileSync).toHaveBeenCalledWith(
         expect.stringContaining('2023-01-01'),
-        expect.any(String)
+        expect.any(String),
       );
     });
 
@@ -267,7 +268,7 @@ describe('Logger', () => {
       // Assert
       expect(mockFs.appendFileSync).toHaveBeenCalledWith(
         expect.stringContaining('error.log'),
-        expect.stringContaining('Error message')
+        expect.stringContaining('Error message'),
       );
     });
 
@@ -311,7 +312,7 @@ describe('Logger', () => {
       // Assert
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('[ERROR]'),
-        expect.stringContaining('Production error')
+        expect.stringContaining('Production error'),
       );
     });
 
@@ -336,7 +337,7 @@ describe('Logger', () => {
         userId: '123',
         action: 'create_work',
         workId: '456',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // Assert
@@ -346,8 +347,8 @@ describe('Logger', () => {
         expect.objectContaining({
           userId: '123',
           action: 'create_work',
-          workId: '456'
-        })
+          workId: '456',
+        }),
       );
     });
 
@@ -358,7 +359,7 @@ describe('Logger', () => {
         url: '/api/works',
         statusCode: 201,
         responseTime: 150,
-        userAgent: 'Mozilla/5.0...'
+        userAgent: 'Mozilla/5.0...',
       };
 
       // Act
@@ -368,7 +369,7 @@ describe('Logger', () => {
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('[INFO]'),
         expect.stringContaining('HTTP Request'),
-        expect.objectContaining(requestData)
+        expect.objectContaining(requestData),
       );
     });
 
@@ -378,7 +379,7 @@ describe('Logger', () => {
         operation: 'ai_generation',
         duration: 2500,
         success: true,
-        metadata: { model: 'gemini-pro' }
+        metadata: { model: 'gemini-pro' },
       };
 
       // Act
@@ -388,7 +389,7 @@ describe('Logger', () => {
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('[INFO]'),
         expect.stringContaining('Performance'),
-        expect.objectContaining(performanceData)
+        expect.objectContaining(performanceData),
       );
     });
   });
@@ -407,8 +408,8 @@ describe('Logger', () => {
         expect.stringContaining('Child log message'),
         expect.objectContaining({
           service: 'auth',
-          version: '1.0'
-        })
+          version: '1.0',
+        }),
       );
     });
 
@@ -423,10 +424,10 @@ describe('Logger', () => {
 
       // Assert
       expect(consoleSpy).not.toHaveBeenCalledWith(
-        expect.stringContaining('Info message')
+        expect.stringContaining('Info message'),
       );
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Warning message')
+        expect.stringContaining('Warning message'),
       );
     });
 
@@ -444,8 +445,8 @@ describe('Logger', () => {
         expect.stringContaining('Nested context'),
         expect.objectContaining({
           service: 'api',
-          module: 'auth'
-        })
+          module: 'auth',
+        }),
       );
     });
   });
@@ -463,10 +464,10 @@ describe('Logger', () => {
 
       // Assert
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Auth debug message')
+        expect.stringContaining('Auth debug message'),
       );
       expect(consoleSpy).not.toHaveBeenCalledWith(
-        expect.stringContaining('DB debug message')
+        expect.stringContaining('DB debug message'),
       );
     });
 
@@ -482,10 +483,10 @@ describe('Logger', () => {
 
       // Assert
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('App auth message')
+        expect.stringContaining('App auth message'),
       );
       expect(consoleSpy).not.toHaveBeenCalledWith(
-        expect.stringContaining('Utils cache message')
+        expect.stringContaining('Utils cache message'),
       );
     });
   });
@@ -506,23 +507,23 @@ describe('Logger', () => {
       expect(logs).toHaveLength(3);
       expect(logs[0]).toMatchObject({
         level: 'info',
-        message: 'Message 1'
+        message: 'Message 1',
       });
       expect(logs[1]).toMatchObject({
         level: 'warn',
-        message: 'Message 2'
+        message: 'Message 2',
       });
       expect(logs[2]).toMatchObject({
         level: 'error',
-        message: 'Message 3'
+        message: 'Message 3',
       });
     });
 
     it('should limit collected logs to prevent memory issues', () => {
       // Arrange
-      const aggregatingLogger = new Logger({ 
+      const aggregatingLogger = new Logger({
         enableAggregation: true,
-        maxCollectedLogs: 5
+        maxCollectedLogs: 5,
       });
 
       // Act

@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { ErrorInfo } from 'react'
+import { ErrorInfo } from 'react';
 
 export interface ErrorFallbackProps {
   error: Error
@@ -22,12 +22,12 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
             <h3 className="text-lg font-medium text-gray-900">出现错误</h3>
           </div>
         </div>
-        
+
         <div className="mb-4">
           <p className="text-sm text-gray-600">
             抱歉，应用遇到了一个错误。请尝试刷新页面或联系技术支持。
           </p>
-          
+
           <details className="mt-3">
             <summary className="text-sm text-gray-500 cursor-pointer hover:text-gray-700">
               查看错误详情
@@ -37,7 +37,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
             </pre>
           </details>
         </div>
-        
+
         <div className="flex space-x-3">
           {resetError && (
             <button
@@ -56,7 +56,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export function NetworkErrorFallback({ error, resetError }: ErrorFallbackProps) {
@@ -73,13 +73,13 @@ export function NetworkErrorFallback({ error, resetError }: ErrorFallbackProps) 
             <h3 className="text-lg font-medium text-gray-900">网络连接错误</h3>
           </div>
         </div>
-        
+
         <div className="mb-4">
           <p className="text-sm text-gray-600">
             无法连接到服务器，请检查网络连接后重试。
           </p>
         </div>
-        
+
         <div className="flex space-x-3">
           {resetError && (
             <button
@@ -92,7 +92,7 @@ export function NetworkErrorFallback({ error, resetError }: ErrorFallbackProps) 
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export function LoadingErrorFallback({ error, resetError }: ErrorFallbackProps) {
@@ -109,13 +109,13 @@ export function LoadingErrorFallback({ error, resetError }: ErrorFallbackProps) 
             <h3 className="text-lg font-medium text-gray-900">加载失败</h3>
           </div>
         </div>
-        
+
         <div className="mb-4">
           <p className="text-sm text-gray-600">
             内容加载失败，请稍后重试。
           </p>
         </div>
-        
+
         <div className="flex space-x-3">
           {resetError && (
             <button
@@ -128,7 +128,7 @@ export function LoadingErrorFallback({ error, resetError }: ErrorFallbackProps) 
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export function PermissionErrorFallback({ error, resetError }: ErrorFallbackProps) {
@@ -145,13 +145,13 @@ export function PermissionErrorFallback({ error, resetError }: ErrorFallbackProp
             <h3 className="text-lg font-medium text-gray-900">权限不足</h3>
           </div>
         </div>
-        
+
         <div className="mb-4">
           <p className="text-sm text-gray-600">
             您没有权限访问此内容，请联系管理员或重新登录。
           </p>
         </div>
-        
+
         <div className="flex space-x-3">
           <button
             onClick={() => window.location.href = '/auth/login'}
@@ -162,7 +162,7 @@ export function PermissionErrorFallback({ error, resetError }: ErrorFallbackProp
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export function ServiceUnavailableErrorFallback({ error, resetError }: ErrorFallbackProps) {
@@ -179,13 +179,13 @@ export function ServiceUnavailableErrorFallback({ error, resetError }: ErrorFall
             <h3 className="text-lg font-medium text-gray-900">服务暂时不可用</h3>
           </div>
         </div>
-        
+
         <div className="mb-4">
           <p className="text-sm text-gray-600">
             服务器正在维护中，请稍后再试。
           </p>
         </div>
-        
+
         <div className="flex space-x-3">
           {resetError && (
             <button
@@ -198,5 +198,5 @@ export function ServiceUnavailableErrorFallback({ error, resetError }: ErrorFall
         </div>
       </div>
     </div>
-  )
+  );
 }

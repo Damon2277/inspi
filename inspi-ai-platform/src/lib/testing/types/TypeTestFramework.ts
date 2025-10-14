@@ -1,11 +1,12 @@
 /**
  * Type Test Framework
- * 
+ *
  * Comprehensive TypeScript type testing framework including
  * compile-time validation, runtime interface checking, type safety regression testing,
  * and type coverage analysis.
  */
 import { EventEmitter } from 'events';
+
 import * as ts from 'typescript';
 
 export interface TypeTestConfig {
@@ -209,16 +210,16 @@ export class TypeTestFramework extends EventEmitter {
    */
   async initialize(): Promise<void> {
     this.emit('frameworkInitializing');
-    
+
     try {
       // Create TypeScript program
       const files = await this.getSourceFiles();
       this.program = ts.createProgram(files, this.config.compilerOptions);
       this.typeChecker = this.program.getTypeChecker();
-      
+
       // Extract type definitions
       await this.extractTypeDefinitions();
-      
+
       this.emit('frameworkInitialized');
     } catch (error) {
       this.emit('frameworkError', { error });
@@ -234,10 +235,10 @@ export class TypeTestFramework extends EventEmitter {
 
     for (const testCase of testCases) {
       this.emit('testStarted', { testCase: testCase.name, type: testCase.type });
-      
+
       const result = await this.executeTestCase(testCase);
       results.push(result);
-      
+
       this.emit('testCompleted', { testCase: testCase.name, result });
     }
 
@@ -261,8 +262,8 @@ export class TypeTestFramework extends EventEmitter {
         environment: process.env.NODE_ENV || 'test',
         typescriptVersion: ts.version,
         testFrameworkVersion: '1.0.0',
-        testId: this.generateTestId()
-      }
+        testId: this.generateTestId(),
+      },
     };
 
     try {
@@ -300,7 +301,7 @@ export class TypeTestFramework extends EventEmitter {
       result.error = {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
-        code: (error as any)?.code
+        code: (error as any)?.code,
       };
     }
 
@@ -338,8 +339,8 @@ export class TypeTestFramework extends EventEmitter {
         environment: process.env.NODE_ENV || 'test',
         typescriptVersion: ts.version,
         testFrameworkVersion: '1.0.0',
-        testId: this.generateTestId()
-      }
+        testId: this.generateTestId(),
+      },
     };
 
     try {
@@ -348,7 +349,7 @@ export class TypeTestFramework extends EventEmitter {
         'test.ts',
         test.sourceCode,
         ts.ScriptTarget.Latest,
-        true
+        true,
       );
 
       // Create program with test source
@@ -361,7 +362,7 @@ export class TypeTestFramework extends EventEmitter {
         readFile: () => '',
         getCanonicalFileName: (fileName) => fileName,
         useCaseSensitiveFileNames: () => true,
-        getNewLine: () => '\n'
+        getNewLine: () => '\n',
       });
 
       // Get diagnostics
@@ -376,17 +377,17 @@ export class TypeTestFramework extends EventEmitter {
         passed: test.shouldCompile ? errors.length === 0 : errors.length > 0,
         expected: test.shouldCompile,
         actual: errors.length === 0,
-        message: test.shouldCompile 
+        message: test.shouldCompile
           ? 'Code should compile without errors'
           : 'Code should have compilation errors',
-        executionTime: 0
+        executionTime: 0,
       };
 
       result.assertions.push(compilationAssertion);
 
       // Validate expected errors
       for (const expectedError of test.expectedErrors) {
-        const matchingError = errors.find(e => e.code === expectedError.code);
+        const matchingError = (errors.find as any)(e => e.code === expectedError.code);
         const errorAssertion: TypeAssertionResult = {
           name: `Expected Error ${expectedError.code}`,
           type: 'compile-time',
@@ -394,14 +395,14 @@ export class TypeTestFramework extends EventEmitter {
           expected: expectedError,
           actual: matchingError || null,
           message: `Expected error ${expectedError.code}: ${expectedError.message}`,
-          executionTime: 0
+          executionTime: 0,
         };
         result.assertions.push(errorAssertion);
       }
 
       // Validate expected warnings
       for (const expectedWarning of test.expectedWarnings) {
-        const matchingWarning = warnings.find(w => w.code === expectedWarning.code);
+        const matchingWarning = (warnings.find as any)(w => w.code === expectedWarning.code);
         const warningAssertion: TypeAssertionResult = {
           name: `Expected Warning ${expectedWarning.code}`,
           type: 'compile-time',
@@ -409,7 +410,7 @@ export class TypeTestFramework extends EventEmitter {
           expected: expectedWarning,
           actual: matchingWarning || null,
           message: `Expected warning ${expectedWarning.code}: ${expectedWarning.message}`,
-          executionTime: 0
+          executionTime: 0,
         };
         result.assertions.push(warningAssertion);
       }
@@ -420,7 +421,7 @@ export class TypeTestFramework extends EventEmitter {
       result.status = 'failed';
       result.error = {
         message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
+        stack: error instanceof Error ? error.stack : undefined,
       };
     }
 
@@ -458,8 +459,8 @@ export class TypeTestFramework extends EventEmitter {
         environment: process.env.NODE_ENV || 'test',
         typescriptVersion: ts.version,
         testFrameworkVersion: '1.0.0',
-        testId: this.generateTestId()
-      }
+        testId: this.generateTestId(),
+      },
     };
 
     try {
@@ -476,7 +477,7 @@ export class TypeTestFramework extends EventEmitter {
           expected: testValue.shouldPass,
           actual: isValid,
           message: `${testValue.description} - Expected: ${testValue.shouldPass}, Got: ${isValid}`,
-          executionTime: 0
+          executionTime: 0,
         };
         result.assertions.push(assertion);
       }
@@ -487,7 +488,7 @@ export class TypeTestFramework extends EventEmitter {
       result.status = 'failed';
       result.error = {
         message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
+        stack: error instanceof Error ? error.stack : undefined,
       };
     }
 
@@ -514,8 +515,8 @@ export class TypeTestFramework extends EventEmitter {
         types: { total: 0, covered: 0 },
         classes: { total: 0, covered: 0 },
         enums: { total: 0, covered: 0 },
-        functions: { total: 0, covered: 0 }
-      }
+        functions: { total: 0, covered: 0 },
+      },
     };
 
     // Analyze each source file
@@ -523,7 +524,7 @@ export class TypeTestFramework extends EventEmitter {
       if (this.shouldIncludeFile(sourceFile.fileName)) {
         const fileCoverage = await this.analyzeFileCoverage(sourceFile);
         report.fileBreakdown.push(fileCoverage);
-        
+
         report.totalTypes += fileCoverage.totalTypes;
         report.coveredTypes += fileCoverage.coveredTypes;
         report.uncoveredTypes.push(...fileCoverage.uncoveredTypes);
@@ -551,8 +552,8 @@ export class TypeTestFramework extends EventEmitter {
       }
     });
 
-    report.coveragePercentage = report.totalTypes > 0 
-      ? (report.coveredTypes / report.totalTypes) * 100 
+    report.coveragePercentage = report.totalTypes > 0
+      ? (report.coveredTypes / report.totalTypes) * 100
       : 100;
 
     return report;
@@ -564,13 +565,13 @@ export class TypeTestFramework extends EventEmitter {
   async runRegressionTests(baselineSnapshot: TypeSnapshot): Promise<TypeRegressionTest[]> {
     const currentSnapshot = await this.createTypeSnapshot();
     const changes = this.compareSnapshots(baselineSnapshot, currentSnapshot);
-    
+
     const regressionTest: TypeRegressionTest = {
       name: 'Type Regression Analysis',
       description: 'Compare current types with baseline snapshot',
       baseline: baselineSnapshot,
       current: currentSnapshot,
-      changes
+      changes,
     };
 
     return [regressionTest];
@@ -587,7 +588,7 @@ export class TypeTestFramework extends EventEmitter {
       timestamp: new Date(),
       version: process.env.npm_package_version || '1.0.0',
       types,
-      checksum
+      checksum,
     };
   }
 
@@ -607,7 +608,7 @@ export class TypeTestFramework extends EventEmitter {
           typeName: name,
           after: type,
           impact: 'non-breaking',
-          description: `Added new ${type.kind}: ${name}`
+          description: `Added new ${type.kind}: ${name}`,
         });
       }
     }
@@ -620,7 +621,7 @@ export class TypeTestFramework extends EventEmitter {
           typeName: name,
           before: type,
           impact: 'breaking',
-          description: `Removed ${type.kind}: ${name}`
+          description: `Removed ${type.kind}: ${name}`,
         });
       }
     }
@@ -635,7 +636,7 @@ export class TypeTestFramework extends EventEmitter {
           before: baselineType,
           after: currentType,
           impact: this.determineChangeImpact(baselineType, currentType),
-          description: `Modified ${currentType.kind}: ${name}`
+          description: `Modified ${currentType.kind}: ${name}`,
         });
       }
     }
@@ -662,7 +663,7 @@ export class TypeTestFramework extends EventEmitter {
   }
 
   private visitNode(node: ts.Node): void {
-    if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node) || 
+    if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node) ||
         ts.isClassDeclaration(node) || ts.isEnumDeclaration(node)) {
       const typeDefinition = this.extractTypeDefinition(node);
       if (typeDefinition) {
@@ -690,7 +691,7 @@ export class TypeTestFramework extends EventEmitter {
       totalTypes: 0,
       coveredTypes: 0,
       coveragePercentage: 0,
-      uncoveredTypes: []
+      uncoveredTypes: [],
     };
   }
 
@@ -746,8 +747,8 @@ export class TypeTestFramework extends EventEmitter {
     const passedTests = results.filter(r => r.status === 'passed').length;
     const failedTests = results.filter(r => r.status === 'failed').length;
 
-    let report = `# Type Definition Test Report\n\n`;
-    report += `**Summary:**\n`;
+    let report = '# Type Definition Test Report\n\n';
+    report += '**Summary:**\n';
     report += `- Total Tests: ${totalTests}\n`;
     report += `- Passed: ${passedTests}\n`;
     report += `- Failed: ${failedTests}\n`;
@@ -762,7 +763,7 @@ export class TypeTestFramework extends EventEmitter {
       typeBreakdown.set(result.type, stats);
     });
 
-    report += `## Test Type Breakdown\n\n`;
+    report += '## Test Type Breakdown\n\n';
     typeBreakdown.forEach((stats, type) => {
       const total = stats.passed + stats.failed;
       const successRate = total > 0 ? ((stats.passed / total) * 100).toFixed(1) : 0;

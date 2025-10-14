@@ -1,17 +1,16 @@
 /**
  * Component Test Utilities
- * 
+ *
  * Comprehensive utilities for testing React components including rendering,
  * user interaction simulation, accessibility testing, and visual regression testing.
  */
 
-import React, { ReactElement, ReactNode } from 'react';
-import { render, RenderOptions, RenderResult, screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderHook, RenderHookOptions, RenderHookResult } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, RenderOptions, RenderResult, screen, fireEvent, waitFor, renderHook, RenderHookOptions, RenderHookResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { ThemeProvider } from 'next-themes';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React, { ReactElement, ReactNode } from 'react';
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations);
@@ -50,15 +49,15 @@ export interface VisualRegressionOptions {
  */
 export function renderComponent(
   ui: ReactElement,
-  options: ComponentTestOptions = {}
+  options: ComponentTestOptions = {},
 ): RenderResult {
   const {
     theme = 'light',
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false },
-        mutations: { retry: false }
-      }
+        mutations: { retry: false },
+      },
     }),
     initialProps = {},
     wrapperProps = {},
@@ -88,15 +87,15 @@ export function renderComponent(
  */
 export function renderComponentHook<TProps, TResult>(
   hook: (props: TProps) => TResult,
-  options: RenderHookOptions<TProps> & ComponentTestOptions = {}
+  options: RenderHookOptions<TProps> & ComponentTestOptions = {},
 ): RenderHookResult<TResult, TProps> {
   const {
     theme = 'light',
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false },
-        mutations: { retry: false }
-      }
+        mutations: { retry: false },
+      },
     }),
     wrapperProps = {},
     ...hookOptions
@@ -129,7 +128,7 @@ export class UserInteractionHelper {
       delay: options.delay,
       skipHover: options.skipHover,
       skipClick: options.skipClick,
-      advanceTimers: options.advanceTimers
+      advanceTimers: options.advanceTimers,
     });
   }
 
@@ -235,14 +234,14 @@ export class AccessibilityTester {
    */
   async testAccessibility(
     container: Element,
-    options: AccessibilityTestOptions = {}
+    options: AccessibilityTestOptions = {},
   ): Promise<void> {
     const { rules, tags, exclude, timeout = 5000 } = options;
 
     const axeOptions = {
       rules: rules || {},
       tags: tags || ['wcag2a', 'wcag2aa', 'wcag21aa'],
-      exclude: exclude || []
+      exclude: exclude || [],
     };
 
     await waitFor(
@@ -250,7 +249,7 @@ export class AccessibilityTester {
         const results = await axe(container, axeOptions);
         expect(results).toHaveNoViolations();
       },
-      { timeout }
+      { timeout },
     );
   }
 
@@ -259,10 +258,10 @@ export class AccessibilityTester {
    */
   async testKeyboardNavigation(
     container: Element,
-    expectedFocusableElements: string[]
+    expectedFocusableElements: string[],
   ): Promise<void> {
     const user = new UserInteractionHelper();
-    
+
     // Focus first element
     const firstElement = container.querySelector(expectedFocusableElements[0]);
     expect(firstElement).toBeInTheDocument();
@@ -309,8 +308,8 @@ export class AccessibilityTester {
   async testColorContrast(container: Element): Promise<void> {
     const results = await axe(container, {
       rules: {
-        'color-contrast': { enabled: true }
-      }
+        'color-contrast': { enabled: true },
+      },
     });
     expect(results).toHaveNoViolations();
   }
@@ -326,13 +325,13 @@ export class VisualRegressionTester {
   async takeScreenshot(
     container: Element,
     testName: string,
-    options: VisualRegressionOptions = {}
+    options: VisualRegressionOptions = {},
   ): Promise<void> {
     // This would integrate with a visual regression testing tool like Percy, Chromatic, or jest-image-snapshot
     // For now, we'll create a placeholder implementation
-    
+
     const { threshold = 0.2, includeAA = true } = options;
-    
+
     // Ensure component is fully rendered
     await waitFor(() => {
       expect(container).toBeInTheDocument();
@@ -342,7 +341,7 @@ export class VisualRegressionTester {
     console.log(`Visual regression test: ${testName}`, {
       threshold,
       includeAA,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -352,20 +351,20 @@ export class VisualRegressionTester {
   async testResponsiveDesign(
     container: Element,
     testName: string,
-    viewports: Array<{ width: number; height: number; name: string }>
+    viewports: Array<{ width: number; height: number; name: string }>,
   ): Promise<void> {
     for (const viewport of viewports) {
       // Simulate viewport resize
       Object.defineProperty(window, 'innerWidth', {
         writable: true,
         configurable: true,
-        value: viewport.width
+        value: viewport.width,
       });
-      
+
       Object.defineProperty(window, 'innerHeight', {
         writable: true,
         configurable: true,
-        value: viewport.height
+        value: viewport.height,
       });
 
       // Trigger resize event
@@ -387,7 +386,7 @@ export class VisualRegressionTester {
   async testThemeVariations(
     renderComponent: (theme: string) => RenderResult,
     testName: string,
-    themes: string[] = ['light', 'dark']
+    themes: string[] = ['light', 'dark'],
   ): Promise<void> {
     for (const theme of themes) {
       const { container } = renderComponent(theme);
@@ -405,11 +404,11 @@ export class ComponentStateTester {
    */
   async testPropCombinations<T extends Record<string, any>>(
     Component: React.ComponentType<T>,
-    propCombinations: Array<{ props: T; testName: string; assertions: (container: Element) => void }>
+    propCombinations: Array<{ props: T; testName: string; assertions: (container: Element) => void }>,
   ): Promise<void> {
     for (const { props, testName, assertions } of propCombinations) {
       const { container } = renderComponent(<Component {...props} />);
-      
+
       try {
         assertions(container);
       } catch (error) {
@@ -428,13 +427,13 @@ export class ComponentStateTester {
       action: () => Promise<void>;
       expectedState: (container: Element) => void;
       description: string;
-    }>
+    }>,
   ): Promise<void> {
     const { container } = renderComponent(<Component {...initialProps} />);
 
     for (const { action, expectedState, description } of stateChanges) {
       await action();
-      
+
       try {
         expectedState(container);
       } catch (error) {
@@ -454,7 +453,7 @@ export class ComponentPerformanceTester {
   async testRenderPerformance<T extends Record<string, any>>(
     Component: React.ComponentType<T>,
     props: T,
-    options: { maxRenderTime?: number; iterations?: number } = {}
+    options: { maxRenderTime?: number; iterations?: number } = {},
   ): Promise<{ averageTime: number; maxTime: number; minTime: number }> {
     const { maxRenderTime = 100, iterations = 10 } = options;
     const renderTimes: number[] = [];
@@ -463,10 +462,10 @@ export class ComponentPerformanceTester {
       const startTime = performance.now();
       const { unmount } = renderComponent(<Component {...props} />);
       const endTime = performance.now();
-      
+
       const renderTime = endTime - startTime;
       renderTimes.push(renderTime);
-      
+
       unmount();
     }
 
@@ -485,7 +484,7 @@ export class ComponentPerformanceTester {
   async testMemoryUsage<T extends Record<string, any>>(
     Component: React.ComponentType<T>,
     props: T,
-    iterations: number = 100
+    iterations: number = 100,
   ): Promise<void> {
     const initialMemory = (performance as any).memory?.usedJSHeapSize || 0;
     const components: Array<() => void> = [];
@@ -546,7 +545,7 @@ export class ComponentTester {
       testResponsive?: boolean;
       focusableElements?: string[];
       viewports?: Array<{ width: number; height: number; name: string }>;
-    } = {}
+    } = {},
   ): Promise<void> {
     const {
       testAccessibility = true,
@@ -558,8 +557,8 @@ export class ComponentTester {
       viewports = [
         { width: 320, height: 568, name: 'mobile' },
         { width: 768, height: 1024, name: 'tablet' },
-        { width: 1920, height: 1080, name: 'desktop' }
-      ]
+        { width: 1920, height: 1080, name: 'desktop' },
+      ],
     } = options;
 
     const { container } = renderComponent(<Component {...props} />);
@@ -592,10 +591,10 @@ export class ComponentTester {
 }
 
 // Export convenience functions
-export const createComponentTester = (options?: UserInteractionOptions) => 
+export const createComponentTester = (options?: UserInteractionOptions) =>
   new ComponentTester(options);
 
-export const createUserInteraction = (options?: UserInteractionOptions) => 
+export const createUserInteraction = (options?: UserInteractionOptions) =>
   new UserInteractionHelper(options);
 
 export const createAccessibilityTester = () => new AccessibilityTester();
@@ -626,7 +625,7 @@ export {
   findByText,
   findByLabelText,
   findByPlaceholderText,
-  findByTestId
+  findByTestId,
 } from '@testing-library/react';
 
 export { userEvent };

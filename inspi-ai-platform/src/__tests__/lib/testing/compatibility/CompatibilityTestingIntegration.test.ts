@@ -2,11 +2,13 @@
  * Integration tests for the complete compatibility testing system
  */
 
-import { CrossPlatformTestRunner } from '../../../../lib/testing/compatibility/CrossPlatformTestRunner';
-import { CompatibilityReporter } from '../../../../lib/testing/compatibility/CompatibilityReporter';
-import { EnvironmentDetector } from '../../../../lib/testing/compatibility/EnvironmentDetector';
 import { promises as fs } from 'fs';
 import path from 'path';
+
+import { CompatibilityReporter } from '../../../../lib/testing/compatibility/CompatibilityReporter';
+import { CrossPlatformTestRunner } from '../../../../lib/testing/compatibility/CrossPlatformTestRunner';
+import { EnvironmentDetector } from '../../../../lib/testing/compatibility/EnvironmentDetector';
+
 
 describe('Compatibility Testing Integration', () => {
   let runner: CrossPlatformTestRunner;
@@ -34,7 +36,7 @@ describe('Compatibility Testing Integration', () => {
   describe('Environment Detection Integration', () => {
     it('should detect current environment correctly', async () => {
       const envInfo = await EnvironmentDetector.getEnvironmentInfo();
-      
+
       expect(envInfo.platform).toBe(process.platform);
       expect(envInfo.arch).toBe(process.arch);
       expect(envInfo.nodeVersion).toBe(process.version);
@@ -45,7 +47,7 @@ describe('Compatibility Testing Integration', () => {
 
     it('should provide Node.js version details', () => {
       const nodeInfo = EnvironmentDetector.getNodeVersionInfo();
-      
+
       expect(nodeInfo.version).toBe(process.version);
       expect(nodeInfo.major).toBeGreaterThan(0);
       expect(nodeInfo.minor).toBeGreaterThanOrEqual(0);
@@ -55,7 +57,7 @@ describe('Compatibility Testing Integration', () => {
 
     it('should check compatibility correctly', () => {
       const compatibility = EnvironmentDetector.checkCompatibility();
-      
+
       expect(typeof compatibility.compatible).toBe('boolean');
       expect(Array.isArray(compatibility.issues)).toBe(true);
       expect(Array.isArray(compatibility.warnings)).toBe(true);
@@ -70,7 +72,7 @@ describe('Compatibility Testing Integration', () => {
       expect(result).toHaveProperty('compatible');
       expect(result).toHaveProperty('issues');
       expect(result).toHaveProperty('recommendations');
-      
+
       expect(typeof result.compatible).toBe('boolean');
       expect(Array.isArray(result.issues)).toBe(true);
       expect(Array.isArray(result.recommendations)).toBe(true);
@@ -102,10 +104,10 @@ describe('Compatibility Testing Integration', () => {
 
       // Verify Node.js version support
       expect(matrix.nodeVersions.length).toBeGreaterThan(0);
-      
+
       // Verify browser support
       expect(Array.isArray(matrix.browsers)).toBe(true);
-      
+
       // Verify container support
       expect(Array.isArray(matrix.containers)).toBe(true);
     }, 60000);
@@ -119,7 +121,7 @@ describe('Compatibility Testing Integration', () => {
           totalEnvironments: 2,
           passedEnvironments: 1,
           failedEnvironments: 1,
-          warningEnvironments: 0
+          warningEnvironments: 0,
         },
         results: [
           {
@@ -132,8 +134,8 @@ describe('Compatibility Testing Integration', () => {
             performance: {
               executionTime: 1000,
               memoryUsage: { peak: 100000, average: 80000, final: 90000 },
-              cpuUsage: { peak: 50, average: 30 }
-            }
+              cpuUsage: { peak: 50, average: 30 },
+            },
           },
           {
             environment: await EnvironmentDetector.getEnvironmentInfo(),
@@ -144,21 +146,21 @@ describe('Compatibility Testing Integration', () => {
               type: 'platform' as const,
               message: 'Mock test failure',
               severity: 'major' as const,
-              affectedTests: ['test1.js']
+              affectedTests: ['test1.js'],
             }],
             warnings: [],
             performance: {
               executionTime: 2000,
               memoryUsage: { peak: 120000, average: 100000, final: 110000 },
-              cpuUsage: { peak: 60, average: 40 }
-            }
-          }
+              cpuUsage: { peak: 60, average: 40 },
+            },
+          },
         ],
         recommendations: [
           'Fix the failing test in mock-failed-environment',
-          'Consider optimizing test performance'
+          'Consider optimizing test performance',
         ],
-        supportMatrix: await runner.generateSupportMatrix()
+        supportMatrix: await runner.generateSupportMatrix(),
       };
 
       const reportPaths = await reporter.generateReport(mockReport, 'all');
@@ -176,7 +178,7 @@ describe('Compatibility Testing Integration', () => {
       if (reportPaths.json) {
         const jsonExists = await fs.access(reportPaths.json).then(() => true).catch(() => false);
         expect(jsonExists).toBe(true);
-        
+
         // Verify JSON content
         const jsonContent = await fs.readFile(reportPaths.json, 'utf8');
         const parsedJson = JSON.parse(jsonContent);
@@ -188,7 +190,7 @@ describe('Compatibility Testing Integration', () => {
       if (reportPaths.markdown) {
         const markdownExists = await fs.access(reportPaths.markdown).then(() => true).catch(() => false);
         expect(markdownExists).toBe(true);
-        
+
         // Verify Markdown content
         const markdownContent = await fs.readFile(reportPaths.markdown, 'utf8');
         expect(markdownContent).toContain('# Cross-Platform Compatibility Report');
@@ -203,7 +205,7 @@ describe('Compatibility Testing Integration', () => {
           totalEnvironments: 3,
           passedEnvironments: 2,
           failedEnvironments: 1,
-          warningEnvironments: 1
+          warningEnvironments: 1,
         },
         results: [
           {
@@ -216,8 +218,8 @@ describe('Compatibility Testing Integration', () => {
             performance: {
               executionTime: 1000,
               memoryUsage: { peak: 100000, average: 80000, final: 90000 },
-              cpuUsage: { peak: 50, average: 30 }
-            }
+              cpuUsage: { peak: 50, average: 30 },
+            },
           },
           {
             environment: await EnvironmentDetector.getEnvironmentInfo(),
@@ -228,27 +230,27 @@ describe('Compatibility Testing Integration', () => {
               type: 'platform' as const,
               message: 'Test failure in environment 2',
               severity: 'major' as const,
-              affectedTests: ['test2.js']
+              affectedTests: ['test2.js'],
             }],
             warnings: [],
             performance: {
               executionTime: 2000,
               memoryUsage: { peak: 120000, average: 100000, final: 110000 },
-              cpuUsage: { peak: 60, average: 40 }
-            }
-          }
+              cpuUsage: { peak: 60, average: 40 },
+            },
+          },
         ],
         recommendations: ['Fix failing tests'],
-        supportMatrix: await runner.generateSupportMatrix()
+        supportMatrix: await runner.generateSupportMatrix(),
       };
 
       const summaryPath = await reporter.generateCISummary(mockReport);
-      
+
       expect(typeof summaryPath).toBe('string');
-      
+
       const summaryExists = await fs.access(summaryPath).then(() => true).catch(() => false);
       expect(summaryExists).toBe(true);
-      
+
       const summaryContent = await fs.readFile(summaryPath, 'utf8');
       expect(summaryContent).toContain('Cross-Platform Compatibility Test Results');
       expect(summaryContent).toContain('Failed Environments');
@@ -260,18 +262,18 @@ describe('Compatibility Testing Integration', () => {
     it('should handle real npm test command (if available)', async () => {
       // Check if package.json exists and has test script
       const packageJsonPath = path.join(process.cwd(), 'package.json');
-      
+
       try {
         await fs.access(packageJsonPath);
         const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
-        
+
         if (packageJson.scripts && packageJson.scripts.test) {
           const result = await runner.runQuickCheck('npm test --silent');
-          
+
           expect(result).toHaveProperty('compatible');
           expect(result).toHaveProperty('issues');
           expect(result).toHaveProperty('recommendations');
-          
+
           // If tests pass, should be compatible
           if (result.compatible) {
             expect(result.issues.length).toBe(0);
@@ -291,15 +293,15 @@ describe('Compatibility Testing Integration', () => {
 
       expect(result.compatible).toBe(false);
       expect(result.issues.length).toBeGreaterThan(0);
-      expect(result.issues.some(issue => 
-        issue.includes('Failed to test') || issue.includes('command not found')
+      expect(result.issues.some(issue =>
+        issue.includes('Failed to test') || issue.includes('command not found'),
       )).toBe(true);
     }, 30000);
 
     it('should handle timeout scenarios', async () => {
       // Create a command that will timeout
       const testCommand = 'sleep 10'; // 10 seconds, should timeout with default settings
-      
+
       const startTime = Date.now();
       const result = await runner.runQuickCheck(testCommand);
       const duration = Date.now() - startTime;
@@ -316,7 +318,7 @@ describe('Compatibility Testing Integration', () => {
       const result = await runner.runQuickCheck(testCommand);
 
       expect(result).toHaveProperty('compatible');
-      
+
       // Performance should be reasonable for simple command
       // This is more of a smoke test to ensure the system works
       expect(typeof result.compatible).toBe('boolean');
@@ -329,7 +331,7 @@ describe('Compatibility Testing Integration', () => {
       const containerInfo = EnvironmentDetector.getContainerInfo();
 
       expect(typeof isContainer).toBe('boolean');
-      
+
       if (isContainer) {
         expect(containerInfo).not.toBeNull();
         expect(containerInfo).toHaveProperty('runtime');

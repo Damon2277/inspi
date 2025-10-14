@@ -1,8 +1,14 @@
 import mongoose from 'mongoose';
-import connectDB from '../mongodb';
+
 import { User, Work, KnowledgeGraph as KnowledgeGraphModel, ContributionLog } from '../models';
-import type { UserDocument, WorkDocument, ContributionLogDocument, IWork, IContributionLog } from '../models';
-import type { KnowledgeGraph } from '@/types/knowledgeGraph';
+import type {
+  UserDocument,
+  WorkDocument,
+  KnowledgeGraphDocument,
+  ContributionLogDocument,
+  IContributionLog,
+} from '../models';
+import connectDB from '../mongodb';
 
 /**
  * Database operation utilities
@@ -22,7 +28,7 @@ export class DatabaseOperations {
    */
   static async createUser(userData: Partial<UserDocument>): Promise<UserDocument> {
     await this.ensureConnection();
-    
+
     try {
       const user = new User(userData);
       return await user.save();
@@ -36,17 +42,17 @@ export class DatabaseOperations {
 
   static async findUserByEmail(email: string): Promise<UserDocument | null> {
     await this.ensureConnection();
-    return await User.findOne({ email: email.toLowerCase() });
+    return await (User.findOne as any)({ email: email.toLowerCase() });
   }
 
   static async updateUser(userId: string, updateData: Partial<UserDocument>): Promise<UserDocument | null> {
     await this.ensureConnection();
-    
+
     try {
-      return await User.findByIdAndUpdate(
+      return await (User.findByIdAndUpdate as any)(
         userId,
         updateData,
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
     } catch (error) {
       if (error instanceof mongoose.Error.ValidationError) {
@@ -59,9 +65,9 @@ export class DatabaseOperations {
   /**
    * Work operations
    */
-  static async createWork(workData: Partial<IWork>): Promise<IWork> {
+  static async createWork(workData: Partial<WorkDocument>): Promise<WorkDocument> {
     await this.ensureConnection();
-    
+
     try {
       const work = new Work(workData);
       return await work.save();
@@ -73,32 +79,32 @@ export class DatabaseOperations {
     }
   }
 
-  static async findPublicWorks(limit = 20, skip = 0): Promise<IWork[]> {
+  static async findPublicWorks(limit = 20, skip = 0): Promise<WorkDocument[]> {
     await this.ensureConnection();
-    return await Work.find({ isPublic: true, status: 'published' })
+    return await (Work.find as any)({ isPublic: true, status: 'published' })
       .populate('author', 'name avatar')
-      .sort({ createdAt: -1 })
+        .sort({ createdAt: -1 })
       .limit(limit)
       .skip(skip);
   }
 
-  static async findWorksByAuthor(authorId: string): Promise<IWork[]> {
+  static async findWorksByAuthor(authorId: string): Promise<WorkDocument[]> {
     await this.ensureConnection();
-    return await Work.find({ author: authorId })
+    return await (Work.find as any)({ author: authorId })
       .populate('author', 'name avatar')
-      .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 });
   }
 
   /**
    * Knowledge Graph operations
    */
-  static async createKnowledgeGraph(graphData: Partial<KnowledgeGraph>): Promise<KnowledgeGraph> {
+  static async createKnowledgeGraph(graphData: Partial<KnowledgeGraphDocument>): Promise<KnowledgeGraphDocument> {
     await this.ensureConnection();
-    
+
     try {
       const graph = new KnowledgeGraphModel(graphData);
       const savedGraph = await graph.save();
-      return savedGraph.toObject();
+      return savedGraph;
     } catch (error) {
       if (error instanceof mongoose.Error.ValidationError) {
         throw new Error(`Validation error: ${Object.values(error.errors).map(e => e.message).join(', ')}`);
@@ -107,11 +113,11 @@ export class DatabaseOperations {
     }
   }
 
-  static async findPublicKnowledgeGraphs(limit = 20, skip = 0): Promise<KnowledgeGraph[]> {
+  static async findPublicKnowledgeGraphs(limit = 20, skip = 0): Promise<KnowledgeGraphDocument[]> {
     await this.ensureConnection();
-    return await KnowledgeGraphModel.find({ isPublic: true, status: 'published' })
-      .populate('author', 'name avatar')
-      .sort({ createdAt: -1 })
+    return await (KnowledgeGraphModel.find as any)({ isPublic: true })
+      .populate('userId', 'name avatar')
+        .sort({ createdAt: -1 })
       .limit(limit)
       .skip(skip);
   }
@@ -121,7 +127,7 @@ export class DatabaseOperations {
    */
   static async logContribution(contributionData: Partial<IContributionLog>): Promise<IContributionLog> {
     await this.ensureConnection();
-    
+
     try {
       const log = new ContributionLog(contributionData);
       return await log.save();
@@ -135,10 +141,10 @@ export class DatabaseOperations {
 
   static async getUserContributions(userId: string, limit = 50): Promise<IContributionLog[]> {
     await this.ensureConnection();
-    return await ContributionLog.find({ user: userId })
+    return await (ContributionLog.find as any)({ user: userId })
       .sort({ createdAt: -1 })
       .limit(limit)
-      .populate('user', 'name avatar');
+      .populate('user', 'name avatar') as any;
   }
 
   /**
@@ -146,28 +152,27 @@ export class DatabaseOperations {
    */
   static async findById<T extends mongoose.Document>(
     model: mongoose.Model<T>,
-    id: string
+    id: string,
   ): Promise<T | null> {
     await this.ensureConnection();
-    
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new Error('Invalid ObjectId format');
     }
-    
-    return await model.findById(id);
+    return await (model.findById as any)(id);
   }
 
   static async deleteById<T extends mongoose.Document>(
     model: mongoose.Model<T>,
-    id: string
+    id: string,
   ): Promise<boolean> {
     await this.ensureConnection();
-    
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new Error('Invalid ObjectId format');
     }
-    
-    const result = await model.findByIdAndDelete(id);
+
+    const result = await (model.findByIdAndDelete as any)(id);
     return result !== null;
   }
 
@@ -180,25 +185,25 @@ export class DatabaseOperations {
   }> {
     try {
       await this.ensureConnection();
-      
+
       return {
         mongodb: {
           connected: mongoose.connection.readyState === 1,
-          status: ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState]
+          status: ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState],
         },
         models: {
-          registered: Object.keys(mongoose.models)
-        }
+          registered: Object.keys(mongoose.models),
+        },
       };
     } catch (error) {
       return {
         mongodb: {
           connected: false,
-          status: 'error'
+          status: 'error',
         },
         models: {
-          registered: []
-        }
+          registered: [],
+        },
       };
     }
   }

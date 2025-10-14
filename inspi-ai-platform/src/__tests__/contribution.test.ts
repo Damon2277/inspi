@@ -2,21 +2,21 @@
  * 贡献度系统测试
  */
 
-import { ContributionType } from '@/types/contribution';
 import { CONTRIBUTION_POINTS, ACHIEVEMENTS } from '@/lib/config/contribution';
+import { ContributionType } from '@/shared/types/contribution';
 
 // Mock数据
 const mockUser = {
   _id: '507f1f77bcf86cd799439011',
   name: 'Test User',
-  email: 'test@example.com'
+  email: 'test@example.com',
 };
 
 const mockWork = {
   _id: '507f1f77bcf86cd799439012',
   title: 'Test Work',
   author: mockUser._id,
-  status: 'published'
+  status: 'published',
 };
 
 describe('贡献度系统配置', () => {
@@ -47,7 +47,7 @@ describe('贡献度类型', () => {
       'work_shared',
       'profile_completed',
       'first_work',
-      'milestone_reached'
+      'milestone_reached',
     ];
 
     expectedTypes.forEach(type => {
@@ -69,8 +69,8 @@ describe('贡献度服务', () => {
       description: '发布了新作品',
       createdAt: new Date(),
       metadata: {
-        workTitle: mockWork.title
-      }
+        workTitle: mockWork.title,
+      },
     };
 
     expect(mockRecord).toHaveProperty('id');
@@ -91,7 +91,7 @@ describe('贡献度服务', () => {
       rank: 1,
       creationCount: 5,
       reuseCount: 10,
-      lastActivity: new Date().toISOString()
+      lastActivity: new Date().toISOString(),
     };
 
     expect(mockLeaderboardEntry).toHaveProperty('userId');
@@ -116,8 +116,8 @@ describe('API 响应格式', () => {
         bonusPoints: 0,
         worksCount: 5,
         reuseCount: 10,
-        lastUpdated: new Date()
-      }
+        lastUpdated: new Date(),
+      },
     };
 
     expect(mockSuccessResponse.success).toBe(true);
@@ -130,7 +130,7 @@ describe('API 响应格式', () => {
     const mockErrorResponse = {
       success: false,
       error: '用户不存在',
-      details: 'User not found in database'
+      details: 'User not found in database',
     };
 
     expect(mockErrorResponse.success).toBe(false);
@@ -144,7 +144,7 @@ describe('组件 Props 验证', () => {
   test('ContributionStats 组件应该接受正确的 props', () => {
     const mockProps = {
       userId: mockUser._id,
-      className: 'test-class'
+      className: 'test-class',
     };
 
     expect(mockProps).toHaveProperty('userId');
@@ -157,7 +157,7 @@ describe('组件 Props 验证', () => {
       className: 'test-class',
       limit: 50,
       showUserRank: true,
-      userId: mockUser._id
+      userId: mockUser._id,
     };
 
     expect(mockProps.limit).toBeGreaterThan(0);
@@ -169,7 +169,7 @@ describe('组件 Props 验证', () => {
     const mockProps = {
       className: 'test-class',
       limit: 12,
-      showPeriodSelector: true
+      showPeriodSelector: true,
     };
 
     expect(mockProps.limit).toBeGreaterThan(0);
@@ -196,7 +196,7 @@ describe('工具函数', () => {
     const reusePoints = 100;
     const bonusPoints = 25;
     const totalPoints = creationPoints + reusePoints + bonusPoints;
-    
+
     expect(totalPoints).toBe(175);
     expect(totalPoints).toBeGreaterThan(creationPoints);
     expect(totalPoints).toBeGreaterThan(reusePoints);
@@ -208,7 +208,7 @@ describe('缓存键生成', () => {
   test('用户统计缓存键应该正确', () => {
     const userId = mockUser._id;
     const cacheKey = `contribution:stats:user:${userId}`;
-    
+
     expect(cacheKey).toContain('contribution:stats:user:');
     expect(cacheKey).toContain(userId);
   });
@@ -218,7 +218,7 @@ describe('缓存键生成', () => {
     const limit = 50;
     const offset = 0;
     const cacheKey = `leaderboard:all:${type}:${limit}:${offset}`;
-    
+
     expect(cacheKey).toContain('leaderboard:all:');
     expect(cacheKey).toContain(type);
     expect(cacheKey).toContain(limit.toString());
@@ -230,12 +230,12 @@ describe('数据验证', () => {
   test('贡献度积分应该在有效范围内', () => {
     const validPoints = [0, 10, 50, 100, 500, 1000];
     const invalidPoints = [-1, 1001, -100, 2000];
-    
+
     validPoints.forEach(points => {
       expect(points).toBeGreaterThanOrEqual(0);
       expect(points).toBeLessThanOrEqual(1000);
     });
-    
+
     invalidPoints.forEach(points => {
       expect(points < 0 || points > 1000).toBe(true);
     });
@@ -244,9 +244,9 @@ describe('数据验证', () => {
   test('用户ID应该是有效的ObjectId格式', () => {
     const validObjectId = '507f1f77bcf86cd799439011';
     const invalidObjectIds = ['', 'invalid', '123', null, undefined];
-    
+
     expect(validObjectId).toMatch(/^[0-9a-fA-F]{24}$/);
-    
+
     invalidObjectIds.forEach(id => {
       if (id) {
         expect(id).not.toMatch(/^[0-9a-fA-F]{24}$/);
@@ -267,9 +267,9 @@ describe('错误处理', () => {
     const validationError = {
       success: false,
       error: '用户ID不能为空',
-      code: 'VALIDATION_ERROR'
+      code: 'VALIDATION_ERROR',
     };
-    
+
     expect(validationError.success).toBe(false);
     expect(validationError.error).toBeTruthy();
   });
@@ -280,7 +280,7 @@ describe('性能考虑', () => {
   test('排行榜限制应该合理', () => {
     const maxLimit = 100;
     const defaultLimit = 50;
-    
+
     expect(defaultLimit).toBeLessThanOrEqual(maxLimit);
     expect(defaultLimit).toBeGreaterThan(0);
     expect(maxLimit).toBeLessThanOrEqual(100); // 避免过大的查询
@@ -290,9 +290,9 @@ describe('性能考虑', () => {
     const cacheConfig = {
       leaderboardTTL: 3600,  // 1小时
       statsTTL: 1800,        // 30分钟
-      trendingTTL: 7200      // 2小时
+      trendingTTL: 7200,      // 2小时
     };
-    
+
     Object.values(cacheConfig).forEach(ttl => {
       expect(ttl).toBeGreaterThan(0);
       expect(ttl).toBeLessThanOrEqual(86400); // 不超过24小时
@@ -315,8 +315,8 @@ describe('集成测试准备', () => {
         worksCount: 5,
         reuseCount: 10,
         rank: 15,
-        lastUpdated: new Date()
-      }
+        lastUpdated: new Date(),
+      },
     };
 
     // 验证响应格式

@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ReusePermissionCheck, ReuseRequest } from '@/types/reuse';
-import { useAuth } from '@/lib/auth/context';
+
+import { useAuth } from '@/core/auth/context';
+import { ReusePermissionCheck, ReuseRequest } from '@/shared/types/reuse';
 
 export interface ReuseButtonProps {
   workId: string;
@@ -23,7 +24,7 @@ export const ReuseButton: React.FC<ReuseButtonProps> = ({
   className = '',
   disabled = false,
   size = 'md',
-  variant = 'primary'
+  variant = 'primary',
 }) => {
   const { user, isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -35,13 +36,13 @@ export const ReuseButton: React.FC<ReuseButtonProps> = ({
   const sizeClasses = {
     sm: 'px-2 py-1 text-xs',
     md: 'px-3 py-1.5 text-sm',
-    lg: 'px-4 py-2 text-base'
+    lg: 'px-4 py-2 text-base',
   };
 
   const variantClasses = {
     primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
     secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500',
-    outline: 'border border-indigo-600 text-indigo-600 hover:bg-indigo-50 focus:ring-indigo-500'
+    outline: 'border border-indigo-600 text-indigo-600 hover:bg-indigo-50 focus:ring-indigo-500',
   };
 
   const baseClasses = 'inline-flex items-center font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200';
@@ -49,7 +50,7 @@ export const ReuseButton: React.FC<ReuseButtonProps> = ({
   // 检查复用权限
   const checkReusePermission = async () => {
     if (!isAuthenticated) {
-      onReuseError?.('请先登录');
+      onReuseError && onReuseError('请先登录');
       return;
     }
 
@@ -57,19 +58,19 @@ export const ReuseButton: React.FC<ReuseButtonProps> = ({
     try {
       const response = await fetch(`/api/works/${workId}/reuse/check`);
       const result = await response.json();
-      
+
       if (result.success) {
         setPermissionCheck(result.data);
         if (result.data.canReuse) {
           setShowConfirmDialog(true);
         } else {
-          onReuseError?.(result.data.reason || '无法复用此作品');
+          onReuseError && onReuseError(result.data.reason || '无法复用此作品');
         }
       } else {
-        onReuseError?.(result.message || '检查复用权限失败');
+        onReuseError && onReuseError(result.message || '检查复用权限失败');
       }
     } catch (error) {
-      onReuseError?.(error instanceof Error ? error.message : '检查复用权限失败');
+      onReuseError && onReuseError(error instanceof Error ? error.message : '检查复用权限失败');
     } finally {
       setIsLoading(false);
     }
@@ -78,7 +79,7 @@ export const ReuseButton: React.FC<ReuseButtonProps> = ({
   // 执行复用
   const handleReuse = async (reuseType: 'full' | 'partial' = 'full') => {
     if (!isAuthenticated) {
-      onReuseError?.('请先登录');
+      onReuseError && onReuseError('请先登录');
       return;
     }
 
@@ -87,28 +88,28 @@ export const ReuseButton: React.FC<ReuseButtonProps> = ({
       const reuseRequest: ReuseRequest = {
         workId,
         reuseType,
-        targetTitle: customTitle || `${workTitle} (复用版)`
+        targetTitle: customTitle || `${workTitle} (复用版)`,
       };
 
       const response = await fetch(`/api/works/${workId}/reuse`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(reuseRequest)
+        body: JSON.stringify(reuseRequest),
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
-        onReuseSuccess?.(result.data.newWorkId);
+        onReuseSuccess && onReuseSuccess(result.data.newWorkId);
         setShowConfirmDialog(false);
         setCustomTitle('');
       } else {
-        onReuseError?.(result.message || '复用作品失败');
+        onReuseError && onReuseError(result.message || '复用作品失败');
       }
     } catch (error) {
-      onReuseError?.(error instanceof Error ? error.message : '复用作品失败');
+      onReuseError && onReuseError(error instanceof Error ? error.message : '复用作品失败');
     } finally {
       setIsLoading(false);
     }

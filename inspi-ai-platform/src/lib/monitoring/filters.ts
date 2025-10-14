@@ -47,7 +47,7 @@ export class ErrorFilter {
       shouldReport: true,
       category: categorizeError(error),
       severity: getErrorSeverity(error),
-      tags: {}
+      tags: {},
     };
 
     // 检查是否应该忽略
@@ -72,7 +72,7 @@ export class ErrorFilter {
     result.tags = {
       category: result.category,
       severity: result.severity,
-      ...this.extractErrorTags(error, context)
+      ...this.extractErrorTags(error, context),
     };
 
     return result;
@@ -86,7 +86,7 @@ export class ErrorFilter {
       error.name,
       error.message.replace(/\d+/g, 'N'), // 替换数字为N
       context?.component || 'unknown',
-      context?.url ? this.normalizeUrl(context.url) : 'unknown'
+      context?.url ? this.normalizeUrl(context.url) : 'unknown',
     ];
 
     return components.join('|');
@@ -123,7 +123,7 @@ export class ErrorFilter {
     // 从错误堆栈中提取信息
     if (error.stack) {
       const stackLines = error.stack.split('\n');
-      const firstLine = stackLines.find(line => line.includes('.tsx') || line.includes('.ts') || line.includes('.js'));
+      const firstLine = (stackLines.find as any)(line => line.includes('.tsx') || line.includes('.ts') || line.includes('.js'));
       if (firstLine) {
         const match = firstLine.match(/\/([^\/]+\.(tsx?|jsx?)):/);
         if (match) {
@@ -201,7 +201,7 @@ export class RequestFilter {
     const result: RequestFilterResult = {
       shouldTrack: true,
       sampleRate: 1.0,
-      tags: {}
+      tags: {},
     };
 
     // 检查是否应该忽略的URL
@@ -219,7 +219,7 @@ export class RequestFilter {
       method: request.method,
       endpoint: this.extractEndpoint(request.url),
       status_category: this.getStatusCategory(request.statusCode),
-      ...this.extractRequestTags(request)
+      ...this.extractRequestTags(request),
     };
 
     return result;
@@ -234,7 +234,7 @@ export class RequestFilter {
       /\/api\/health/,
       /\/favicon\.ico/,
       /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/,
-      /\/webpack-hmr/
+      /\/webpack-hmr/,
     ];
 
     return ignoredPatterns.some(pattern => pattern.test(url));
@@ -277,7 +277,7 @@ export class RequestFilter {
    */
   private getStatusCategory(statusCode?: number): string {
     if (!statusCode) return 'unknown';
-    
+
     if (statusCode < 300) return '2xx';
     if (statusCode < 400) return '3xx';
     if (statusCode < 500) return '4xx';
@@ -339,13 +339,13 @@ export class PerformanceFilter {
   }): { shouldReport: boolean; tags: Record<string, string> } {
     const result = {
       shouldReport: true,
-      tags: {} as Record<string, string>
+      tags: {} as Record<string, string>,
     };
 
     // 设置标签
     result.tags = {
       metric: metric.name,
-      ...this.categorizePerformance(metric)
+      ...this.categorizePerformance(metric),
     };
 
     return result;
@@ -400,5 +400,5 @@ if (typeof window !== 'undefined') {
 export default {
   errorFilter,
   requestFilter,
-  performanceFilter
+  performanceFilter,
 };

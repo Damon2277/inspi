@@ -3,8 +3,9 @@
  * 支持百度、腾讯、阿里云等内容审核API
  */
 
+import { logger } from '@/shared/utils/logger';
+
 import { ValidationIssue } from './types';
-import { logger } from '@/lib/utils/logger';
 
 export interface ThirdPartyFilterConfig {
   provider: 'baidu' | 'tencent' | 'aliyun' | 'custom';
@@ -39,7 +40,7 @@ export class BaiduContentFilter {
     this.config = {
       timeout: 5000,
       ...config,
-      provider: 'baidu'
+      provider: 'baidu',
     };
   }
 
@@ -59,7 +60,7 @@ export class BaiduContentFilter {
 
   private async checkContent(content: string): Promise<ThirdPartyFilterResult> {
     const token = await this.getAccessToken();
-    
+
     const response = await fetch('https://aip.baidubce.com/rest/2.0/solution/v1/text_censor/v2/user_defined', {
       method: 'POST',
       headers: {
@@ -67,9 +68,9 @@ export class BaiduContentFilter {
       },
       body: new URLSearchParams({
         access_token: token,
-        text: content
+        text: content,
       }),
-      signal: AbortSignal.timeout(this.config.timeout!)
+      signal: AbortSignal.timeout(this.config.timeout!),
     });
 
     if (!response.ok) {
@@ -77,7 +78,7 @@ export class BaiduContentFilter {
     }
 
     const data = await response.json();
-    
+
     if (data.error_code) {
       throw new Error(`Baidu API error: ${data.error_msg}`);
     }
@@ -89,9 +90,9 @@ export class BaiduContentFilter {
       categories: (data.data || []).map((item: any) => ({
         category: item.type,
         probability: item.probability,
-        description: item.msg || ''
+        description: item.msg || '',
       })),
-      requestId: data.log_id
+      requestId: data.log_id,
     };
   }
 
@@ -109,12 +110,12 @@ export class BaiduContentFilter {
       body: new URLSearchParams({
         grant_type: 'client_credentials',
         client_id: this.config.apiKey,
-        client_secret: this.config.secretKey!
-      })
+        client_secret: this.config.secretKey!,
+      }),
     });
 
     const data = await response.json();
-    
+
     if (data.error) {
       throw new Error(`Failed to get Baidu access token: ${data.error_description}`);
     }
@@ -141,11 +142,11 @@ export class BaiduContentFilter {
     if (result.conclusion !== 'pass') {
       const severity = result.conclusion === 'block' ? 'error' : 'warning';
       const categories = result.categories.map(c => c.category).join(', ');
-      
+
       issues.push({
         type: 'sensitive_word',
         message: `百度内容审核: ${categories || '检测到不当内容'}`,
-        severity
+        severity,
       });
     }
 
@@ -163,7 +164,7 @@ export class TencentContentFilter {
     this.config = {
       timeout: 5000,
       ...config,
-      provider: 'tencent'
+      provider: 'tencent',
     };
   }
 
@@ -194,7 +195,7 @@ export class AliyunContentFilter {
     this.config = {
       timeout: 5000,
       ...config,
-      provider: 'aliyun'
+      provider: 'aliyun',
     };
   }
 
@@ -226,7 +227,7 @@ export class ThirdPartyFilterManager {
    */
   addFilter(name: string, config: ThirdPartyFilterConfig) {
     let filter;
-    
+
     switch (config.provider) {
       case 'baidu':
         filter = new BaiduContentFilter(config);
@@ -264,12 +265,12 @@ export class ThirdPartyFilterManager {
         filter.detect(content).catch(error => {
           logger.error(`Filter ${name} failed:`, error);
           return [];
-        })
+        }),
       );
     }
 
     const results = await Promise.all(promises);
-    
+
     // 合并所有结果
     for (const issues of results) {
       allIssues.push(...issues);
@@ -295,7 +296,7 @@ if (process.env.BAIDU_API_KEY && process.env.BAIDU_SECRET_KEY) {
     provider: 'baidu',
     apiKey: process.env.BAIDU_API_KEY,
     secretKey: process.env.BAIDU_SECRET_KEY,
-    enabled: process.env.BAIDU_CONTENT_FILTER_ENABLED !== 'false'
+    enabled: process.env.BAIDU_CONTENT_FILTER_ENABLED !== 'false',
   });
 }
 
@@ -305,7 +306,7 @@ if (process.env.TENCENT_SECRET_ID && process.env.TENCENT_SECRET_KEY) {
     provider: 'tencent',
     apiKey: process.env.TENCENT_SECRET_ID,
     secretKey: process.env.TENCENT_SECRET_KEY,
-    enabled: process.env.TENCENT_CONTENT_FILTER_ENABLED !== 'false'
+    enabled: process.env.TENCENT_CONTENT_FILTER_ENABLED !== 'false',
   });
 }
 
@@ -315,6 +316,6 @@ if (process.env.ALIYUN_ACCESS_KEY_ID && process.env.ALIYUN_ACCESS_KEY_SECRET) {
     provider: 'aliyun',
     apiKey: process.env.ALIYUN_ACCESS_KEY_ID,
     secretKey: process.env.ALIYUN_ACCESS_KEY_SECRET,
-    enabled: process.env.ALIYUN_CONTENT_FILTER_ENABLED !== 'false'
+    enabled: process.env.ALIYUN_CONTENT_FILTER_ENABLED !== 'false',
   });
 }

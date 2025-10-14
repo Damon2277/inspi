@@ -1,25 +1,26 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
+import React from 'react';
+
 import '@testing-library/jest-dom';
-import { 
-  HighDensityGrid, 
-  CompactCard, 
-  DenseTable, 
+import {
+  HighDensityGrid,
+  CompactCard,
+  DenseTable,
   DenseList,
   VisualWeight,
   SectionDivider,
   ContentHierarchy,
-  HighlightBox
+  HighlightBox,
 } from '@/components/ui';
 
 // Mock useResponsive hook
-jest.mock('@/hooks/useResponsive', () => ({
+jest.mock('@/shared/hooks/useResponsive', () => ({
   useResponsive: () => ({
     isDesktop: true,
     isWide: false,
     isTablet: false,
-    isMobile: false
-  })
+    isMobile: false,
+  }),
 }));
 
 describe('高密度布局组件', () => {
@@ -30,9 +31,9 @@ describe('高密度布局组件', () => {
           <div>Item 1</div>
           <div>Item 2</div>
           <div>Item 3</div>
-        </HighDensityGrid>
+        </HighDensityGrid>,
       );
-      
+
       expect(screen.getByText('Item 1')).toBeInTheDocument();
       expect(screen.getByText('Item 2')).toBeInTheDocument();
       expect(screen.getByText('Item 3')).toBeInTheDocument();
@@ -46,9 +47,9 @@ describe('高密度布局组件', () => {
           title="测试标题"
           description="测试描述"
           preview="测试预览内容"
-        />
+        />,
       );
-      
+
       expect(screen.getByText('测试标题')).toBeInTheDocument();
       expect(screen.getByText('测试描述')).toBeInTheDocument();
       expect(screen.getByText('测试预览内容')).toBeInTheDocument();
@@ -58,12 +59,12 @@ describe('高密度布局组件', () => {
   describe('DenseTable', () => {
     const mockData = [
       { id: 1, name: '项目1', status: '进行中' },
-      { id: 2, name: '项目2', status: '已完成' }
+      { id: 2, name: '项目2', status: '已完成' },
     ];
 
     const mockColumns = [
       { key: 'name' as const, title: '名称' },
-      { key: 'status' as const, title: '状态' }
+      { key: 'status' as const, title: '状态' },
     ];
 
     it('应该显示表格数据', () => {
@@ -71,9 +72,9 @@ describe('高密度布局组件', () => {
         <DenseTable
           data={mockData}
           columns={mockColumns}
-        />
+        />,
       );
-      
+
       expect(screen.getByText('名称')).toBeInTheDocument();
       expect(screen.getByText('状态')).toBeInTheDocument();
       expect(screen.getByText('项目1')).toBeInTheDocument();
@@ -89,9 +90,9 @@ describe('高密度布局组件', () => {
         <DenseList
           data={mockData}
           renderItem={(item) => <div>{item}</div>}
-        />
+        />,
       );
-      
+
       expect(screen.getByText('项目1')).toBeInTheDocument();
       expect(screen.getByText('项目2')).toBeInTheDocument();
       expect(screen.getByText('项目3')).toBeInTheDocument();
@@ -105,9 +106,9 @@ describe('视觉层次组件', () => {
       render(
         <VisualWeight weight="primary">
           主要内容
-        </VisualWeight>
+        </VisualWeight>,
       );
-      
+
       const element = screen.getByText('主要内容');
       expect(element).toHaveClass('visual-weight-primary');
     });
@@ -116,14 +117,14 @@ describe('视觉层次组件', () => {
   describe('SectionDivider', () => {
     it('应该渲染分割线', () => {
       render(<SectionDivider type="line" />);
-      
+
       const divider = document.querySelector('.section-divider');
       expect(divider).toBeInTheDocument();
     });
 
     it('应该显示标签', () => {
       render(<SectionDivider type="line" label="测试标签" />);
-      
+
       expect(screen.getByText('测试标签')).toBeInTheDocument();
     });
   });
@@ -134,9 +135,9 @@ describe('视觉层次组件', () => {
         <ContentHierarchy>
           <div>内容1</div>
           <div>内容2</div>
-        </ContentHierarchy>
+        </ContentHierarchy>,
       );
-      
+
       expect(screen.getByText('内容1')).toBeInTheDocument();
       expect(screen.getByText('内容2')).toBeInTheDocument();
     });
@@ -147,9 +148,9 @@ describe('视觉层次组件', () => {
       render(
         <HighlightBox variant="info" title="信息标题">
           信息内容
-        </HighlightBox>
+        </HighlightBox>,
       );
-      
+
       expect(screen.getByText('信息标题')).toBeInTheDocument();
       expect(screen.getByText('信息内容')).toBeInTheDocument();
     });

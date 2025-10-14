@@ -1,26 +1,27 @@
 /**
  * Component Test Framework Tests
- * 
+ *
  * Tests for the comprehensive UI component testing framework
  */
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
+
 import {
   ComponentTestFramework,
   createComponentTestFramework,
   createTestSuite,
-  ComponentTestSuite
+  ComponentTestSuite,
 } from '../../../../lib/testing/ui/ComponentTestFramework';
 
 // Mock components for testing
-const SimpleButton: React.FC<{ onClick?: () => void; children: React.ReactNode; disabled?: boolean }> = ({ 
-  onClick, 
-  children, 
-  disabled = false 
+const SimpleButton: React.FC<{ onClick?: () => void; children: React.ReactNode; disabled?: boolean }> = ({
+  onClick,
+  children,
+  disabled = false,
 }) => (
-  <button 
-    onClick={onClick} 
+  <button
+    onClick={onClick}
     disabled={disabled}
     data-testid="simple-button"
     className="btn btn-primary"
@@ -34,7 +35,7 @@ const ComplexForm: React.FC<{ onSubmit?: (data: any) => void }> = ({ onSubmit })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit?.(formData);
+    onSubmit && onSubmit(formData);
   };
 
   return (
@@ -67,13 +68,13 @@ const ComplexForm: React.FC<{ onSubmit?: (data: any) => void }> = ({ onSubmit })
 };
 
 const ThemeAwareComponent: React.FC<{ theme?: 'light' | 'dark' }> = ({ theme = 'light' }) => (
-  <div 
+  <div
     className={`theme-component theme-${theme}`}
     data-testid="theme-component"
     style={{
       backgroundColor: theme === 'light' ? '#ffffff' : '#000000',
       color: theme === 'light' ? '#000000' : '#ffffff',
-      padding: '16px'
+      padding: '16px',
     }}
   >
     <h1>Theme: {theme}</h1>
@@ -90,7 +91,7 @@ describe('ComponentTestFramework', () => {
       viewport: { width: 1024, height: 768 },
       accessibility: { enabled: true },
       performance: { enabled: true },
-      styles: { enabled: true }
+      styles: { enabled: true },
     });
   });
 
@@ -101,7 +102,7 @@ describe('ComponentTestFramework', () => {
   describe('Component Rendering', () => {
     it('should render component with providers', () => {
       const { container } = framework.renderComponent(<SimpleButton>Click me</SimpleButton>);
-      
+
       expect(container.firstChild).toBeInTheDocument();
       expect(screen.getByTestId('simple-button')).toBeInTheDocument();
       expect(screen.getByText('Click me')).toBeInTheDocument();
@@ -109,7 +110,7 @@ describe('ComponentTestFramework', () => {
 
     it('should track render time and count', () => {
       const result = framework.renderComponent(<SimpleButton>Test</SimpleButton>);
-      
+
       expect(result.renderTime).toBeGreaterThan(0);
       expect(result.renderCount).toBe(1);
     });
@@ -119,9 +120,9 @@ describe('ComponentTestFramework', () => {
       framework.renderComponent(
         <SimpleButton onClick={mockClick} disabled={true}>
           Disabled Button
-        </SimpleButton>
+        </SimpleButton>,
       );
-      
+
       const button = screen.getByTestId('simple-button');
       expect(button).toBeDisabled();
       expect(button).toHaveTextContent('Disabled Button');
@@ -133,11 +134,11 @@ describe('ComponentTestFramework', () => {
       const suite: ComponentTestSuite = {
         name: 'Simple Button Test',
         component: SimpleButton,
-        props: { children: 'Test Button' }
+        props: { children: 'Test Button' },
       };
 
       const result = await framework.runTestSuite(suite);
-      
+
       expect(result.renderTime).toBeGreaterThan(0);
       expect(result.reRenderCount).toBeGreaterThan(0);
       expect(result.accessibilityViolations).toBeDefined();
@@ -150,12 +151,12 @@ describe('ComponentTestFramework', () => {
         props: { children: 'Default' },
         variants: [
           { name: 'Disabled', props: { children: 'Disabled', disabled: true } },
-          { name: 'With Click', props: { children: 'Clickable', onClick: jest.fn() } }
-        ]
+          { name: 'With Click', props: { children: 'Clickable', onClick: jest.fn() } },
+        ],
       };
 
       const result = await framework.runTestSuite(suite);
-      
+
       expect(result.renderTime).toBeGreaterThan(0);
       expect(result.accessibilityViolations).toBeDefined();
     });
@@ -175,13 +176,13 @@ describe('ComponentTestFramework', () => {
             },
             assertions: async (container) => {
               expect(mockClick).toHaveBeenCalledTimes(1);
-            }
-          }
-        ]
+            },
+          },
+        ],
       };
 
       const result = await framework.runTestSuite(suite);
-      
+
       expect(result.interactions).toHaveLength(1);
       expect(result.interactions[0].success).toBe(true);
     });
@@ -207,15 +208,15 @@ describe('ComponentTestFramework', () => {
             assertions: async (container) => {
               expect(mockSubmit).toHaveBeenCalledWith({
                 name: 'John Doe',
-                email: 'john@example.com'
+                email: 'john@example.com',
               });
-            }
-          }
-        ]
+            },
+          },
+        ],
       };
 
       const result = await framework.runTestSuite(suite);
-      
+
       expect(result.interactions).toHaveLength(1);
       expect(result.interactions[0].success).toBe(true);
     });
@@ -227,16 +228,16 @@ describe('ComponentTestFramework', () => {
         name: 'Performance Test',
         component: ComplexForm,
         config: {
-          performance: { 
-            enabled: true, 
+          performance: {
+            enabled: true,
             renderTimeThreshold: 50,
-            memoryThreshold: 1000000 
-          }
-        }
+            memoryThreshold: 1000000,
+          },
+        },
       };
 
       const result = await framework.runTestSuite(suite);
-      
+
       expect(result.memoryUsage).toBeGreaterThanOrEqual(0);
     });
 
@@ -254,15 +255,15 @@ describe('ComponentTestFramework', () => {
         name: 'Slow Component',
         component: SlowComponent,
         config: {
-          performance: { 
-            enabled: true, 
-            renderTimeThreshold: 50 
-          }
-        }
+          performance: {
+            enabled: true,
+            renderTimeThreshold: 50,
+          },
+        },
       };
 
       const result = await framework.runTestSuite(suite);
-      
+
       expect(result.renderTime).toBeGreaterThan(50);
     });
   });
@@ -273,14 +274,14 @@ describe('ComponentTestFramework', () => {
         name: 'Light Theme',
         component: ThemeAwareComponent,
         props: { theme: 'light' },
-        config: { theme: 'light' }
+        config: { theme: 'light' },
       };
 
       const darkSuite: ComponentTestSuite = {
         name: 'Dark Theme',
         component: ThemeAwareComponent,
         props: { theme: 'dark' },
-        config: { theme: 'dark' }
+        config: { theme: 'dark' },
       };
 
       const lightResult = await framework.runTestSuite(lightSuite);
@@ -299,7 +300,7 @@ describe('ComponentTestFramework', () => {
 
       const suite: ComponentTestSuite = {
         name: 'Error Component',
-        component: ErrorComponent
+        component: ErrorComponent,
       };
 
       await expect(framework.runTestSuite(suite)).rejects.toThrow();
@@ -318,13 +319,13 @@ describe('ComponentTestFramework', () => {
             },
             assertions: async (container) => {
               // This should not be reached
-            }
-          }
-        ]
+            },
+          },
+        ],
       };
 
       const result = await framework.runTestSuite(suite);
-      
+
       expect(result.interactions).toHaveLength(1);
       expect(result.interactions[0].success).toBe(false);
       expect(result.interactions[0].error).toContain('Interaction failed');
@@ -334,7 +335,7 @@ describe('ComponentTestFramework', () => {
   describe('Test Utilities', () => {
     it('should provide useful test utilities', () => {
       const utils = framework.createTestUtils();
-      
+
       expect(utils.findByTestId).toBeDefined();
       expect(utils.getByTestId).toBeDefined();
       expect(utils.queryByTestId).toBeDefined();
@@ -348,11 +349,11 @@ describe('ComponentTestFramework', () => {
 
     it('should measure render time with utility', async () => {
       const utils = framework.createTestUtils();
-      
+
       const renderTime = await utils.measureRenderTime(() => {
         render(<SimpleButton>Test</SimpleButton>);
       });
-      
+
       expect(renderTime).toBeGreaterThan(0);
     });
   });
@@ -361,7 +362,7 @@ describe('ComponentTestFramework', () => {
 describe('ComponentTestSuiteBuilder', () => {
   it('should build test suite with fluent API', () => {
     const mockClick = jest.fn();
-    
+
     const suite = createTestSuite()
       .component(SimpleButton)
       .name('Button Test Suite')
@@ -376,11 +377,11 @@ describe('ComponentTestSuiteBuilder', () => {
         },
         async (container) => {
           expect(mockClick).toHaveBeenCalled();
-        }
+        },
       )
       .config({
         accessibility: { enabled: true },
-        performance: { enabled: true }
+        performance: { enabled: true },
       })
       .build();
 
@@ -415,15 +416,15 @@ describe('ComponentTestSuiteBuilder', () => {
 describe('Integration Tests', () => {
   it('should work with real React components', async () => {
     const framework = createComponentTestFramework();
-    
+
     const Counter: React.FC = () => {
       const [count, setCount] = React.useState(0);
-      
+
       return (
         <div data-testid="counter">
           <span data-testid="count">{count}</span>
-          <button 
-            data-testid="increment" 
+          <button
+            data-testid="increment"
             onClick={() => setCount(c => c + 1)}
           >
             Increment
@@ -447,28 +448,28 @@ describe('Integration Tests', () => {
           assertions: async (container) => {
             const count = container.querySelector('[data-testid="count"]');
             expect(count).toHaveTextContent('3');
-          }
-        }
-      ]
+          },
+        },
+      ],
     };
 
     const result = await framework.runTestSuite(suite);
-    
+
     expect(result.interactions[0].success).toBe(true);
-    
+
     framework.cleanup();
   });
 
   it('should handle async components', async () => {
     const framework = createComponentTestFramework();
-    
+
     const AsyncComponent: React.FC = () => {
       const [data, setData] = React.useState<string | null>(null);
-      
+
       React.useEffect(() => {
         setTimeout(() => setData('Loaded'), 100);
       }, []);
-      
+
       return (
         <div data-testid="async-component">
           {data ? data : 'Loading...'}
@@ -491,15 +492,15 @@ describe('Integration Tests', () => {
           assertions: async (container) => {
             const component = container.querySelector('[data-testid="async-component"]');
             expect(component).toHaveTextContent('Loaded');
-          }
-        }
-      ]
+          },
+        },
+      ],
     };
 
     const result = await framework.runTestSuite(suite);
-    
+
     expect(result.interactions[0].success).toBe(true);
-    
+
     framework.cleanup();
   });
 });

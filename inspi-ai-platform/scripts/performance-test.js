@@ -179,7 +179,8 @@ async function apiLoadTest() {
   const requestsPerSecond = totalRequests / totalTime;
   
   console.log(`  📊 总请求数: ${totalRequests}`);
-  console.log(`  ✅ 成功请求: ${successfulRequests} (${((successfulRequests/totalRequests)*100).toFixed(1)}%)`);
+  console.log(`  ✅ 成功请求:
+    ${successfulRequests} (${((successfulRequests/totalRequests)*100).toFixed(1)}%)`);
   console.log(`  ⏱️  平均响应时间: ${avgResponseTime.toFixed(2)}ms`);
   console.log(`  🚀 吞吐量: ${requestsPerSecond.toFixed(2)} req/s`);
   
@@ -238,7 +239,8 @@ async function contentValidationStressTest() {
   const avgResponseTime = responses.reduce((sum, r) => sum + r.responseTime, 0) / responses.length;
   
   console.log(`  📊 内容验证请求: ${responses.length}`);
-  console.log(`  ✅ 成功验证: ${successfulRequests} (${((successfulRequests/responses.length)*100).toFixed(1)}%)`);
+  console.log(`  ✅ 成功验证:
+    ${successfulRequests} (${((successfulRequests/responses.length)*100).toFixed(1)}%)`);
   console.log(`  ⏱️  平均验证时间: ${avgResponseTime.toFixed(2)}ms`);
   
   return {
@@ -257,10 +259,12 @@ async function invitationSystemLoadTest() {
   console.log('🎁 邀请系统负载测试');
   
   const operations = [
-    { path: '/api/invite/generate', method: 'POST', body: { userId: 'load-test-user', type: 'standard' } },
+    { path: '/api/invite/generate', method: 'POST',
+      body: { userId: 'load-test-user', type: 'standard' } },
     { path: '/api/invite/stats/load-test-user', method: 'GET' },
     { path: '/api/activities', method: 'GET' },
-    { path: '/api/notifications', method: 'POST', body: { userId: 'load-test-user', type: 'test', title: '测试', message: '负载测试' } }
+    { path: '/api/notifications', method: 'POST',
+      body: { userId: 'load-test-user', type: 'test', title: '测试', message: '负载测试' } }
   ];
   
   const results = [];
@@ -291,7 +295,8 @@ async function invitationSystemLoadTest() {
   const avgResponseTime = responses.reduce((sum, r) => sum + r.responseTime, 0) / responses.length;
   
   console.log(`  📊 邀请系统操作: ${responses.length}`);
-  console.log(`  ✅ 成功操作: ${successfulRequests} (${((successfulRequests/responses.length)*100).toFixed(1)}%)`);
+  console.log(`  ✅ 成功操作:
+    ${successfulRequests} (${((successfulRequests/responses.length)*100).toFixed(1)}%)`);
   console.log(`  ⏱️  平均响应时间: ${avgResponseTime.toFixed(2)}ms`);
   
   return {
@@ -339,7 +344,8 @@ async function databasePerformanceTest() {
   const avgResponseTime = responses.reduce((sum, r) => sum + r.responseTime, 0) / responses.length;
   
   console.log(`  📊 数据库查询: ${responses.length}`);
-  console.log(`  ✅ 成功查询: ${successfulRequests} (${((successfulRequests/responses.length)*100).toFixed(1)}%)`);
+  console.log(`  ✅ 成功查询:
+    ${successfulRequests} (${((successfulRequests/responses.length)*100).toFixed(1)}%)`);
   console.log(`  ⏱️  平均查询时间: ${avgResponseTime.toFixed(2)}ms`);
   
   return {
@@ -497,7 +503,8 @@ async function runPerformanceTests() {
       summary: {
         totalScenarios: results.length,
         successfulScenarios: results.filter(r => r.success !== false).length,
-        avgResponseTime: results.reduce((sum, r) => sum + (r.avgResponseTime || 0), 0) / results.length
+        avgResponseTime: results.reduce((sum,
+          r) => sum + (r.avgResponseTime || 0), 0) / results.length
       }
     };
     

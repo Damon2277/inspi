@@ -66,7 +66,7 @@ export class CustomMetricsCollector {
       debug: process.env.NODE_ENV === 'development',
       filter: () => true,
       transform: (metric) => metric,
-      ...config
+      ...config,
     };
   }
 
@@ -81,7 +81,7 @@ export class CustomMetricsCollector {
     this.startAutoReporting();
     logger.info('Custom metrics collector started', {
       bufferSize: this.config.bufferSize,
-      reportInterval: this.config.reportInterval
+      reportInterval: this.config.reportInterval,
     });
   }
 
@@ -104,7 +104,7 @@ export class CustomMetricsCollector {
 
     const fullMetric: CustomMetric = {
       ...metric,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     // 应用过滤器
@@ -121,7 +121,7 @@ export class CustomMetricsCollector {
       console.log(`[Custom Metrics] ${transformedMetric.name}:`, {
         value: transformedMetric.value,
         unit: transformedMetric.unit,
-        category: transformedMetric.category
+        category: transformedMetric.category,
       });
     }
 
@@ -133,7 +133,7 @@ export class CustomMetricsCollector {
     logger.debug('Custom metric recorded', {
       name: transformedMetric.name,
       value: transformedMetric.value,
-      category: transformedMetric.category
+      category: transformedMetric.category,
     });
   }
 
@@ -148,7 +148,7 @@ export class CustomMetricsCollector {
     const timer: PerformanceTimer = {
       name,
       startTime: performance.now(),
-      tags
+      tags,
     };
 
     this.timers.set(name, timer);
@@ -179,8 +179,8 @@ export class CustomMetricsCollector {
       category: 'performance',
       tags: {
         ...timer.tags,
-        ...additionalTags
-      }
+        ...additionalTags,
+      },
     });
 
     this.timers.delete(name);
@@ -196,7 +196,7 @@ export class CustomMetricsCollector {
       value,
       unit: 'count',
       category: 'business',
-      tags
+      tags,
     });
   }
 
@@ -209,33 +209,33 @@ export class CustomMetricsCollector {
     }
 
     const memory = (performance as any).memory;
-    
+
     this.recordMetric({
       name: `${name}.used`,
       value: memory.usedJSHeapSize,
       unit: 'bytes',
-      category: 'technical'
+      category: 'technical',
     });
 
     this.recordMetric({
       name: `${name}.total`,
       value: memory.totalJSHeapSize,
       unit: 'bytes',
-      category: 'technical'
+      category: 'technical',
     });
 
     this.recordMetric({
       name: `${name}.limit`,
       value: memory.jsHeapSizeLimit,
       unit: 'bytes',
-      category: 'technical'
+      category: 'technical',
     });
 
     this.recordMetric({
       name: `${name}.usage_percentage`,
       value: (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100,
       unit: 'percentage',
-      category: 'technical'
+      category: 'technical',
     });
   }
 
@@ -248,14 +248,14 @@ export class CustomMetricsCollector {
     }
 
     const connection = (navigator as any).connection;
-    
+
     if (connection.effectiveType) {
       this.recordMetric({
         name: 'network.effective_type',
         value: this.getConnectionTypeScore(connection.effectiveType),
         unit: 'score',
         category: 'technical',
-        tags: { type: connection.effectiveType }
+        tags: { type: connection.effectiveType },
       });
     }
 
@@ -264,7 +264,7 @@ export class CustomMetricsCollector {
         name: 'network.downlink',
         value: connection.downlink,
         unit: 'count',
-        category: 'technical'
+        category: 'technical',
       });
     }
 
@@ -273,7 +273,7 @@ export class CustomMetricsCollector {
         name: 'network.rtt',
         value: connection.rtt,
         unit: 'ms',
-        category: 'technical'
+        category: 'technical',
       });
     }
   }
@@ -289,8 +289,8 @@ export class CustomMetricsCollector {
       category: 'user-experience',
       tags: {
         action,
-        element: element || 'unknown'
-      }
+        element: element || 'unknown',
+      },
     });
   }
 
@@ -312,7 +312,7 @@ export class CustomMetricsCollector {
       name: 'page.dns_lookup',
       value: navigation.domainLookupEnd - navigation.domainLookupStart,
       unit: 'ms',
-      category: 'performance'
+      category: 'performance',
     });
 
     // TCP 连接时间
@@ -320,7 +320,7 @@ export class CustomMetricsCollector {
       name: 'page.tcp_connect',
       value: navigation.connectEnd - navigation.connectStart,
       unit: 'ms',
-      category: 'performance'
+      category: 'performance',
     });
 
     // 请求响应时间
@@ -328,7 +328,7 @@ export class CustomMetricsCollector {
       name: 'page.request_response',
       value: navigation.responseEnd - navigation.requestStart,
       unit: 'ms',
-      category: 'performance'
+      category: 'performance',
     });
 
     // DOM 解析时间
@@ -336,7 +336,7 @@ export class CustomMetricsCollector {
       name: 'page.dom_parse',
       value: navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
       unit: 'ms',
-      category: 'performance'
+      category: 'performance',
     });
 
     // 页面完全加载时间
@@ -344,7 +344,7 @@ export class CustomMetricsCollector {
       name: 'page.load_complete',
       value: navigation.loadEventEnd - navigation.loadEventStart,
       unit: 'ms',
-      category: 'performance'
+      category: 'performance',
     });
   }
 
@@ -364,21 +364,21 @@ export class CustomMetricsCollector {
         name: `resource.${type}.count`,
         value: stats.count,
         unit: 'count',
-        category: 'performance'
+        category: 'performance',
       });
 
       this.recordMetric({
         name: `resource.${type}.total_size`,
         value: stats.totalSize,
         unit: 'bytes',
-        category: 'performance'
+        category: 'performance',
       });
 
       this.recordMetric({
         name: `resource.${type}.avg_duration`,
         value: stats.avgDuration,
         unit: 'ms',
-        category: 'performance'
+        category: 'performance',
       });
     });
   }
@@ -391,7 +391,7 @@ export class CustomMetricsCollector {
 
     resources.forEach(resource => {
       const type = this.getResourceType(resource.name);
-      
+
       if (!stats[type]) {
         stats[type] = { count: 0, totalSize: 0, totalDuration: 0, avgDuration: 0 };
       }
@@ -430,7 +430,7 @@ export class CustomMetricsCollector {
       '2g': 2,
       '3g': 3,
       '4g': 4,
-      '5g': 5
+      '5g': 5,
     };
     return scores[type] || 0;
   }
@@ -492,15 +492,15 @@ export class CustomMetricsCollector {
       metrics,
       timestamp: Date.now(),
       url: typeof window !== 'undefined' ? window.location.href : '',
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : ''
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
     });
 
     const response = await fetch(this.config.reportEndpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body
+      body,
     });
 
     if (!response.ok) {
@@ -541,7 +541,7 @@ export class CustomMetricsCollector {
     const stats = {
       total: this.metrics.length,
       byCategory: {} as Record<string, number>,
-      byUnit: {} as Record<string, number>
+      byUnit: {} as Record<string, number>,
     };
 
     this.metrics.forEach(metric => {
@@ -570,7 +570,7 @@ export const metrics = {
   network: () => globalCustomMetricsCollector.recordNetworkMetrics(),
   interaction: (action: string, element?: string, duration?: number) => globalCustomMetricsCollector.recordUserInteraction(action, element, duration),
   pageLoad: () => globalCustomMetricsCollector.recordPageLoadMetrics(),
-  resources: () => globalCustomMetricsCollector.recordResourceMetrics()
+  resources: () => globalCustomMetricsCollector.recordResourceMetrics(),
 };
 
 export default CustomMetricsCollector;

@@ -21,19 +21,19 @@ describe('QualityGateSystem', () => {
           statements: 90,
           branches: 85,
           functions: 90,
-          lines: 90
+          lines: 90,
         },
         excludePatterns: ['**/*.test.ts'],
-        failOnThreshold: true
+        failOnThreshold: true,
       },
       performance: {
         enabled: true,
         thresholds: {
           maxRegressionPercent: 20,
           maxExecutionTime: 60000,
-          maxMemoryUsage: 512 * 1024 * 1024
+          maxMemoryUsage: 512 * 1024 * 1024,
         },
-        failOnRegression: true
+        failOnRegression: true,
       },
       security: {
         enabled: true,
@@ -41,9 +41,9 @@ describe('QualityGateSystem', () => {
           noHardcodedSecrets: true,
           noInsecureRandomness: true,
           noSqlInjection: true,
-          noXssVulnerabilities: true
+          noXssVulnerabilities: true,
         },
-        failOnViolation: true
+        failOnViolation: true,
       },
       compliance: {
         enabled: true,
@@ -51,10 +51,10 @@ describe('QualityGateSystem', () => {
           requireTestDocumentation: true,
           enforceNamingConventions: true,
           requireErrorHandling: true,
-          enforceTypeScript: true
+          enforceTypeScript: true,
         },
-        failOnViolation: false
-      }
+        failOnViolation: false,
+      },
     });
   });
 
@@ -69,11 +69,11 @@ describe('QualityGateSystem', () => {
           coverage: expect.any(Object),
           performance: expect.any(Object),
           security: expect.any(Object),
-          compliance: expect.any(Object)
+          compliance: expect.any(Object),
         },
         overallScore: expect.any(Number),
         recommendations: expect.any(Array),
-        blockers: expect.any(Array)
+        blockers: expect.any(Array),
       });
     });
 
@@ -84,27 +84,27 @@ describe('QualityGateSystem', () => {
         current: { statements: 95, branches: 90, functions: 95, lines: 95 },
         thresholds: { statements: 90, branches: 85, functions: 90, lines: 90 },
         violations: [],
-        uncoveredFiles: []
+        uncoveredFiles: [],
       };
 
       const mockPerformanceResult = {
         passed: true,
         current: { executionTime: 30000, memoryUsage: 256 * 1024 * 1024, testCount: 100 },
         regressions: { executionTime: 0, memoryUsage: 0 },
-        violations: []
+        violations: [],
       };
 
       const mockSecurityResult = {
         passed: true,
         violations: [],
         riskLevel: 'low' as const,
-        summary: { total: 0, critical: 0, high: 0, medium: 0, low: 0 }
+        summary: { total: 0, critical: 0, high: 0, medium: 0, low: 0 },
       };
 
       const mockComplianceResult = {
         passed: true,
         violations: [],
-        summary: { total: 0, documentation: 0, naming: 0, errorHandling: 0, typeScript: 0 }
+        summary: { total: 0, documentation: 0, naming: 0, errorHandling: 0, typeScript: 0 },
       };
 
       // Mock the check methods
@@ -126,7 +126,7 @@ describe('QualityGateSystem', () => {
         current: { statements: 80, branches: 75, functions: 85, lines: 80 },
         thresholds: { statements: 90, branches: 85, functions: 90, lines: 90 },
         violations: ['Statement coverage 80% is below threshold 90%'],
-        uncoveredFiles: ['src/uncovered.ts']
+        uncoveredFiles: ['src/uncovered.ts'],
       };
 
       jest.spyOn(qualityGate, 'checkCoverage').mockResolvedValue(mockCoverageResult);
@@ -147,10 +147,10 @@ describe('QualityGateSystem', () => {
           line: 10,
           message: 'Hardcoded API key detected',
           recommendation: 'Use environment variables',
-          evidence: 'apiKey = "sk-1234567890"'
+          evidence: 'apiKey = "sk-1234567890"',
         }],
         riskLevel: 'critical' as const,
-        summary: { total: 1, critical: 1, high: 0, medium: 0, low: 0 }
+        summary: { total: 1, critical: 1, high: 0, medium: 0, low: 0 },
       };
 
       jest.spyOn(qualityGate, 'checkSecurity').mockResolvedValue(mockSecurityResult);
@@ -186,13 +186,13 @@ describe('QualityGateSystem', () => {
             current: { statements: 80, branches: 75, functions: 85, lines: 80 },
             thresholds: { statements: 90, branches: 85, functions: 90, lines: 90 },
             violations: ['Coverage too low'],
-            uncoveredFiles: []
+            uncoveredFiles: [],
           },
           performance: {
             passed: true,
             current: { executionTime: 30000, memoryUsage: 256 * 1024 * 1024, testCount: 100 },
             regressions: { executionTime: 0, memoryUsage: 0 },
-            violations: []
+            violations: [],
           },
           security: {
             passed: false,
@@ -203,20 +203,20 @@ describe('QualityGateSystem', () => {
               line: 1,
               message: 'Test violation',
               recommendation: 'Fix it',
-              evidence: 'code'
+              evidence: 'code',
             }],
             riskLevel: 'high' as const,
-            summary: { total: 1, critical: 0, high: 1, medium: 0, low: 0 }
+            summary: { total: 1, critical: 0, high: 1, medium: 0, low: 0 },
           },
           compliance: {
             passed: true,
             violations: [],
-            summary: { total: 0, documentation: 0, naming: 0, errorHandling: 0, typeScript: 0 }
-          }
+            summary: { total: 0, documentation: 0, naming: 0, errorHandling: 0, typeScript: 0 },
+          },
         },
         overallScore: 75,
         recommendations: ['Improve coverage'],
-        blockers: ['Coverage too low']
+        blockers: ['Coverage too low'],
       };
 
       const report = qualityGate.generateReport(mockResult);
@@ -236,9 +236,9 @@ describe('QualityGateSystem', () => {
             statements: 95,
             branches: 90,
             functions: 95,
-            lines: 95
-          }
-        }
+            lines: 95,
+          },
+        },
       };
 
       qualityGate.updateConfig(newConfig);
@@ -258,7 +258,7 @@ describe('QualityGateSystem', () => {
 
     it('should skip coverage when disabled', async () => {
       qualityGate.updateConfig({
-        coverage: { enabled: false }
+        coverage: { enabled: false },
       });
 
       const result = await qualityGate.checkCoverage();
@@ -293,26 +293,26 @@ describe('QualityGateSystem', () => {
           current: { statements: 95, branches: 90, functions: 95, lines: 95 },
           thresholds: { statements: 90, branches: 85, functions: 90, lines: 90 },
           violations: [],
-          uncoveredFiles: []
+          uncoveredFiles: [],
         },
         performance: {
           passed: true,
           current: { executionTime: 30000, memoryUsage: 256 * 1024 * 1024, testCount: 100 },
           baseline: { executionTime: 30000, memoryUsage: 256 * 1024 * 1024, testCount: 100 },
           regressions: { executionTime: 0, memoryUsage: 0 },
-          violations: []
+          violations: [],
         },
         security: {
           passed: true,
           violations: [],
           riskLevel: 'low' as const,
-          summary: { total: 0, critical: 0, high: 0, medium: 0, low: 0 }
+          summary: { total: 0, critical: 0, high: 0, medium: 0, low: 0 },
         },
         compliance: {
           passed: true,
           violations: [],
-          summary: { total: 0, documentation: 0, naming: 0, errorHandling: 0, typeScript: 0 }
-        }
+          summary: { total: 0, documentation: 0, naming: 0, errorHandling: 0, typeScript: 0 },
+        },
       };
 
       jest.spyOn(qualityGate, 'checkCoverage').mockResolvedValue(mockResults.coverage);
@@ -335,41 +335,41 @@ describe('QualityGateSystem', () => {
           current: { statements: 80, branches: 75, functions: 85, lines: 80 },
           thresholds: { statements: 90, branches: 85, functions: 90, lines: 90 },
           violations: ['Low coverage'],
-          uncoveredFiles: ['file1.ts', 'file2.ts']
+          uncoveredFiles: ['file1.ts', 'file2.ts'],
         },
         performance: {
           passed: false,
           current: { executionTime: 90000, memoryUsage: 512 * 1024 * 1024, testCount: 100 },
           baseline: { executionTime: 60000, memoryUsage: 256 * 1024 * 1024, testCount: 100 },
           regressions: { executionTime: 50, memoryUsage: 100 },
-          violations: ['Performance regression']
+          violations: ['Performance regression'],
         },
         security: {
           passed: false,
-          violations: [{ 
-            rule: 'test', 
-            severity: 'critical' as const, 
-            file: 'test.ts', 
-            line: 1, 
-            message: 'Critical issue', 
+          violations: [{
+            rule: 'test',
+            severity: 'critical' as const,
+            file: 'test.ts',
+            line: 1,
+            message: 'Critical issue',
             recommendation: 'Fix it',
-            evidence: 'code'
+            evidence: 'code',
           }],
           riskLevel: 'critical' as const,
-          summary: { total: 1, critical: 1, high: 0, medium: 0, low: 0 }
+          summary: { total: 1, critical: 1, high: 0, medium: 0, low: 0 },
         },
         compliance: {
           passed: false,
-          violations: [{ 
-            rule: 'test', 
-            severity: 'error' as const, 
-            file: 'test.ts', 
-            message: 'Compliance issue', 
+          violations: [{
+            rule: 'test',
+            severity: 'error' as const,
+            file: 'test.ts',
+            message: 'Compliance issue',
             recommendation: 'Fix it',
-            category: 'documentation' as const
+            category: 'documentation' as const,
           }],
-          summary: { total: 1, documentation: 1, naming: 0, errorHandling: 0, typeScript: 0 }
-        }
+          summary: { total: 1, documentation: 1, naming: 0, errorHandling: 0, typeScript: 0 },
+        },
       };
 
       jest.spyOn(qualityGate, 'checkCoverage').mockResolvedValue(mockResults.coverage);

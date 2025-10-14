@@ -39,7 +39,7 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const freeUser = createMockUser({
         subscription: { plan: 'free', expiresAt: null, autoRenew: false },
-        usage: { dailyGenerations: 3, dailyReuses: 1, lastResetDate: new Date() }
+        usage: { dailyGenerations: 3, dailyReuses: 1, lastResetDate: new Date() },
       });
 
       // Mock the canGenerate method
@@ -56,7 +56,7 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const freeUser = createMockUser({
         subscription: { plan: 'free', expiresAt: null, autoRenew: false },
-        usage: { dailyGenerations: 5, dailyReuses: 2, lastResetDate: new Date() }
+        usage: { dailyGenerations: 5, dailyReuses: 2, lastResetDate: new Date() },
       });
 
       // Mock the canGenerate method to simulate limit reached
@@ -73,7 +73,7 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const proUser = createMockUser({
         subscription: { plan: 'pro', expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), autoRenew: true },
-        usage: { dailyGenerations: 15, dailyReuses: 8, lastResetDate: new Date() }
+        usage: { dailyGenerations: 15, dailyReuses: 8, lastResetDate: new Date() },
       });
 
       // Mock the canGenerate method for pro user
@@ -90,7 +90,7 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const superUser = createMockUser({
         subscription: { plan: 'super', expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), autoRenew: true },
-        usage: { dailyGenerations: 80, dailyReuses: 25, lastResetDate: new Date() }
+        usage: { dailyGenerations: 80, dailyReuses: 25, lastResetDate: new Date() },
       });
 
       // Mock the canGenerate method for super user
@@ -107,11 +107,11 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const user = createMockUser({
         subscription: { plan: 'free', expiresAt: null, autoRenew: false },
-        usage: { 
-          dailyGenerations: 5, 
-          dailyReuses: 2, 
-          lastResetDate: new Date(Date.now() - 25 * 60 * 60 * 1000) // 25小时前
-        }
+        usage: {
+          dailyGenerations: 5,
+          dailyReuses: 2,
+          lastResetDate: new Date(Date.now() - 25 * 60 * 60 * 1000), // 25小时前
+        },
       });
 
       // Mock resetDailyUsage to simulate reset behavior
@@ -141,7 +141,7 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const freeUser = createMockUser({
         subscription: { plan: 'free', expiresAt: null, autoRenew: false },
-        usage: { dailyGenerations: 2, dailyReuses: 1, lastResetDate: new Date() }
+        usage: { dailyGenerations: 2, dailyReuses: 1, lastResetDate: new Date() },
       });
 
       freeUser.canReuse = jest.fn().mockReturnValue(true);
@@ -157,7 +157,7 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const freeUser = createMockUser({
         subscription: { plan: 'free', expiresAt: null, autoRenew: false },
-        usage: { dailyGenerations: 3, dailyReuses: 2, lastResetDate: new Date() }
+        usage: { dailyGenerations: 3, dailyReuses: 2, lastResetDate: new Date() },
       });
 
       freeUser.canReuse = jest.fn().mockReturnValue(false);
@@ -173,7 +173,7 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const proUser = createMockUser({
         subscription: { plan: 'pro', expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), autoRenew: true },
-        usage: { dailyGenerations: 10, dailyReuses: 8, lastResetDate: new Date() }
+        usage: { dailyGenerations: 10, dailyReuses: 8, lastResetDate: new Date() },
       });
 
       proUser.canReuse = jest.fn().mockReturnValue(true);
@@ -189,7 +189,7 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const superUser = createMockUser({
         subscription: { plan: 'super', expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), autoRenew: true },
-        usage: { dailyGenerations: 50, dailyReuses: 28, lastResetDate: new Date() }
+        usage: { dailyGenerations: 50, dailyReuses: 28, lastResetDate: new Date() },
       });
 
       superUser.canReuse = jest.fn().mockReturnValue(true);
@@ -206,15 +206,15 @@ describe('权限验证边界条件测试', () => {
     it('应该验证有效的Pro订阅', () => {
       // Arrange
       const proUser = createMockUser({
-        subscription: { 
-          plan: 'pro', 
+        subscription: {
+          plan: 'pro',
           expiresAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15天后过期
-          autoRenew: true 
-        }
+          autoRenew: true,
+        },
       });
 
       // Act
-      const isValidSubscription = proUser.subscription.expiresAt && 
+      const isValidSubscription = proUser.subscription.expiresAt &&
                                  proUser.subscription.expiresAt > new Date();
 
       // Assert
@@ -225,15 +225,15 @@ describe('权限验证边界条件测试', () => {
     it('应该识别过期的订阅', () => {
       // Arrange
       const expiredUser = createMockUser({
-        subscription: { 
-          plan: 'pro', 
+        subscription: {
+          plan: 'pro',
           expiresAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5天前过期
-          autoRenew: false 
-        }
+          autoRenew: false,
+        },
       });
 
       // Act
-      const isValidSubscription = expiredUser.subscription.expiresAt && 
+      const isValidSubscription = expiredUser.subscription.expiresAt &&
                                  expiredUser.subscription.expiresAt > new Date();
 
       // Assert
@@ -243,15 +243,15 @@ describe('权限验证边界条件测试', () => {
     it('应该处理没有过期时间的免费订阅', () => {
       // Arrange
       const freeUser = createMockUser({
-        subscription: { 
-          plan: 'free', 
-          expiresAt: null, 
-          autoRenew: false 
-        }
+        subscription: {
+          plan: 'free',
+          expiresAt: null,
+          autoRenew: false,
+        },
       });
 
       // Act
-      const isValidSubscription = freeUser.subscription.plan === 'free' || 
+      const isValidSubscription = freeUser.subscription.plan === 'free' ||
                                  (freeUser.subscription.expiresAt && freeUser.subscription.expiresAt > new Date());
 
       // Assert
@@ -261,16 +261,16 @@ describe('权限验证边界条件测试', () => {
     it('应该处理边界时间的订阅过期', () => {
       // Arrange
       const borderlineUser = createMockUser({
-        subscription: { 
-          plan: 'pro', 
+        subscription: {
+          plan: 'pro',
           expiresAt: new Date(Date.now() + 1000), // 1秒后过期
-          autoRenew: false 
-        }
+          autoRenew: false,
+        },
       });
 
       // Act - 等待过期
       setTimeout(() => {
-        const isValidSubscription = borderlineUser.subscription.expiresAt && 
+        const isValidSubscription = borderlineUser.subscription.expiresAt &&
                                    borderlineUser.subscription.expiresAt > new Date();
         expect(isValidSubscription).toBe(false);
       }, 1100);
@@ -282,7 +282,7 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const highContributorUser = createMockUser({
         contributionScore: 1000,
-        subscription: { plan: 'free', expiresAt: null, autoRenew: false }
+        subscription: { plan: 'free', expiresAt: null, autoRenew: false },
       });
 
       // Act - 模拟基于贡献分数的额外权限
@@ -298,7 +298,7 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const lowContributorUser = createMockUser({
         contributionScore: 50,
-        subscription: { plan: 'free', expiresAt: null, autoRenew: false }
+        subscription: { plan: 'free', expiresAt: null, autoRenew: false },
       });
 
       // Act
@@ -314,7 +314,7 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const negativeContributorUser = createMockUser({
         contributionScore: -100,
-        subscription: { plan: 'free', expiresAt: null, autoRenew: false }
+        subscription: { plan: 'free', expiresAt: null, autoRenew: false },
       });
 
       // Act
@@ -331,7 +331,7 @@ describe('权限验证边界条件测试', () => {
     it('应该处理未定义的订阅信息', () => {
       // Arrange
       const userWithoutSubscription = createMockUser({
-        subscription: undefined as any
+        subscription: undefined as any,
       });
 
       // Act & Assert
@@ -344,7 +344,7 @@ describe('权限验证边界条件测试', () => {
     it('应该处理未定义的使用信息', () => {
       // Arrange
       const userWithoutUsage = createMockUser({
-        usage: undefined as any
+        usage: undefined as any,
       });
 
       // Act & Assert
@@ -360,8 +360,8 @@ describe('权限验证边界条件测试', () => {
         usage: {
           dailyGenerations: Number.MAX_SAFE_INTEGER,
           dailyReuses: Number.MAX_SAFE_INTEGER,
-          lastResetDate: new Date()
-        }
+          lastResetDate: new Date(),
+        },
       });
 
       extremeUser.canGenerate = jest.fn().mockReturnValue(false);
@@ -382,8 +382,8 @@ describe('权限验证边界条件测试', () => {
         usage: {
           dailyGenerations: 3,
           dailyReuses: 1,
-          lastResetDate: new Date('invalid-date')
-        }
+          lastResetDate: new Date('invalid-date'),
+        },
       });
 
       // Act & Assert
@@ -399,19 +399,19 @@ describe('权限验证边界条件测试', () => {
         usage: {
           dailyGenerations: 3,
           dailyReuses: 1,
-          lastResetDate: new Date(Date.now() + 24 * 60 * 60 * 1000) // 明天
-        }
+          lastResetDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // 明天
+        },
       });
 
       userWithFutureDate.resetDailyUsage = jest.fn().mockImplementation(() => {
         const now = new Date();
         const lastReset = userWithFutureDate.usage.lastResetDate;
-        
+
         // 如果重置日期在未来，不应该重置
         if (lastReset > now) {
           return; // 不重置
         }
-        
+
         userWithFutureDate.usage.dailyGenerations = 0;
         userWithFutureDate.usage.dailyReuses = 0;
         userWithFutureDate.usage.lastResetDate = now;
@@ -430,7 +430,7 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const user = createMockUser({
         subscription: { plan: 'pro', expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), autoRenew: true },
-        usage: { dailyGenerations: 10, dailyReuses: 5, lastResetDate: new Date() }
+        usage: { dailyGenerations: 10, dailyReuses: 5, lastResetDate: new Date() },
       });
 
       user.canGenerate = jest.fn().mockReturnValue(true);
@@ -439,7 +439,7 @@ describe('权限验证边界条件测试', () => {
       // Act - 并发检查权限
       const promises = Array(100).fill(null).map(async () => ({
         canGenerate: user.canGenerate(),
-        canReuse: user.canReuse()
+        canReuse: user.canReuse(),
       }));
 
       const results = await Promise.all(promises);
@@ -456,11 +456,11 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const user = createMockUser({
         subscription: { plan: 'free', expiresAt: null, autoRenew: false },
-        usage: { dailyGenerations: 4, dailyReuses: 1, lastResetDate: new Date() }
+        usage: { dailyGenerations: 4, dailyReuses: 1, lastResetDate: new Date() },
       });
 
       let generationCount = user.usage.dailyGenerations;
-      
+
       user.canGenerate = jest.fn().mockImplementation(() => {
         const canGen = generationCount < 5;
         if (canGen) {
@@ -484,7 +484,7 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const user = createMockUser({
         subscription: { plan: 'free', expiresAt: null, autoRenew: false },
-        usage: { dailyGenerations: 5, dailyReuses: 2, lastResetDate: new Date() }
+        usage: { dailyGenerations: 5, dailyReuses: 2, lastResetDate: new Date() },
       });
 
       // 模拟免费用户已达限制
@@ -493,7 +493,7 @@ describe('权限验证边界条件测试', () => {
       // Act - 升级到Pro
       user.subscription.plan = 'pro';
       user.subscription.expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      
+
       // 更新权限检查逻辑
       user.canGenerate = jest.fn().mockReturnValue(true); // Pro用户限制更高
 
@@ -507,12 +507,12 @@ describe('权限验证边界条件测试', () => {
     it('应该处理订阅过期后的权限降级', () => {
       // Arrange
       const user = createMockUser({
-        subscription: { 
-          plan: 'pro', 
+        subscription: {
+          plan: 'pro',
           expiresAt: new Date(Date.now() + 1000), // 1秒后过期
-          autoRenew: false 
+          autoRenew: false,
         },
-        usage: { dailyGenerations: 15, dailyReuses: 8, lastResetDate: new Date() }
+        usage: { dailyGenerations: 15, dailyReuses: 8, lastResetDate: new Date() },
       });
 
       user.canGenerate = jest.fn().mockReturnValue(true);
@@ -521,7 +521,7 @@ describe('权限验证边界条件测试', () => {
       setTimeout(() => {
         // 模拟订阅过期后的权限检查
         const isExpired = user.subscription.expiresAt && user.subscription.expiresAt <= new Date();
-        
+
         if (isExpired) {
           user.subscription.plan = 'free'; // 降级到免费
           user.canGenerate = jest.fn().mockReturnValue(false); // 免费用户限制
@@ -540,7 +540,7 @@ describe('权限验证边界条件测试', () => {
       const adminUser = createMockUser({
         email: 'admin@example.com', // 假设管理员邮箱
         subscription: { plan: 'free', expiresAt: null, autoRenew: false },
-        usage: { dailyGenerations: 1000, dailyReuses: 500, lastResetDate: new Date() }
+        usage: { dailyGenerations: 1000, dailyReuses: 500, lastResetDate: new Date() },
       });
 
       // 模拟管理员权限检查
@@ -562,15 +562,15 @@ describe('权限验证边界条件测试', () => {
       const testUser = createMockUser({
         email: 'test@example.com',
         subscription: { plan: 'free', expiresAt: null, autoRenew: false },
-        usage: { dailyGenerations: 10, dailyReuses: 5, lastResetDate: new Date() }
+        usage: { dailyGenerations: 10, dailyReuses: 5, lastResetDate: new Date() },
       });
 
       // 模拟测试环境权限
       const isTestEnvironment = process.env.NODE_ENV === 'test';
       const isTestUser = testUser.email.includes('test@');
-      
+
       testUser.canGenerate = jest.fn().mockReturnValue(
-        (isTestEnvironment && isTestUser) || testUser.usage.dailyGenerations < 5
+        (isTestEnvironment && isTestUser) || testUser.usage.dailyGenerations < 5,
       );
 
       // Act
@@ -586,7 +586,7 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const user = createMockUser({
         subscription: { plan: 'pro', expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), autoRenew: true },
-        usage: { dailyGenerations: 10, dailyReuses: 5, lastResetDate: new Date() }
+        usage: { dailyGenerations: 10, dailyReuses: 5, lastResetDate: new Date() },
       });
 
       let checkCount = 0;
@@ -617,7 +617,7 @@ describe('权限验证边界条件测试', () => {
       // Arrange
       const user = createMockUser({
         subscription: { plan: 'free', expiresAt: null, autoRenew: false },
-        usage: { dailyGenerations: 4, dailyReuses: 1, lastResetDate: new Date() }
+        usage: { dailyGenerations: 4, dailyReuses: 1, lastResetDate: new Date() },
       });
 
       let cachedResult: boolean | null = null;
@@ -633,11 +633,11 @@ describe('权限验证边界条件测试', () => {
 
       // Act - 首次检查
       const firstCheck = user.canGenerate();
-      
+
       // 模拟使用增加，清除缓存
       generationCount = 5;
       cachedResult = null;
-      
+
       const secondCheck = user.canGenerate();
 
       // Assert

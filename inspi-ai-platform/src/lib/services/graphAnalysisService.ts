@@ -3,15 +3,15 @@
  * 提供知识图谱的分析功能，包括中心性分析、聚类分析、路径查找等
  */
 
+import { ALGORITHM_CONFIG } from '@/lib/config/knowledgeGraph';
 import { KnowledgeGraphModel } from '@/lib/models/KnowledgeGraph';
 import {
   GraphNode,
   GraphEdge,
   GraphAnalysis,
   TraversalOptions,
-  PathFindingOptions
-} from '@/types/knowledgeGraph';
-import { ALGORITHM_CONFIG } from '@/lib/config/knowledgeGraph';
+  PathFindingOptions,
+} from '@/shared/types/knowledgeGraph';
 
 // ============= 图数据结构 =============
 
@@ -70,7 +70,7 @@ export class GraphAnalysisService {
       nodes,
       edges,
       adjacencyList,
-      reverseAdjacencyList
+      reverseAdjacencyList,
     };
   }
 
@@ -80,11 +80,11 @@ export class GraphAnalysisService {
   static async analyzeGraph(graphId: string, userId?: string): Promise<GraphAnalysis> {
     try {
       // 获取图谱数据
-      const graph = await KnowledgeGraphModel.findOne({
+      const graph = await (KnowledgeGraphModel as any).findOne({
         $or: [
           { _id: graphId, userId },
-          { _id: graphId, 'metadata.isPublic': true }
-        ]
+          { _id: graphId, 'metadata.isPublic': true },
+        ],
       });
 
       if (!graph) {
@@ -98,7 +98,7 @@ export class GraphAnalysisService {
         this.calculateCentrality(graphData),
         this.detectClusters(graphData),
         this.findLearningPaths(graphData),
-        this.generateRecommendations(graphData)
+        this.generateRecommendations(graphData),
       ]);
 
       return {
@@ -106,7 +106,7 @@ export class GraphAnalysisService {
         centrality,
         clusters,
         learningPaths,
-        recommendations
+        recommendations,
       };
     } catch (error) {
       console.error('图谱分析失败:', error);
@@ -118,7 +118,7 @@ export class GraphAnalysisService {
    * 计算节点中心性
    */
   private static async calculateCentrality(
-    graphData: GraphData
+    graphData: GraphData,
   ): Promise<Array<{ nodeId: string; score: number }>> {
     const { nodes, adjacencyList } = graphData;
     const centrality: Array<{ nodeId: string; score: number }> = [];
@@ -130,7 +130,7 @@ export class GraphAnalysisService {
     nodes.forEach(node => {
       centrality.push({
         nodeId: node.id,
-        score: pageRankScores.get(node.id) || 0
+        score: pageRankScores.get(node.id) || 0,
       });
     });
 
@@ -155,7 +155,7 @@ export class GraphAnalysisService {
     // 初始化PageRank值
     const pageRank = new Map<string, number>();
     const newPageRank = new Map<string, number>();
-    
+
     nodes.forEach(node => {
       pageRank.set(node.id, 1.0 / nodeCount);
       newPageRank.set(node.id, 0);
@@ -174,10 +174,10 @@ export class GraphAnalysisService {
       nodes.forEach(node => {
         const currentPR = pageRank.get(node.id) || 0;
         const outLinks = adjacencyList.get(node.id) || [];
-        
+
         if (outLinks.length > 0) {
           const contribution = currentPR / outLinks.length;
-          
+
           outLinks.forEach(({ nodeId: targetId }) => {
             const currentTargetPR = newPageRank.get(targetId) || 0;
             newPageRank.set(targetId, currentTargetPR + dampingFactor * contribution);
@@ -189,11 +189,11 @@ export class GraphAnalysisService {
       nodes.forEach(node => {
         const oldValue = pageRank.get(node.id) || 0;
         const newValue = newPageRank.get(node.id) || 0;
-        
+
         if (Math.abs(newValue - oldValue) > tolerance) {
           hasConverged = false;
         }
-        
+
         pageRank.set(node.id, newValue);
       });
 
@@ -209,10 +209,10 @@ export class GraphAnalysisService {
    * 检测图谱聚类
    */
   private static async detectClusters(
-    graphData: GraphData
+    graphData: GraphData,
   ): Promise<Array<{ id: string; nodeIds: string[]; label: string }>> {
     const { nodes, adjacencyList } = graphData;
-    
+
     // 使用简单的连通分量算法进行聚类
     const visited = new Set<string>();
     const clusters: Array<{ id: string; nodeIds: string[]; label: string }> = [];
@@ -221,25 +221,25 @@ export class GraphAnalysisService {
     for (const node of nodes) {
       if (!visited.has(node.id)) {
         const cluster = this.dfsCluster(node.id, adjacencyList, visited);
-        
+
         if (cluster.length > 1) { // 只保留包含多个节点的聚类
           // 生成聚类标签（使用最常见的节点类型）
-          const nodeTypes = cluster.map(nodeId => 
-            nodes.find(n => n.id === nodeId)?.type
+          const nodeTypes = cluster.map(nodeId =>
+            (nodes as any).find(n => n.id === nodeId)?.type,
           ).filter(Boolean);
-          
+
           const typeCount = nodeTypes.reduce((acc, type) => {
             acc[type!] = (acc[type!] || 0) + 1;
             return acc;
           }, {} as Record<string, number>);
-          
-          const dominantType = Object.entries(typeCount)
-            .sort(([,a], [,b]) => b - a)[0]?.[0] || 'unknown';
+
+          const dominantType = (Object.entries(typeCount) as Array<[string, number]>)
+            .sort(([, a], [, b]) => b - a)[0]?.[0] || 'unknown';
 
           clusters.push({
             id: `cluster_${clusterId++}`,
             nodeIds: cluster,
-            label: `${dominantType}聚类 (${cluster.length}个节点)`
+            label: `${dominantType}聚类 (${cluster.length}个节点)`,
           });
         }
       }
@@ -254,14 +254,14 @@ export class GraphAnalysisService {
   private static dfsCluster(
     startNodeId: string,
     adjacencyList: Map<string, Array<{ nodeId: string; edge: GraphEdge }>>,
-    visited: Set<string>
+    visited: Set<string>,
   ): string[] {
     const cluster: string[] = [];
     const stack: string[] = [startNodeId];
 
     while (stack.length > 0) {
       const nodeId = stack.pop()!;
-      
+
       if (!visited.has(nodeId)) {
         visited.add(nodeId);
         cluster.push(nodeId);
@@ -269,7 +269,7 @@ export class GraphAnalysisService {
         const neighbors = adjacencyList.get(nodeId) || [];
         neighbors.forEach(({ nodeId: neighborId, edge }) => {
           // 只考虑强关联的边（相关、相似、扩展关系）
-          if (['related', 'similar', 'extends'].includes(edge.type) && 
+          if (['related', 'similar', 'extends'].includes(edge.type) &&
               !visited.has(neighborId)) {
             stack.push(neighborId);
           }
@@ -284,7 +284,7 @@ export class GraphAnalysisService {
    * 查找学习路径
    */
   private static async findLearningPaths(
-    graphData: GraphData
+    graphData: GraphData,
   ): Promise<Array<{
     from: string;
     to: string;
@@ -318,24 +318,24 @@ export class GraphAnalysisService {
           basicNode.id,
           advancedNode.id,
           graphData,
-          { preferredEdgeTypes: ['prerequisite', 'contains'] }
+          { preferredEdgeTypes: ['prerequisite', 'contains'] },
         );
 
         if (path && path.length > 1) {
           // 计算路径难度（基于节点难度的平均值）
-          const pathNodes = path.map(nodeId => 
-            nodes.find(n => n.id === nodeId)
+          const pathNodes = path.map(nodeId =>
+            (nodes as any).find(n => n.id === nodeId),
           ).filter(Boolean);
-          
-          const avgDifficulty = pathNodes.reduce((sum, node) => 
-            sum + (node!.metadata.difficulty || 3), 0
+
+          const avgDifficulty = pathNodes.reduce((sum, node) =>
+            sum + (node!.metadata.difficulty || 3), 0,
           ) / pathNodes.length;
 
           learningPaths.push({
             from: basicNode.id,
             to: advancedNode.id,
             path,
-            difficulty: avgDifficulty
+            difficulty: avgDifficulty,
           });
         }
       }
@@ -354,7 +354,7 @@ export class GraphAnalysisService {
     startId: string,
     endId: string,
     graphData: GraphData,
-    options: PathFindingOptions = {}
+    options: PathFindingOptions = {},
   ): string[] | null {
     const { adjacencyList } = graphData;
     const { preferredEdgeTypes = [], avoidNodes = [] } = options;
@@ -396,24 +396,24 @@ export class GraphAnalysisService {
         // 重构路径
         const path: string[] = [];
         let current: string | null = endId;
-        
+
         while (current !== null) {
           path.unshift(current);
           current = previous.get(current) || null;
         }
-        
+
         return path;
       }
 
       // 更新邻居节点的距离
       const neighbors = adjacencyList.get(currentNode) || [];
-      
+
       for (const { nodeId: neighborId, edge } of neighbors) {
         if (!unvisited.has(neighborId)) continue;
 
         // 计算边权重
         let weight = edge.weight;
-        
+
         // 如果有偏好的边类型，给予权重优惠
         if (preferredEdgeTypes.includes(edge.type)) {
           weight *= 0.5;
@@ -437,7 +437,7 @@ export class GraphAnalysisService {
    * 生成改进建议
    */
   private static async generateRecommendations(
-    graphData: GraphData
+    graphData: GraphData,
   ): Promise<Array<{
     type: 'missing_connection' | 'new_node' | 'work_suggestion';
     description: string;
@@ -459,7 +459,7 @@ export class GraphAnalysisService {
         type: 'missing_connection',
         description: `建议在"${connection.sourceLabel}"和"${connection.targetLabel}"之间添加${connection.edgeType}关系`,
         confidence: connection.confidence,
-        data: connection
+        data: connection,
       });
     });
 
@@ -470,7 +470,7 @@ export class GraphAnalysisService {
         type: 'new_node',
         description: `建议添加"${suggestion.label}"节点来完善知识结构`,
         confidence: suggestion.confidence,
-        data: suggestion
+        data: suggestion,
       });
     });
 
@@ -481,7 +481,7 @@ export class GraphAnalysisService {
         type: 'work_suggestion',
         description: `节点"${suggestion.nodeLabel}"缺少相关作品，建议添加${suggestion.workType}类型的内容`,
         confidence: suggestion.confidence,
-        data: suggestion
+        data: suggestion,
       });
     });
 
@@ -519,9 +519,9 @@ export class GraphAnalysisService {
         const node2 = nodes[j];
 
         // 检查是否已存在连接
-        const hasConnection = edges.some(edge => 
+        const hasConnection = edges.some(edge =>
           (edge.source === node1.id && edge.target === node2.id) ||
-          (edge.source === node2.id && edge.target === node1.id)
+          (edge.source === node2.id && edge.target === node1.id),
         );
 
         if (!hasConnection) {
@@ -536,8 +536,8 @@ export class GraphAnalysisService {
 
           // 基于标签相似性判断
           if (node1.metadata.tags && node2.metadata.tags) {
-            const commonTags = node1.metadata.tags.filter(tag => 
-              node2.metadata.tags!.includes(tag)
+            const commonTags = node1.metadata.tags.filter(tag =>
+              node2.metadata.tags!.includes(tag),
             );
             if (commonTags.length > 0) {
               confidence += commonTags.length * 0.2;
@@ -559,7 +559,7 @@ export class GraphAnalysisService {
               sourceLabel: node1.label,
               targetLabel: node2.label,
               edgeType,
-              confidence: Math.min(confidence, 1.0)
+              confidence: Math.min(confidence, 1.0),
             });
           }
         }
@@ -597,13 +597,13 @@ export class GraphAnalysisService {
     expectedTypes.forEach(type => {
       const count = typeCount[type] || 0;
       const totalNodes = nodes.length;
-      
+
       if (totalNodes > 5 && count / totalNodes < 0.1) {
         suggestions.push({
           label: `新的${type}节点`,
           type,
           level: type === 'subject' ? 0 : type === 'chapter' ? 1 : 2,
-          confidence: 0.6
+          confidence: 0.6,
         });
       }
     });
@@ -629,8 +629,8 @@ export class GraphAnalysisService {
     }> = [];
 
     // 找到没有作品的节点
-    const nodesWithoutWorks = nodes.filter(node => 
-      node.metadata.workCount === 0
+    const nodesWithoutWorks = nodes.filter(node =>
+      node.metadata.workCount === 0,
     );
 
     nodesWithoutWorks.forEach(node => {
@@ -660,7 +660,7 @@ export class GraphAnalysisService {
         nodeId: node.id,
         nodeLabel: node.label,
         workType,
-        confidence
+        confidence,
       });
     });
 
@@ -673,10 +673,10 @@ export class GraphAnalysisService {
   private static calculateStringSimilarity(str1: string, str2: string): number {
     const set1 = new Set(str1.toLowerCase().split(''));
     const set2 = new Set(str2.toLowerCase().split(''));
-    
+
     const intersection = new Set([...set1].filter(x => set2.has(x)));
     const union = new Set([...set1, ...set2]);
-    
+
     return intersection.size / union.size;
   }
 
@@ -686,13 +686,13 @@ export class GraphAnalysisService {
   static traverseGraph(
     graphData: GraphData,
     startNodeId: string,
-    options: TraversalOptions = {}
+    options: TraversalOptions = {},
   ): string[] {
     const {
       maxDepth = 10,
       direction = 'forward',
       edgeTypes = [],
-      nodeTypes = []
+      nodeTypes = [],
     } = options;
 
     const visited = new Set<string>();
@@ -705,9 +705,9 @@ export class GraphAnalysisService {
       if (visited.has(nodeId) || depth > maxDepth) continue;
 
       visited.add(nodeId);
-      
+
       // 检查节点类型过滤
-      const node = graphData.nodes.find(n => n.id === nodeId);
+      const node = (graphData.nodes as any).find(n => n.id === nodeId);
       if (node && nodeTypes.length > 0 && !nodeTypes.includes(node.type)) {
         continue;
       }
@@ -716,11 +716,11 @@ export class GraphAnalysisService {
 
       // 获取邻居节点
       const neighbors: Array<{ nodeId: string; edge: GraphEdge }> = [];
-      
+
       if (direction === 'forward' || direction === 'both') {
         neighbors.push(...(graphData.adjacencyList.get(nodeId) || []));
       }
-      
+
       if (direction === 'backward' || direction === 'both') {
         neighbors.push(...(graphData.reverseAdjacencyList.get(nodeId) || []));
       }

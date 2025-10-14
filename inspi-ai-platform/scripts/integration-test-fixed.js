@@ -290,7 +290,8 @@ async function runTestSuite(suiteName) {
     }
   } catch (error) {
     console.error(`❌ 测试套件失败: ${suiteName} - ${error.message}`);
-    return { passed: 0, failed: 1, tests: [{ name: suiteName, status: 'failed', error: error.message }] };
+    return { passed: 0, failed: 1, tests: [{ name: suiteName, status: 'failed',
+      error: error.message }] };
   }
 }
 
@@ -357,7 +358,8 @@ async function runIntegrationTests() {
     console.log('=' .repeat(50));
     console.log(`✅ 通过: ${testResults.passed}`);
     console.log(`❌ 失败: ${testResults.failed}`);
-    console.log(`📈 成功率: ${((testResults.passed / (testResults.passed + testResults.failed)) * 100).toFixed(1)}%`);
+    console.log(`📈 成功率:
+      ${((testResults.passed / (testResults.passed + testResults.failed)) * 100).toFixed(1)}%`);
     
     // 保存测试报告
     const reportData = {
@@ -367,7 +369,8 @@ async function runIntegrationTests() {
       summary: {
         passed: testResults.passed,
         failed: testResults.failed,
-        successRate: ((testResults.passed / (testResults.passed + testResults.failed)) * 100).toFixed(1) + '%'
+        successRate:
+          ((testResults.passed / (testResults.passed + testResults.failed)) * 100).toFixed(1) + '%'
       },
       tests: testResults.tests
     };

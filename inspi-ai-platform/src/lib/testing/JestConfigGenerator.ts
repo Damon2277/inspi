@@ -3,9 +3,10 @@
  * 根据测试类型和环境动态生成Jest配置
  */
 
-import { TestConfigManager } from './TestConfigManager';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
+
+import { TestConfigManager } from './TestConfigManager';
 
 export interface JestConfigOptions {
   type: 'unit' | 'integration' | 'e2e';
@@ -39,23 +40,23 @@ export class JestConfigGenerator {
       ...typeSpecificConfig,
       ...environmentConfig,
       ...coverageConfig,
-      
+
       // 合并配置
       setupFilesAfterEnv: [
         ...baseConfig.setupFilesAfterEnv,
         ...(typeSpecificConfig.setupFilesAfterEnv || []),
       ],
-      
+
       testMatch: [
         ...baseConfig.testMatch,
         ...(typeSpecificConfig.testMatch || []),
       ],
-      
+
       testPathIgnorePatterns: [
         ...baseConfig.testPathIgnorePatterns,
         ...(typeSpecificConfig.testPathIgnorePatterns || []),
       ],
-      
+
       moduleNameMapper: {
         ...baseConfig.moduleNameMapper,
         ...(typeSpecificConfig.moduleNameMapper || {}),
@@ -68,41 +69,41 @@ export class JestConfigGenerator {
    */
   private getBaseConfig(options: JestConfigOptions): any {
     const testConfig = this.configManager.getConfigForType(options.type);
-    
+
     return {
       // 基础设置
       rootDir: process.cwd(),
       testEnvironment: options.type === 'unit' ? 'jsdom' : 'node',
-      
+
       // 超时设置
       testTimeout: testConfig.execution.timeout,
-      
+
       // 并行设置
       maxWorkers: options.ci ? 1 : testConfig.execution.maxWorkers,
-      
+
       // 输出设置
       verbose: testConfig.execution.verbose,
       silent: testConfig.execution.silent,
-      
+
       // 错误处理
       bail: options.ci ? true : testConfig.execution.bail,
       detectOpenHandles: testConfig.execution.detectOpenHandles,
       forceExit: testConfig.execution.forceExit,
-      
+
       // 模块解析
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
         '^~/(.*)$': '<rootDir>/$1',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-        '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': 
+        '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$':
           '<rootDir>/src/__tests__/__mocks__/fileMock.js',
       },
-      
+
       // 基础设置文件
       setupFilesAfterEnv: [
         '<rootDir>/jest.setup.js',
       ],
-      
+
       // 忽略路径
       testPathIgnorePatterns: [
         '<rootDir>/.next/',
@@ -111,20 +112,20 @@ export class JestConfigGenerator {
         '<rootDir>/dist/',
         '<rootDir>/build/',
       ],
-      
+
       // 转换忽略
       transformIgnorePatterns: [
         'node_modules/(?!(bson|mongodb|mongoose|d3|d3-.*|@testing-library)/)',
       ],
-      
+
       // 基础测试匹配
       testMatch: [
         '<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}',
       ],
-      
+
       // 模块文件扩展名
       moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
-      
+
       // 清除Mock
       clearMocks: true,
       restoreMocks: true,
@@ -155,11 +156,11 @@ export class JestConfigGenerator {
     return {
       displayName: 'Unit Tests',
       testEnvironment: 'jsdom',
-      
+
       setupFilesAfterEnv: [
         '<rootDir>/jest.setup.unit.js',
       ],
-      
+
       testMatch: [
         '<rootDir>/src/**/*.unit.{test,spec}.{js,jsx,ts,tsx}',
         '<rootDir>/src/__tests__/unit/**/*.{test,spec}.{js,jsx,ts,tsx}',
@@ -167,14 +168,14 @@ export class JestConfigGenerator {
         '<rootDir>/src/__tests__/hooks/**/*.{test,spec}.{js,jsx,ts,tsx}',
         '<rootDir>/src/__tests__/utils/**/*.{test,spec}.{js,jsx,ts,tsx}',
       ],
-      
+
       testPathIgnorePatterns: [
         '<rootDir>/src/__tests__/api/',
         '<rootDir>/src/__tests__/integration/',
         '<rootDir>/src/__tests__/e2e/',
         '<rootDir>/src/__tests__/performance/',
       ],
-      
+
       // 单元测试专用环境变量
       testEnvironmentOptions: {
         url: 'http://localhost:3000',
@@ -189,24 +190,24 @@ export class JestConfigGenerator {
     return {
       displayName: 'Integration Tests',
       testEnvironment: 'node',
-      
+
       setupFilesAfterEnv: [
         '<rootDir>/jest.setup.integration.js',
       ],
-      
+
       testMatch: [
         '<rootDir>/src/**/*.integration.{test,spec}.{js,jsx,ts,tsx}',
         '<rootDir>/src/__tests__/integration/**/*.{test,spec}.{js,jsx,ts,tsx}',
         '<rootDir>/src/__tests__/api/**/*.{test,spec}.{js,jsx,ts,tsx}',
       ],
-      
+
       testPathIgnorePatterns: [
         '<rootDir>/src/__tests__/unit/',
         '<rootDir>/src/__tests__/e2e/',
         '<rootDir>/src/__tests__/components/',
         '<rootDir>/src/__tests__/hooks/',
       ],
-      
+
       // 集成测试需要更长的超时时间
       testTimeout: 30000,
     };
@@ -219,16 +220,16 @@ export class JestConfigGenerator {
     return {
       displayName: 'E2E Tests',
       testEnvironment: 'node',
-      
+
       setupFilesAfterEnv: [
         '<rootDir>/jest.setup.e2e.js',
       ],
-      
+
       testMatch: [
         '<rootDir>/src/**/*.e2e.{test,spec}.{js,jsx,ts,tsx}',
         '<rootDir>/src/__tests__/e2e/**/*.{test,spec}.{js,jsx,ts,tsx}',
       ],
-      
+
       testPathIgnorePatterns: [
         '<rootDir>/src/__tests__/unit/',
         '<rootDir>/src/__tests__/integration/',
@@ -236,10 +237,10 @@ export class JestConfigGenerator {
         '<rootDir>/src/__tests__/hooks/',
         '<rootDir>/src/__tests__/api/',
       ],
-      
+
       // E2E测试需要最长的超时时间
       testTimeout: 60000,
-      
+
       // E2E测试通常不需要并行执行
       maxWorkers: 1,
     };
@@ -250,7 +251,7 @@ export class JestConfigGenerator {
    */
   private getEnvironmentConfig(options: JestConfigOptions): any {
     const config: any = {};
-    
+
     // CI环境配置
     if (options.ci) {
       config.ci = true;
@@ -266,7 +267,7 @@ export class JestConfigGenerator {
         }],
       ];
     }
-    
+
     // 监视模式配置
     if (options.watch) {
       config.watchman = true;
@@ -276,7 +277,7 @@ export class JestConfigGenerator {
         '<rootDir>/coverage/',
       ];
     }
-    
+
     // 调试模式配置
     if (options.debug) {
       config.verbose = true;
@@ -284,12 +285,12 @@ export class JestConfigGenerator {
       config.maxWorkers = 1;
       config.detectOpenHandles = true;
     }
-    
+
     // 快照更新
     if (options.updateSnapshots) {
       config.updateSnapshot = true;
     }
-    
+
     return config;
   }
 
@@ -298,7 +299,7 @@ export class JestConfigGenerator {
    */
   private getCoverageConfig(type: 'unit' | 'integration' | 'e2e'): any {
     const testConfig = this.configManager.getConfigForType(type);
-    
+
     return {
       collectCoverage: true,
       collectCoverageFrom: testConfig.reporting.collectCoverageFrom,
@@ -317,11 +318,11 @@ export class JestConfigGenerator {
   public generateConfigFile(options: JestConfigOptions, outputPath?: string): string {
     const config = this.generateConfig(options);
     const configContent = this.generateConfigFileContent(config, options.type);
-    
+
     const filePath = outputPath || path.join(process.cwd(), `jest.config.${options.type}.generated.js`);
-    
+
     fs.writeFileSync(filePath, configContent);
-    
+
     return filePath;
   }
 
@@ -352,25 +353,25 @@ module.exports = createJestConfig(customJestConfig);
    */
   public validateConfig(config: any): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
-    
+
     // 检查必需字段
     if (!config.testEnvironment) {
       errors.push('testEnvironment is required');
     }
-    
+
     if (!config.testMatch || config.testMatch.length === 0) {
       errors.push('testMatch must contain at least one pattern');
     }
-    
+
     if (!config.moduleNameMapper) {
       errors.push('moduleNameMapper is required');
     }
-    
+
     // 检查超时设置
     if (config.testTimeout && config.testTimeout <= 0) {
       errors.push('testTimeout must be greater than 0');
     }
-    
+
     // 检查覆盖率阈值
     if (config.coverageThreshold) {
       const { global } = config.coverageThreshold;
@@ -382,7 +383,7 @@ module.exports = createJestConfig(customJestConfig);
         });
       }
     }
-    
+
     return {
       valid: errors.length === 0,
       errors,
@@ -398,7 +399,7 @@ module.exports = createJestConfig(customJestConfig);
       coverage: true,
       ci: process.env.CI === 'true',
     };
-    
+
     return this.generateConfig(options);
   }
 }

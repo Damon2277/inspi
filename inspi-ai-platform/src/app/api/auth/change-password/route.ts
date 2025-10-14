@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { changePassword } from '@/lib/auth/service';
-import { requireAuth, AuthenticatedRequest } from '@/lib/auth/middleware';
+
+import { requireAuth, AuthenticatedRequest } from '@/core/auth/middleware';
+import { changePassword } from '@/core/auth/service';
 
 /**
  * POST /api/auth/change-password
@@ -9,11 +10,11 @@ import { requireAuth, AuthenticatedRequest } from '@/lib/auth/middleware';
 export const POST = requireAuth(async (request: AuthenticatedRequest) => {
   try {
     const userId = request.user?.userId;
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'User ID not found' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -23,7 +24,7 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     if (!currentPassword || !newPassword) {
       return NextResponse.json(
         { error: 'Current password and new password are required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -32,7 +33,7 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     if (!result.success) {
       return NextResponse.json(
         { error: result.error },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -43,7 +44,7 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     console.error('Change password API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });

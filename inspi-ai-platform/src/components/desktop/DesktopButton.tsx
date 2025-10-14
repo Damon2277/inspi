@@ -31,21 +31,21 @@ export function DesktopButton({
   fullWidth = false,
   onClick,
   type = 'button',
-  className = ''
+  className = '',
 }: DesktopButtonProps) {
   const baseClasses = 'desktop-button';
-  
+
   const variantClasses = {
     primary: 'desktop-button-primary',
     secondary: 'desktop-button-secondary',
     outline: 'desktop-button-outline',
-    ghost: 'desktop-button-ghost'
+    ghost: 'desktop-button-ghost',
   };
 
   const sizeClasses = {
     sm: 'desktop-button-sm',
     md: 'desktop-button-md',
-    lg: 'desktop-button-lg'
+    lg: 'desktop-button-lg',
   };
 
   const classes = `
@@ -97,7 +97,7 @@ export function DesktopButton({
  */
 export function DesktopButtonGroup({
   children,
-  className = ''
+  className = '',
 }: {
   children: React.ReactNode;
   className?: string;

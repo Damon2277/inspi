@@ -2,6 +2,7 @@
  * 日志格式化器
  */
 import winston from 'winston';
+
 import { SENSITIVE_FIELDS } from './config';
 
 /**
@@ -44,65 +45,110 @@ export interface LogEntry {
 /**
  * 脱敏处理函数
  */
-const sanitizeData = (data: any): any => {
+type AnyRecord = Record<string | number | symbol, unknown>;
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const toStringValue = (value: unknown): string | undefined => {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  return undefined;
+};
+
+const toNumberValue = (value: unknown): number | undefined => {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+};
+
+const sanitizeData = (data: unknown): unknown => {
   if (data === null || data === undefined) {
     return data;
   }
-  
-  if (typeof data === 'string') {
+
+  if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') {
     return data;
   }
-  
+
   if (Array.isArray(data)) {
-    return data.map(sanitizeData);
+    return data.map(item => sanitizeData(item));
   }
-  
-  if (typeof data === 'object') {
-    const sanitized: any = {};
-    
+
+  if (isPlainObject(data)) {
+    const sanitized: Record<string, unknown> = {};
+
     for (const [key, value] of Object.entries(data)) {
       const lowerKey = key.toLowerCase();
-      
+
       // 检查是否为敏感字段
-      const isSensitive = SENSITIVE_FIELDS.some(field => 
-        lowerKey.includes(field.toLowerCase())
+      const isSensitive = SENSITIVE_FIELDS.some(field =>
+        lowerKey.includes(field.toLowerCase()),
       );
-      
-      if (isSensitive) {
-        sanitized[key] = '[REDACTED]';
-      } else {
-        sanitized[key] = sanitizeData(value);
-      }
+
+      sanitized[key] = isSensitive ? '[REDACTED]' : sanitizeData(value);
     }
-    
+
     return sanitized;
   }
-  
+
   return data;
 };
 
 /**
  * 错误对象格式化
  */
-const formatError = (error: Error): LogEntry['error'] => {
+const normalizeError = (error: unknown): Error => {
+  if (error instanceof Error) {
+    return error;
+  }
+
+  if (isPlainObject(error) && 'message' in error) {
+    const message = toStringValue((error as Record<string, unknown>).message) ?? 'Unknown error';
+    const normalized = new Error(message);
+    const name = toStringValue((error as Record<string, unknown>).name);
+    if (name) {
+      normalized.name = name;
+    }
+    const stack = toStringValue((error as Record<string, unknown>).stack);
+    if (stack) {
+      normalized.stack = stack;
+    }
+    const code = toStringValue((error as Record<string, unknown>).code);
+    if (code) {
+      (normalized as Error & { code?: string }).code = code;
+    }
+    return normalized;
+  }
+
+  return new Error(toStringValue(error) ?? 'Unknown error');
+};
+
+const formatError = (error: unknown): LogEntry['error'] => {
+  const normalized = normalizeError(error);
   return {
-    name: error.name,
-    message: error.message,
-    stack: error.stack,
-    code: (error as any).code
+    name: normalized.name,
+    message: normalized.message,
+    stack: normalized.stack,
+    code: (normalized as Error & { code?: string }).code,
   };
 };
 
 /**
  * 性能信息格式化
  */
-const formatPerformance = (performance?: any): LogEntry['performance'] | undefined => {
-  if (!performance) return undefined;
-  
+const formatPerformance = (performance?: unknown): LogEntry['performance'] | undefined => {
+  if (!performance || !isPlainObject(performance)) return undefined;
+
+  const duration = toNumberValue(performance.duration) ?? 0;
+
   return {
-    duration: performance.duration || 0,
+    duration,
     memory: process.memoryUsage().heapUsed,
-    cpu: process.cpuUsage().user
+    cpu: process.cpuUsage().user,
   };
 };
 
@@ -111,70 +157,110 @@ const formatPerformance = (performance?: any): LogEntry['performance'] | undefin
  */
 export const jsonFormatter = winston.format.combine(
   winston.format.timestamp({
-    format: 'YYYY-MM-DD HH:mm:ss.SSS'
+    format: 'YYYY-MM-DD HH:mm:ss.SSS',
   }),
   winston.format.errors({ stack: true }),
   winston.format.printf((info) => {
-    const logEntry: LogEntry = {
-      timestamp: info.timestamp,
-      level: info.level,
-      message: info.message,
-      traceId: info.traceId,
-      userId: info.userId,
-      requestId: info.requestId,
-      tag: info.tag,
-      metadata: {
-        service: info.service || 'inspi-ai-platform',
-        version: info.version || '0.1.0',
-        environment: info.environment || process.env.NODE_ENV || 'development',
-        ...sanitizeData(info.metadata || {})
-      }
+    const timestamp = toStringValue(info.timestamp) ?? new Date().toISOString();
+    const level = toStringValue(info.level) ?? 'info';
+    const message = toStringValue(info.message) ?? '';
+    const traceId = toStringValue(info.traceId);
+    const userId = toStringValue(info.userId);
+    const requestId = toStringValue(info.requestId);
+    const tag = toStringValue(info.tag);
+
+    const baseMetadata: LogEntry['metadata'] = {
+      service: toStringValue((info as AnyRecord).service) ?? 'inspi-ai-platform',
+      version: toStringValue((info as AnyRecord).version) ?? '0.1.0',
+      environment: toStringValue((info as AnyRecord).environment) ?? process.env.NODE_ENV ?? 'development',
     };
-    
-    // 添加错误信息
-    if (info.error || info instanceof Error) {
-      logEntry.error = formatError(info.error || info);
+
+    const metadataSource = isPlainObject(info.metadata) ? info.metadata : {};
+    const sanitizedMetadata = sanitizeData(metadataSource);
+    if (isPlainObject(sanitizedMetadata)) {
+      Object.assign(baseMetadata, sanitizedMetadata);
     }
-    
+
+    const logEntry: LogEntry = {
+      timestamp,
+      level,
+      message,
+      traceId,
+      userId,
+      requestId,
+      tag,
+      metadata: baseMetadata,
+    };
+
+    // 添加错误信息
+    const errorInfo = info.error ?? (info instanceof Error ? info : undefined);
+    if (errorInfo) {
+      logEntry.error = formatError(errorInfo);
+    }
+
     // 添加性能信息
     if (info.performance) {
       logEntry.performance = formatPerformance(info.performance);
     }
-    
+
     // 添加上下文信息
     if (info.context) {
-      logEntry.context = sanitizeData(info.context);
+      const sanitizedContext = sanitizeData(info.context);
+      if (isPlainObject(sanitizedContext)) {
+        logEntry.context = sanitizedContext;
+      }
     }
-    
+
     // 添加其他自定义字段
-    const customFields = { ...info };
-    delete customFields.timestamp;
-    delete customFields.level;
-    delete customFields.message;
-    delete customFields.traceId;
-    delete customFields.userId;
-    delete customFields.requestId;
-    delete customFields.tag;
-    delete customFields.metadata;
-    delete customFields.error;
-    delete customFields.performance;
-    delete customFields.context;
-    delete customFields.service;
-    delete customFields.version;
-    delete customFields.environment;
-    delete customFields[Symbol.for('level')];
-    delete customFields[Symbol.for('message')];
-    delete customFields[Symbol.for('splat')];
-    
-    if (Object.keys(customFields).length > 0) {
-      logEntry.metadata = {
-        ...logEntry.metadata,
-        ...sanitizeData(customFields)
-      };
+    const customFields: AnyRecord = { ...info } as AnyRecord;
+    const keysToRemove = [
+      'timestamp',
+      'level',
+      'message',
+      'traceId',
+      'userId',
+      'requestId',
+      'tag',
+      'metadata',
+      'error',
+      'performance',
+      'context',
+      'service',
+      'version',
+      'environment',
+    ];
+    keysToRemove.forEach(key => {
+      if (key in customFields) {
+        delete customFields[key];
+      }
+    });
+
+    const symbolKeys = [Symbol.for('level'), Symbol.for('message'), Symbol.for('splat')];
+    symbolKeys.forEach(symbolKey => {
+      if (Object.prototype.hasOwnProperty.call(customFields, symbolKey)) {
+        delete customFields[symbolKey];
+      }
+    });
+
+    const stringCustomFields: Record<string, unknown> = {};
+    Object.entries(customFields).forEach(([key, value]) => {
+      if (typeof key === 'string') {
+        stringCustomFields[key] = value;
+      }
+    });
+
+    if (Object.keys(stringCustomFields).length > 0) {
+      const sanitizedCustomFields = sanitizeData(stringCustomFields);
+      if (isPlainObject(sanitizedCustomFields)) {
+        logEntry.metadata = {
+          ...logEntry.metadata,
+          ...sanitizedCustomFields,
+        };
+      }
     }
-    
+
     return JSON.stringify(logEntry);
-  })
+  }),
 );
 
 /**
@@ -182,47 +268,54 @@ export const jsonFormatter = winston.format.combine(
  */
 export const consoleFormatter = winston.format.combine(
   winston.format.timestamp({
-    format: 'HH:mm:ss.SSS'
+    format: 'HH:mm:ss.SSS',
   }),
   winston.format.colorize(),
   winston.format.errors({ stack: true }),
   winston.format.printf((info) => {
-    let output = `${info.timestamp} [${info.level}]`;
-    
+    const timestamp = toStringValue(info.timestamp);
+    const level = toStringValue(info.level) ?? 'info';
+    let output = timestamp ? `${timestamp} [${level}]` : `[${level}]`;
+
     // 添加标签
-    if (info.tag) {
-      output += ` [${info.tag}]`;
+    const tag = toStringValue(info.tag);
+    if (tag) {
+      output += ` [${tag}]`;
     }
-    
+
     // 添加追踪ID
-    if (info.traceId) {
-      output += ` [${info.traceId.substring(0, 8)}]`;
+    const traceId = toStringValue(info.traceId);
+    if (traceId) {
+      output += ` [${traceId.substring(0, 8)}]`;
     }
-    
+
     // 添加用户ID
-    if (info.userId) {
-      output += ` [user:${info.userId}]`;
+    const userId = toStringValue(info.userId);
+    if (userId) {
+      output += ` [user:${userId}]`;
     }
-    
-    output += `: ${info.message}`;
-    
+
+    const message = toStringValue(info.message) ?? '';
+    output += `: ${message}`;
+
     // 添加错误堆栈
-    if (info.stack) {
-      output += `\n${info.stack}`;
+    const stack = toStringValue((info as AnyRecord).stack);
+    if (stack) {
+      output += `\n${stack}`;
     }
-    
+
     // 添加元数据（开发环境显示）
-    if (info.metadata && Object.keys(info.metadata).length > 0) {
+    if (isPlainObject(info.metadata) && Object.keys(info.metadata).length > 0) {
       output += `\n  Metadata: ${JSON.stringify(sanitizeData(info.metadata), null, 2)}`;
     }
-    
+
     // 添加上下文信息
-    if (info.context && Object.keys(info.context).length > 0) {
+    if (isPlainObject(info.context) && Object.keys(info.context).length > 0) {
       output += `\n  Context: ${JSON.stringify(sanitizeData(info.context), null, 2)}`;
     }
-    
+
     return output;
-  })
+  }),
 );
 
 /**
@@ -230,28 +323,34 @@ export const consoleFormatter = winston.format.combine(
  */
 export const simpleFormatter = winston.format.combine(
   winston.format.timestamp({
-    format: 'YYYY-MM-DD HH:mm:ss'
+    format: 'YYYY-MM-DD HH:mm:ss',
   }),
   winston.format.errors({ stack: true }),
   winston.format.printf((info) => {
-    let output = `${info.timestamp} [${info.level.toUpperCase()}]`;
-    
-    if (info.tag) {
-      output += ` [${info.tag}]`;
+    const timestamp = toStringValue(info.timestamp) ?? new Date().toISOString();
+    const level = (toStringValue(info.level) ?? 'info').toUpperCase();
+    let output = `${timestamp} [${level}]`;
+
+    const tag = toStringValue(info.tag);
+    if (tag) {
+      output += ` [${tag}]`;
     }
-    
-    if (info.traceId) {
-      output += ` [${info.traceId}]`;
+
+    const traceId = toStringValue(info.traceId);
+    if (traceId) {
+      output += ` [${traceId}]`;
     }
-    
-    output += `: ${info.message}`;
-    
-    if (info.stack) {
-      output += `\n${info.stack}`;
+
+    const message = toStringValue(info.message) ?? '';
+    output += `: ${message}`;
+
+    const stack = toStringValue((info as AnyRecord).stack);
+    if (stack) {
+      output += `\n${stack}`;
     }
-    
+
     return output;
-  })
+  }),
 );
 
 /**
@@ -269,72 +368,96 @@ export const createCustomFormatter = (options: {
     includeContext = true,
     includePerformance = false,
     colorize = false,
-    format = 'json'
+    format = 'json',
   } = options;
-  
+
   const formats = [
     winston.format.timestamp({
-      format: 'YYYY-MM-DD HH:mm:ss.SSS'
+      format: 'YYYY-MM-DD HH:mm:ss.SSS',
     }),
-    winston.format.errors({ stack: true })
+    winston.format.errors({ stack: true }),
   ];
-  
+
   if (colorize) {
     formats.push(winston.format.colorize());
   }
-  
+
   formats.push(
     winston.format.printf((info) => {
       if (format === 'json') {
         const logEntry: Partial<LogEntry> = {
-          timestamp: info.timestamp,
-          level: info.level,
-          message: info.message,
-          traceId: info.traceId,
-          userId: info.userId,
-          requestId: info.requestId,
-          tag: info.tag
+          timestamp: toStringValue(info.timestamp) ?? new Date().toISOString(),
+          level: toStringValue(info.level) ?? 'info',
+          message: toStringValue(info.message) ?? '',
+          traceId: toStringValue(info.traceId),
+          userId: toStringValue(info.userId),
+          requestId: toStringValue(info.requestId),
+          tag: toStringValue(info.tag),
         };
-        
+
+        const metadataBase: LogEntry['metadata'] = {
+          service: toStringValue((info as AnyRecord).service) ?? 'inspi-ai-platform',
+          version: toStringValue((info as AnyRecord).version) ?? '0.1.0',
+          environment: toStringValue((info as AnyRecord).environment) ?? process.env.NODE_ENV ?? 'development',
+        };
+
+        logEntry.metadata = metadataBase;
+
         if (includeMetadata && info.metadata) {
-          logEntry.metadata = sanitizeData(info.metadata);
+          const sanitizedMetadata = sanitizeData(info.metadata);
+          if (isPlainObject(sanitizedMetadata)) {
+            logEntry.metadata = {
+              ...metadataBase,
+              ...sanitizedMetadata,
+            };
+          }
         }
-        
+
         if (includeContext && info.context) {
-          logEntry.context = sanitizeData(info.context);
+          const sanitizedContext = sanitizeData(info.context);
+          if (isPlainObject(sanitizedContext)) {
+            logEntry.context = sanitizedContext;
+          }
         }
-        
+
         if (includePerformance && info.performance) {
           logEntry.performance = formatPerformance(info.performance);
         }
-        
-        if (info.error || info instanceof Error) {
-          logEntry.error = formatError(info.error || info);
+
+        const errorInfo = info.error ?? (info instanceof Error ? info : undefined);
+        if (errorInfo) {
+          logEntry.error = formatError(errorInfo);
         }
-        
+
         return JSON.stringify(logEntry);
       }
-      
+
       // 简单格式
-      let output = `${info.timestamp} [${info.level.toUpperCase()}]`;
-      
-      if (info.tag) {
-        output += ` [${info.tag}]`;
+      const timestamp = toStringValue(info.timestamp) ?? new Date().toISOString();
+      const level = (toStringValue(info.level) ?? 'info').toUpperCase();
+      let output = `${timestamp} [${level}]`;
+
+      const tag = toStringValue(info.tag);
+      if (tag) {
+        output += ` [${tag}]`;
       }
-      
-      if (info.traceId) {
-        output += ` [${info.traceId.substring(0, 8)}]`;
+
+      const traceId = toStringValue(info.traceId);
+      if (traceId) {
+        output += ` [${traceId.substring(0, 8)}]`;
       }
-      
-      output += `: ${info.message}`;
-      
-      if (info.stack) {
-        output += `\n${info.stack}`;
+
+      const message = toStringValue(info.message) ?? '';
+      output += `: ${message}`;
+
+      const stack = toStringValue((info as AnyRecord).stack);
+      if (stack) {
+        output += `\n${stack}`;
       }
-      
+
       return output;
-    })
+    }),
   );
-  
+
   return winston.format.combine(...formats);
 };

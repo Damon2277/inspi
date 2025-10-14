@@ -17,7 +17,7 @@ describe('Redis Cache Consistency Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRedisManager = redisManager as jest.Mocked<typeof redisManager>;
-    
+
     // Mock Redis client
     mockClient = {
       get: jest.fn(),
@@ -30,7 +30,7 @@ describe('Redis Cache Consistency Tests', () => {
       exists: jest.fn(),
       ttl: jest.fn(),
       keys: jest.fn(),
-      flushdb: jest.fn()
+      flushdb: jest.fn(),
     };
 
     mockRedisManager.getClient.mockReturnValue(mockClient);
@@ -50,7 +50,7 @@ describe('Redis Cache Consistency Tests', () => {
       // Arrange
       const key = 'test:string';
       const value = 'test value';
-      
+
       mockClient.get.mockResolvedValue(value);
       mockClient.set.mockResolvedValue('OK');
 
@@ -82,7 +82,7 @@ describe('Redis Cache Consistency Tests', () => {
     it('应该正确处理缓存删除操作', async () => {
       // Arrange
       const key = 'test:delete';
-      
+
       mockClient.del.mockResolvedValue(1);
 
       // Act
@@ -120,8 +120,8 @@ describe('Redis Cache Consistency Tests', () => {
         name: 'Test Object',
         data: {
           nested: true,
-          array: [1, 2, 3]
-        }
+          array: [1, 2, 3],
+        },
       };
 
       const serializedValue = JSON.stringify(jsonObject);
@@ -171,7 +171,7 @@ describe('Redis Cache Consistency Tests', () => {
       const complexObject = {
         users: [
           { id: 1, name: 'User 1', roles: ['admin', 'user'] },
-          { id: 2, name: 'User 2', roles: ['user'] }
+          { id: 2, name: 'User 2', roles: ['user'] },
         ],
         metadata: {
           version: '1.0.0',
@@ -180,10 +180,10 @@ describe('Redis Cache Consistency Tests', () => {
             enabled: true,
             settings: {
               theme: 'dark',
-              language: 'zh-CN'
-            }
-          }
-        }
+              language: 'zh-CN',
+            },
+          },
+        },
       };
 
       const serializedValue = JSON.stringify(complexObject);
@@ -422,11 +422,11 @@ describe('Redis Cache Consistency Tests', () => {
 
       // Act
       const setPromises = Array.from({ length: operations }, (_, i) =>
-        redis.set(`${baseKey}:${i}`, `value-${i}`)
+        redis.set(`${baseKey}:${i}`, `value-${i}`),
       );
 
       const getPromises = Array.from({ length: operations }, (_, i) =>
-        redis.get(`${baseKey}:${i}`)
+        redis.get(`${baseKey}:${i}`),
       );
 
       await Promise.all(setPromises);
@@ -448,16 +448,16 @@ describe('Redis Cache Consistency Tests', () => {
       mockClient.get.mockImplementation((key) => {
         const keyParts = key.split(':');
         const index = keyParts[keyParts.length - 1];
-        return Promise.resolve(JSON.stringify({ id: parseInt(index), name: `Object ${index}` }));
+        return Promise.resolve(JSON.stringify({ id: parseInt(index, 10), name: `Object ${index}` }));
       });
 
       // Act
       const setPromises = Array.from({ length: operations }, (_, i) =>
-        redis.setJSON(`${baseKey}:${i}`, { id: i, name: `Object ${i}` })
+        redis.setJSON(`${baseKey}:${i}`, { id: i, name: `Object ${i}` }),
       );
 
       const getPromises = Array.from({ length: operations }, (_, i) =>
-        redis.getJSON(`${baseKey}:${i}`)
+        redis.getJSON(`${baseKey}:${i}`),
       );
 
       await Promise.all(setPromises);
@@ -483,7 +483,7 @@ describe('Redis Cache Consistency Tests', () => {
 
       // Act
       const promises = Array.from({ length: operations }, () =>
-        redis.increment(key)
+        redis.increment(key),
       );
 
       const results = await Promise.all(promises);
@@ -505,7 +505,7 @@ describe('Redis Cache Consistency Tests', () => {
         { key: 'json', value: JSON.stringify({ complex: 'object' }) },
         { key: 'array', value: JSON.stringify([1, 2, 3, 4, 5]) },
         { key: 'empty', value: '' },
-        { key: 'unicode', value: '你好世界 🌍' }
+        { key: 'unicode', value: '你好世界 🌍' },
       ];
 
       mockClient.set.mockResolvedValue('OK');
@@ -531,12 +531,12 @@ describe('Redis Cache Consistency Tests', () => {
         "apostrophe'character",
         'backslash\\character',
         'unicode\u0000null',
-        'emoji😀test'
+        'emoji😀test',
       ];
 
       mockClient.set.mockResolvedValue('OK');
       mockClient.get.mockImplementation((key) => {
-        const index = parseInt(key.split(':').pop() || '0');
+        const index = parseInt(key.split(':', 10).pop() || '0', 10);
         return Promise.resolve(specialChars[index]);
       });
 
@@ -544,10 +544,10 @@ describe('Redis Cache Consistency Tests', () => {
       for (let i = 0; i < specialChars.length; i++) {
         const key = `special:${i}`;
         const value = specialChars[i];
-        
+
         await redis.set(key, value);
         const result = await redis.get(key);
-        
+
         expect(result).toBe(value);
       }
     });
@@ -559,8 +559,8 @@ describe('Redis Cache Consistency Tests', () => {
         data: Array.from({ length: 1000 }, (_, i) => ({
           id: i,
           name: `Item ${i}`,
-          description: `Description for item ${i}`.repeat(10)
-        }))
+          description: `Description for item ${i}`.repeat(10),
+        })),
       };
 
       mockClient.set.mockResolvedValue('OK');

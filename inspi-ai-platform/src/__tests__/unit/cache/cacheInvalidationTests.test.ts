@@ -18,7 +18,7 @@ describe('Cache Invalidation Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
-    
+
     // Mock Redis client
     mockRedisClient = {
       get: jest.fn(),
@@ -36,11 +36,11 @@ describe('Cache Invalidation Tests', () => {
       unsubscribe: jest.fn(),
       on: jest.fn(),
       isReady: true,
-      quit: jest.fn()
+      quit: jest.fn(),
     };
 
     (redis as any).createClient = jest.fn().mockReturnValue(mockRedisClient);
-    
+
     simpleRedis = new SimpleRedis();
     cacheInvalidator = new CacheInvalidator(simpleRedis);
   });
@@ -67,14 +67,14 @@ describe('Cache Invalidation Tests', () => {
 
       // Act
       await simpleRedis.set(key, value, { ttl });
-      
+
       // 检查未过期时的值
       const beforeExpiry = await simpleRedis.get(key);
       const remainingTtl = await simpleRedis.ttl(key);
-      
+
       // 模拟时间过去
       jest.advanceTimersByTime(ttl * 1000 + 1000);
-      
+
       // 检查过期后的值
       const afterExpiry = await simpleRedis.get(key);
       const expiredTtl = await simpleRedis.ttl(key);
@@ -101,8 +101,8 @@ describe('Cache Invalidation Tests', () => {
       // Assert
       expect(mockRedisClient.set).toHaveBeenCalledWith(key, value);
       expect(mockRedisClient.expireAt).toHaveBeenCalledWith(
-        key, 
-        Math.floor(expiryTime.getTime() / 1000)
+        key,
+        Math.floor(expiryTime.getTime() / 1000),
       );
     });
 
@@ -135,7 +135,7 @@ describe('Cache Invalidation Tests', () => {
       const userCacheKeys = [
         `user:${userId}:profile`,
         `user:${userId}:settings`,
-        `user:${userId}:permissions`
+        `user:${userId}:permissions`,
       ];
 
       mockRedisClient.keys.mockResolvedValue(userCacheKeys);
@@ -155,7 +155,7 @@ describe('Cache Invalidation Tests', () => {
       const taggedKeys = [
         'product:1:details',
         'product:2:details',
-        'category:electronics:products'
+        'category:electronics:products',
       ];
 
       // Mock标签到key的映射
@@ -178,7 +178,7 @@ describe('Cache Invalidation Tests', () => {
       const dependentKeys = [
         'user:123:dashboard',
         'user:123:recommendations',
-        'feed:user:123'
+        'feed:user:123',
       ];
 
       // Mock依赖关系
@@ -209,10 +209,10 @@ describe('Cache Invalidation Tests', () => {
       // Act
       // 设置初始版本
       await simpleRedis.setVersioned(key, value, value.version);
-      
+
       // 获取当前版本
       const currentValue = await simpleRedis.getVersioned(key, value.version);
-      
+
       // 尝试获取更高版本（应该失效）
       const invalidValue = await simpleRedis.getVersioned(key, updatedValue.version);
 
@@ -226,7 +226,7 @@ describe('Cache Invalidation Tests', () => {
       const globalVersion = 'app_version';
       const currentVersion = '1.2.3';
       const newVersion = '1.2.4';
-      
+
       const cacheKeys = ['config:app', 'config:features', 'config:limits'];
 
       mockRedisClient.get
@@ -239,10 +239,10 @@ describe('Cache Invalidation Tests', () => {
       // Act
       // 检查当前版本
       const version1 = await cacheInvalidator.getGlobalVersion(globalVersion);
-      
+
       // 更新全局版本并失效缓存
       await cacheInvalidator.updateGlobalVersion(globalVersion, newVersion);
-      
+
       // 检查新版本
       const version2 = await cacheInvalidator.getGlobalVersion(globalVersion);
 
@@ -259,12 +259,12 @@ describe('Cache Invalidation Tests', () => {
       // Arrange
       const maxMemory = 1024 * 1024; // 1MB
       const currentMemory = 1024 * 1024 * 0.9; // 90%使用率
-      
+
       // Mock Redis内存信息
       mockRedisClient.info.mockResolvedValue(
-        `used_memory:${currentMemory}\r\nmaxmemory:${maxMemory}\r\n`
+        `used_memory:${currentMemory}\r\nmaxmemory:${maxMemory}\r\n`,
       );
-      
+
       const lruKeys = ['old_key1', 'old_key2', 'old_key3'];
       mockRedisClient.keys.mockResolvedValue(lruKeys);
       mockRedisClient.del.mockResolvedValue(lruKeys.length);
@@ -284,14 +284,14 @@ describe('Cache Invalidation Tests', () => {
       // Arrange
       const keys = ['freq_key1', 'freq_key2', 'freq_key3'];
       const accessCounts = [1, 5, 10]; // 不同的访问频率
-      
+
       // Mock访问计数
       mockRedisClient.hgetall.mockResolvedValue({
         'freq_key1': '1',
-        'freq_key2': '5', 
-        'freq_key3': '10'
+        'freq_key2': '5',
+        'freq_key3': '10',
       });
-      
+
       mockRedisClient.del.mockResolvedValue(1);
       mockRedisClient.hdel.mockResolvedValue(1);
 
@@ -311,7 +311,7 @@ describe('Cache Invalidation Tests', () => {
       const invalidationMessage = {
         type: 'invalidate',
         keys: ['sync_key1', 'sync_key2'],
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       mockRedisClient.publish.mockResolvedValue(2); // 2个订阅者
@@ -323,7 +323,7 @@ describe('Cache Invalidation Tests', () => {
       // Assert
       expect(mockRedisClient.publish).toHaveBeenCalledWith(
         channel,
-        JSON.stringify(invalidationMessage)
+        JSON.stringify(invalidationMessage),
       );
     });
 
@@ -332,14 +332,14 @@ describe('Cache Invalidation Tests', () => {
       const invalidationMessage = {
         type: 'invalidate',
         keys: ['received_key1', 'received_key2'],
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       mockRedisClient.del.mockResolvedValue(invalidationMessage.keys.length);
 
       // Act
       await cacheInvalidator.handleInvalidationMessage(
-        JSON.stringify(invalidationMessage)
+        JSON.stringify(invalidationMessage),
       );
 
       // Assert
@@ -353,7 +353,7 @@ describe('Cache Invalidation Tests', () => {
         id: messageId,
         type: 'invalidate',
         keys: ['duplicate_key'],
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       // Mock消息已处理
@@ -361,13 +361,13 @@ describe('Cache Invalidation Tests', () => {
 
       // Act
       await cacheInvalidator.handleInvalidationMessage(
-        JSON.stringify(invalidationMessage)
+        JSON.stringify(invalidationMessage),
       );
 
       // Assert
       expect(mockRedisClient.sismember).toHaveBeenCalledWith(
         'processed_messages',
-        messageId
+        messageId,
       );
       expect(mockRedisClient.del).not.toHaveBeenCalled(); // 不应该重复处理
     });
@@ -380,13 +380,13 @@ describe('Cache Invalidation Tests', () => {
       const accessPattern = {
         lastAccess: Date.now() - 3600000, // 1小时前
         accessCount: 5,
-        averageInterval: 1800000 // 30分钟间隔
+        averageInterval: 1800000, // 30分钟间隔
       };
 
       mockRedisClient.hgetall.mockResolvedValue({
         lastAccess: accessPattern.lastAccess.toString(),
         accessCount: accessPattern.accessCount.toString(),
-        averageInterval: accessPattern.averageInterval.toString()
+        averageInterval: accessPattern.averageInterval.toString(),
       });
 
       // Act
@@ -402,26 +402,26 @@ describe('Cache Invalidation Tests', () => {
       const businessRules = {
         userProfile: { maxAge: 3600000, dependencies: ['user_permissions'] },
         productCatalog: { maxAge: 1800000, tags: ['inventory'] },
-        sessionData: { maxAge: 900000, sliding: true }
+        sessionData: { maxAge: 900000, sliding: true },
       };
 
       const key = 'user:123:profile';
       const cacheMetadata = {
         createdAt: Date.now() - 3700000, // 超过1小时
         lastAccess: Date.now() - 1800000, // 30分钟前访问
-        type: 'userProfile'
+        type: 'userProfile',
       };
 
       mockRedisClient.hgetall.mockResolvedValue({
         createdAt: cacheMetadata.createdAt.toString(),
         lastAccess: cacheMetadata.lastAccess.toString(),
-        type: cacheMetadata.type
+        type: cacheMetadata.type,
       });
 
       // Act
       const shouldInvalidate = await cacheInvalidator.evaluateBusinessRules(
         key,
-        businessRules
+        businessRules,
       );
 
       // Assert
@@ -452,7 +452,7 @@ describe('Cache Invalidation Tests', () => {
       const keys = ['pipe_key1', 'pipe_key2', 'pipe_key3'];
       const mockPipeline = {
         del: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue([1, 1, 1])
+        exec: jest.fn().mockResolvedValue([1, 1, 1]),
       };
 
       mockRedisClient.pipeline = jest.fn().mockReturnValue(mockPipeline);
@@ -473,10 +473,10 @@ describe('Cache Invalidation Tests', () => {
 
       // Act
       const promise = cacheInvalidator.asyncInvalidate(keys);
-      
+
       // 不等待完成，立即检查
       expect(promise).toBeInstanceOf(Promise);
-      
+
       // 等待异步操作完成
       await promise;
 
@@ -502,15 +502,15 @@ describe('Cache Invalidation Tests', () => {
       expect(mockRedisClient.hincrby).toHaveBeenCalledWith(
         'invalidation:daily_stats',
         expect.any(String), // 日期key
-        keys.length
+        keys.length,
       );
     });
 
     it('应该监控失效操作的性能', async () => {
       // Arrange
       const keys = ['perf_key1', 'perf_key2'];
-      mockRedisClient.del.mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve(keys.length), 100))
+      mockRedisClient.del.mockImplementation(() =>
+        new Promise(resolve => setTimeout(() => resolve(keys.length), 100)),
       );
 
       // Act
@@ -557,8 +557,8 @@ class CacheInvalidator {
   async checkMemoryUsage(): Promise<{ used: number; max: number; percentage: number }> {
     const info = await this.cache.info('memory');
     const lines = info.split('\r\n');
-    const used = parseInt(lines.find(l => l.startsWith('used_memory:'))?.split(':')[1] || '0');
-    const max = parseInt(lines.find(l => l.startsWith('maxmemory:'))?.split(':')[1] || '0');
+    const used = parseInt(lines.find(l => l.startsWith('used_memory:'))?.split(':')[1] || '0', 10);
+    const max = parseInt(lines.find(l => l.startsWith('maxmemory:'))?.split(':')[1] || '0', 10);
     return { used, max, percentage: max > 0 ? used / max : 0 };
   }
 
@@ -574,10 +574,10 @@ class CacheInvalidator {
   async evictLowFrequencyKeys(count: number): Promise<void> {
     const accessCounts = await this.cache.hgetall('access_count');
     const sortedKeys = Object.entries(accessCounts)
-      .sort(([,a], [,b]) => parseInt(a) - parseInt(b))
+      .sort(([, a], [, b]) => parseInt(a, 10) - parseInt(b, 10))
       .slice(0, count)
       .map(([key]) => key);
-    
+
     if (sortedKeys.length > 0) {
       await this.cache.del(...sortedKeys);
       await this.cache.hdel('access_count', ...sortedKeys);
@@ -588,22 +588,22 @@ class CacheInvalidator {
     const message = {
       type: 'invalidate',
       keys,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
     await this.cache.publish('cache_invalidation', JSON.stringify(message));
   }
 
   async handleInvalidationMessage(message: string): Promise<void> {
     const data = JSON.parse(message);
-    
+
     // 检查是否已处理过此消息
     if (data.id && await this.cache.sismember('processed_messages', data.id)) {
       return;
     }
-    
+
     if (data.type === 'invalidate' && data.keys) {
       await this.cache.del(...data.keys);
-      
+
       // 标记消息已处理
       if (data.id) {
         await this.cache.sadd('processed_messages', data.id);
@@ -614,22 +614,22 @@ class CacheInvalidator {
   async predictInvalidation(key: string): Promise<boolean> {
     const metadata = await this.cache.hgetall(`meta:${key}`);
     if (!metadata.lastAccess) return false;
-    
-    const lastAccess = parseInt(metadata.lastAccess);
-    const averageInterval = parseInt(metadata.averageInterval || '3600000');
+
+    const lastAccess = parseInt(metadata.lastAccess, 10);
+    const averageInterval = parseInt(metadata.averageInterval || '3600000', 10);
     const timeSinceLastAccess = Date.now() - lastAccess;
-    
+
     return timeSinceLastAccess > averageInterval * 2;
   }
 
   async evaluateBusinessRules(key: string, rules: any): Promise<boolean> {
     const metadata = await this.cache.hgetall(`meta:${key}`);
     if (!metadata.type || !metadata.createdAt) return false;
-    
+
     const rule = rules[metadata.type];
     if (!rule) return false;
-    
-    const age = Date.now() - parseInt(metadata.createdAt);
+
+    const age = Date.now() - parseInt(metadata.createdAt, 10);
     return age > rule.maxAge;
   }
 
@@ -656,7 +656,7 @@ class CacheInvalidator {
   async invalidateWithStats(keys: string[]): Promise<void> {
     await this.cache.del(...keys);
     await this.cache.incr('invalidation:total_count');
-    
+
     const today = new Date().toISOString().split('T')[0];
     await this.cache.hincrby('invalidation:daily_stats', today, keys.length);
   }
@@ -664,19 +664,19 @@ class CacheInvalidator {
   async getInvalidationStats(): Promise<any> {
     const totalCount = await this.cache.get('invalidation:total_count');
     const dailyStats = await this.cache.hgetall('invalidation:daily_stats');
-    return { totalCount: parseInt(totalCount || '0'), dailyStats };
+    return { totalCount: parseInt(totalCount || '0', 10), dailyStats };
   }
 
   async invalidateWithPerformanceTracking(keys: string[]): Promise<void> {
     const startTime = Date.now();
     await this.cache.del(...keys);
     const duration = Date.now() - startTime;
-    
+
     // 记录性能指标
     await this.cache.lpush('invalidation:performance', JSON.stringify({
       timestamp: startTime,
       duration,
-      keyCount: keys.length
+      keyCount: keys.length,
     }));
   }
 
@@ -686,7 +686,7 @@ class CacheInvalidator {
 
   async updateGlobalVersion(versionKey: string, newVersion: string): Promise<void> {
     await this.cache.set(`version:${versionKey}`, newVersion);
-    
+
     // 失效相关缓存
     const pattern = versionKey.replace('_version', '') + ':*';
     const keys = await this.cache.keys(pattern);

@@ -1,12 +1,13 @@
 /**
  * Coverage Checker
- * 
+ *
  * Implements automatic coverage threshold checking with detailed analysis
  * and reporting of coverage violations.
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
+
 import { glob } from 'glob';
 
 export interface CoverageData {
@@ -100,12 +101,12 @@ export class CoverageChecker {
     try {
       const coverageData = await this.loadCoverageData();
       const fileDetails = await this.loadFileCoverageDetails();
-      
+
       const current = {
         statements: coverageData.statements.pct,
         branches: coverageData.branches.pct,
         functions: coverageData.functions.pct,
-        lines: coverageData.lines.pct
+        lines: coverageData.lines.pct,
       };
 
       const violations = this.checkThresholds(current);
@@ -121,7 +122,7 @@ export class CoverageChecker {
         violations,
         uncoveredFiles,
         fileDetails,
-        summary
+        summary,
       };
     } catch (error) {
       // If coverage data is not available, return a failing result
@@ -136,8 +137,8 @@ export class CoverageChecker {
           totalFiles: 0,
           coveredFiles: 0,
           partiallyUncoveredFiles: 0,
-          uncoveredFiles: 0
-        }
+          uncoveredFiles: 0,
+        },
       };
     }
   }
@@ -164,7 +165,7 @@ export class CoverageChecker {
       `- Branches: ${result.current.branches.toFixed(2)}% (threshold: ${result.thresholds.branches}%)`,
       `- Functions: ${result.current.functions.toFixed(2)}% (threshold: ${result.thresholds.functions}%)`,
       `- Lines: ${result.current.lines.toFixed(2)}% (threshold: ${result.thresholds.lines}%)`,
-      ''
+      '',
     ];
 
     // Summary
@@ -206,7 +207,7 @@ export class CoverageChecker {
         lines.push(`- Statements: ${file.statements.pct.toFixed(1)}%`);
         lines.push(`- Branches: ${file.branches.pct.toFixed(1)}%`);
         lines.push(`- Functions: ${file.functions.pct.toFixed(1)}%`);
-        
+
         if (file.uncoveredLines.length > 0) {
           const lineRanges = this.compressLineNumbers(file.uncoveredLines);
           lines.push(`- Uncovered Lines: ${lineRanges.slice(0, 5).join(', ')}`);
@@ -240,7 +241,7 @@ export class CoverageChecker {
       if (!historicalData) {
         return {
           trend: 'stable',
-          changes: { statements: 0, branches: 0, functions: 0, lines: 0 }
+          changes: { statements: 0, branches: 0, functions: 0, lines: 0 },
         };
       }
 
@@ -248,11 +249,11 @@ export class CoverageChecker {
         statements: currentData.statements.pct - historicalData.statements.pct,
         branches: currentData.branches.pct - historicalData.branches.pct,
         functions: currentData.functions.pct - historicalData.functions.pct,
-        lines: currentData.lines.pct - historicalData.lines.pct
+        lines: currentData.lines.pct - historicalData.lines.pct,
       };
 
       const avgChange = (changes.statements + changes.branches + changes.functions + changes.lines) / 4;
-      
+
       let trend: 'improving' | 'degrading' | 'stable' = 'stable';
       if (avgChange > 1) trend = 'improving';
       else if (avgChange < -1) trend = 'degrading';
@@ -261,20 +262,20 @@ export class CoverageChecker {
     } catch {
       return {
         trend: 'stable',
-        changes: { statements: 0, branches: 0, functions: 0, lines: 0 }
+        changes: { statements: 0, branches: 0, functions: 0, lines: 0 },
       };
     }
   }
 
   private async loadCoverageData(): Promise<CoverageData> {
     const coverageSummaryPath = path.join(this.coverageDirectory, 'coverage-summary.json');
-    
+
     if (!fs.existsSync(coverageSummaryPath)) {
       throw new Error(`Coverage summary not found at ${coverageSummaryPath}`);
     }
 
     const summaryData = JSON.parse(fs.readFileSync(coverageSummaryPath, 'utf8'));
-    
+
     if (!summaryData.total) {
       throw new Error('Invalid coverage summary format');
     }
@@ -284,7 +285,7 @@ export class CoverageChecker {
 
   private async loadFileCoverageDetails(): Promise<FileCoverageData[]> {
     const coverageSummaryPath = path.join(this.coverageDirectory, 'coverage-summary.json');
-    
+
     if (!fs.existsSync(coverageSummaryPath)) {
       return [];
     }
@@ -295,7 +296,7 @@ export class CoverageChecker {
 
       for (const [filePath, data] of Object.entries(summaryData)) {
         if (filePath === 'total') continue;
-        
+
         const fileData = data as CoverageData;
         const uncoveredLines = await this.getUncoveredLines(filePath);
         const uncoveredBranches = await this.getUncoveredBranches(filePath);
@@ -304,7 +305,7 @@ export class CoverageChecker {
           path: filePath,
           ...fileData,
           uncoveredLines,
-          uncoveredBranches
+          uncoveredBranches,
         });
       }
 
@@ -323,11 +324,11 @@ export class CoverageChecker {
 
       const lcovContent = fs.readFileSync(lcovInfoPath, 'utf8');
       const uncoveredLines: number[] = [];
-      
+
       // Parse LCOV format to extract uncovered lines
       const lines = lcovContent.split('\n');
       let inTargetFile = false;
-      
+
       for (const line of lines) {
         if (line.startsWith('SF:') && line.includes(filePath)) {
           inTargetFile = true;
@@ -336,8 +337,8 @@ export class CoverageChecker {
         } else if (inTargetFile && line.startsWith('DA:')) {
           const [, lineInfo] = line.split(':');
           const [lineNum, hitCount] = lineInfo.split(',');
-          if (parseInt(hitCount) === 0) {
-            uncoveredLines.push(parseInt(lineNum));
+          if (parseInt(hitCount, 10) === 0) {
+            uncoveredLines.push(parseInt(lineNum, 10));
           }
         }
       }
@@ -357,11 +358,11 @@ export class CoverageChecker {
 
       const lcovContent = fs.readFileSync(lcovInfoPath, 'utf8');
       const uncoveredBranches: Array<{ line: number; type: string }> = [];
-      
+
       // Parse LCOV format to extract uncovered branches
       const lines = lcovContent.split('\n');
       let inTargetFile = false;
-      
+
       for (const line of lines) {
         if (line.startsWith('SF:') && line.includes(filePath)) {
           inTargetFile = true;
@@ -372,8 +373,8 @@ export class CoverageChecker {
           const [lineNum, , , taken] = branchInfo.split(',');
           if (taken === '0') {
             uncoveredBranches.push({
-              line: parseInt(lineNum),
-              type: 'branch'
+              line: parseInt(lineNum, 10),
+              type: 'branch',
             });
           }
         }
@@ -394,7 +395,7 @@ export class CoverageChecker {
 
       const historyData = JSON.parse(fs.readFileSync(historicalPath, 'utf8'));
       const entries = Object.entries(historyData).sort(([a], [b]) => b.localeCompare(a));
-      
+
       if (entries.length < 2) {
         return null;
       }
@@ -411,25 +412,25 @@ export class CoverageChecker {
 
     if (current.statements < this.config.thresholds.statements) {
       violations.push(
-        `Statement coverage ${current.statements.toFixed(2)}% is below threshold ${this.config.thresholds.statements}%`
+        `Statement coverage ${current.statements.toFixed(2)}% is below threshold ${this.config.thresholds.statements}%`,
       );
     }
 
     if (current.branches < this.config.thresholds.branches) {
       violations.push(
-        `Branch coverage ${current.branches.toFixed(2)}% is below threshold ${this.config.thresholds.branches}%`
+        `Branch coverage ${current.branches.toFixed(2)}% is below threshold ${this.config.thresholds.branches}%`,
       );
     }
 
     if (current.functions < this.config.thresholds.functions) {
       violations.push(
-        `Function coverage ${current.functions.toFixed(2)}% is below threshold ${this.config.thresholds.functions}%`
+        `Function coverage ${current.functions.toFixed(2)}% is below threshold ${this.config.thresholds.functions}%`,
       );
     }
 
     if (current.lines < this.config.thresholds.lines) {
       violations.push(
-        `Line coverage ${current.lines.toFixed(2)}% is below threshold ${this.config.thresholds.lines}%`
+        `Line coverage ${current.lines.toFixed(2)}% is below threshold ${this.config.thresholds.lines}%`,
       );
     }
 
@@ -471,7 +472,7 @@ export class CoverageChecker {
       totalFiles,
       coveredFiles,
       partiallyUncoveredFiles,
-      uncoveredFiles
+      uncoveredFiles,
     };
   }
 

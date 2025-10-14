@@ -2,7 +2,9 @@
  * 查询缓存中间件
  */
 import { NextRequest, NextResponse } from 'next/server';
+
 import { logger } from '@/lib/logging/logger';
+
 import { CacheManager } from '@/lib/cache/manager';
 
 /**
@@ -36,6 +38,11 @@ export interface CacheMetadata {
   };
 }
 
+interface CachedResponsePayload {
+  data: unknown;
+  metadata: CacheMetadata;
+}
+
 /**
  * 缓存统计
  */
@@ -62,7 +69,7 @@ export class QueryCacheMiddleware {
     totalRequests: 0,
     averageResponseTime: 0,
     cacheSize: 0,
-    compressionRatio: 0
+    compressionRatio: 0,
   };
 
   constructor(cacheManager: CacheManager, config?: Partial<QueryCacheConfig>) {
@@ -75,17 +82,17 @@ export class QueryCacheMiddleware {
       excludePatterns: [
         /\/api\/auth\//,
         /\/api\/admin\//,
-        /\/api\/user\/profile/
+        /\/api\/user\/profile/,
       ],
       includePatterns: [
         /\/api\/works/,
         /\/api\/rankings/,
-        /\/api\/knowledge-graphs/
+        /\/api\/knowledge-graphs/,
       ],
       varyHeaders: ['authorization', 'user-agent'],
       compressionEnabled: true,
       compressionThreshold: 1024, // 1KB
-      ...config
+      ...config,
     };
   }
 
@@ -108,20 +115,20 @@ export class QueryCacheMiddleware {
 
       // 生成缓存键
       const cacheKey = await this.generateCacheKey(request);
-      
+
       // 尝试从缓存获取响应
       const cachedResponse = await this.getCachedResponse(cacheKey);
       if (cachedResponse) {
         this.stats.hits++;
         this.updateHitRate();
-        
+
         const responseTime = Date.now() - startTime;
         this.updateAverageResponseTime(responseTime);
 
         logger.debug('Query cache hit', {
           cacheKey,
           responseTime,
-          url: request.url
+          url: request.url,
         });
 
         return this.createResponseFromCache(cachedResponse);
@@ -135,7 +142,7 @@ export class QueryCacheMiddleware {
 
     } catch (error) {
       logger.error('Query cache middleware error', error instanceof Error ? error : new Error(String(error)), {
-        url: request.url
+        url: request.url,
       });
       return null;
     }
@@ -147,7 +154,7 @@ export class QueryCacheMiddleware {
   async cacheResponse(
     request: NextRequest,
     response: NextResponse,
-    customTTL?: number
+    customTTL?: number,
   ): Promise<void> {
     if (!this.config.enabled || !this.shouldCache(request)) {
       return;
@@ -164,7 +171,7 @@ export class QueryCacheMiddleware {
 
       // 提取响应数据
       const responseData = await this.extractResponseData(response);
-      
+
       // 压缩数据（如果启用且超过阈值）
       const { data, compressed } = await this.compressIfNeeded(responseData);
 
@@ -176,7 +183,7 @@ export class QueryCacheMiddleware {
         size: JSON.stringify(data).length,
         compressed,
         headers: this.extractCacheableHeaders(response),
-        userContext: this.extractUserContext(request)
+        userContext: this.extractUserContext(request),
       };
 
       // 检查缓存大小限制
@@ -184,7 +191,7 @@ export class QueryCacheMiddleware {
         logger.warn('Response too large to cache', {
           cacheKey,
           size: metadata.size,
-          maxSize: this.config.maxCacheSize / 100
+          maxSize: this.config.maxCacheSize / 100,
         });
         return;
       }
@@ -192,7 +199,7 @@ export class QueryCacheMiddleware {
       // 存储到缓存
       await this.cacheManager.set(cacheKey, {
         data,
-        metadata
+        metadata,
       }, { ttl });
 
       // 更新统计
@@ -205,12 +212,12 @@ export class QueryCacheMiddleware {
         cacheKey,
         size: metadata.size,
         compressed,
-        ttl
+        ttl,
       });
 
     } catch (error) {
       logger.error('Failed to cache response', error instanceof Error ? error : new Error(String(error)), {
-        url: request.url
+        url: request.url,
       });
     }
   }
@@ -226,7 +233,7 @@ export class QueryCacheMiddleware {
         // 清除匹配模式的缓存
         const keys = await this.cacheManager.getKeys(`${this.config.cacheKeyPrefix}*`);
         const matchingKeys = keys.filter(key => new RegExp(pattern).test(key));
-        
+
         for (const key of matchingKeys) {
           await this.cacheManager.delete(key);
           clearedCount++;
@@ -234,7 +241,7 @@ export class QueryCacheMiddleware {
       } else {
         // 清除所有查询缓存
         const keys = await this.cacheManager.getKeys(`${this.config.cacheKeyPrefix}*`);
-        
+
         for (const key of keys) {
           await this.cacheManager.delete(key);
           clearedCount++;
@@ -295,7 +302,7 @@ export class QueryCacheMiddleware {
       totalRequests: 0,
       averageResponseTime: 0,
       cacheSize: 0,
-      compressionRatio: 0
+      compressionRatio: 0,
     };
   }
 
@@ -357,14 +364,22 @@ export class QueryCacheMiddleware {
   /**
    * 从缓存获取响应
    */
-  private async getCachedResponse(cacheKey: string): Promise<any | null> {
+  private async getCachedResponse(cacheKey: string): Promise<CachedResponsePayload | null> {
     try {
       const cached = await this.cacheManager.get(cacheKey);
-      if (!cached) {
+      if (!cached || typeof cached !== 'object' || cached === null) {
         return null;
       }
 
-      const { data, metadata } = cached;
+      if (!('data' in cached) || !('metadata' in cached)) {
+        return null;
+      }
+
+      const { data, metadata } = cached as CachedResponsePayload;
+
+      if (!metadata || typeof metadata.timestamp !== 'number' || typeof metadata.ttl !== 'number') {
+        return null;
+      }
 
       // 检查是否过期
       if (Date.now() - metadata.timestamp > metadata.ttl * 1000) {
@@ -373,13 +388,13 @@ export class QueryCacheMiddleware {
       }
 
       // 解压缩数据（如果需要）
-      const responseData = metadata.compressed 
+      const responseData = metadata.compressed
         ? await this.decompress(data)
         : data;
 
       return {
         data: responseData,
-        metadata
+        metadata,
       };
 
     } catch (error) {
@@ -391,10 +406,10 @@ export class QueryCacheMiddleware {
   /**
    * 从缓存创建响应
    */
-  private createResponseFromCache(cachedResponse: any): NextResponse {
+  private createResponseFromCache(cachedResponse: CachedResponsePayload): NextResponse {
     const { data, metadata } = cachedResponse;
 
-    const response = NextResponse.json(data);
+    const response = NextResponse.json(data as any);
 
     // 设置缓存头
     response.headers.set('X-Cache', 'HIT');
@@ -436,7 +451,7 @@ export class QueryCacheMiddleware {
    */
   private async extractResponseData(response: NextResponse): Promise<any> {
     const contentType = response.headers.get('content-type');
-    
+
     if (contentType?.includes('application/json')) {
       return await response.json();
     } else if (contentType?.includes('text/')) {
@@ -455,7 +470,7 @@ export class QueryCacheMiddleware {
       'content-type',
       'content-encoding',
       'etag',
-      'last-modified'
+      'last-modified',
     ];
 
     const headers: Record<string, string> = {};
@@ -479,7 +494,7 @@ export class QueryCacheMiddleware {
 
     return {
       userId: authorization ? 'user-from-token' : undefined, // 实际实现中应该解析JWT
-      sessionId: sessionId || undefined
+      sessionId: sessionId || undefined,
     };
   }
 
@@ -540,8 +555,8 @@ export class QueryCacheMiddleware {
    * 更新命中率
    */
   private updateHitRate(): void {
-    this.stats.hitRate = this.stats.totalRequests > 0 
-      ? (this.stats.hits / this.stats.totalRequests) * 100 
+    this.stats.hitRate = this.stats.totalRequests > 0
+      ? (this.stats.hits / this.stats.totalRequests) * 100
       : 0;
   }
 
@@ -560,7 +575,7 @@ export class QueryCacheMiddleware {
     const originalSize = JSON.stringify(original).length;
     const compressedSize = JSON.stringify(compressed).length;
     const ratio = compressedSize / originalSize;
-    
+
     // 更新平均压缩比率
     this.stats.compressionRatio = (this.stats.compressionRatio + ratio) / 2;
   }
@@ -571,7 +586,7 @@ export class QueryCacheMiddleware {
  */
 export function createQueryCacheMiddleware(
   cacheManager: CacheManager,
-  config?: Partial<QueryCacheConfig>
+  config?: Partial<QueryCacheConfig>,
 ): QueryCacheMiddleware {
   return new QueryCacheMiddleware(cacheManager, config);
 }
@@ -581,7 +596,7 @@ export function createQueryCacheMiddleware(
  */
 export function withQueryCache(
   cacheManager: CacheManager,
-  config?: Partial<QueryCacheConfig>
+  config?: Partial<QueryCacheConfig>,
 ) {
   const middleware = createQueryCacheMiddleware(cacheManager, config);
 

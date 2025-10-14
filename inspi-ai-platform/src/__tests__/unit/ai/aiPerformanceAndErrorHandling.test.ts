@@ -3,11 +3,11 @@
  * 测试AI服务的性能指标、错误恢复和资源管理
  */
 
-import { AIGenerationOptions, GeminiService } from '@/lib/ai/geminiService';
-import { generatePrompt, validateCardContent } from '@/lib/ai/promptTemplates';
-import { env } from '@/config/environment';
-import { logger } from '@/lib/utils/logger';
+import { AIGenerationOptions, GeminiService } from '@/core/ai/geminiService';
+import { generatePrompt, validateCardContent } from '@/core/ai/promptTemplates';
 import { redis } from '@/lib/cache/redis';
+import { env } from '@/shared/config/environment';
+import { logger } from '@/shared/utils/logger';
 
 // Mock dependencies
 jest.mock('@google/generative-ai');
@@ -21,20 +21,20 @@ jest.mock('@/config/environment', () => ({
       RETRY_DELAY: 1000,
     },
     CACHE: { TTL: 3600 },
-  }
+  },
 }));
 jest.mock('@/lib/utils/logger', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
-  }
+  },
 }));
 jest.mock('@/lib/cache/redis', () => ({
   redis: {
     get: jest.fn().mockResolvedValue(null),
     setex: jest.fn().mockResolvedValue('OK'),
-  }
+  },
 }));
 
 describe('AI服务性能和错误处理测试', () => {
@@ -64,8 +64,8 @@ describe('AI服务性能和错误处理测试', () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => '性能测试响应'
-        }
+          text: () => '性能测试响应',
+        },
       });
 
       const startTime = performance.now();
@@ -80,20 +80,20 @@ describe('AI服务性能和错误处理测试', () => {
 
     it('应该在批量生成时保持性能', async () => {
       // Arrange
-      mockGenerateContent.mockImplementation(() => 
+      mockGenerateContent.mockImplementation(() =>
         Promise.resolve({
           response: {
-            text: () => '批量性能测试响应'
-          }
-        })
+            text: () => '批量性能测试响应',
+          },
+        }),
       );
 
       const batchSize = 10;
       const startTime = performance.now();
 
       // Act
-      const promises = Array(batchSize).fill(null).map((_, index) => 
-        geminiService.generateContent(`批量测试 ${index}`)
+      const promises = Array(batchSize).fill(null).map((_, index) =>
+        geminiService.generateContent(`批量测试 ${index}`),
       );
       await Promise.all(promises);
 
@@ -106,12 +106,12 @@ describe('AI服务性能和错误处理测试', () => {
     it('应该正确测量和记录性能指标', async () => {
       // Arrange
       const delay = 100;
-      mockGenerateContent.mockImplementation(() => 
+      mockGenerateContent.mockImplementation(() =>
         new Promise(resolve => setTimeout(() => resolve({
           response: {
-            text: () => '延迟测试响应'
-          }
-        }), delay))
+            text: () => '延迟测试响应',
+          },
+        }), delay)),
       );
 
       // Act
@@ -122,32 +122,32 @@ describe('AI服务性能和错误处理测试', () => {
         'AI generation completed',
         expect.objectContaining({
           duration: expect.any(Number),
-          model: 'gemini-1.5-flash'
-        })
+          model: 'gemini-1.5-flash',
+        }),
       );
 
       const logCall = (logger.info as jest.Mock).mock.calls.find(
-        call => call[0] === 'AI generation completed'
+        call => call[0] === 'AI generation completed',
       );
       expect(logCall[1].duration).toBeGreaterThanOrEqual(delay);
     });
 
     it('应该在高负载下保持稳定性', async () => {
       // Arrange
-      mockGenerateContent.mockImplementation(() => 
+      mockGenerateContent.mockImplementation(() =>
         Promise.resolve({
           response: {
-            text: () => '高负载测试响应'
-          }
-        })
+            text: () => '高负载测试响应',
+          },
+        }),
       );
 
       const highLoad = 100;
       const startTime = performance.now();
 
       // Act
-      const promises = Array(highLoad).fill(null).map((_, index) => 
-        geminiService.generateContent(`高负载测试 ${index}`)
+      const promises = Array(highLoad).fill(null).map((_, index) =>
+        geminiService.generateContent(`高负载测试 ${index}`),
       );
       const results = await Promise.all(promises);
 
@@ -155,7 +155,7 @@ describe('AI服务性能和错误处理测试', () => {
       const duration = performance.now() - startTime;
       expect(results).toHaveLength(highLoad);
       expect(duration).toBeLessThan(5000); // 应该在5秒内完成100个请求
-      
+
       results.forEach(result => {
         expect(result.content).toBe('高负载测试响应');
       });
@@ -170,8 +170,8 @@ describe('AI服务性能和错误处理测试', () => {
 
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => largeContent
-        }
+          text: () => largeContent,
+        },
       });
 
       // Act
@@ -184,7 +184,7 @@ describe('AI服务性能和错误处理测试', () => {
       // Assert
       const finalMemory = process.memoryUsage();
       const memoryIncrease = finalMemory.heapUsed - initialMemory.heapUsed;
-      
+
       // 内存增长应该在合理范围内（考虑到10个100KB的响应）
       expect(memoryIncrease).toBeLessThan(5 * 1024 * 1024); // 5MB
       expect(results).toHaveLength(10);
@@ -194,8 +194,8 @@ describe('AI服务性能和错误处理测试', () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => '内存泄漏测试'
-        }
+          text: () => '内存泄漏测试',
+        },
       });
 
       const iterations = 50;
@@ -204,7 +204,7 @@ describe('AI服务性能和错误处理测试', () => {
       // Act
       for (let i = 0; i < iterations; i++) {
         await geminiService.generateContent(`泄漏测试 ${i}`);
-        
+
         if (i % 10 === 0) {
           memorySnapshots.push(process.memoryUsage().heapUsed);
         }
@@ -221,15 +221,15 @@ describe('AI服务性能和错误处理测试', () => {
       const hugeContent = 'x'.repeat(10 * 1024 * 1024); // 10MB内容
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => hugeContent
-        }
+          text: () => hugeContent,
+        },
       });
 
       const beforeMemory = process.memoryUsage().heapUsed;
 
       // Act
       const result = await geminiService.generateContent('大型响应测试');
-      
+
       // 强制垃圾回收（如果可用）
       if (global.gc) {
         global.gc();
@@ -237,13 +237,13 @@ describe('AI服务性能和错误处理测试', () => {
 
       // Assert
       expect(result.content.length).toBe(10 * 1024 * 1024);
-      
+
       // 等待一段时间让垃圾回收器工作
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       const afterMemory = process.memoryUsage().heapUsed;
       const memoryDiff = afterMemory - beforeMemory;
-      
+
       // 内存增长应该小于响应大小（说明有垃圾回收）
       expect(memoryDiff).toBeLessThan(15 * 1024 * 1024); // 15MB限制
     });
@@ -260,8 +260,8 @@ describe('AI服务性能和错误处理测试', () => {
         }
         return Promise.resolve({
           response: {
-            text: () => '恢复成功'
-          }
+            text: () => '恢复成功',
+          },
         });
       });
 
@@ -287,8 +287,8 @@ describe('AI服务性能和错误处理测试', () => {
         }
         return Promise.resolve({
           response: {
-            text: () => 'API限制恢复成功'
-          }
+            text: () => 'API限制恢复成功',
+          },
         });
       });
 
@@ -322,8 +322,8 @@ describe('AI服务性能和错误处理测试', () => {
         }
         return Promise.resolve({
           response: {
-            text: () => `成功: ${prompt}`
-          }
+            text: () => `成功: ${prompt}`,
+          },
         });
       });
 
@@ -331,12 +331,12 @@ describe('AI服务性能和错误处理测试', () => {
         '成功请求1',
         '失败请求',
         '成功请求2',
-        '成功请求3'
+        '成功请求3',
       ];
 
       // Act
       const results = await Promise.allSettled(
-        requests.map(req => geminiService.generateContent(req))
+        requests.map(req => geminiService.generateContent(req)),
       );
 
       // Assert
@@ -355,14 +355,14 @@ describe('AI服务性能和错误处理测试', () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => '连接池测试'
-        }
+          text: () => '连接池测试',
+        },
       });
 
       // Act - 创建大量并发请求
       const concurrentRequests = 20;
-      const promises = Array(concurrentRequests).fill(null).map((_, index) => 
-        geminiService.generateContent(`连接池测试 ${index}`)
+      const promises = Array(concurrentRequests).fill(null).map((_, index) =>
+        geminiService.generateContent(`连接池测试 ${index}`),
       );
 
       const results = await Promise.all(promises);
@@ -375,8 +375,8 @@ describe('AI服务性能和错误处理测试', () => {
     it('应该正确处理超时', async () => {
       // Arrange
       const longDelay = 35000; // 超过30秒超时
-      mockGenerateContent.mockImplementation(() => 
-        new Promise(resolve => setTimeout(resolve, longDelay))
+      mockGenerateContent.mockImplementation(() =>
+        new Promise(resolve => setTimeout(resolve, longDelay)),
       );
 
       // Act & Assert
@@ -386,16 +386,16 @@ describe('AI服务性能和错误处理测试', () => {
     it('应该在超时后清理资源', async () => {
       // Arrange
       let cleanupCalled = false;
-      mockGenerateContent.mockImplementation(() => 
+      mockGenerateContent.mockImplementation(() =>
         new Promise((resolve, reject) => {
           const timeout = setTimeout(() => {
             cleanupCalled = true;
             reject(new Error('Timeout'));
           }, 100);
-          
+
           // 模拟清理逻辑
           return timeout;
-        })
+        }),
       );
 
       // Act
@@ -418,7 +418,7 @@ describe('AI服务性能和错误处理测试', () => {
         content: '缓存响应',
         usage: { promptTokens: 10, completionTokens: 20, totalTokens: 30 },
         model: 'gemini-1.5-flash',
-        cached: false
+        cached: false,
       };
 
       (redis as any).get.mockResolvedValue(JSON.stringify(cachedResponse));
@@ -437,12 +437,12 @@ describe('AI服务性能和错误处理测试', () => {
     it('应该正确处理缓存未命中的性能', async () => {
       // Arrange
       (redis as any).get.mockResolvedValue(null);
-      mockGenerateContent.mockImplementation(() => 
+      mockGenerateContent.mockImplementation(() =>
         new Promise(resolve => setTimeout(() => resolve({
           response: {
-            text: () => '未缓存响应'
-          }
-        }), 50))
+            text: () => '未缓存响应',
+          },
+        }), 50)),
       );
 
       const startTime = performance.now();
@@ -460,11 +460,11 @@ describe('AI服务性能和错误处理测试', () => {
       // Arrange
       (redis as any).get.mockRejectedValue(new Error('Cache error'));
       (redis as any).setex.mockRejectedValue(new Error('Cache error'));
-      
+
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => '缓存失败响应'
-        }
+          text: () => '缓存失败响应',
+        },
       });
 
       const startTime = performance.now();
@@ -490,15 +490,15 @@ describe('AI服务性能和错误处理测试', () => {
 
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => '并发缓存测试'
-        }
+          text: () => '并发缓存测试',
+        },
       });
 
       // Act
       const concurrentRequests = 10;
       const samePrompt = '并发缓存测试';
-      const promises = Array(concurrentRequests).fill(null).map(() => 
-        geminiService.generateContent(samePrompt)
+      const promises = Array(concurrentRequests).fill(null).map(() =>
+        geminiService.generateContent(samePrompt),
       );
 
       const results = await Promise.all(promises);
@@ -506,7 +506,7 @@ describe('AI服务性能和错误处理测试', () => {
       // Assert
       expect(results).toHaveLength(concurrentRequests);
       expect(cacheAccessCount).toBeGreaterThanOrEqual(concurrentRequests);
-      
+
       results.forEach(result => {
         expect(result.content).toBe('并发缓存测试');
       });
@@ -519,15 +519,15 @@ describe('AI服务性能和错误处理测试', () => {
         generationCount++;
         return new Promise(resolve => setTimeout(() => resolve({
           response: {
-            text: () => `生成 ${generationCount}`
-          }
+            text: () => `生成 ${generationCount}`,
+          },
         }), Math.random() * 100));
       });
 
       // Act
       const concurrentRequests = 5;
-      const promises = Array(concurrentRequests).fill(null).map((_, index) => 
-        geminiService.generateContent(`竞态测试 ${index}`)
+      const promises = Array(concurrentRequests).fill(null).map((_, index) =>
+        geminiService.generateContent(`竞态测试 ${index}`),
       );
 
       const results = await Promise.all(promises);
@@ -535,7 +535,7 @@ describe('AI服务性能和错误处理测试', () => {
       // Assert
       expect(results).toHaveLength(concurrentRequests);
       expect(generationCount).toBe(concurrentRequests);
-      
+
       // 每个结果应该是唯一的
       const contents = results.map(r => r.content);
       const uniqueContents = new Set(contents);
@@ -580,8 +580,8 @@ describe('AI服务性能和错误处理测试', () => {
         expect.objectContaining({
           error: '详细错误测试',
           model: 'gemini-1.5-flash',
-          duration: expect.any(Number)
-        })
+          duration: expect.any(Number),
+        }),
       );
     });
 
@@ -599,8 +599,8 @@ describe('AI服务性能和错误处理测试', () => {
       // Arrange
       mockGenerateContent.mockResolvedValue({
         response: {
-          text: () => 'OK'
-        }
+          text: () => 'OK',
+        },
       });
 
       const startTime = performance.now();
@@ -637,7 +637,7 @@ describe('AI服务性能和错误处理测试', () => {
         knowledgePoint: '性能测试知识点',
         subject: '数学',
         gradeLevel: '高中',
-        difficulty: 'medium' as const
+        difficulty: 'medium' as const,
       };
 
       const startTime = performance.now();

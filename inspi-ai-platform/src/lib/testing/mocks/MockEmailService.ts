@@ -3,8 +3,9 @@
  * 提供邮件发送的模拟功能，支持发送记录和验证
  */
 
-import { BaseMockService } from './BaseMockService';
 import { EmailOptions, EmailResult } from '@/lib/email/service';
+
+import { BaseMockService } from './BaseMockService';
 
 export interface MockEmailRecord {
   id: string;
@@ -34,7 +35,7 @@ export class MockEmailService extends BaseMockService {
     shouldFail: false,
     failureRate: 0,
     delay: 50,
-    messageIdPrefix: 'mock-'
+    messageIdPrefix: 'mock-',
   };
   private messageIdCounter: number = 1;
 
@@ -53,7 +54,7 @@ export class MockEmailService extends BaseMockService {
     if (!this.validateEmailOptions(options)) {
       const result: EmailResult = {
         success: false,
-        error: 'Invalid email options'
+        error: 'Invalid email options',
       };
       this.recordEmail(options, result);
       return result;
@@ -66,7 +67,7 @@ export class MockEmailService extends BaseMockService {
     if (this.shouldSimulateFailure()) {
       const result: EmailResult = {
         success: false,
-        error: 'Mock email service failure'
+        error: 'Mock email service failure',
       };
       this.recordEmail(options, result);
       return result;
@@ -76,7 +77,7 @@ export class MockEmailService extends BaseMockService {
     const messageId = this.generateMessageId();
     const result: EmailResult = {
       success: true,
-      messageId
+      messageId,
     };
 
     this.recordEmail(options, result);
@@ -121,7 +122,7 @@ export class MockEmailService extends BaseMockService {
       fromEmail: 'noreply@example.com',
       fromName: 'Mock Service',
       mockMode: true,
-      sentCount: this.sentEmails.length
+      sentCount: this.sentEmails.length,
     };
   }
 
@@ -148,8 +149,8 @@ export class MockEmailService extends BaseMockService {
    * 获取特定主题的邮件
    */
   getEmailsBySubject(subject: string): MockEmailRecord[] {
-    return this.sentEmails.filter(email => 
-      email.subject.toLowerCase().includes(subject.toLowerCase())
+    return this.sentEmails.filter(email =>
+      email.subject.toLowerCase().includes(subject.toLowerCase()),
     );
   }
 
@@ -158,8 +159,8 @@ export class MockEmailService extends BaseMockService {
    */
   wasEmailSent(to: string, subject: string): boolean {
     return this.sentEmails.some(email => {
-      const toMatch = Array.isArray(email.to) 
-        ? email.to.includes(to) 
+      const toMatch = Array.isArray(email.to)
+        ? email.to.includes(to)
         : email.to === to;
       const subjectMatch = email.subject.toLowerCase().includes(subject.toLowerCase());
       return toMatch && subjectMatch;
@@ -189,9 +190,9 @@ export class MockEmailService extends BaseMockService {
       failed,
       successRate: total > 0 ? successful / total : 0,
       uniqueRecipients: recipients.size,
-      lastSent: this.sentEmails.length > 0 
-        ? this.sentEmails[this.sentEmails.length - 1].timestamp 
-        : null
+      lastSent: this.sentEmails.length > 0
+        ? this.sentEmails[this.sentEmails.length - 1].timestamp
+        : null,
     };
   }
 
@@ -246,7 +247,7 @@ export class MockEmailService extends BaseMockService {
     // 验证邮件地址格式
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const recipients = Array.isArray(options.to) ? options.to : [options.to];
-    
+
     for (const recipient of recipients) {
       if (!emailRegex.test(recipient)) {
         this.addError(`Invalid email address: ${recipient}`);
@@ -269,7 +270,7 @@ export class MockEmailService extends BaseMockService {
       text: options.text,
       attachments: options.attachments,
       timestamp: new Date(),
-      result
+      result,
     };
 
     this.sentEmails.push(record);
@@ -326,14 +327,14 @@ export class MockEmailService extends BaseMockService {
       const testEmail: EmailOptions = {
         to: 'test@example.com',
         subject: 'Test Email',
-        text: 'This is a test email'
+        text: 'This is a test email',
       };
 
       const originalFailureRate = this.config.failureRate;
       this.config.failureRate = 0; // 临时禁用失败
 
       const sendResult = await this.sendEmail(testEmail);
-      
+
       this.config.failureRate = originalFailureRate; // 恢复失败率
 
       if (!sendResult.success) {
@@ -357,7 +358,7 @@ export class MockEmailService extends BaseMockService {
       shouldFail: false,
       failureRate: 0,
       delay: 50,
-      messageIdPrefix: 'mock-'
+      messageIdPrefix: 'mock-',
     };
   }
 
@@ -368,7 +369,7 @@ export class MockEmailService extends BaseMockService {
     return {
       ...this.getStatus(),
       ...this.getEmailStats(),
-      config: this.config
+      config: this.config,
     };
   }
 }

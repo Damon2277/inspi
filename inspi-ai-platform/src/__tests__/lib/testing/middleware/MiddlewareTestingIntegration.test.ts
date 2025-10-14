@@ -1,10 +1,11 @@
 /**
  * Middleware Testing Integration Tests
- * 
+ *
  * End-to-end integration tests demonstrating the complete middleware testing system
  * including real-world scenarios, performance testing, and comprehensive reporting.
  */
 import { NextRequest, NextResponse } from 'next/server';
+
 import {
   MiddlewareTestFramework,
   MiddlewareChainTester,
@@ -18,7 +19,7 @@ import {
   MiddlewareTestUtils,
   type MiddlewareDefinition,
   type MiddlewareChain,
-  type TestScenario
+  type TestScenario,
 } from '../../../../lib/testing/middleware';
 
 describe('Middleware Testing Integration', () => {
@@ -28,7 +29,7 @@ describe('Middleware Testing Integration', () => {
   beforeEach(() => {
     const config = createDefaultMiddlewareTestConfig();
     framework = createMiddlewareTestFramework(config);
-    
+
     const chainConfig = createDefaultChainTestConfig();
     chainTester = new MiddlewareChainTester(chainConfig);
   });
@@ -45,23 +46,23 @@ describe('Middleware Testing Integration', () => {
         name: 'jwt-auth',
         handler: async (request: NextRequest) => {
           const authHeader = request.headers.get('authorization');
-          
+
           if (!authHeader) {
             return NextResponse.json(
               { error: 'Authorization header required' },
-              { status: 401 }
+              { status: 401 },
             );
           }
 
           if (!authHeader.startsWith('Bearer ')) {
             return NextResponse.json(
               { error: 'Invalid authorization format' },
-              { status: 401 }
+              { status: 401 },
             );
           }
 
           const token = authHeader.substring(7);
-          
+
           // Simulate JWT validation
           if (token === 'valid-jwt-token') {
             const response = NextResponse.next();
@@ -73,15 +74,15 @@ describe('Middleware Testing Integration', () => {
           if (token === 'expired-token') {
             return NextResponse.json(
               { error: 'Token expired' },
-              { status: 401 }
+              { status: 401 },
             );
           }
 
           return NextResponse.json(
             { error: 'Invalid token' },
-            { status: 401 }
+            { status: 401 },
           );
-        }
+        },
       };
 
       framework.registerMiddleware(authMiddleware);
@@ -90,7 +91,7 @@ describe('Middleware Testing Integration', () => {
 
     it('should run comprehensive authentication tests', async () => {
       const authScenarios = CommonTestScenarios.authentication();
-      
+
       // Add custom scenarios
       const customScenarios: TestScenario[] = [
         {
@@ -103,16 +104,16 @@ describe('Middleware Testing Integration', () => {
               url: 'http://localhost:3000/api/protected',
               method: 'GET',
               headers: {
-                'authorization': 'Bearer expired-token'
-              }
-            }
+                'authorization': 'Bearer expired-token',
+              },
+            },
           },
           expected: {
             response: {
               status: 401,
-              body: { error: 'Token expired' }
-            }
-          }
+              body: { error: 'Token expired' },
+            },
+          },
         },
         {
           name: 'Valid token with user context',
@@ -124,32 +125,32 @@ describe('Middleware Testing Integration', () => {
               url: 'http://localhost:3000/api/protected',
               method: 'GET',
               headers: {
-                'authorization': 'Bearer valid-jwt-token'
-              }
-            }
+                'authorization': 'Bearer valid-jwt-token',
+              },
+            },
           },
           expected: {
             response: {
               status: 200,
               headers: {
                 'x-user-id': '12345',
-                'x-user-role': 'admin'
-              }
-            }
-          }
-        }
+                'x-user-role': 'admin',
+              },
+            },
+          },
+        },
       ];
 
       const allScenarios = [...authScenarios, ...customScenarios];
       const results = await framework.runFunctionalTests(allScenarios);
 
       expect(results.length).toBeGreaterThan(0);
-      
+
       const passedTests = results.filter(r => r.status === 'passed');
       const failedTests = results.filter(r => r.status === 'failed');
 
       console.log(`Authentication Tests: ${passedTests.length} passed, ${failedTests.length} failed`);
-      
+
       // Most tests should pass (we expect some to fail for invalid scenarios)
       expect(passedTests.length).toBeGreaterThan(failedTests.length);
     });
@@ -162,15 +163,15 @@ describe('Middleware Testing Integration', () => {
           description: 'Test with malformed JWT structure',
           input: { authorization: 'Bearer not.a.jwt' },
           expectedBehavior: 'error' as const,
-          category: 'malformed' as const
+          category: 'malformed' as const,
         },
         {
           name: 'Extremely long token',
           description: 'Test with extremely long token',
           input: { authorization: `Bearer ${'x'.repeat(10000)}` },
           expectedBehavior: 'error' as const,
-          category: 'extreme' as const
-        }
+          category: 'extreme' as const,
+        },
       ];
 
       const results = await framework.runBoundaryTests('jwt-auth', boundaryTests);
@@ -186,7 +187,7 @@ describe('Middleware Testing Integration', () => {
       const performanceTest = PerformanceTestHelpers.createPerformanceTest(
         'jwt-auth',
         1000,
-        50 // 50ms max execution time
+        50, // 50ms max execution time
       );
 
       const results = await framework.runPerformanceBenchmarks('jwt-auth', [performanceTest]);
@@ -208,10 +209,10 @@ describe('Middleware Testing Integration', () => {
       rateLimitMiddleware = {
         name: 'rate-limiter',
         handler: async (request: NextRequest) => {
-          const clientIp = request.headers.get('x-forwarded-for') || 
-                          request.headers.get('x-real-ip') || 
+          const clientIp = request.headers.get('x-forwarded-for') ||
+                          request.headers.get('x-real-ip') ||
                           '127.0.0.1';
-          
+
           const now = Date.now();
           const windowMs = 60000; // 1 minute
           const limit = 10;
@@ -226,7 +227,7 @@ describe('Middleware Testing Integration', () => {
           clientData.count++;
           requestCounts.set(clientIp, clientData);
 
-          const response = clientData.count <= limit ? NextResponse.next() : 
+          const response = clientData.count <= limit ? NextResponse.next() :
             NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
 
           response.headers.set('x-rate-limit-limit', limit.toString());
@@ -234,7 +235,7 @@ describe('Middleware Testing Integration', () => {
           response.headers.set('x-rate-limit-reset', clientData.resetTime.toString());
 
           return response;
-        }
+        },
       };
 
       framework.registerMiddleware(rateLimitMiddleware);
@@ -243,10 +244,10 @@ describe('Middleware Testing Integration', () => {
 
     it('should test rate limiting scenarios', async () => {
       const rateLimitScenarios = CommonTestScenarios.rateLimiting(10, 60000);
-      
+
       // Test multiple requests from same IP
       const multipleRequestScenarios: TestScenario[] = [];
-      
+
       for (let i = 1; i <= 12; i++) {
         multipleRequestScenarios.push({
           name: `Request ${i} from same IP`,
@@ -258,15 +259,15 @@ describe('Middleware Testing Integration', () => {
               url: 'http://localhost:3000/api/test',
               method: 'GET',
               headers: {
-                'x-forwarded-for': '192.168.1.100'
-              }
-            }
+                'x-forwarded-for': '192.168.1.100',
+              },
+            },
           },
           expected: {
             response: {
-              status: i <= 10 ? 200 : 429
-            }
-          }
+              status: i <= 10 ? 200 : 429,
+            },
+          },
         });
       }
 
@@ -291,12 +292,12 @@ describe('Middleware Testing Integration', () => {
             request: {
               url: 'http://localhost:3000/api/test',
               method: 'GET',
-              headers: { 'x-forwarded-for': '192.168.1.1' }
-            }
+              headers: { 'x-forwarded-for': '192.168.1.1' },
+            },
           },
           expected: {
-            response: { status: 200 }
-          }
+            response: { status: 200 },
+          },
         },
         {
           name: 'Request from IP 2',
@@ -307,13 +308,13 @@ describe('Middleware Testing Integration', () => {
             request: {
               url: 'http://localhost:3000/api/test',
               method: 'GET',
-              headers: { 'x-forwarded-for': '192.168.1.2' }
-            }
+              headers: { 'x-forwarded-for': '192.168.1.2' },
+            },
           },
           expected: {
-            response: { status: 200 }
-          }
-        }
+            response: { status: 200 },
+          },
+        },
       ];
 
       const results = await framework.runFunctionalTests(scenarios);
@@ -338,27 +339,27 @@ describe('Middleware Testing Integration', () => {
           if (method === 'OPTIONS') {
             // Handle preflight request
             const response = new NextResponse(null, { status: 200 });
-            
+
             if (origin && allowedOrigins.includes(origin)) {
               response.headers.set('access-control-allow-origin', origin);
             }
-            
+
             response.headers.set('access-control-allow-methods', 'GET, POST, PUT, DELETE, OPTIONS');
             response.headers.set('access-control-allow-headers', 'content-type, authorization');
             response.headers.set('access-control-max-age', '86400');
-            
+
             return response;
           }
 
           const response = NextResponse.next();
-          
+
           if (origin && allowedOrigins.includes(origin)) {
             response.headers.set('access-control-allow-origin', origin);
             response.headers.set('access-control-allow-credentials', 'true');
           }
 
           return response;
-        }
+        },
       };
 
       framework.registerMiddleware(corsMiddleware);
@@ -367,7 +368,7 @@ describe('Middleware Testing Integration', () => {
 
     it('should test CORS scenarios comprehensively', async () => {
       const corsScenarios = CommonTestScenarios.cors();
-      
+
       const additionalScenarios: TestScenario[] = [
         {
           name: 'Disallowed origin',
@@ -378,17 +379,17 @@ describe('Middleware Testing Integration', () => {
             request: {
               url: 'http://localhost:3000/api/test',
               method: 'GET',
-              headers: { 'origin': 'https://malicious.com' }
-            }
+              headers: { 'origin': 'https://malicious.com' },
+            },
           },
           expected: {
             response: {
               status: 200,
               headers: {
-                'access-control-allow-origin': undefined // Should not be set
-              }
-            }
-          }
+                'access-control-allow-origin': undefined, // Should not be set
+              },
+            },
+          },
         },
         {
           name: 'Complex preflight request',
@@ -402,27 +403,27 @@ describe('Middleware Testing Integration', () => {
               headers: {
                 'origin': 'https://example.com',
                 'access-control-request-method': 'PUT',
-                'access-control-request-headers': 'content-type, x-custom-header'
-              }
-            }
+                'access-control-request-headers': 'content-type, x-custom-header',
+              },
+            },
           },
           expected: {
             response: {
               status: 200,
               headers: {
                 'access-control-allow-origin': 'https://example.com',
-                'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS'
-              }
-            }
-          }
-        }
+                'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
+              },
+            },
+          },
+        },
       ];
 
       const allScenarios = [...corsScenarios, ...additionalScenarios];
       const results = await framework.runFunctionalTests(allScenarios);
 
       expect(results.length).toBeGreaterThan(0);
-      
+
       // Check specific CORS header validations
       results.forEach(result => {
         if (result.status === 'passed') {
@@ -449,7 +450,7 @@ describe('Middleware Testing Integration', () => {
           }
           return NextResponse.next();
         },
-        priority: 2
+        priority: 2,
       };
 
       rateLimitMiddleware = {
@@ -461,7 +462,7 @@ describe('Middleware Testing Integration', () => {
           }
           return NextResponse.next();
         },
-        priority: 1
+        priority: 1,
       };
 
       corsMiddleware = {
@@ -474,7 +475,7 @@ describe('Middleware Testing Integration', () => {
           }
           return response;
         },
-        priority: 0
+        priority: 0,
       };
 
       validationMiddleware = {
@@ -489,7 +490,7 @@ describe('Middleware Testing Integration', () => {
           return NextResponse.next();
         },
         dependencies: ['auth'],
-        priority: 3
+        priority: 3,
       };
 
       [authMiddleware, rateLimitMiddleware, corsMiddleware, validationMiddleware].forEach(middleware => {
@@ -506,9 +507,9 @@ describe('Middleware Testing Integration', () => {
           { name: 'cors', handler: corsMiddleware.handler, priority: 0 },
           { name: 'rate-limit', handler: rateLimitMiddleware.handler, priority: 1 },
           { name: 'auth', handler: authMiddleware.handler, priority: 2 },
-          { name: 'validation', handler: validationMiddleware.handler, priority: 3 }
+          { name: 'validation', handler: validationMiddleware.handler, priority: 3 },
         ],
-        order: 'sequential'
+        order: 'sequential',
       };
 
       // Validate chain
@@ -522,9 +523,9 @@ describe('Middleware Testing Integration', () => {
           'origin': 'https://example.com',
           'authorization': 'Bearer valid-token',
           'content-type': 'application/json',
-          'x-rate-limit-remaining': '5'
+          'x-rate-limit-remaining': '5',
         },
-        body: JSON.stringify({ name: 'John Doe' })
+        body: JSON.stringify({ name: 'John Doe' }),
       });
 
       const successResult = await chainTester.executeChain(chain, successRequest);
@@ -537,9 +538,9 @@ describe('Middleware Testing Integration', () => {
         headers: {
           'origin': 'https://example.com',
           'content-type': 'application/json',
-          'x-rate-limit-remaining': '5'
+          'x-rate-limit-remaining': '5',
         },
-        body: JSON.stringify({ name: 'John Doe' })
+        body: JSON.stringify({ name: 'John Doe' }),
       });
 
       const failResult = await chainTester.executeChain(chain, failRequest);
@@ -549,15 +550,15 @@ describe('Middleware Testing Integration', () => {
 
     it('should run integration test suite for complete chain', async () => {
       const integrationSuite = IntegrationTestHelpers.createAuthChainTest();
-      
+
       // Customize for our specific middlewares
       integrationSuite.chain.middlewares = [
         { name: 'auth', handler: authMiddleware.handler },
-        { name: 'validation', handler: validationMiddleware.handler }
+        { name: 'validation', handler: validationMiddleware.handler },
       ];
 
       const results = await chainTester.testChainScenarios(integrationSuite.chain, integrationSuite.scenarios);
-      
+
       expect(results.length).toBeGreaterThan(0);
       results.forEach(result => {
         expect(result.type).toBe('integration');
@@ -572,9 +573,9 @@ describe('Middleware Testing Integration', () => {
           { name: 'cors', handler: corsMiddleware.handler },
           { name: 'rate-limit', handler: rateLimitMiddleware.handler },
           { name: 'auth', handler: authMiddleware.handler },
-          { name: 'validation', handler: validationMiddleware.handler }
+          { name: 'validation', handler: validationMiddleware.handler },
         ],
-        order: 'sequential'
+        order: 'sequential',
       };
 
       const request = new NextRequest('http://localhost:3000/api/test', {
@@ -583,9 +584,9 @@ describe('Middleware Testing Integration', () => {
           'origin': 'https://example.com',
           'authorization': 'Bearer valid-token',
           'content-type': 'application/json',
-          'x-rate-limit-remaining': '10'
+          'x-rate-limit-remaining': '10',
         },
-        body: JSON.stringify({ test: 'data' })
+        body: JSON.stringify({ test: 'data' }),
       });
 
       const benchmark = await chainTester.benchmarkChain(chain, request, 50);
@@ -593,7 +594,7 @@ describe('Middleware Testing Integration', () => {
       expect(benchmark.averageExecutionTime).toBeGreaterThan(0);
       expect(benchmark.throughput).toBeGreaterThan(0);
       expect(benchmark.bottlenecks).toHaveLength(4);
-      
+
       // Verify all middlewares are tracked
       const middlewareNames = benchmark.bottlenecks.map(b => b.middleware);
       expect(middlewareNames).toContain('cors');
@@ -611,7 +612,7 @@ describe('Middleware Testing Integration', () => {
         handler: async (request: NextRequest) => {
           const auth = request.headers.get('authorization');
           return auth ? NextResponse.next() : NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        },
       };
 
       framework.registerMiddleware(authMiddleware);
@@ -627,10 +628,10 @@ describe('Middleware Testing Integration', () => {
             request: {
               url: 'http://localhost:3000/api/test',
               method: 'GET',
-              headers: { 'authorization': 'Bearer token' }
-            }
+              headers: { 'authorization': 'Bearer token' },
+            },
           },
-          expected: { response: { status: 200 } }
+          expected: { response: { status: 200 } },
         },
         {
           name: 'Invalid auth',
@@ -640,16 +641,16 @@ describe('Middleware Testing Integration', () => {
           input: {
             request: {
               url: 'http://localhost:3000/api/test',
-              method: 'GET'
-            }
+              method: 'GET',
+            },
           },
-          expected: { response: { status: 401 } }
-        }
+          expected: { response: { status: 401 } },
+        },
       ];
 
       // Performance tests
       const performanceScenarios: TestScenario[] = [
-        PerformanceTestHelpers.createPerformanceTest('report-auth', 100, 50)
+        PerformanceTestHelpers.createPerformanceTest('report-auth', 100, 50),
       ];
 
       // Boundary tests
@@ -696,7 +697,7 @@ describe('Middleware Testing Integration', () => {
             throw new Error('Random failure');
           }
           return NextResponse.json({ success: true });
-        }
+        },
       };
 
       framework.registerMiddleware(flakyMiddleware);
@@ -709,12 +710,12 @@ describe('Middleware Testing Integration', () => {
         input: {
           request: {
             url: 'http://localhost:3000/api/test',
-            method: 'GET'
-          }
+            method: 'GET',
+          },
         },
         expected: {
-          response: { status: 200 }
-        }
+          response: { status: 200 },
+        },
       }));
 
       const results = await framework.runFunctionalTests(scenarios);

@@ -1,6 +1,6 @@
 /**
  * State Test Framework Tests
- * 
+ *
  * Comprehensive tests for the state management testing framework including
  * Zustand store testing, consistency validation, and performance testing.
  */
@@ -10,7 +10,7 @@ import {
   createDefaultStateTestConfig,
   StateTestUtils,
   type StateTestScenario,
-  type StateStore
+  type StateStore,
 } from '../../../../lib/testing/state';
 
 describe('StateTestFramework', () => {
@@ -20,12 +20,12 @@ describe('StateTestFramework', () => {
   beforeEach(() => {
     const config = createDefaultStateTestConfig();
     framework = createStateTestFramework(config);
-    
+
     mockStore = StateTestUtils.createMockStore({
       count: 0,
       name: 'test',
       loading: false,
-      data: null
+      data: null,
     });
   });
 
@@ -52,10 +52,10 @@ describe('StateTestFramework', () => {
                 const state = store.getState();
                 return state.count === 0 && state.name === 'test';
               },
-              message: 'Initial state should match expected values'
-            }
-          ]
-        }
+              message: 'Initial state should match expected values',
+            },
+          ],
+        },
       ];
 
       const results = await framework.runTests(scenarios);
@@ -82,8 +82,8 @@ describe('StateTestFramework', () => {
               execute: (store) => {
                 const currentState = store.getState();
                 store.setState({ count: currentState.count + 1 });
-              }
-            }
+              },
+            },
           ],
           assertions: [
             {
@@ -93,10 +93,10 @@ describe('StateTestFramework', () => {
                 const state = store.getState();
                 return state.count === 1;
               },
-              message: 'Count should be incremented to 1'
-            }
-          ]
-        }
+              message: 'Count should be incremented to 1',
+            },
+          ],
+        },
       ];
 
       const results = await framework.runTests(scenarios);
@@ -121,8 +121,8 @@ describe('StateTestFramework', () => {
               type: 'sync',
               execute: (store) => {
                 store.setState({ value: 'updated' });
-              }
-            }
+              },
+            },
           ],
           assertions: [
             {
@@ -131,10 +131,10 @@ describe('StateTestFramework', () => {
               check: (store, context) => {
                 return context.subscriptionCalls.length > 0;
               },
-              message: 'Subscription should be called on state change'
-            }
-          ]
-        }
+              message: 'Subscription should be called on state change',
+            },
+          ],
+        },
       ];
 
       const results = await framework.runTests(scenarios);
@@ -161,7 +161,7 @@ describe('StateTestFramework', () => {
               type: 'sync',
               execute: (store) => {
                 store.setState({ loading: true });
-              }
+              },
             },
             {
               name: 'Load data',
@@ -169,8 +169,8 @@ describe('StateTestFramework', () => {
               execute: async (store) => {
                 await new Promise(resolve => setTimeout(resolve, 50));
                 store.setState({ loading: false, data: 'loaded' });
-              }
-            }
+              },
+            },
           ],
           assertions: [
             {
@@ -180,10 +180,10 @@ describe('StateTestFramework', () => {
                 const state = store.getState();
                 return !state.loading && state.data === 'loaded';
               },
-              message: 'Data should be loaded and loading should be false'
-            }
-          ]
-        }
+              message: 'Data should be loaded and loading should be false',
+            },
+          ],
+        },
       ];
 
       const results = await framework.runTests(scenarios);
@@ -208,7 +208,7 @@ describe('StateTestFramework', () => {
               type: 'sync',
               execute: (store) => {
                 store.setState({ step: 1 });
-              }
+              },
             },
             {
               name: 'Delayed step',
@@ -216,8 +216,8 @@ describe('StateTestFramework', () => {
               delay: 100,
               execute: (store) => {
                 store.setState({ step: 2 });
-              }
-            }
+              },
+            },
           ],
           assertions: [
             {
@@ -227,10 +227,10 @@ describe('StateTestFramework', () => {
                 const state = store.getState();
                 return state.step === 2;
               },
-              message: 'Should reach final step after delay'
-            }
-          ]
-        }
+              message: 'Should reach final step after delay',
+            },
+          ],
+        },
       ];
 
       const startTime = Date.now();
@@ -247,7 +247,7 @@ describe('StateTestFramework', () => {
     it('should measure performance metrics', async () => {
       const initialState = { counter: 0 };
       const updateCount = 100;
-      
+
       const scenarios: StateTestScenario<any>[] = [
         {
           name: 'Performance Test',
@@ -260,7 +260,7 @@ describe('StateTestFramework', () => {
             type: 'sync' as const,
             execute: (store: StateStore<any>) => {
               store.setState({ counter: i + 1 });
-            }
+            },
           })),
           assertions: [
             {
@@ -269,10 +269,10 @@ describe('StateTestFramework', () => {
               check: (store, context) => {
                 return context.performanceMetrics.averageUpdateTime < 10;
               },
-              message: 'Average update time should be reasonable'
-            }
-          ]
-        }
+              message: 'Average update time should be reasonable',
+            },
+          ],
+        },
       ];
 
       const results = await framework.runTests(scenarios);
@@ -299,8 +299,8 @@ describe('StateTestFramework', () => {
               execute: (store) => {
                 const largeArray = new Array(1000).fill('data');
                 store.setState({ data: largeArray });
-              }
-            }
+              },
+            },
           ],
           assertions: [
             {
@@ -309,10 +309,10 @@ describe('StateTestFramework', () => {
               check: (store, context) => {
                 return context.performanceMetrics.memoryUsage.length > 0;
               },
-              message: 'Memory usage should be tracked'
-            }
-          ]
-        }
+              message: 'Memory usage should be tracked',
+            },
+          ],
+        },
       ];
 
       const results = await framework.runTests(scenarios);
@@ -340,7 +340,7 @@ describe('StateTestFramework', () => {
               execute: async (store) => {
                 await new Promise(resolve => setTimeout(resolve, 50));
                 store.setState({ value1: 'updated1' });
-              }
+              },
             },
             {
               name: 'Concurrent action 2',
@@ -349,8 +349,8 @@ describe('StateTestFramework', () => {
               execute: async (store) => {
                 await new Promise(resolve => setTimeout(resolve, 30));
                 store.setState({ value2: 'updated2' });
-              }
-            }
+              },
+            },
           ],
           assertions: [
             {
@@ -360,10 +360,10 @@ describe('StateTestFramework', () => {
                 const state = store.getState();
                 return state.value1 === 'updated1' && state.value2 === 'updated2';
               },
-              message: 'Both concurrent updates should be applied'
-            }
-          ]
-        }
+              message: 'Both concurrent updates should be applied',
+            },
+          ],
+        },
       ];
 
       const results = await framework.runTests(scenarios);
@@ -391,8 +391,8 @@ describe('StateTestFramework', () => {
                 store.setState({ a: 1 });
                 store.setState({ b: 2 });
                 store.setState({ c: 3 });
-              }
-            }
+              },
+            },
           ],
           assertions: [
             {
@@ -402,10 +402,10 @@ describe('StateTestFramework', () => {
                 const state = store.getState();
                 return state.a === 1 && state.b === 2 && state.c === 3;
               },
-              message: 'All batch updates should be applied'
-            }
-          ]
-        }
+              message: 'All batch updates should be applied',
+            },
+          ],
+        },
       ];
 
       const results = await framework.runTests(scenarios);
@@ -431,11 +431,11 @@ describe('StateTestFramework', () => {
               type: 'sync',
               execute: () => {
                 throw new Error('Test error');
-              }
-            }
+              },
+            },
           ],
-          assertions: []
-        }
+          assertions: [],
+        },
       ];
 
       const results = await framework.runTests(scenarios);
@@ -463,10 +463,10 @@ describe('StateTestFramework', () => {
               check: () => {
                 throw new Error('Assertion error');
               },
-              message: 'This assertion should fail'
-            }
-          ]
-        }
+              message: 'This assertion should fail',
+            },
+          ],
+        },
       ];
 
       const results = await framework.runTests(scenarios);
@@ -504,10 +504,10 @@ describe('StateTestFramework', () => {
               name: 'Test should run',
               type: 'state',
               check: () => true,
-              message: 'Test should run successfully'
-            }
-          ]
-        }
+              message: 'Test should run successfully',
+            },
+          ],
+        },
       ];
 
       const results = await framework.runTests(scenarios);
@@ -535,9 +535,9 @@ describe('StateTestFramework', () => {
               name: 'Should pass',
               type: 'state',
               check: () => true,
-              message: 'This should pass'
-            }
-          ]
+              message: 'This should pass',
+            },
+          ],
         },
         {
           name: 'Failing Test',
@@ -551,10 +551,10 @@ describe('StateTestFramework', () => {
               name: 'Should fail',
               type: 'state',
               check: () => false,
-              message: 'This should fail'
-            }
-          ]
-        }
+              message: 'This should fail',
+            },
+          ],
+        },
       ];
 
       const results = await framework.runTests(scenarios);
@@ -573,7 +573,7 @@ describe('StateTestFramework', () => {
   describe('Event Emission', () => {
     it('should emit test events', async () => {
       const events: string[] = [];
-      
+
       framework.on('testStarted', () => events.push('testStarted'));
       framework.on('testCompleted', () => events.push('testCompleted'));
 
@@ -591,10 +591,10 @@ describe('StateTestFramework', () => {
               name: 'Should emit events',
               type: 'state',
               check: () => true,
-              message: 'Should emit events'
-            }
-          ]
-        }
+              message: 'Should emit events',
+            },
+          ],
+        },
       ];
 
       await framework.runTests(scenarios);

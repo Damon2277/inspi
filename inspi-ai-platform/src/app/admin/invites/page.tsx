@@ -1,25 +1,19 @@
-/**
- * 邀请管理页面
- */
+'use client';
 
-'use client'
+import React from 'react';
 
-import { useEffect, useState } from 'react'
-import AdminLayout from '@/components/admin/AdminLayout'
-import InviteManagement from '@/components/admin/InviteManagement'
+import { InviteManagement } from '@/components/admin/InviteManagement';
 
 export default function AdminInvitesPage() {
   return (
-    <AdminLayout>
-      <div className=\"space-y-6\">
-        <div>
-          <h1 className=\"text-2xl font-bold text-gray-900\">邀请管理</h1>
-          <p className=\"mt-1 text-sm text-gray-600\">
-            管理和监控所有邀请码的使用情况
-          </p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          <div className="border-4 border-dashed border-gray-200 rounded-lg">
+            <InviteManagement />
+          </div>
         </div>
-        <InviteManagement />
       </div>
-    </AdminLayout>
-  )
+    </div>
+  );
 }

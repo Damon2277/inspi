@@ -1,16 +1,17 @@
 /**
  * Middleware Chain Tester Tests
- * 
+ *
  * Tests for middleware chain testing utilities including
  * chain validation, execution order testing, and integration scenarios.
  */
 import { NextRequest, NextResponse } from 'next/server';
+
 import {
   MiddlewareChainTester,
   createDefaultChainTestConfig,
   type MiddlewareDefinition,
   type MiddlewareChain,
-  type IntegrationScenario
+  type IntegrationScenario,
 } from '../../../../lib/testing/middleware';
 
 describe('MiddlewareChainTester', () => {
@@ -35,7 +36,7 @@ describe('MiddlewareChainTester', () => {
         return NextResponse.next();
       },
       dependencies: [],
-      priority: 1
+      priority: 1,
     };
 
     rateLimitMiddleware = {
@@ -48,7 +49,7 @@ describe('MiddlewareChainTester', () => {
         return NextResponse.next();
       },
       dependencies: [],
-      priority: 2
+      priority: 2,
     };
 
     corsMiddleware = {
@@ -62,7 +63,7 @@ describe('MiddlewareChainTester', () => {
         return response;
       },
       dependencies: [],
-      priority: 3
+      priority: 3,
     };
 
     validationMiddleware = {
@@ -81,7 +82,7 @@ describe('MiddlewareChainTester', () => {
         return NextResponse.next();
       },
       dependencies: ['auth'],
-      priority: 4
+      priority: 4,
     };
 
     // Register middlewares
@@ -100,9 +101,9 @@ describe('MiddlewareChainTester', () => {
           { name: 'rate-limit', handler: rateLimitMiddleware.handler, priority: 2 },
           { name: 'cors', handler: corsMiddleware.handler, priority: 3 },
           { name: 'auth', handler: authMiddleware.handler, priority: 1 },
-          { name: 'validation', handler: validationMiddleware.handler, priority: 4 }
+          { name: 'validation', handler: validationMiddleware.handler, priority: 4 },
         ],
-        order: 'sequential'
+        order: 'sequential',
       };
 
       const validation = chainTester.validateChain(chain);
@@ -117,9 +118,9 @@ describe('MiddlewareChainTester', () => {
         name: 'invalid-chain',
         description: 'Chain with missing dependencies',
         middlewares: [
-          { name: 'validation', handler: validationMiddleware.handler } // Missing 'auth' dependency
+          { name: 'validation', handler: validationMiddleware.handler }, // Missing 'auth' dependency
         ],
-        order: 'sequential'
+        order: 'sequential',
       };
 
       const validation = chainTester.validateChain(chain);
@@ -137,9 +138,9 @@ describe('MiddlewareChainTester', () => {
         description: 'Chain with wrong execution order',
         middlewares: [
           { name: 'validation', handler: validationMiddleware.handler, priority: 4 },
-          { name: 'auth', handler: authMiddleware.handler, priority: 1 } // Should come before validation
+          { name: 'auth', handler: authMiddleware.handler, priority: 1 }, // Should come before validation
         ],
-        order: 'sequential'
+        order: 'sequential',
       };
 
       const validation = chainTester.validateChain(chain);
@@ -155,9 +156,9 @@ describe('MiddlewareChainTester', () => {
         description: 'Very long middleware chain',
         middlewares: Array.from({ length: 15 }, (_, i) => ({
           name: `middleware-${i}`,
-          handler: async () => NextResponse.next()
+          handler: async () => NextResponse.next(),
         })),
-        order: 'sequential'
+        order: 'sequential',
       };
 
       const validation = chainTester.validateChain(longChain);
@@ -172,9 +173,9 @@ describe('MiddlewareChainTester', () => {
         name: 'unregistered-chain',
         description: 'Chain with unregistered middleware',
         middlewares: [
-          { name: 'unregistered-middleware', handler: async () => NextResponse.next() }
+          { name: 'unregistered-middleware', handler: async () => NextResponse.next() },
         ],
-        order: 'sequential'
+        order: 'sequential',
       };
 
       const validation = chainTester.validateChain(chain);
@@ -195,9 +196,9 @@ describe('MiddlewareChainTester', () => {
         middlewares: [
           { name: 'cors', handler: corsMiddleware.handler },
           { name: 'rate-limit', handler: rateLimitMiddleware.handler },
-          { name: 'auth', handler: authMiddleware.handler }
+          { name: 'auth', handler: authMiddleware.handler },
         ],
-        order: 'sequential'
+        order: 'sequential',
       };
 
       const request = new NextRequest('http://localhost:3000/api/test', {
@@ -205,8 +206,8 @@ describe('MiddlewareChainTester', () => {
         headers: {
           'origin': 'https://example.com',
           'authorization': 'Bearer valid-token',
-          'x-rate-limit-remaining': '10'
-        }
+          'x-rate-limit-remaining': '10',
+        },
       });
 
       const result = await chainTester.executeChain(chain, request);
@@ -223,17 +224,17 @@ describe('MiddlewareChainTester', () => {
         description: 'Parallel execution chain',
         middlewares: [
           { name: 'cors', handler: corsMiddleware.handler },
-          { name: 'rate-limit', handler: rateLimitMiddleware.handler }
+          { name: 'rate-limit', handler: rateLimitMiddleware.handler },
         ],
-        order: 'parallel'
+        order: 'parallel',
       };
 
       const request = new NextRequest('http://localhost:3000/api/test', {
         method: 'GET',
         headers: {
           'origin': 'https://example.com',
-          'x-rate-limit-remaining': '10'
-        }
+          'x-rate-limit-remaining': '10',
+        },
       });
 
       const result = await chainTester.executeChain(chain, request);
@@ -249,7 +250,7 @@ describe('MiddlewareChainTester', () => {
         name: 'error-middleware',
         handler: async () => {
           throw new Error('Middleware error');
-        }
+        },
       };
 
       chainTester.registerMiddleware(errorMiddleware);
@@ -259,9 +260,9 @@ describe('MiddlewareChainTester', () => {
         description: 'Chain with error middleware',
         middlewares: [
           { name: 'cors', handler: corsMiddleware.handler },
-          { name: 'error-middleware', handler: errorMiddleware.handler }
+          { name: 'error-middleware', handler: errorMiddleware.handler },
         ],
-        order: 'sequential'
+        order: 'sequential',
       };
 
       const request = new NextRequest('http://localhost:3000/api/test');
@@ -278,22 +279,22 @@ describe('MiddlewareChainTester', () => {
         description: 'Chain for state capture testing',
         middlewares: [
           { name: 'cors', handler: corsMiddleware.handler },
-          { name: 'auth', handler: authMiddleware.handler }
+          { name: 'auth', handler: authMiddleware.handler },
         ],
-        order: 'sequential'
+        order: 'sequential',
       };
 
       const request = new NextRequest('http://localhost:3000/api/test', {
         headers: {
           'origin': 'https://example.com',
-          'authorization': 'Bearer valid-token'
-        }
+          'authorization': 'Bearer valid-token',
+        },
       });
 
       const result = await chainTester.executeChain(chain, request);
 
       expect(result.intermediateStates).toHaveLength(2);
-      
+
       result.intermediateStates.forEach(state => {
         expect(state.middlewareName).toBeDefined();
         expect(state.request).toBeDefined();
@@ -311,9 +312,9 @@ describe('MiddlewareChainTester', () => {
         description: 'Integration testing chain',
         middlewares: [
           { name: 'auth', handler: authMiddleware.handler },
-          { name: 'validation', handler: validationMiddleware.handler }
+          { name: 'validation', handler: validationMiddleware.handler },
         ],
-        order: 'sequential'
+        order: 'sequential',
       };
 
       const scenarios: IntegrationScenario[] = [
@@ -325,24 +326,24 @@ describe('MiddlewareChainTester', () => {
               middleware: 'auth',
               input: { authorization: 'Bearer valid-token' },
               expectedOutput: { authorized: true },
-              sideEffects: []
+              sideEffects: [],
             },
             {
               middleware: 'validation',
               input: { data: { name: 'test' } },
               expectedOutput: { valid: true },
-              sideEffects: []
-            }
+              sideEffects: [],
+            },
           ],
           assertions: [
             {
               type: 'response',
               target: 'final',
               condition: { status: 200 },
-              message: 'Should allow valid authenticated request'
-            }
-          ]
-        }
+              message: 'Should allow valid authenticated request',
+            },
+          ],
+        },
       ];
 
       const results = await chainTester.testChainScenarios(chain, scenarios);
@@ -360,16 +361,16 @@ describe('MiddlewareChainTester', () => {
         description: 'Chain for performance benchmarking',
         middlewares: [
           { name: 'cors', handler: corsMiddleware.handler },
-          { name: 'rate-limit', handler: rateLimitMiddleware.handler }
+          { name: 'rate-limit', handler: rateLimitMiddleware.handler },
         ],
-        order: 'sequential'
+        order: 'sequential',
       };
 
       const request = new NextRequest('http://localhost:3000/api/test', {
         headers: {
           'origin': 'https://example.com',
-          'x-rate-limit-remaining': '10'
-        }
+          'x-rate-limit-remaining': '10',
+        },
       });
 
       const benchmark = await chainTester.benchmarkChain(chain, request, 10);
@@ -381,11 +382,11 @@ describe('MiddlewareChainTester', () => {
       expect(benchmark.memoryUsage.average).toBeGreaterThanOrEqual(0);
       expect(benchmark.memoryUsage.peak).toBeGreaterThanOrEqual(0);
       expect(benchmark.bottlenecks).toHaveLength(2);
-      
+
       // Verify bottlenecks are sorted by execution time
       if (benchmark.bottlenecks.length > 1) {
         expect(benchmark.bottlenecks[0].averageTime).toBeGreaterThanOrEqual(
-          benchmark.bottlenecks[1].averageTime
+          benchmark.bottlenecks[1].averageTime,
         );
       }
     });
@@ -397,7 +398,7 @@ describe('MiddlewareChainTester', () => {
         handler: async (request: NextRequest) => {
           await new Promise(resolve => setTimeout(resolve, 50));
           return NextResponse.next();
-        }
+        },
       };
 
       chainTester.registerMiddleware(slowMiddleware);
@@ -408,16 +409,16 @@ describe('MiddlewareChainTester', () => {
         middlewares: [
           { name: 'cors', handler: corsMiddleware.handler },
           { name: 'slow-middleware', handler: slowMiddleware.handler },
-          { name: 'rate-limit', handler: rateLimitMiddleware.handler }
+          { name: 'rate-limit', handler: rateLimitMiddleware.handler },
         ],
-        order: 'sequential'
+        order: 'sequential',
       };
 
       const request = new NextRequest('http://localhost:3000/api/test');
       const benchmark = await chainTester.benchmarkChain(chain, request, 5);
 
       expect(benchmark.bottlenecks).toHaveLength(3);
-      
+
       // The slow middleware should be the top bottleneck
       const topBottleneck = benchmark.bottlenecks[0];
       expect(topBottleneck.middleware).toBe('slow-middleware');
@@ -434,9 +435,9 @@ describe('MiddlewareChainTester', () => {
         middlewares: [
           { name: 'cors', handler: corsMiddleware.handler },
           { name: 'auth', handler: authMiddleware.handler },
-          { name: 'rate-limit', handler: rateLimitMiddleware.handler }
+          { name: 'rate-limit', handler: rateLimitMiddleware.handler },
         ],
-        order: 'sequential'
+        order: 'sequential',
       };
 
       const request = new NextRequest('http://localhost:3000/api/test');
@@ -445,19 +446,19 @@ describe('MiddlewareChainTester', () => {
         {
           middlewareName: 'auth',
           errorType: 'sync' as const,
-          expectedBehavior: 'fail-fast' as const
+          expectedBehavior: 'fail-fast' as const,
         },
         {
           middlewareName: 'rate-limit',
           errorType: 'async' as const,
-          expectedBehavior: 'fail-fast' as const
-        }
+          expectedBehavior: 'fail-fast' as const,
+        },
       ];
 
       const results = await chainTester.testChainErrorHandling(chain, request, errorScenarios);
 
       expect(results).toHaveLength(2);
-      
+
       results.forEach(result => {
         expect(result.scenario).toBeDefined();
         expect(result.success).toBe(false);
@@ -473,7 +474,7 @@ describe('MiddlewareChainTester', () => {
           return new Promise(() => {
             // Never resolves, causing timeout
           });
-        }
+        },
       };
 
       chainTester.registerMiddleware(timeoutMiddleware);
@@ -482,9 +483,9 @@ describe('MiddlewareChainTester', () => {
         name: 'timeout-chain',
         description: 'Chain with timeout middleware',
         middlewares: [
-          { name: 'timeout-middleware', handler: timeoutMiddleware.handler }
+          { name: 'timeout-middleware', handler: timeoutMiddleware.handler },
         ],
-        order: 'sequential'
+        order: 'sequential',
       };
 
       const request = new NextRequest('http://localhost:3000/api/test');
@@ -508,7 +509,7 @@ describe('MiddlewareChainTester', () => {
           console.log(`Request: ${request.method} ${request.url}`);
           return NextResponse.next();
         },
-        priority: 0
+        priority: 0,
       };
 
       const metricsMiddleware: MiddlewareDefinition = {
@@ -517,7 +518,7 @@ describe('MiddlewareChainTester', () => {
           // Simulate metrics collection
           return NextResponse.next();
         },
-        priority: 5
+        priority: 5,
       };
 
       chainTester.registerMiddleware(loggerMiddleware);
@@ -532,9 +533,9 @@ describe('MiddlewareChainTester', () => {
           { name: 'rate-limit', handler: rateLimitMiddleware.handler, priority: 2 },
           { name: 'auth', handler: authMiddleware.handler, priority: 1 },
           { name: 'validation', handler: validationMiddleware.handler, priority: 4 },
-          { name: 'metrics', handler: metricsMiddleware.handler, priority: 5 }
+          { name: 'metrics', handler: metricsMiddleware.handler, priority: 5 },
         ],
-        order: 'sequential'
+        order: 'sequential',
       };
 
       const validation = chainTester.validateChain(complexChain);
@@ -546,9 +547,9 @@ describe('MiddlewareChainTester', () => {
           'origin': 'https://example.com',
           'authorization': 'Bearer valid-token',
           'x-rate-limit-remaining': '10',
-          'content-type': 'application/json'
+          'content-type': 'application/json',
         },
-        body: JSON.stringify({ data: 'test' })
+        body: JSON.stringify({ data: 'test' }),
       });
 
       const result = await chainTester.executeChain(complexChain, request);
@@ -567,7 +568,7 @@ describe('MiddlewareChainTester', () => {
           // Simulate memory-intensive operation
           const largeArray = new Array(10000).fill('data');
           return NextResponse.json({ processed: largeArray.length });
-        }
+        },
       };
 
       chainTester.registerMiddleware(memoryIntensiveMiddleware);
@@ -576,9 +577,9 @@ describe('MiddlewareChainTester', () => {
         name: 'memory-chain',
         description: 'Chain for memory usage testing',
         middlewares: [
-          { name: 'memory-intensive', handler: memoryIntensiveMiddleware.handler }
+          { name: 'memory-intensive', handler: memoryIntensiveMiddleware.handler },
         ],
-        order: 'sequential'
+        order: 'sequential',
       };
 
       const request = new NextRequest('http://localhost:3000/api/test');

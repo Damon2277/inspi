@@ -29,4 +29,5 @@ sizes.forEach(size => {
 });
 
 console.log('PNG icons created successfully!');
-console.log('Note: These are minimal placeholder icons. For production, use proper icon design tools.');
+console.log('Note: These are minimal placeholder icons. For production,
+  use proper icon design tools.');
