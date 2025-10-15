@@ -2,10 +2,6 @@
 
 import React, { useState } from 'react';
 
-interface PasswordResetFormData {
-  email: string;
-}
-
 interface PasswordResetFormProps {
   onSuccess?: (email?: string) => void;
   isLoading?: boolean;

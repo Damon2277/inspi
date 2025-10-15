@@ -5,7 +5,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { WorkService, CreateWorkRequest, UpdateWorkRequest } from '@/core/community/work-service';
 import { useAuth } from '@/shared/hooks/useAuth';
@@ -64,14 +64,7 @@ export function WorkEditor({ workId, onSave, onCancel, className = '' }: WorkEdi
     '生活应用', '思维训练', '复习总结', '拓展延伸',
   ];
 
-  // 加载现有作品数据（编辑模式）
-  useEffect(() => {
-    if (workId) {
-      loadWork();
-    }
-  }, [workId]);
-
-  const loadWork = async () => {
+  const loadWork = useCallback(async () => {
     if (!workId) return;
 
     try {
@@ -105,7 +98,12 @@ export function WorkEditor({ workId, onSave, onCancel, className = '' }: WorkEdi
     } finally {
       setLoading(false);
     }
-  };
+  }, [workId]);
+
+  // 加载现有作品数据（编辑模式）
+  useEffect(() => {
+    void loadWork();
+  }, [loadWork]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;

@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { LeaderboardResponse, LeaderboardEntry, LeaderboardType } from '@/shared/types/contribution';
 
@@ -112,7 +112,7 @@ const LeaderboardComponent: React.FC<LeaderboardProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<LeaderboardType>(LeaderboardType.TOTAL);
 
-  const fetchLeaderboard = async (type: LeaderboardType) => {
+  const fetchLeaderboard = useCallback(async (type: LeaderboardType) => {
     try {
       setLoading(true);
       setError(null);
@@ -146,11 +146,11 @@ const LeaderboardComponent: React.FC<LeaderboardProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [limit, showUserRank, userId]);
 
   useEffect(() => {
-    fetchLeaderboard(selectedType);
-  }, [selectedType, limit, showUserRank, userId]);
+    void fetchLeaderboard(selectedType);
+  }, [selectedType, fetchLeaderboard]);
 
   const handleTypeChange = (type: LeaderboardType) => {
     setSelectedType(type);
@@ -193,7 +193,7 @@ const LeaderboardComponent: React.FC<LeaderboardProps> = ({
               </div>
             </div>
             <button
-              onClick={() => fetchLeaderboard(selectedType)}
+              onClick={() => void fetchLeaderboard(selectedType)}
               className="mt-3 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors text-sm"
             >
               重新加载

@@ -10,7 +10,6 @@ import {
   SubscriptionUsage,
   UserTier,
   SubscriptionStatus,
-  PaymentStatus,
   CreatePlanRequest,
 } from '@/shared/types/subscription';
 

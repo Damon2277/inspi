@@ -105,7 +105,7 @@ export class FrontendOptimizer {
   ): React.ComponentType<P> {
     if (!this.config.enableLazyLoading) {
       // 如果禁用懒加载，直接返回动态导入
-      return React.lazy(importFn);
+      return React.lazy(importFn) as unknown as React.ComponentType<P>;
     }
 
     const LazyComponent = React.lazy(() => {
@@ -125,7 +125,7 @@ export class FrontendOptimizer {
     const SuspenseWrapper = (props: P) => React.createElement(
       React.Suspense,
       { fallback: fallback ? React.createElement(fallback) : React.createElement('div', null, 'Loading...') },
-      React.createElement(LazyComponent, props),
+      React.createElement(LazyComponent as React.ComponentType<P>, props),
     );
 
     const lazyComponentInfo = LazyComponent as unknown as { displayName?: string; name?: string };
@@ -219,7 +219,7 @@ export class FrontendOptimizer {
       return Component;
     }
 
-    return React.memo(Component, areEqual);
+    return React.memo(Component, areEqual) as React.ComponentType<P>;
   }
 
   /**

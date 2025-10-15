@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 /**
  * 重试按钮属性
@@ -41,18 +41,7 @@ export const RetryButton: React.FC<RetryButtonProps> = ({
   const [lastError, setLastError] = useState<Error | null>(null);
 
   // 自动重试倒计时
-  useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown(countdown - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (countdown === 0 && autoRetry && retryCount > 0 && retryCount < maxRetries) {
-      handleRetry();
-    }
-  }, [countdown, autoRetry, retryCount, maxRetries]);
-
-  const handleRetry = async () => {
+  const handleRetry = useCallback(async () => {
     if (isRetrying || retryCount >= maxRetries) {
       return;
     }
@@ -68,18 +57,35 @@ export const RetryButton: React.FC<RetryButtonProps> = ({
         setRetryCount(0);
       }
     } catch (error) {
-      const newRetryCount = retryCount + 1;
-      setRetryCount(newRetryCount);
-      setLastError(error instanceof Error ? error : new Error('Retry failed'));
+      const normalizedError = error instanceof Error ? error : new Error('Retry failed');
+      setLastError(normalizedError);
+      setRetryCount(prev => {
+        const next = prev + 1;
 
-      // 如果还有重试次数且启用自动重试，开始倒计时
-      if (autoRetry && newRetryCount < maxRetries) {
-        setCountdown(Math.floor(retryDelay / 1000));
-      }
+        // 如果还有重试次数且启用自动重试，开始倒计时
+        if (autoRetry && next < maxRetries) {
+          setCountdown(Math.floor(retryDelay / 1000));
+        }
+
+        return next;
+      });
     } finally {
       setIsRetrying(false);
     }
-  };
+  }, [autoRetry, isRetrying, maxRetries, onRetry, resetOnSuccess, retryDelay, retryCount]);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(prev => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+
+    if (countdown === 0 && autoRetry && retryCount > 0 && retryCount < maxRetries) {
+      void handleRetry();
+    }
+  }, [countdown, autoRetry, retryCount, maxRetries, handleRetry]);
 
   const resetRetries = () => {
     setRetryCount(0);
@@ -111,7 +117,7 @@ export const RetryButton: React.FC<RetryButtonProps> = ({
     <div className="inline-flex flex-col items-center space-y-2">
       {/* 主重试按钮 */}
       <button
-        onClick={handleRetry}
+        onClick={() => void handleRetry()}
         disabled={isDisabled}
         className={buttonClasses}
       >

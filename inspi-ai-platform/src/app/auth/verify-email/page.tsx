@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -14,19 +14,10 @@ export default function VerifyEmailPage() {
 
   const token = searchParams.get('token');
   const email = searchParams.get('email');
+  const redirectTimeoutRef = useRef<number | null>(null);
+  const cooldownTimerRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (token) {
-      // 如果有token，验证邮箱
-      verifyEmail(token);
-    } else {
-      // 如果没有token，显示等待验证状态
-      setVerificationStatus('loading');
-      setCanResend(true);
-    }
-  }, [token]);
-
-  const verifyEmail = async (verificationToken: string) => {
+  const verifyEmail = useCallback(async (verificationToken: string) => {
     try {
       const response = await fetch('/api/auth/verify-email', {
         method: 'POST',
@@ -43,7 +34,7 @@ export default function VerifyEmailPage() {
       if (response.ok && result.success) {
         setVerificationStatus('success');
         // 3秒后自动跳转到登录页面
-        setTimeout(() => {
+        redirectTimeoutRef.current = window.setTimeout(() => {
           router.push('/auth/login?verified=true');
         }, 3000);
       } else {
@@ -58,7 +49,24 @@ export default function VerifyEmailPage() {
       setVerificationStatus('error');
       setError('网络错误，请重试');
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    if (token) {
+      // 如果有token，验证邮箱
+      void verifyEmail(token);
+    } else {
+      // 如果没有token，显示等待验证状态
+      setVerificationStatus('loading');
+      setCanResend(true);
+    }
+
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, [token, verifyEmail]);
 
   const resendVerificationEmail = async () => {
     if (!email || resendCooldown > 0) return;
@@ -80,10 +88,13 @@ export default function VerifyEmailPage() {
         // 设置60秒冷却时间
         let countdown = 60;
         setResendCooldown(countdown);
-        const timer = setInterval(() => {
+        cooldownTimerRef.current = window.setInterval(() => {
           countdown -= 1;
           if (countdown <= 0) {
-            clearInterval(timer);
+            if (cooldownTimerRef.current) {
+              clearInterval(cooldownTimerRef.current);
+              cooldownTimerRef.current = null;
+            }
             setResendCooldown(0);
           } else {
             setResendCooldown(countdown);
@@ -96,6 +107,14 @@ export default function VerifyEmailPage() {
       setError('网络错误，请重试');
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (cooldownTimerRef.current) {
+        clearInterval(cooldownTimerRef.current);
+      }
+    };
+  }, []);
 
   const renderContent = () => {
     switch (verificationStatus) {

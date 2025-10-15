@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
       // 如果数据库连接失败，在开发环境提供友好提示
       if (process.env.NODE_ENV === 'development') {
         console.error('Database connection failed:', dbError.message);
-        
+
         // 如果是尝试使用demo账号，提供正确的凭据提示
         if (email === 'demo@example.com' || email === process.env.DEMO_LOGIN_EMAIL) {
           return NextResponse.json(
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
             { status: 401 },
           );
         }
-        
+
         return NextResponse.json(
           {
             success: false,

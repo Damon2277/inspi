@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     try {
       // 验证JWT令牌
       const decoded = verifyToken(token);
-      
+
       if (!decoded || !decoded.email) {
         return NextResponse.json(
           { success: false, error: '无效的会话' },
@@ -69,13 +69,13 @@ export async function POST(request: NextRequest) {
       }
 
       // 开发环境：如果是demo用户，直接返回模拟数据
-      if (process.env.NODE_ENV === 'development' && 
+      if (process.env.NODE_ENV === 'development' &&
           process.env.DEMO_LOGIN_ENABLED === 'true' &&
           decoded.email === 'demo@example.com') {
         return NextResponse.json(
-          { 
-            success: true, 
-            user: DEMO_USER 
+          {
+            success: true,
+            user: DEMO_USER,
           },
           { status: 200 },
         );
@@ -101,13 +101,10 @@ export async function POST(request: NextRequest) {
         // 如果数据库连接失败，在开发环境返回模拟用户
         if (process.env.NODE_ENV === 'development') {
           console.warn('Database connection failed, using demo user');
-          return NextResponse.json(
-            { 
-              success: true, 
-              user: { ...DEMO_USER, email: decoded.email } 
-            },
-            { status: 200 },
-          );
+          return NextResponse.json({
+            success: true,
+            user: { ...DEMO_USER, email: decoded.email },
+          }, { status: 200 });
         }
         throw dbError;
       }

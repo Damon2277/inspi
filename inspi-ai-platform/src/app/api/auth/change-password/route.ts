@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { requireAuth, AuthenticatedRequest } from '@/core/auth/middleware';
 import { changePassword } from '@/core/auth/service';

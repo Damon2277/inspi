@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { PlanConfig } from '@/core/subscription/plan-model';
 import { planService } from '@/core/subscription/plan-service';
@@ -16,12 +16,17 @@ export default function PricingPage() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [banner, setBanner] = useState<{
+    type: 'success' | 'error' | 'info';
+    message: string;
+  } | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, [user]);
+  const showBanner = useCallback((type: 'success' | 'error' | 'info', message: string) => {
+    setBanner({ type, message });
+    setTimeout(() => setBanner(null), 4000);
+  }, []);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
 
@@ -43,11 +48,15 @@ export default function PricingPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSelectPlan = async (planId: string) => {
     if (!user) {
-      alert('请先登录');
+      showBanner('info', '请先登录');
       return;
     }
 
@@ -67,7 +76,7 @@ export default function PricingPage() {
           window.location.href = `/payment/${result.paymentInfo.paymentId}`;
         } else {
           // 无需支付，直接完成
-          alert('套餐升级成功！');
+          showBanner('success', '套餐升级成功！');
           await loadData();
         }
       } else {
@@ -85,7 +94,7 @@ export default function PricingPage() {
 
     } catch (error) {
       console.error('选择套餐失败:', error);
-      alert('操作失败，请稍后重试');
+      showBanner('error', '操作失败，请稍后重试');
     } finally {
       setIsProcessing(false);
       setSelectedPlan(null);

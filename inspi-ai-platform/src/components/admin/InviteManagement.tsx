@@ -7,7 +7,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 // 类型定义
 interface InviteCode {
@@ -53,12 +53,7 @@ export function InviteManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 加载邀请码数据
-  useEffect(() => {
-    loadInvites();
-  }, [filters, pagination.page]);
-
-  const loadInvites = async () => {
+  const loadInvites = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -129,13 +124,17 @@ export function InviteManagement() {
         });
       }
 
-      setInvites(filteredInvites);
-      const newPagination = {
-        ...pagination,
+      const currentPage = pagination.page;
+      const currentLimit = pagination.limit;
+      const start = (currentPage - 1) * currentLimit;
+      const end = start + currentLimit;
+
+      setInvites(filteredInvites.slice(start, end));
+      setPagination(prev => ({
+        ...prev,
         totalCount: filteredInvites.length,
-        totalPages: Math.ceil(filteredInvites.length / pagination.limit),
-      };
-      setPagination(newPagination);
+        totalPages: Math.max(1, Math.ceil(filteredInvites.length / prev.limit)),
+      }));
 
     } catch (err) {
       console.error('加载邀请码失败:', err);
@@ -143,23 +142,28 @@ export function InviteManagement() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filters, pagination.limit, pagination.page]);
+
+  // 加载邀请码数据
+  useEffect(() => {
+    void loadInvites();
+  }, [loadInvites]);
 
   // 处理搜索
   const handleSearch = (value: string) => {
-    setFilters({ ...filters, search: value });
-    setPagination({ ...pagination, page: 1 });
+    setFilters(prev => ({ ...prev, search: value }));
+    setPagination(prev => ({ ...prev, page: 1 }));
   };
 
   // 处理状态过滤
   const handleStatusFilter = (status: InviteFilters['status']) => {
-    setFilters({ ...filters, status });
-    setPagination({ ...pagination, page: 1 });
+    setFilters(prev => ({ ...prev, status }));
+    setPagination(prev => ({ ...prev, page: 1 }));
   };
 
   // 处理页面切换
   const handlePageChange = (page: number) => {
-    setPagination({ ...pagination, page });
+    setPagination(prev => ({ ...prev, page }));
   };
 
   // 格式化日期

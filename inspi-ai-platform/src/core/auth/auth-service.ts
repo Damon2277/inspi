@@ -11,7 +11,7 @@ import ContributionLog from '@/lib/models/ContributionLog';
 import User, { UserDocument } from '@/lib/models/User';
 import connectDB from '@/lib/mongodb';
 
-import { generateToken, generateRefreshToken, verifyToken, verifyRefreshToken, JWTPayload } from './jwt';
+import { generateToken, generateRefreshToken, verifyToken, verifyRefreshToken } from './jwt';
 
 
 export interface AuthResponse {
@@ -66,6 +66,27 @@ export class AuthService {
    */
   static async register(data: RegisterRequest): Promise<AuthResponse> {
     try {
+      // Demo mode support
+      const demoLoginDisabled = process.env.DEMO_LOGIN_ENABLED === 'false';
+      if (!demoLoginDisabled && process.env.NODE_ENV === 'development') {
+        // In demo mode, simulate successful registration
+        console.log('Demo mode: Simulating successful registration for', data.email);
+        return {
+          success: true,
+          user: {
+            _id: 'demo-user-id',
+            email: data.email,
+            name: data.name,
+            emailVerified: false,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          } as any,
+          token: 'demo-token',
+          refreshToken: 'demo-refresh-token',
+          message: '注册成功！您可以使用 demo@example.com / demopass 登录',
+        };
+      }
+
       await connectDB();
 
       // 验证输入
@@ -363,7 +384,7 @@ export class AuthService {
   /**
    * 用户登出
    */
-  static async logout(token: string): Promise<{ success: boolean; message?: string }> {
+  static async logout(_token: string): Promise<{ success: boolean; message?: string }> {
     try {
       // 在实际应用中，这里可能需要：
       // 1. 将token加入黑名单

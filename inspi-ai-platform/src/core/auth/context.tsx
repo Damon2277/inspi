@@ -2,8 +2,6 @@
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 
-import User from '@/lib/models/User';
-
 // UserDocument类型定义
 interface UserDocument {
   _id: string;

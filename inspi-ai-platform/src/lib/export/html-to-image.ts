@@ -6,6 +6,11 @@
 import domtoimage from 'dom-to-image';
 import html2canvas from 'html2canvas';
 
+export const DEFAULT_EXPORT_DIMENSIONS = {
+  width: 944,
+  height: 600,
+} as const;
+
 export interface ExportOptions {
   format: 'png' | 'jpg' | 'svg';
   quality?: number; // 0-1, 仅对JPG有效
@@ -264,8 +269,8 @@ export const exportPresets = {
   social: {
     format: 'png' as const,
     scale: 2,
-    width: 800,
-    height: 800,
+    width: DEFAULT_EXPORT_DIMENSIONS.width,
+    height: DEFAULT_EXPORT_DIMENSIONS.height,
     backgroundColor: '#ffffff',
   },
 
@@ -273,6 +278,8 @@ export const exportPresets = {
   print: {
     format: 'png' as const,
     scale: 3,
+    width: DEFAULT_EXPORT_DIMENSIONS.width,
+    height: DEFAULT_EXPORT_DIMENSIONS.height,
     backgroundColor: '#ffffff',
   },
 
@@ -281,6 +288,8 @@ export const exportPresets = {
     format: 'jpg' as const,
     scale: 1,
     quality: 0.8,
+    width: DEFAULT_EXPORT_DIMENSIONS.width,
+    height: DEFAULT_EXPORT_DIMENSIONS.height,
     backgroundColor: '#ffffff',
   },
 
@@ -288,6 +297,8 @@ export const exportPresets = {
   transparent: {
     format: 'png' as const,
     scale: 2,
+    width: DEFAULT_EXPORT_DIMENSIONS.width,
+    height: DEFAULT_EXPORT_DIMENSIONS.height,
     backgroundColor: 'transparent',
   },
 } as const;

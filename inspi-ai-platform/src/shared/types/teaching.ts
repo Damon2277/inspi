@@ -19,6 +19,47 @@ export interface TeachingCard {
     knowledgePoint?: string;
     generatedAt?: Date | string;
   };
+  sop?: CardSOPSection[];
+  presentation?: CardPresentationMeta;
+  cached?: boolean;
+}
+
+export interface CardSOPMicroStep {
+  title: string;
+  goal: string;
+  teacherActions: string;
+  studentActions: string;
+  evidence?: string;
+  differentiation?: {
+    basic?: string;
+    intermediate?: string;
+    advanced?: string;
+  };
+  durationSeconds?: number;
+  interactionMode?: string;
+}
+
+export interface CardSOPSection {
+  title: string;
+  durationMinutes: number;
+  steps: CardSOPMicroStep[];
+}
+
+export interface CardPresentationCue {
+  title: string;
+  narrative: string;
+  emphasis?: string;
+  durationSeconds?: number;
+  spotlight?: string;
+}
+
+export interface CardPresentationMeta {
+  headline: string;
+  summary: string;
+  recommendedDuration: number;
+  cues: CardPresentationCue[];
+  theme?: 'light' | 'dark';
+  callToAction?: string;
 }
 
 export interface GenerateCardsRequest {

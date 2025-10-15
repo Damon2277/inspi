@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 
 import {
   exportElementToImage,
@@ -27,33 +27,50 @@ interface ExportSharePanelProps {
     type: string;
   };
   className?: string;
+  prepareExportElement?: () => Promise<HTMLElement | null>;
+  finalizeExport?: () => void;
 }
 
-export function ExportSharePanel({ cardElement, cardData, className = '' }: ExportSharePanelProps) {
+export function ExportSharePanel({
+  cardElement,
+  cardData,
+  className = '',
+  prepareExportElement,
+  finalizeExport,
+}: ExportSharePanelProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [showExportOptions, setShowExportOptions] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [exportProgress, setExportProgress] = useState('');
+  const [feedback, setFeedback] = useState<{
+    type: 'success' | 'error' | 'info';
+    message: string;
+  } | null>(null);
+
+  const showFeedback = (type: 'success' | 'error' | 'info', message: string) => {
+    setFeedback({ type, message });
+    setTimeout(() => setFeedback(null), 3000);
+  };
 
   // 导出格式选项
   const exportFormats = [
     {
       key: 'social',
-      name: '社交媒体 (PNG)',
-      description: '800x800 高清正方形',
+      name: '课堂展示 (PNG)',
+      description: '944×600 高清画布，适合投屏',
       icon: '📱',
     },
     {
       key: 'print',
-      name: '高清打印 (PNG)',
-      description: '3倍分辨率，适合打印',
+      name: '高清导出 (PNG)',
+      description: '3× 分辨率，保留细节',
       icon: '🖨️',
     },
     {
       key: 'web',
       name: '网页使用 (JPG)',
-      description: '压缩文件，快速加载',
+      description: '标准尺寸，便于分享',
       icon: '🌐',
     },
     {
@@ -64,36 +81,50 @@ export function ExportSharePanel({ cardElement, cardData, className = '' }: Expo
     },
   ];
 
+  const resolveExportTarget = async (): Promise<{ target: HTMLElement | null; prepared: boolean }> => {
+    if (prepareExportElement) {
+      const target = await prepareExportElement();
+      return { target, prepared: true };
+    }
+
+    return { target: cardElement, prepared: false };
+  };
+
   /**
    * 导出图片
    */
   const handleExport = async (presetKey: keyof typeof exportPresets) => {
-    if (!cardElement) {
-      alert('请先生成卡片内容');
-      return;
-    }
-
     setIsExporting(true);
     setExportProgress('准备导出...');
+
+    let prepared = false;
 
     try {
       const options = exportPresets[presetKey];
       setExportProgress('正在生成图片...');
 
-      const result = await exportElementToImage(cardElement, options);
+      const { target, prepared: didPrepare } = await resolveExportTarget();
+      prepared = prepared || didPrepare;
+
+      if (!target) {
+        throw new Error('未找到可导出的卡片区域');
+      }
+
+      const result = await exportElementToImage(target, options);
 
       setExportProgress('准备下载...');
       downloadImage(result);
 
       setExportProgress('导出完成！');
 
-      // 记录导出事件
-      console.log(`导出卡片: ${cardData.id}, 格式: ${presetKey}`);
+      showFeedback('success', '图片已保存');
 
     } catch (error) {
-      console.error('导出失败:', error);
-      alert(`导出失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      showFeedback('error', `导出失败：${error instanceof Error ? error.message : '未知错误'}`);
     } finally {
+      if (prepared && finalizeExport) {
+        finalizeExport();
+      }
       setIsExporting(false);
       setShowExportOptions(false);
       setTimeout(() => setExportProgress(''), 2000);
@@ -104,22 +135,29 @@ export function ExportSharePanel({ cardElement, cardData, className = '' }: Expo
    * 复制图片到剪贴板
    */
   const handleCopyImage = async () => {
-    if (!cardElement) {
-      alert('请先生成卡片内容');
-      return;
-    }
-
     setIsExporting(true);
     setExportProgress('正在复制到剪贴板...');
 
+    let prepared = false;
+
     try {
-      const result = await exportElementToImage(cardElement, exportPresets.social);
+      const { target, prepared: didPrepare } = await resolveExportTarget();
+      prepared = prepared || didPrepare;
+
+      if (!target) {
+        throw new Error('未找到可导出的卡片区域');
+      }
+
+      const result = await exportElementToImage(target, exportPresets.social);
       await copyImageToClipboard(result);
       setExportProgress('已复制到剪贴板！');
+      showFeedback('success', '卡片已复制到剪贴板');
     } catch (error) {
-      console.error('复制失败:', error);
-      alert(`复制失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      showFeedback('error', `复制失败：${error instanceof Error ? error.message : '未知错误'}`);
     } finally {
+      if (prepared && finalizeExport) {
+        finalizeExport();
+      }
       setIsExporting(false);
       setTimeout(() => setExportProgress(''), 2000);
     }
@@ -130,6 +168,8 @@ export function ExportSharePanel({ cardElement, cardData, className = '' }: Expo
    */
   const handleShare = async (platform: SharePlatform) => {
     setIsSharing(true);
+
+    let prepared = false;
 
     try {
       // 生成分享链接
@@ -144,9 +184,16 @@ export function ExportSharePanel({ cardElement, cardData, className = '' }: Expo
       };
 
       // 如果需要图片，先导出
-      if (['weibo', 'qq'].includes(platform) && cardElement) {
+      if (['weibo', 'qq'].includes(platform)) {
         setExportProgress('正在生成分享图片...');
-        const result = await exportElementToImage(cardElement, exportPresets.social);
+        const { target, prepared: didPrepare } = await resolveExportTarget();
+        prepared = prepared || didPrepare;
+
+        if (!target) {
+          throw new Error('未找到可导出的卡片区域');
+        }
+
+        const result = await exportElementToImage(target, exportPresets.social);
 
         // 这里需要上传图片到服务器获取公开URL
         // 暂时使用本地DataURL (某些平台可能不支持)
@@ -158,11 +205,14 @@ export function ExportSharePanel({ cardElement, cardData, className = '' }: Expo
 
       // 记录分享事件
       await trackShareEvent(cardData.id, platform);
+      showFeedback('success', '分享链接已生成');
 
     } catch (error) {
-      console.error('分享失败:', error);
-      alert(`分享失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      showFeedback('error', `分享失败：${error instanceof Error ? error.message : '未知错误'}`);
     } finally {
+      if (prepared && finalizeExport) {
+        finalizeExport();
+      }
       setIsSharing(false);
       setShowShareOptions(false);
       setExportProgress('');
@@ -176,7 +226,7 @@ export function ExportSharePanel({ cardElement, cardData, className = '' }: Expo
         {/* 快速导出按钮 */}
         <button
           onClick={() => handleExport('social')}
-          disabled={isExporting || !cardElement}
+          disabled={isExporting || (!cardElement && !prepareExportElement)}
           style={{
             padding: '8px 16px',
             backgroundColor: '#3b82f6',
@@ -196,57 +246,14 @@ export function ExportSharePanel({ cardElement, cardData, className = '' }: Expo
           {isExporting ? '导出中...' : '下载图片'}
         </button>
 
-        {/* 复制到剪贴板 */}
-        <button
-          onClick={handleCopyImage}
-          disabled={isExporting || !cardElement}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#10b981',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: isExporting ? 'not-allowed' : 'pointer',
-            opacity: isExporting ? 0.6 : 1,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-        >
-          📋 复制图片
-        </button>
-
-        {/* 更多导出选项 */}
-        <button
-          onClick={() => setShowExportOptions(!showExportOptions)}
-          disabled={isExporting || !cardElement}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#6b7280',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: isExporting ? 'not-allowed' : 'pointer',
-            opacity: isExporting ? 0.6 : 1,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-        >
-          ⚙️ 更多格式
-        </button>
 
         {/* 分享按钮 */}
         <button
-          onClick={() => setShowShareOptions(!showShareOptions)}
+          onClick={() => handleShare('wechat' as SharePlatform)}
           disabled={isSharing}
           style={{
             padding: '8px 16px',
-            backgroundColor: '#f59e0b',
+            backgroundColor: '#10b981',
             color: 'white',
             border: 'none',
             borderRadius: '6px',
@@ -259,10 +266,26 @@ export function ExportSharePanel({ cardElement, cardData, className = '' }: Expo
             gap: '6px',
           }}
         >
-          {isSharing ? '⏳' : '📤'}
-          {isSharing ? '分享中...' : '分享'}
+          {isSharing ? '⏳' : '💬'}
+          {isSharing ? '分享中...' : '分享到微信'}
         </button>
       </div>
+
+      {feedback && (
+        <div
+          style={{
+            marginTop: '12px',
+            padding: '10px 12px',
+            borderRadius: '8px',
+            fontSize: '13px',
+            color: feedback.type === 'error' ? '#b91c1c' : '#0f172a',
+            backgroundColor:
+              feedback.type === 'error' ? '#fee2e2' : feedback.type === 'success' ? '#dcfce7' : '#e0f2fe',
+          }}
+        >
+          {feedback.message}
+        </div>
+      )}
 
       {/* 进度提示 */}
       {exportProgress && (
@@ -278,106 +301,6 @@ export function ExportSharePanel({ cardElement, cardData, className = '' }: Expo
         </div>
       )}
 
-      {/* 导出选项面板 */}
-      {showExportOptions && (
-        <div style={{
-          marginTop: '12px',
-          padding: '16px',
-          backgroundColor: '#f9fafb',
-          borderRadius: '8px',
-          border: '1px solid #e5e7eb',
-        }}>
-          <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: '#374151' }}>
-            选择导出格式
-          </h4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
-            {exportFormats.map(format => (
-              <button
-                key={format.key}
-                onClick={() => handleExport(format.key as keyof typeof exportPresets)}
-                disabled={isExporting}
-                style={{
-                  padding: '12px',
-                  backgroundColor: 'white',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#3b82f6';
-                  e.currentTarget.style.backgroundColor = '#f8fafc';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#d1d5db';
-                  e.currentTarget.style.backgroundColor = 'white';
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '16px' }}>{format.icon}</span>
-                  <span style={{ fontSize: '14px', fontWeight: '500', color: '#374151' }}>
-                    {format.name}
-                  </span>
-                </div>
-                <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                  {format.description}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 分享选项面板 */}
-      {showShareOptions && (
-        <div style={{
-          marginTop: '12px',
-          padding: '16px',
-          backgroundColor: '#f9fafb',
-          borderRadius: '8px',
-          border: '1px solid #e5e7eb',
-        }}>
-          <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: '#374151' }}>
-            分享到社交媒体
-          </h4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
-            {sharePlatforms.map(platform => (
-              <button
-                key={platform.id}
-                onClick={() => handleShare(platform.id)}
-                disabled={isSharing}
-                style={{
-                  padding: '12px 8px',
-                  backgroundColor: 'white',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = platform.color;
-                  e.currentTarget.style.backgroundColor = '#f8fafc';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#d1d5db';
-                  e.currentTarget.style.backgroundColor = 'white';
-                }}
-              >
-                <span style={{ fontSize: '20px' }}>{platform.icon}</span>
-                <span style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>
-                  {platform.name}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

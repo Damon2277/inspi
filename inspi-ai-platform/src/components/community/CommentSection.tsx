@@ -1,4 +1,3 @@
-import type { User } from '@/shared/hooks/useAuth';
 /**
  * 评论区组件
  * 支持评论展示、发布、回复、点赞等功能
@@ -6,7 +5,7 @@ import type { User } from '@/shared/hooks/useAuth';
 'use client';
 
 import Image from 'next/image';
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { useAuth } from '@/shared/hooks/useAuth';
 
@@ -55,38 +54,39 @@ export function CommentSection({
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [total, setTotal] = useState(initialCommentsCount);
+  const [deleteTarget, setDeleteTarget] = useState<Comment | null>(null);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
 
   // 加载评论
-  const loadComments = async (reset: boolean = false) => {
-    try {
+  const loadComments = useCallback(
+    async ({ page: targetPage, reset = false }: { page: number; reset?: boolean }) => {
       setLoading(true);
 
-      const currentPage = reset ? 1 : page;
-      const response = await fetch(`/api/works/${workId}/comments?page=${currentPage}&limit=20`);
-      const result = await response.json();
+      try {
+        const response = await fetch(`/api/works/${workId}/comments?page=${targetPage}&limit=20`);
+        const result = await response.json();
 
-      if (result.success) {
-        if (reset) {
-          setComments(result.comments);
-          setPage(1);
-        } else {
-          setComments([...comments, ...result.comments]);
+        if (result.success) {
+          const nextComments: Comment[] = Array.isArray(result.comments) ? result.comments : [];
+
+          setComments(prev => (reset ? nextComments : [...prev, ...nextComments]));
+          setPage(targetPage);
+          setTotal(result.total ?? nextComments.length);
+          setHasMore(targetPage < (result.totalPages ?? targetPage));
         }
-
-        setTotal(result.total);
-        setHasMore(currentPage < result.totalPages);
+      } catch (error) {
+        console.error('Load comments error:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Load comments error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [workId],
+  );
 
   // 初始加载
   useEffect(() => {
-    loadComments(true);
-  }, [workId]);
+    void loadComments({ page: 1, reset: true });
+  }, [loadComments]);
 
   // 发布评论
   const handleSubmitComment = async (e: React.FormEvent) => {
@@ -109,9 +109,9 @@ export function CommentSection({
       const result = await response.json();
 
       if (result.success) {
-        setComments([result.comment, ...comments]);
+        setComments(prev => [result.comment, ...prev]);
         setNewComment('');
-        setTotal(total + 1);
+        setTotal(prev => prev + 1);
       }
     } catch (error) {
       console.error('Submit comment error:', error);
@@ -143,17 +143,18 @@ export function CommentSection({
 
       if (result.success) {
         // 更新评论列表，添加回复
-        const updatedComments = comments.map((comment: any) => {
-          if (comment._id === parentCommentId) {
-            return {
-              ...comment,
-              repliesCount: comment.repliesCount + 1,
-              replies: [...(comment.replies || []), result.comment],
-            };
-          }
-          return comment;
-        });
-        setComments(updatedComments);
+        setComments(prev =>
+          prev.map(comment => {
+            if (comment._id === parentCommentId) {
+              return {
+                ...comment,
+                repliesCount: comment.repliesCount + 1,
+                replies: [...(comment.replies || []), result.comment],
+              };
+            }
+            return comment;
+          }),
+        );
 
         setReplyContent('');
         setReplyingTo(null);
@@ -178,21 +179,22 @@ export function CommentSection({
       });
 
       if (response.ok) {
-        const updatedComments2 = comments.map((comment: any) => {
-          if (comment._id === commentId) {
-            const isLiked = comment.userInteractions?.isLiked;
-            return {
-              ...comment,
-              likesCount: isLiked ? comment.likesCount - 1 : comment.likesCount + 1,
-              userInteractions: {
-                ...comment.userInteractions,
-                isLiked: !isLiked,
-              },
-            };
-          }
-          return comment;
-        });
-        setComments(updatedComments2);
+        setComments(prev =>
+          prev.map(comment => {
+            if (comment._id === commentId) {
+              const isLiked = comment.userInteractions?.isLiked;
+              return {
+                ...comment,
+                likesCount: isLiked ? comment.likesCount - 1 : comment.likesCount + 1,
+                userInteractions: {
+                  ...comment.userInteractions,
+                  isLiked: !isLiked,
+                },
+              };
+            }
+            return comment;
+          }),
+        );
       }
     } catch (error) {
       console.error('Like comment error:', error);
@@ -216,18 +218,19 @@ export function CommentSection({
       const result = await response.json();
 
       if (result.success) {
-        const updatedComments = comments.map((comment: any) => {
-          if (comment._id === commentId) {
-            return {
-              ...comment,
-              content: editContent.trim(),
-              isEdited: true,
-              editedAt: new Date().toISOString(),
-            };
-          }
-          return comment;
-        });
-        setComments(updatedComments);
+        setComments(prev =>
+          prev.map(comment => {
+            if (comment._id === commentId) {
+              return {
+                ...comment,
+                content: editContent.trim(),
+                isEdited: true,
+                editedAt: new Date().toISOString(),
+              };
+            }
+            return comment;
+          }),
+        );
 
         setEditingComment(null);
         setEditContent('');
@@ -238,11 +241,13 @@ export function CommentSection({
   };
 
   // 删除评论
-  const handleDeleteComment = async (commentId: string) => {
-    if (!confirm('确定要删除这条评论吗？')) return;
+  const handleDeleteComment = async () => {
+    if (!deleteTarget) return;
 
     try {
-      const response = await fetch(`/api/comments/${commentId}`, {
+      setDeleteSubmitting(true);
+
+      const response = await fetch(`/api/comments/${deleteTarget._id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
@@ -250,12 +255,19 @@ export function CommentSection({
       });
 
       if (response.ok) {
-        setComments(comments.filter((comment: any) => comment._id !== commentId));
-        setTotal(total - 1);
+        setComments(prev => prev.filter(comment => comment._id !== deleteTarget._id));
+        setTotal(prev => Math.max(prev - 1, 0));
+        setDeleteTarget(null);
       }
     } catch (error) {
       console.error('Delete comment error:', error);
+    } finally {
+      setDeleteSubmitting(false);
     }
+  };
+
+  const requestDeleteComment = (comment: Comment) => {
+    setDeleteTarget(comment);
   };
 
   const formatDate = (dateString: string) => {
@@ -375,11 +387,11 @@ export function CommentSection({
                         >
                           编辑
                         </button>
-                        <button
-                          onClick={() => handleDeleteComment(comment._id)}
-                          className="hover:text-red-500"
-                        >
-                          删除
+                      <button
+                        onClick={() => requestDeleteComment(comment)}
+                        className="hover:text-red-500"
+                      >
+                        删除
                         </button>
                       </>
                     )}
@@ -447,16 +459,19 @@ export function CommentSection({
       const result = await response.json();
 
       if (result.success) {
-        const updatedComments = comments.map((comment: any) => {
-          if (comment._id === commentId) {
-            return {
-              ...comment,
-              replies: result.comments,
-            };
-          }
-          return comment;
-        });
-        setComments(updatedComments);
+        const replies: Comment[] = Array.isArray(result.comments) ? result.comments : [];
+
+        setComments(prev =>
+          prev.map(comment => {
+            if (comment._id === commentId) {
+              return {
+                ...comment,
+                replies,
+              };
+            }
+            return comment;
+          }),
+        );
       }
     } catch (error) {
       console.error('Load more replies error:', error);
@@ -464,15 +479,16 @@ export function CommentSection({
   };
 
   const handleLoadMore = () => {
-    setPage(page + 1);
-    loadComments(false);
+    const nextPage = page + 1;
+    void loadComments({ page: nextPage });
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm ${className}`}>
-      <div className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          评论 ({total})
+    <>
+      <div className={`bg-white rounded-lg shadow-sm ${className}`}>
+        <div className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            评论 ({total})
         </h3>
 
         {/* 发布评论表单 */}
@@ -570,7 +586,42 @@ export function CommentSection({
           </div>
         )}
       </div>
-    </div>
+      </div>
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="w-full max-w-sm rounded-lg bg-white shadow-xl">
+            <div className="border-b border-gray-200 px-6 py-4">
+              <h3 className="text-lg font-medium text-gray-900">删除评论</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                确认删除这条评论吗？操作不可撤销。
+              </p>
+            </div>
+            <div className="px-6 py-4 text-sm text-gray-700">
+              <p className="max-h-32 overflow-y-auto break-words text-gray-600">
+                {deleteTarget.content}
+              </p>
+            </div>
+            <div className="flex justify-end space-x-3 px-6 py-4">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+                disabled={deleteSubmitting}
+              >
+                取消
+              </button>
+              <button
+                onClick={handleDeleteComment}
+                disabled={deleteSubmitting}
+                className="rounded-lg px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 disabled:opacity-60"
+              >
+                {deleteSubmitting ? '删除中...' : '确认删除'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

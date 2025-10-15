@@ -313,7 +313,8 @@ export function getWelcomeEmailTemplate(variables: {
         </div>
 
         <div class="content">
-            <p>亲爱的 ${name}，</p>
+    <p>亲爱的 ${name}，</p>
+    <p style="color: #666; font-size: 14px;">您的注册邮箱：${email}</p>
             <p>欢迎加入 Inspi.AI 大家庭！我们很高兴您选择我们的平台来开启您的AI教学创作之旅。</p>
         </div>
 

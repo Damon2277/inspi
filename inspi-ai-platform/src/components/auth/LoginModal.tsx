@@ -165,6 +165,13 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
           <p className="text-sm text-gray-600">
             首次登录将自动为您创建账号
           </p>
+          <button
+            type="button"
+            onClick={onSwitchToRegister}
+            className="mt-2 text-sm text-blue-600 hover:text-blue-700 focus:outline-none"
+          >
+            去注册新账号
+          </button>
         </div>
 
         <div className="mt-4">

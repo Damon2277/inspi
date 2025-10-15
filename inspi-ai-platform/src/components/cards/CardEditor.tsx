@@ -64,6 +64,7 @@ export function CardEditor({
         class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none',
       },
     },
+    immediatelyRender: false,
   });
 
   const handleStyleChange = useCallback((key: keyof CardStyle, value: any) => {

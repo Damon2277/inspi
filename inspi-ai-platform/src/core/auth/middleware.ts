@@ -24,7 +24,8 @@ export async function authenticateToken(request: NextRequest): Promise<{
     let token = extractTokenFromHeader(authHeader || '');
 
     if (!token) {
-      token = request.cookies.get('token')?.value || null;
+      token = request.cookies.get('token')?.value ||
+        request.cookies.get('auth-token')?.value || null;
     }
 
     if (!token) {
@@ -42,24 +43,87 @@ export async function authenticateToken(request: NextRequest): Promise<{
       };
     }
 
-    // Optionally fetch user from database for fresh data
-    await connectDB();
-    const dbUser = await (User.findById as any)(payload.userId).select('-password');
+    // In development mode with demo login enabled, skip database lookup
+    if (
+      process.env.NODE_ENV === 'development' &&
+      process.env.DEMO_LOGIN_ENABLED === 'true'
+    ) {
+      // Create mock dbUser for demo mode
+      const mockDbUser = {
+        _id: payload.userId,
+        email: payload.email,
+        name: 'Demo User',
+        subscription: {
+          plan: 'pro',
+          status: 'active',
+        },
+        usage: {
+          dailyGenerations: 0,
+          dailyReuses: 0,
+        },
+      };
 
-    if (!dbUser) {
       return {
-        success: false,
-        error: 'User not found',
+        success: true,
+        user: {
+          ...payload,
+          dbUser: mockDbUser,
+        },
       };
     }
 
-    return {
-      success: true,
-      user: {
-        ...payload,
-        dbUser: dbUser.toObject(),
-      },
-    };
+    // Production mode: fetch user from database
+    try {
+      await connectDB();
+      const dbUser = await (User.findById as any)(payload.userId).select('-password');
+
+      if (!dbUser) {
+        return {
+          success: false,
+          error: 'User not found',
+        };
+      }
+
+      return {
+        success: true,
+        user: {
+          ...payload,
+          dbUser: dbUser.toObject(),
+        },
+      };
+    } catch (dbError) {
+      console.error('Database connection error:', dbError);
+
+      // Fallback for dev mode if DB fails
+      if (process.env.NODE_ENV === 'development') {
+        const fallbackUser = {
+          _id: payload.userId,
+          email: payload.email,
+          name: 'Demo User',
+          subscription: {
+            plan: 'pro',
+            status: 'active',
+          },
+          usage: {
+            dailyGenerations: 0,
+            dailyReuses: 0,
+          },
+        };
+
+        return {
+          success: true,
+          user: {
+            ...payload,
+            dbUser: fallbackUser,
+          },
+        };
+      }
+
+      return {
+        success: false,
+        error: 'Database connection failed',
+      };
+    }
   } catch (error) {
     console.error('Authentication middleware error:', error);
     return {

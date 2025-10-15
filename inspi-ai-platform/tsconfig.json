@@ -49,9 +49,9 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitReturns": false,
-    "noFallthroughCasesInSwitch": false,
+    "noFallthroughCasesInSwitch": true,
     "checkJs": false,
-    "forceConsistentCasingInFileNames": false
+    "forceConsistentCasingInFileNames": true
   },
   "include": [
     "next-env.d.ts",

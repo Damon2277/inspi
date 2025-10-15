@@ -2,7 +2,7 @@
  * 订阅系统常量定义
  */
 
-import { SubscriptionPlan, QuotaLimits } from '@/shared/types/subscription';
+import { SubscriptionPlan } from '@/shared/types/subscription';
 
 const DEFAULT_TIMESTAMP = new Date('2024-01-01T00:00:00.000Z');
 

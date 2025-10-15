@@ -4,7 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { defaultContentValidator, ContentValidator, VALIDATOR_PRESETS } from './contentValidator';
+import { ContentValidator, VALIDATOR_PRESETS } from './contentValidator';
 import { ContentFilterOptions } from './types';
 
 export interface SecurityMiddlewareOptions {

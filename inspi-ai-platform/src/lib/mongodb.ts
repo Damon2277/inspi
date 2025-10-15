@@ -11,20 +11,16 @@ type MongooseCache = {
   promise: Promise<typeof mongoose> | null;
 };
 
-declare global {
-
-  var mongoose: MongooseCache | undefined;
-}
-
 /**
  * Global is used here to maintain a cached connection across hot reloads
  * in development. This prevents connections growing exponentially
  * during API Route usage.
  */
-const globalWithMongoose = global as typeof global & { mongoose?: MongooseCache };
+const globalWithMongoose = global as typeof global & { __mongooseCache?: MongooseCache };
 
-const cached: MongooseCache = globalWithMongoose.mongoose ?? { conn: null, promise: null };
-globalWithMongoose.mongoose = cached;
+const cached: MongooseCache =
+  globalWithMongoose.__mongooseCache ?? { conn: null, promise: null };
+globalWithMongoose.__mongooseCache = cached;
 
 /**
  * Connect to MongoDB with proper error handling and connection options

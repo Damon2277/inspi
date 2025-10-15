@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { wechatPayService, WeChatPayUtils } from '@/core/subscription/wechat-pay';
 import { PaymentRecord } from '@/shared/types/subscription';
+import { logger } from '@/shared/utils/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
       });
 
       // 在实际应用中，这里应该将支付记录保存到数据库
-      console.log('支付记录创建成功:', paymentRecord);
+      logger.info('Payment record created', paymentRecord);
 
       return NextResponse.json({
         success: true,
@@ -69,7 +70,10 @@ export async function POST(request: NextRequest) {
       });
 
     } catch (paymentError) {
-      console.error('创建微信支付订单失败:', paymentError);
+      logger.error('Failed to create WeChat payment order', {
+        error: paymentError instanceof Error ? paymentError.message : 'Unknown error',
+        paymentId: outTradeNo,
+      });
 
       // 模拟支付订单创建（开发环境）
       const mockQrCodeUrl = `weixin://wxpay/bizpayurl?pr=${outTradeNo}`;
@@ -84,7 +88,9 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('创建支付订单失败:', error);
+    logger.error('Failed to create payment order', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       {
         success: false,

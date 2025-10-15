@@ -239,7 +239,7 @@ export async function generateShareLink(cardId: string, cardData?: any): Promise
 /**
  * 获取分享统计
  */
-export async function getShareStats(cardId: string): Promise<ShareStats> {
+export async function getShareStats(_cardId: string): Promise<ShareStats> {
   try {
     // 这里应该调用后端API获取分享统计
     // 暂时返回模拟数据

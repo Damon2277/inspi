@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 /**
  * 网络错误组件属性
@@ -78,26 +78,17 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
   const [countdown, setCountdown] = useState(0);
   const { isOnline, connectionType } = useNetworkStatus();
 
-  // 自动重试倒计时
-  useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (countdown === 0 && isRetrying) {
-      handleRetry();
-    }
-  }, [countdown, isRetrying]);
-
   /**
    * 处理重试
    */
-  const handleRetry = async () => {
+  const handleRetry = useCallback(async () => {
     if (retryCount >= maxRetries) {
+      setIsRetrying(false);
       return;
     }
 
     setIsRetrying(true);
-    setRetryCount(retryCount + 1);
+    setRetryCount(prev => prev + 1);
 
     try {
       if (onRetry) {
@@ -108,7 +99,17 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
     } finally {
       setIsRetrying(false);
     }
-  };
+  }, [retryCount, maxRetries, onRetry]);
+
+  // 自动重试倒计时
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (countdown === 0 && isRetrying) {
+      void handleRetry();
+    }
+  }, [countdown, isRetrying, handleRetry]);
 
   /**
    * 开始自动重试

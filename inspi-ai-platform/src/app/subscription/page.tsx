@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { AppLayout } from '@/components/layout/AppLayout';
 import { paymentService } from '@/core/subscription/payment-service';
@@ -18,14 +18,18 @@ export default function SubscriptionManagePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'payments' | 'history'>('overview');
+  const [banner, setBanner] = useState<{
+    type: 'success' | 'error' | 'info';
+    message: string;
+  } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<'cancel' | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      loadSubscriptionData();
-    }
-  }, [user]);
+  const showBanner = useCallback((type: 'success' | 'error' | 'info', message: string) => {
+    setBanner({ type, message });
+    setTimeout(() => setBanner(null), 4000);
+  }, []);
 
-  const loadSubscriptionData = async () => {
+  const loadSubscriptionData = useCallback(async () => {
     try {
       setIsLoading(true);
 
@@ -48,14 +52,16 @@ export default function SubscriptionManagePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
-  const handleCancelSubscription = async () => {
-    if (!currentSubscription) return;
-
-    if (!confirm('确定要取消订阅吗？取消后将在当前计费周期结束后生效。')) {
-      return;
+  useEffect(() => {
+    if (user) {
+      loadSubscriptionData();
     }
+  }, [user, loadSubscriptionData]);
+
+  const confirmCancelSubscription = useCallback(async () => {
+    if (!currentSubscription) return;
 
     try {
       setActionLoading('cancel');
@@ -66,14 +72,20 @@ export default function SubscriptionManagePage() {
       );
 
       setCurrentSubscription(result);
-      alert('订阅已取消，将在当前计费周期结束后生效');
+      showBanner('success', '订阅已取消，将在当前计费周期结束后生效');
 
     } catch (error) {
       console.error('取消订阅失败:', error);
-      alert('取消订阅失败，请稍后重试');
+      showBanner('error', '取消订阅失败，请稍后重试');
     } finally {
       setActionLoading(null);
+      setConfirmAction(null);
     }
+  }, [currentSubscription, showBanner]);
+
+  const handleCancelSubscription = () => {
+    if (!currentSubscription) return;
+    setConfirmAction('cancel');
   };
 
   const handleRenewSubscription = async () => {
@@ -85,11 +97,11 @@ export default function SubscriptionManagePage() {
       const result = await subscriptionService.reactivateSubscription(currentSubscription.id);
 
       setCurrentSubscription(result);
-      alert('续费成功！');
+      showBanner('success', '续费成功！');
 
     } catch (error) {
       console.error('续费失败:', error);
-      alert('续费失败，请稍后重试');
+      showBanner('error', '续费失败，请稍后重试');
     } finally {
       setActionLoading(null);
     }
@@ -112,6 +124,29 @@ export default function SubscriptionManagePage() {
     <AppLayout>
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-6xl mx-auto px-4">
+          {banner && (
+            <div
+              className={`mb-6 rounded-md border p-4 text-sm ${
+                banner.type === 'success'
+                  ? 'border-green-200 bg-green-50 text-green-700'
+                  : banner.type === 'error'
+                  ? 'border-red-200 bg-red-50 text-red-700'
+                  : 'border-blue-200 bg-blue-50 text-blue-700'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <span>{banner.message}</span>
+                <button
+                  type="button"
+                  onClick={() => setBanner(null)}
+                  className="ml-4 text-xs underline"
+                >
+                  关闭
+                </button>
+              </div>
+            </div>
+          )}
+
         {/* 页面标题 */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">订阅管理</h1>
@@ -458,7 +493,33 @@ export default function SubscriptionManagePage() {
         )}
         </div>
       </div>
+      {confirmAction === 'cancel' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900">确认取消订阅</h3>
+            <p className="mt-2 text-sm text-gray-600">
+              取消后将在当前计费周期结束后生效，确定要继续吗？
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmAction(null)}
+                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                返回
+              </button>
+              <button
+                type="button"
+                onClick={confirmCancelSubscription}
+                disabled={actionLoading === 'cancel'}
+                className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700 disabled:opacity-60"
+              >
+                确认取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }
-

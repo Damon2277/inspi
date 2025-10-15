@@ -58,7 +58,7 @@ export const MockAuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, _password: string) => {
     // 模拟登录逻辑
     setLoading(true);
 

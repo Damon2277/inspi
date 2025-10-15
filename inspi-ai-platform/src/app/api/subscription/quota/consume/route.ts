@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { logger } from '@/shared/utils/logger';
+
 // 模拟配额消费记录
 const quotaConsumption: Record<string, Record<string, number>> = {};
 
@@ -38,7 +40,7 @@ export async function POST(request: NextRequest) {
       date: new Date().toISOString().split('T')[0],
     };
 
-    console.log('Quota consumed:', consumptionRecord);
+    logger.info('Quota consumed', consumptionRecord);
 
     return NextResponse.json({
       success: true,
@@ -48,7 +50,9 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error consuming quota:', error);
+    logger.error('Error consuming quota', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 },

@@ -3,12 +3,9 @@
  * 处理套餐与权限、配额之间的映射关系
  */
 
-import { DEFAULT_PLANS } from '@/core/subscription/constants';
 import {
   UserTier,
   PlanQuotas,
-  PlanFeatures,
-  SubscriptionPlan,
 } from '@/shared/types/subscription';
 
 /**
@@ -667,7 +664,6 @@ export class PlanMapper {
    */
   static canPerformOperation(
     tier: UserTier,
-    operation: string,
     requiredPermissions: string[],
   ): {
     allowed: boolean;

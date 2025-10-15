@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, type, language } = validation.data;
+    const { email, type } = validation.data;
 
     // 2. 检查邮件服务状态
     const emailHealthy = await emailService.healthCheck();

@@ -435,7 +435,9 @@ function generateAlertMessage(alertType: string, errorEvent: any): string {
  */
 async function sendErrorAlert(alert: any) {
   // 实现告警发送逻辑
-  console.error(`ERROR ALERT [${alert.type}]: ${alert.message}`, alert);
+  logger.error(`ERROR ALERT [${alert.type}]: ${alert.message}`, {
+    alert,
+  });
 
   // 这里可以集成各种通知服务
   switch (alert.action) {
@@ -459,7 +461,9 @@ async function sendErrorAlert(alert: any) {
  */
 async function sendImmediateAlert(alert: any) {
   // 发送即时通知（例如：短信、电话、Slack等）
-  console.error('IMMEDIATE ALERT:', alert.message);
+  logger.error('Immediate error alert dispatched', {
+    message: alert.message,
+  });
 }
 
 /**
@@ -467,7 +471,9 @@ async function sendImmediateAlert(alert: any) {
  */
 async function sendSpikeAlert(alert: any) {
   // 发送激增告警
-  console.warn('SPIKE ALERT:', alert.message);
+  logger.warn('Error spike alert dispatched', {
+    message: alert.message,
+  });
 }
 
 /**
@@ -475,7 +481,9 @@ async function sendSpikeAlert(alert: any) {
  */
 async function sendRateAlert(alert: any) {
   // 发送错误率告警
-  console.warn('RATE ALERT:', alert.message);
+  logger.warn('Error rate alert dispatched', {
+    message: alert.message,
+  });
 }
 
 /**
@@ -483,7 +491,9 @@ async function sendRateAlert(alert: any) {
  */
 async function sendSecurityAlert(alert: any) {
   // 发送安全告警
-  console.error('SECURITY ALERT:', alert.message);
+  logger.error('Security error alert dispatched', {
+    message: alert.message,
+  });
 }
 
 /**
@@ -623,7 +633,9 @@ async function processErrorAsync(errorEvent: any) {
 
   setTimeout(() => {
     // 模拟异步处理
-    console.log(`Processed error ${errorEvent.id} asynchronously`);
+    logger.info('Processed error asynchronously', {
+      errorId: errorEvent.id,
+    });
 
     // 可以在这里实现：
     // 1. 发送到 Sentry

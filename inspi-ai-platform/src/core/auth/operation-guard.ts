@@ -133,7 +133,7 @@ export function useOperationGuard() {
 export function withOperationGuard(operation: WriteOperation) {
   return function <T extends (...args: any[]) => any>(
     target: T,
-    context: OperationContext = { operation },
+    _context: OperationContext = { operation },
   ): T {
     return ((...args: any[]) => {
       // 这里需要在实际使用时注入认证状态

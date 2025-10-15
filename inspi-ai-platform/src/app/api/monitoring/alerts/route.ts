@@ -350,7 +350,7 @@ async function sendNotification(alert: Alert, channel: string) {
       await sendWebhookNotification(alert, message);
       break;
     default:
-      console.log(`Unknown notification channel: ${channel}`);
+      logger.warn('Unknown notification channel', { channel, alertId: alert.id });
   }
 }
 
@@ -389,10 +389,10 @@ function formatAlertMessage(alert: Alert, channel: string): string {
  */
 async function sendEmailNotification(alert: Alert, message: string) {
   // 实现邮件发送逻辑
-  console.log('Sending email notification:', {
+  logger.info('Sending email notification', {
     to: 'admin@example.com',
     subject: `Alert: ${alert.title}`,
-    body: message,
+    preview: message.slice(0, 120),
   });
 }
 
@@ -401,7 +401,7 @@ async function sendEmailNotification(alert: Alert, message: string) {
  */
 async function sendSMSNotification(alert: Alert, message: string) {
   // 实现短信发送逻辑
-  console.log('Sending SMS notification:', {
+  logger.info('Sending SMS notification', {
     to: '+1234567890',
     message,
   });
@@ -412,7 +412,7 @@ async function sendSMSNotification(alert: Alert, message: string) {
  */
 async function sendSlackNotification(alert: Alert, message: string) {
   // 实现Slack通知逻辑
-  console.log('Sending Slack notification:', {
+  logger.info('Sending Slack notification', {
     channel: '#alerts',
     message,
   });
@@ -423,7 +423,7 @@ async function sendSlackNotification(alert: Alert, message: string) {
  */
 async function sendPhoneNotification(alert: Alert, message: string) {
   // 实现电话通知逻辑
-  console.log('Sending phone notification:', {
+  logger.info('Sending phone notification', {
     to: '+1234567890',
     message,
   });
@@ -434,9 +434,9 @@ async function sendPhoneNotification(alert: Alert, message: string) {
  */
 async function sendWebhookNotification(alert: Alert, message: string) {
   // 实现Webhook通知逻辑
-  console.log('Sending webhook notification:', {
+  logger.info('Sending webhook notification', {
     url: 'https://example.com/webhook',
-    payload: { alert, message },
+    payloadPreview: JSON.stringify({ alert, message }).slice(0, 200),
   });
 }
 

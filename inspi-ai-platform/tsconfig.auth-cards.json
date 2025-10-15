@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/app/api/auth/**/*",
+    "src/app/auth/**/*",
+    "src/components/auth/**/*",
+    "src/core/auth/**/*",
+    "src/shared/hooks/useAuth.tsx"
+  ]
+}

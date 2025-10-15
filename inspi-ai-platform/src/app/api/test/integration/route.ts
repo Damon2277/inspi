@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { integrationTestService } from '@/lib/testing/integration-test';
+import { logger } from '@/shared/utils/logger';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🧪 开始运行集成测试...');
+    logger.info('Starting integration tests');
 
     // 运行完整的端到端测试
     const testResult = await integrationTestService.runFullE2ETest();
@@ -26,7 +27,9 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('运行集成测试失败:', error);
+    logger.error('Integration tests failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       {
         success: false,

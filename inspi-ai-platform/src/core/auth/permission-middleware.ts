@@ -315,7 +315,7 @@ export class PermissionMiddleware {
  * 权限装饰器工厂
  */
 export function requirePermissions(permissions: string[]) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return function (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
@@ -357,7 +357,7 @@ export function requirePermissions(permissions: string[]) {
  * 配额检查装饰器工厂
  */
 export function requireQuota(quotaType: QuotaType, amount: number = 1) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return function (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {

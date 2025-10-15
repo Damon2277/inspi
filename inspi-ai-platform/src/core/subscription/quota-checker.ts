@@ -5,7 +5,6 @@
 import {
   QuotaType,
   UserTier,
-  SubscriptionStatus,
   Subscription,
   QuotaLimits,
 } from '@/shared/types/subscription';
@@ -14,9 +13,7 @@ import { DEFAULT_PLANS, QUOTA_THRESHOLDS } from './constants';
 import {
   formatQuota,
   calculateQuotaUsagePercentage,
-  isQuotaExceeded,
   getQuotaWarningLevel,
-  getQuotaTypeLabel,
   getQuotaTypeIcon,
 } from './utils';
 

@@ -24,7 +24,7 @@ export function LoginPrompt({
 
   useEffect(() => {
     if (!isOpen) {
-      return;
+      return undefined;
     }
 
     document.body.style.overflow = 'hidden';
@@ -87,6 +87,16 @@ export function LoginPrompt({
     return benefits[op] || ['解锁更多功能', '提升使用体验'];
   };
 
+  const handleLoginSuccess = () => {
+    // Close the modal
+    onClose();
+
+    // Refresh the page to ensure auth state is updated
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
+  };
+
   return (
     <div className="login-prompt-overlay" role="dialog" aria-modal="true">
       <div className="login-prompt-backdrop" onClick={onClose} />
@@ -126,7 +136,7 @@ export function LoginPrompt({
 
           <section className="login-prompt-form">
             <AuthProviders>
-              <LoginForm redirectTo={returnPath} onSuccess={onClose} />
+              <LoginForm redirectTo={returnPath} onSuccess={handleLoginSuccess} />
             </AuthProviders>
           </section>
         </div>

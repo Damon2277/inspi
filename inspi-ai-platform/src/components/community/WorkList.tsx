@@ -6,7 +6,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useAuth } from '@/shared/hooks/useAuth';
 
@@ -78,6 +78,7 @@ export function WorkList({
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [total, setTotal] = useState(0);
+  const isInitialLoad = useRef(true);
 
   // 学科和年级选项
   const subjects = [
@@ -96,67 +97,72 @@ export function WorkList({
     '生活应用', '思维训练', '复习总结', '拓展延伸',
   ];
 
-  // 加载作品列表
-  const loadWorks = async (reset: boolean = false) => {
-    try {
+  const loadWorks = useCallback(
+    async ({ page: targetPage, reset = false }: { page: number; reset?: boolean }) => {
       setLoading(true);
 
-      const params = new URLSearchParams({
-        page: reset ? '1' : page.toString(),
-        limit: '20',
-        sortBy: currentSort,
-      });
+      try {
+        const params = new URLSearchParams({
+          page: targetPage.toString(),
+          limit: '20',
+          sortBy: currentSort,
+        });
 
-      if (searchInput.trim()) {
-        params.append('query', searchInput.trim());
-      }
+        const trimmedQuery = searchInput.trim();
+        if (trimmedQuery) {
+          params.append('query', trimmedQuery);
+        }
 
-      Object.entries(currentFilters).forEach(([key, value]) => {
-        if (value) {
+        Object.entries(currentFilters).forEach(([key, value]) => {
+          if (!value) return;
           if (Array.isArray(value)) {
             value.forEach(v => params.append(key, v));
           } else {
             params.append(key, value);
           }
+        });
+
+        const response = await fetch(`/api/works/search?${params}`);
+        const result = await response.json();
+
+        if (result.success) {
+          const list: Work[] = Array.isArray(result.works) ? result.works : [];
+
+          setWorks(prev => (reset ? list : [...prev, ...list]));
+          setPage(targetPage);
+          setTotal(result.total ?? list.length);
+          setHasMore(targetPage < (result.totalPages ?? targetPage));
         }
-      });
-
-      const response = await fetch(`/api/works/search?${params}`);
-      const result = await response.json();
-
-      if (result.success) {
-        if (reset) {
-          setWorks(result.works);
-          setPage(1);
-        } else {
-          setWorks([...works, ...result.works]);
-        }
-
-        setTotal(result.total);
-        setHasMore(result.page < result.totalPages);
+      } catch (error) {
+        console.error('Load works error:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Load works error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [currentFilters, currentSort, searchInput],
+  );
 
-  // 初始加载
   useEffect(() => {
-    if (initialWorks.length === 0) {
-      loadWorks(true);
-    }
-  }, []);
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
 
-  // 搜索和筛选变化时重新加载
-  useEffect(() => {
-    loadWorks(true);
-  }, [searchInput, currentFilters, currentSort]);
+      if (initialWorks.length > 0) {
+        setWorks(initialWorks);
+        setTotal(initialWorks.length);
+        setHasMore(initialWorks.length >= 20);
+        setPage(1);
+        return;
+      }
+    }
+
+    setPage(1);
+    void loadWorks({ page: 1, reset: true });
+  }, [initialWorks, loadWorks]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    loadWorks(true);
+    setPage(1);
+    void loadWorks({ page: 1, reset: true });
   };
 
   const handleFilterChange = (key: string, value: any) => {
@@ -167,8 +173,9 @@ export function WorkList({
   };
 
   const handleLoadMore = () => {
-    setPage(page + 1);
-    loadWorks(false);
+    const nextPage = page + 1;
+    setPage(nextPage);
+    void loadWorks({ page: nextPage });
   };
 
   const handleLike = async (workId: string) => {
@@ -183,21 +190,22 @@ export function WorkList({
       });
 
       if (response.ok) {
-        const updatedWorks = works.map((work: any) => {
-          if (work._id === workId) {
-            const isLiked = work.userInteractions?.isLiked;
-            return {
-              ...work,
-              likesCount: isLiked ? work.likesCount - 1 : work.likesCount + 1,
-              userInteractions: {
-                ...work.userInteractions,
-                isLiked: !isLiked,
-              },
-            };
-          }
-          return work;
-        });
-        setWorks(updatedWorks);
+        setWorks(prev =>
+          prev.map(work => {
+            if (work._id === workId) {
+              const isLiked = work.userInteractions?.isLiked;
+              return {
+                ...work,
+                likesCount: isLiked ? work.likesCount - 1 : work.likesCount + 1,
+                userInteractions: {
+                  ...work.userInteractions,
+                  isLiked: !isLiked,
+                },
+              };
+            }
+            return work;
+          }),
+        );
       }
     } catch (error) {
       console.error('Like error:', error);
@@ -216,19 +224,20 @@ export function WorkList({
       });
 
       if (response.ok) {
-        const updatedWorks = works.map((work: any) => {
-          if (work._id === workId) {
-            return {
-              ...work,
-              userInteractions: {
-                ...work.userInteractions,
-                isBookmarked: !work.userInteractions?.isBookmarked,
-              },
-            };
-          }
-          return work;
-        });
-        setWorks(updatedWorks);
+        setWorks(prev =>
+          prev.map(work => {
+            if (work._id === workId) {
+              return {
+                ...work,
+                userInteractions: {
+                  ...work.userInteractions,
+                  isBookmarked: !work.userInteractions?.isBookmarked,
+                },
+              };
+            }
+            return work;
+          }),
+        );
       }
     } catch (error) {
       console.error('Bookmark error:', error);

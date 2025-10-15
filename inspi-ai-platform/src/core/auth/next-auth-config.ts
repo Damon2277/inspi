@@ -120,7 +120,7 @@ export const authOptions: NextAuthOptions = {
   },
 
   events: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account, profile: _profile }) {
       console.log('User signed in:', { user: user.email, provider: account?.provider });
     },
     async signOut({ session }) {

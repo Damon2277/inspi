@@ -359,7 +359,7 @@ async function checkRapidRequests(event: any, pattern: any): Promise<boolean> {
 async function handleSuspiciousBehavior(event: any, pattern: any) {
   // 实现安全措施
   // 例如：限流、封禁、通知管理员等
-  console.warn(`Suspicious behavior: ${pattern.type}`, event);
+  logger.warn(`Suspicious behavior detected: ${pattern.type}`, { event });
 }
 
 /**
@@ -368,7 +368,9 @@ async function handleSuspiciousBehavior(event: any, pattern: any) {
 async function sendRealTimeNotification(event: any) {
   // 实现实时通知逻辑
   // 例如：WebSocket推送、邮件通知等
-  console.log('Real-time notification:', event.eventType);
+  logger.info('Real-time notification dispatched', {
+    eventType: event.eventType,
+  });
 }
 
 /**
@@ -457,7 +459,9 @@ async function processEventsAsync(events: any[]) {
   // 例如：发送到外部分析服务、数据仓库等
   setTimeout(() => {
     // 模拟异步处理
-    console.log(`Processed ${events.length} events asynchronously`);
+    logger.info('Processed analytics events asynchronously', {
+      count: events.length,
+    });
   }, 1000);
 }
 

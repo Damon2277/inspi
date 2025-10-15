@@ -4,7 +4,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { ContributionHistory, ContributionRecord, ContributionType } from '@/shared/types/contribution';
 
@@ -142,7 +142,11 @@ const ContributionHistoryComponent: React.FC<ContributionHistoryProps> = ({
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const fetchHistory = async (type: ContributionType | 'all' = 'all', offset = 0, append = false) => {
+  const fetchHistory = useCallback(async (
+    type: ContributionType | 'all' = 'all',
+    offset = 0,
+    append = false,
+  ) => {
     try {
       if (!append) {
         setLoading(true);
@@ -169,14 +173,15 @@ const ContributionHistoryComponent: React.FC<ContributionHistoryProps> = ({
       }
 
       if (data.success) {
-        if (append && history) {
-          setHistory({
-            ...data.data,
-            records: [...history.records, ...data.data.records],
-          });
-        } else {
-          setHistory(data.data);
-        }
+        setHistory(prev => {
+          if (append && prev) {
+            return {
+              ...data.data,
+              records: [...prev.records, ...data.data.records],
+            };
+          }
+          return data.data;
+        });
         setHasMore(data.data.hasMore);
       } else {
         throw new Error(data.error || '获取历史记录失败');
@@ -188,13 +193,13 @@ const ContributionHistoryComponent: React.FC<ContributionHistoryProps> = ({
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [userId, limit]);
 
   useEffect(() => {
     if (userId) {
-      fetchHistory(selectedType);
+      void fetchHistory(selectedType);
     }
-  }, [userId, selectedType]);
+  }, [userId, selectedType, fetchHistory]);
 
   const handleTypeChange = (type: ContributionType | 'all') => {
     setSelectedType(type);
@@ -202,7 +207,7 @@ const ContributionHistoryComponent: React.FC<ContributionHistoryProps> = ({
 
   const handleLoadMore = () => {
     if (history && hasMore && !loadingMore) {
-      fetchHistory(selectedType, history.records.length, true);
+      void fetchHistory(selectedType, history.records.length, true);
     }
   };
 
@@ -243,7 +248,7 @@ const ContributionHistoryComponent: React.FC<ContributionHistoryProps> = ({
               </div>
             </div>
             <button
-              onClick={() => fetchHistory(selectedType)}
+              onClick={() => void fetchHistory(selectedType)}
               className="mt-3 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors text-sm"
             >
               重新加载

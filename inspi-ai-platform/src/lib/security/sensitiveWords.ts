@@ -176,7 +176,7 @@ export class SensitiveWordDetector {
   private findVariantMatches(text: string): Array<{ word: string; start: number; end: number }> {
     const matches: Array<{ word: string; start: number; end: number }> = [];
 
-    for (const [original, variants] of Object.entries(WORD_VARIANTS)) {
+    for (const [_original, variants] of Object.entries(WORD_VARIANTS)) {
       for (const variant of variants) {
         const regex = new RegExp(this.escapeRegExp(variant), 'gi');
         let match;

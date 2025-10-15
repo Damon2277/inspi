@@ -58,8 +58,15 @@ export class DatabaseUtils {
     }
 
     // 清理全局缓存
-    global.mongoose = { conn: null, promise: null };
-    global.redis = { conn: null, promise: null };
+    const globalCache = global as typeof global & {
+      __mongooseCache?: { conn: any; promise: any };
+      redis?: { conn: any; promise: any };
+    };
+
+    globalCache.__mongooseCache = { conn: null, promise: null };
+    if (globalCache.redis) {
+      globalCache.redis = { conn: null, promise: null };
+    }
   }
 
   /**

@@ -8,7 +8,6 @@ import {
   QuotaType,
   QuotaLimits,
   Subscription,
-  SubscriptionPlan,
 } from '@/shared/types/subscription';
 
 import {
@@ -53,7 +52,16 @@ export function getQuotaTypeIcon(quotaType: QuotaType): string {
  */
 export function formatPrice(price: number, currency: string = 'CNY'): string {
   if (price === 0) return '免费';
-  return `¥${price}`;
+
+  const currencySymbols: Record<string, string> = {
+    CNY: '¥',
+    USD: '$',
+    EUR: '€',
+    GBP: '£',
+  };
+
+  const symbol = currencySymbols[currency] ?? '';
+  return symbol ? `${symbol}${price}` : `${price} ${currency}`;
 }
 
 /**

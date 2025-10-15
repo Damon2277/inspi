@@ -217,13 +217,6 @@ export class QuotaManager {
   }
 
   /**
-   * 获取今天的键
-   */
-  private getTodayKey(): string {
-    return this.getDateKey(new Date());
-  }
-
-  /**
    * 获取日期键
    */
   private getDateKey(date: Date): string {
@@ -253,18 +246,6 @@ export class QuotaManager {
     }
 
     return Math.max(0, Math.floor((this.midnightCache.midnight.getTime() - now.getTime()) / 1000));
-  }
-
-  /**
-   * 获取到午夜的秒数
-   */
-  private getSecondsUntilMidnight(): number {
-    const now = new Date();
-    const midnight = new Date();
-    midnight.setDate(midnight.getDate() + 1);
-    midnight.setHours(0, 0, 0, 0);
-
-    return Math.floor((midnight.getTime() - now.getTime()) / 1000);
   }
 
   /**

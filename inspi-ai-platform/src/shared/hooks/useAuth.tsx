@@ -7,14 +7,13 @@
 import { useRouter as useNextRouter } from 'next/navigation';
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
-import AuthService, {
+import {
   AuthResponse,
   LoginRequest,
   RegisterRequest,
   ResetPasswordRequest,
   ConfirmResetPasswordRequest,
   ChangePasswordRequest,
-  RefreshTokenRequest,
 } from '@/core/auth/auth-service';
 
 export interface AuthUser {
@@ -171,31 +170,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = !!user;
 
   /**
-   * 初始化认证状态
-   */
-  const initializeAuth = useCallback(async () => {
-    try {
-      const token = getStoredToken();
-      const storedUser = getStoredUser();
-
-      if (token && storedUser) {
-        // 验证存储的会话
-        const isValid = await checkSession();
-        if (isValid) {
-          setUserState(storedUser);
-        } else {
-          clearAuth();
-        }
-      }
-    } catch (error) {
-      console.error('Auth initialization error:', error);
-      clearAuth();
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  /**
    * 检查会话有效性
    */
   const checkSession = useCallback(async (): Promise<boolean> => {
@@ -226,6 +200,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
   }, []);
+
+  /**
+   * 初始化认证状态
+   */
+  const initializeAuth = useCallback(async () => {
+    try {
+      const token = getStoredToken();
+      const storedUser = getStoredUser();
+
+      if (token && storedUser) {
+        // 在开发环境下，直接信任本地存储的token
+        if (process.env.NODE_ENV === 'development') {
+          setUserState(storedUser);
+        } else {
+          // 生产环境验证存储的会话
+          const isValid = await checkSession();
+          if (isValid) {
+            setUserState(storedUser);
+          } else {
+            clearAuth();
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Auth initialization error:', error);
+      clearAuth();
+    } finally {
+      setLoading(false);
+    }
+  }, [checkSession]);
 
   /**
    * 用户登录
@@ -505,7 +509,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 自动刷新令牌
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      return undefined;
+    }
 
     const interval = setInterval(async () => {
       const success = await refreshToken();

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { logger } from '@/shared/utils/logger';
+
 /**
  * GET /api/share/card/[id]
  * 获取分享的卡片数据
@@ -41,7 +43,9 @@ export async function GET(
     return NextResponse.json(mockCard);
 
   } catch (error) {
-    console.error('获取分享卡片失败:', error);
+    logger.error('Failed to fetch shared card', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: '服务器错误' },
       { status: 500 },
@@ -64,7 +68,11 @@ export async function POST(
 
     // 记录分享事件到数据库
     // 这里应该实现实际的数据库记录逻辑
-    console.log(`分享事件记录: 卡片${id}, 平台${platform}, 动作${action}`);
+    logger.info('Recorded share event', {
+      cardId: id,
+      platform,
+      action,
+    });
 
     // 更新分享统计
     // 实际应用中应该更新数据库中的分享计数
@@ -75,7 +83,9 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('记录分享事件失败:', error);
+    logger.error('Failed to record share event', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: '记录失败' },
       { status: 500 },

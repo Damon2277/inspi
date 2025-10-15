@@ -214,14 +214,14 @@ export function ProtectedRoute({
 export function usePermissions() {
   const { user, isAuthenticated } = useAuth();
 
-  const hasPermission = (permission: string): boolean => {
+  const hasPermission = (_permission: string): boolean => {
     if (!isAuthenticated || !user) return false;
 
     // TODO: 实现权限系统
     return true; // 暂时允许所有权限
   };
 
-  const hasRole = (role: string): boolean => {
+  const hasRole = (_role: string): boolean => {
     if (!isAuthenticated || !user) return false;
 
     // TODO: 实现角色系统

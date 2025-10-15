@@ -3,19 +3,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { subscriptionService } from '@/core/subscription/subscription-service';
 import { wechatPayService } from '@/core/subscription/wechat-pay';
 import { PaymentRecord, PaymentStatus } from '@/shared/types/subscription';
+import { logger } from '@/shared/utils/logger';
 
 export async function POST(request: NextRequest) {
   try {
     // 获取微信支付通知的XML数据
     const xmlData = await request.text();
 
-    console.log('收到微信支付通知:', xmlData);
+    logger.info('Received WeChat payment notification', {
+      payloadPreview: xmlData.slice(0, 500),
+    });
 
     // 验证支付通知
     const notification = wechatPayService.verifyPaymentNotification(xmlData);
 
     if (!notification) {
-      console.error('支付通知验证失败');
+      logger.error('WeChat payment notification verification failed');
       return new NextResponse(
         wechatPayService.generateNotificationResponse(false, '签名验证失败'),
         {
@@ -27,7 +30,10 @@ export async function POST(request: NextRequest) {
 
     // 检查支付结果
     if (notification.returnCode !== 'SUCCESS' || notification.resultCode !== 'SUCCESS') {
-      console.error('支付失败通知:', notification.errCodeDes);
+      logger.error('WeChat payment failure notification received', {
+        errorCode: notification.errCode,
+        message: notification.errCodeDes,
+      });
 
       // 更新支付记录状态为失败
       await updatePaymentStatus(notification.outTradeNo, 'failed', {
@@ -57,7 +63,9 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('处理支付通知失败:', error);
+    logger.error('Failed to process WeChat payment notification', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
 
     // 返回失败响应，微信会重试
     return new NextResponse(
@@ -74,13 +82,18 @@ export async function POST(request: NextRequest) {
  * 处理支付成功
  */
 async function handlePaymentSuccess(notification: any) {
-  try {
-    const outTradeNo = notification.outTradeNo;
-    const transactionId = notification.transactionId;
-    const totalFee = notification.totalFee;
-    const timeEnd = notification.timeEnd;
+  const outTradeNo = notification.outTradeNo;
+  const transactionId = notification.transactionId;
+  const totalFee = notification.totalFee;
+  const timeEnd = notification.timeEnd;
 
-    console.log(`支付成功: 订单号=${outTradeNo}, 微信订单号=${transactionId}, 金额=${totalFee}`);
+  try {
+
+    logger.info('WeChat payment succeeded', {
+      outTradeNo,
+      transactionId,
+      totalFee,
+    });
 
     // 更新支付记录状态
     const paymentRecord = await updatePaymentStatus(outTradeNo, 'completed', {
@@ -100,10 +113,13 @@ async function handlePaymentSuccess(notification: any) {
     // 发送支付成功通知
     await sendPaymentSuccessNotification(paymentRecord);
 
-    console.log('支付处理完成:', outTradeNo);
+    logger.info('WeChat payment processing completed', { outTradeNo });
 
   } catch (error) {
-    console.error('处理支付成功失败:', error);
+    logger.error('Failed to process successful payment', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      outTradeNo,
+    });
     throw error;
   }
 }
@@ -145,11 +161,15 @@ async function updatePaymentStatus(
       ...(additionalData?.bankType && { bankType: additionalData.bankType }),
     };
 
-    console.log('支付记录状态更新:', mockPaymentRecord);
+    logger.info('Payment record status updated', mockPaymentRecord);
     return mockPaymentRecord;
 
   } catch (error) {
-    console.error('更新支付状态失败:', error);
+    logger.error('Failed to update payment status', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      outTradeNo,
+      status,
+    });
     return null;
   }
 }
@@ -165,10 +185,16 @@ async function activateSubscription(paymentRecord: PaymentRecord) {
       { status: 'active' },
     );
 
-    console.log('订阅激活成功:', paymentRecord.subscriptionId);
+    logger.info('Subscription activated', {
+      subscriptionId: paymentRecord.subscriptionId,
+      userId: paymentRecord.userId,
+    });
 
   } catch (error) {
-    console.error('激活订阅失败:', error);
+    logger.error('Failed to activate subscription', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      subscriptionId: paymentRecord.subscriptionId,
+    });
     throw error;
   }
 }
@@ -179,15 +205,22 @@ async function activateSubscription(paymentRecord: PaymentRecord) {
 async function sendPaymentSuccessNotification(paymentRecord: PaymentRecord) {
   try {
     // 发送邮件通知
-    console.log('发送支付成功邮件通知:', paymentRecord.userId);
+    logger.info('Sending payment success email notification', {
+      userId: paymentRecord.userId,
+    });
 
     // 发送系统内通知
-    console.log('发送系统内通知:', paymentRecord.userId);
+    logger.info('Sending in-app payment success notification', {
+      userId: paymentRecord.userId,
+    });
 
     // 在实际应用中，这里应该调用邮件服务和通知服务
 
   } catch (error) {
-    console.error('发送支付成功通知失败:', error);
+    logger.error('Failed to send payment success notification', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      userId: paymentRecord.userId,
+    });
     // 通知发送失败不应该影响支付处理流程
   }
 }

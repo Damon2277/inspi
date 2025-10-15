@@ -4,7 +4,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 interface ContributionChartProps {
   userId: string;
@@ -29,7 +29,7 @@ const ContributionChart: React.FC<ContributionChartProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // 模拟数据生成（实际应该从API获取）
-  const generateMockData = () => {
+  const generateMockData = useCallback(() => {
     const days = period === 'daily' ? 7 : period === 'weekly' ? 4 : 12;
     const mockData: ChartData[] = [];
     let cumulative = 0;
@@ -49,7 +49,7 @@ const ContributionChart: React.FC<ContributionChartProps> = ({
     }
 
     return mockData;
-  };
+  }, [period]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,11 +75,11 @@ const ContributionChart: React.FC<ContributionChartProps> = ({
     };
 
     if (userId) {
-      fetchData();
+      void fetchData();
     }
-  }, [userId, period]);
+  }, [userId, period, generateMockData]);
 
-  const drawChart = () => {
+  const drawChart = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || data.length === 0) return;
 
@@ -180,13 +180,13 @@ const ContributionChart: React.FC<ContributionChartProps> = ({
       const value = Math.round((maxPoints * (5 - i)) / 5);
       ctx.fillText(value.toString(), padding - 10, y + 4);
     }
-  };
+  }, [data]);
 
   useEffect(() => {
     if (!loading && data.length > 0) {
       drawChart();
     }
-  }, [data, loading]);
+  }, [data, loading, drawChart]);
 
   if (loading) {
     return (

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { requirePermissions, requireQuota } from '@/core/auth/permission-middleware';
+import { logger } from '@/shared/utils/logger';
 
 export async function POST(request: NextRequest) {
   // TODO: 实现权限检查和配额检查
@@ -28,7 +28,11 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date(),
       };
 
-      console.log('卡片创建成功:', card);
+      logger.info('Card created', {
+        cardId: card.id,
+        userId: card.userId,
+        template: card.template,
+      });
 
       return NextResponse.json({
         success: true,
@@ -37,7 +41,9 @@ export async function POST(request: NextRequest) {
       });
 
   } catch (error) {
-    console.error('创建卡片失败:', error);
+    logger.error('Failed to create card', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       {
         success: false,

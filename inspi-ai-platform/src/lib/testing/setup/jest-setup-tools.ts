@@ -34,7 +34,7 @@ globalTestErrorHandler.registerStrategy(
 
 // Global test utilities available in all tests
 declare global {
-  var testUtils: {
+  let testUtils: {
     errorHandler: typeof globalTestErrorHandler;
   };
 }

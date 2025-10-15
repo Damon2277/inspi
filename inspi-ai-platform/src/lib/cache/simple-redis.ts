@@ -38,7 +38,7 @@ export class SimpleRedis {
   private readonly maxMemoryItems: number;
   private cleanupTimer: NodeJS.Timeout | null = null;
 
-  constructor(private readonly options: SimpleRedisOptions = {}) {
+  constructor(options: SimpleRedisOptions = {}) {
     this.enableMemoryFallback = options.enableMemoryFallback ?? true;
     this.maxMemoryItems = options.maxMemoryItems ?? DEFAULT_MAX_MEMORY_ITEMS;
 

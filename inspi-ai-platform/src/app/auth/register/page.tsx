@@ -5,12 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import React, { Suspense, useEffect, useState } from 'react';
 
 import { AuthProviders } from '@/components/auth/AuthProviders';
-import { LoginForm } from '@/components/auth/LoginForm';
+import { RegisterForm } from '@/components/auth/RegisterForm';
 
-function LoginPageContent() {
+function RegisterPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
 
   const returnUrl = searchParams.get('returnUrl') || '/';
 
@@ -23,15 +23,10 @@ function LoginPageContent() {
   }, []);
 
   const handleSuccess = () => {
-    setIsLoggedIn(true);
+    setIsRegistered(true);
     setTimeout(() => {
-      // Refresh to ensure auth state is updated
-      if (returnUrl === '/') {
-        window.location.reload();
-      } else {
-        router.push(returnUrl);
-      }
-    }, 100);
+      router.push('/auth/login?returnUrl=' + encodeURIComponent(returnUrl));
+    }, 2000);
   };
 
   const handleClose = () => {
@@ -45,7 +40,7 @@ function LoginPageContent() {
         <button
           onClick={handleClose}
           className="login-prompt-close"
-          aria-label="关闭登录页面"
+          aria-label="关闭注册页面"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -56,48 +51,48 @@ function LoginPageContent() {
           <section className="login-prompt-info">
             <div className="login-prompt-header">
               <div className="login-prompt-icon" aria-hidden="true">
-                ✨
+                🚀
               </div>
-              <h3 className="login-prompt-title">创建专属AI卡片</h3>
-              <p className="login-prompt-message">登录后即可使用此功能</p>
+              <h3 className="login-prompt-title">加入 Inspi.AI</h3>
+              <p className="login-prompt-message">注册账号，开启AI教学之旅</p>
             </div>
 
             <div className="login-prompt-benefits">
-              <p className="login-prompt-benefits-title">登录后您将获得：</p>
+              <p className="login-prompt-benefits-title">注册后您将获得：</p>
               <ul className="login-prompt-benefits-list">
                 <li className="login-prompt-benefit">
                   <span className="login-prompt-benefit-icon" aria-hidden="true">✔</span>
-                  <span className="login-prompt-benefit-text">每日3次免费创建额度</span>
+                  <span className="login-prompt-benefit-text">免费使用AI教学助手</span>
                 </li>
                 <li className="login-prompt-benefit">
                   <span className="login-prompt-benefit-icon" aria-hidden="true">✔</span>
-                  <span className="login-prompt-benefit-text">四种专业卡片类型</span>
+                  <span className="login-prompt-benefit-text">保存和管理教学作品</span>
                 </li>
                 <li className="login-prompt-benefit">
                   <span className="login-prompt-benefit-icon" aria-hidden="true">✔</span>
-                  <span className="login-prompt-benefit-text">智能内容生成</span>
+                  <span className="login-prompt-benefit-text">加入教师社区</span>
                 </li>
                 <li className="login-prompt-benefit">
                   <span className="login-prompt-benefit-icon" aria-hidden="true">✔</span>
-                  <span className="login-prompt-benefit-text">个人作品管理</span>
+                  <span className="login-prompt-benefit-text">获取更多教学资源</span>
                 </li>
               </ul>
             </div>
           </section>
 
           <section className="login-prompt-form">
-            {isLoggedIn ? (
+            {isRegistered ? (
               <div className="login-card__alert success" role="alert">
                 <div className="flex items-center justify-center mb-2">
                   <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p>登录成功！正在跳转...</p>
+                <p>注册成功！正在跳转到登录页...</p>
               </div>
             ) : (
               <AuthProviders>
-                <LoginForm redirectTo={returnUrl} onSuccess={handleSuccess} />
+                <RegisterForm onSuccess={handleSuccess} />
               </AuthProviders>
             )}
           </section>
@@ -105,10 +100,8 @@ function LoginPageContent() {
 
         <div className="login-prompt-footer">
           <p>
-            登录即表示您同意我们的{' '}
-            <Link href="/terms">用户协议</Link>
-            {' '}和{' '}
-            <Link href="/privacy">隐私政策</Link>
+            已有账号？{' '}
+            <Link href="/auth/login">立即登录</Link>
           </p>
         </div>
       </div>
@@ -116,14 +109,14 @@ function LoginPageContent() {
   );
 }
 
-export default function LoginPage() {
+export default function RegisterPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-gray-600">加载中...</div>
       </div>
     }>
-      <LoginPageContent />
+      <RegisterPageContent />
     </Suspense>
   );
 }

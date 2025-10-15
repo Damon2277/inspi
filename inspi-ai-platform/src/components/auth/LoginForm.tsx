@@ -106,7 +106,7 @@ export function LoginForm({ onSuccess, redirectTo = '/', className = '' }: Login
       if (result.success) {
         // 先调用成功回调
         onSuccess && onSuccess();
-        
+
         // 稍微延迟以确保状态更新
         setTimeout(() => {
           // 如果是默认路径，刷新页面以确保状态更新
