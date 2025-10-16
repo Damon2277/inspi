@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { SquareCardShowcase } from '@/components/square/SquareCardShowcase';
+import { enrichCard, generateFallbackCard, type RawCardType } from '@/app/api/magic/card-engine';
+
 const mockWorks = [
   {
     id: 1,
@@ -24,7 +27,7 @@ const mockWorks = [
     subject: '语文',
     grade: '初中',
     description: '结合古诗词的创作背景，引导学生感受诗人的情感世界，提升文学鉴赏能力。',
-    cardCount: 6,
+    cardCount: 4,
     likes: 156,
     views: 2100,
     reuses: 45,
@@ -39,7 +42,7 @@ const mockWorks = [
     subject: '化学',
     grade: '高中',
     description: '通过实验现象和理论分析，帮助学生掌握化学反应速率的影响因素和化学平衡的建立过程。',
-    cardCount: 5,
+    cardCount: 4,
     likes: 67,
     views: 890,
     reuses: 18,
@@ -54,7 +57,7 @@ const mockWorks = [
     subject: '英语',
     grade: '初中',
     description: '系统梳理英语各种时态的用法，通过丰富的例句和练习，让学生轻松掌握时态变化规律。',
-    cardCount: 8,
+    cardCount: 4,
     likes: 234,
     views: 3200,
     reuses: 67,
@@ -69,7 +72,7 @@ const mockWorks = [
     subject: '物理',
     grade: '高中',
     description: '从生活实例出发，讲解力的概念、牛顿定律等基础知识，培养学生的物理思维。',
-    cardCount: 7,
+    cardCount: 4,
     likes: 123,
     views: 1800,
     reuses: 34,
@@ -84,7 +87,7 @@ const mockWorks = [
     subject: '生物',
     grade: '初中',
     description: '通过显微镜观察和模型展示，让学生深入了解细胞的基本结构和功能。',
-    cardCount: 5,
+    cardCount: 4,
     likes: 98,
     views: 1400,
     reuses: 28,
@@ -112,30 +115,48 @@ export default async function SquareDetailPage(props: SquareDetailPageProps) {
     notFound();
   }
 
+  const cardTypes: RawCardType[] = ['concept', 'example', 'practice', 'extension'];
+  const cards = cardTypes.map((type, index) => {
+    const baseCard = generateFallbackCard(type, work.title);
+    const enriched = enrichCard(
+      {
+        ...baseCard,
+        id: `${work.id}-${type}-${index}`,
+      },
+      work.title,
+      work.subject,
+      work.grade,
+    );
+    return enriched;
+  });
+
   return (
     <div className="modern-layout">
-      <div style={{ padding: '32px 0', minHeight: 'calc(100vh - 80px)' }}>
-          <Link href="/square" style={{
+      <div className="modern-container" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
+        <Link
+          href="/square"
+          style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
             fontSize: '14px',
             color: 'var(--primary-600)',
-            textDecoration: 'none' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            返回广场
-          </Link>
-        </div>
+            textDecoration: 'none',
+            marginBottom: '16px',
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          返回广场
+        </Link>
 
-        <div className="modern-container">
-          <div className="modern-card modern-card-elevated" style={{ padding: '32px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <header style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
-                <div style={{
-                  width: '72px',
-                  height: '72px',
+        <div className="modern-card modern-card-elevated" style={{ padding: '32px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <header style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+              <div style={{
+                width: '72px',
+                height: '72px',
                   borderRadius: '24px',
                   background: 'var(--gray-100)',
                   display: 'flex',
@@ -170,13 +191,48 @@ export default async function SquareDetailPage(props: SquareDetailPageProps) {
               </header>
 
               <section>
-                <h2 style={{
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: 'var(--gray-900)',
-                  marginBottom: '12px' }}>
-                  作品简介
-                </h2>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '16px',
+                    marginBottom: '12px',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <h2 style={{
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    color: 'var(--gray-900)',
+                    margin: 0,
+                  }}>
+                    作品简介
+                  </h2>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                    <span style={{
+                      fontSize: '14px',
+                      color: 'var(--gray-500)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      已被致敬复用
+                      <strong style={{ fontSize: '16px', color: 'var(--gray-900)' }}>{work.reuses}</strong>
+                      次
+                    </span>
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn-primary"
+                      style={{ whiteSpace: 'nowrap', padding: '10px 20px' }}
+                    >
+                      立即复用
+                    </button>
+                  </div>
+                </div>
                 <p style={{
                   fontSize: '16px',
                   color: 'var(--gray-600)',
@@ -190,34 +246,17 @@ export default async function SquareDetailPage(props: SquareDetailPageProps) {
                   fontSize: '18px',
                   fontWeight: '600',
                   color: 'var(--gray-900)',
-                  marginBottom: '16px' }}>
-                  作品数据
+                  marginBottom: '12px' }}>
+                  教学卡片
                 </h2>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-                  gap: '16px' }}>
-                  <div className="modern-card" style={{ padding: '16px' }}>
-                    <p style={{ fontSize: '12px', color: 'var(--gray-500)' }}>浏览</p>
-                    <p style={{ fontSize: '20px', fontWeight: '600', color: 'var(--gray-900)' }}>{work.views}</p>
-                  </div>
-                  <div className="modern-card" style={{ padding: '16px' }}>
-                    <p style={{ fontSize: '12px', color: 'var(--gray-500)' }}>点赞</p>
-                    <p style={{ fontSize: '20px', fontWeight: '600', color: 'var(--gray-900)' }}>{work.likes}</p>
-                  </div>
-                  <div className="modern-card" style={{ padding: '16px' }}>
-                    <p style={{ fontSize: '12px', color: 'var(--gray-500)' }}>致敬复用</p>
-                    <p style={{ fontSize: '20px', fontWeight: '600', color: 'var(--gray-900)' }}>{work.reuses}</p>
-                  </div>
-                  <div className="modern-card" style={{ padding: '16px' }}>
-                    <p style={{ fontSize: '12px', color: 'var(--gray-500)' }}>卡片数量</p>
-                    <p style={{ fontSize: '20px', fontWeight: '600', color: 'var(--gray-900)' }}>{work.cardCount}</p>
-                  </div>
-                  <div className="modern-card" style={{ padding: '16px' }}>
-                    <p style={{ fontSize: '12px', color: 'var(--gray-500)' }}>评分</p>
-                    <p style={{ fontSize: '20px', fontWeight: '600', color: 'var(--gray-900)' }}>⭐ {work.rating}</p>
-                  </div>
-                </div>
+                <p style={{
+                  fontSize: '14px',
+                  color: 'var(--gray-500)',
+                  marginBottom: '20px',
+                }}>
+                  点击任意卡片可导出、致敬复用或进入演示模式，快速带走这套教学设计。
+                </p>
+                <SquareCardShowcase cards={cards} />
               </section>
 
               <section>
@@ -241,9 +280,9 @@ export default async function SquareDetailPage(props: SquareDetailPageProps) {
                   ))}
                 </div>
               </section>
-            </div>
           </div>
         </div>
       </div>
+    </div>
   );
 }

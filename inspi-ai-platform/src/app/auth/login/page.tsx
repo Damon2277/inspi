@@ -2,17 +2,25 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 
 import { AuthProviders } from '@/components/auth/AuthProviders';
 import { LoginForm } from '@/components/auth/LoginForm';
+
+const sanitizeReturnUrl = (raw: string | null): string => {
+  if (!raw) return '/';
+  if (raw.startsWith('http://') || raw.startsWith('https://')) {
+    return '/';
+  }
+  return raw.startsWith('/') ? raw : `/${raw}`;
+};
 
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  const returnUrl = searchParams.get('returnUrl') || '/';
+  const rawReturnUrl = searchParams.get('returnUrl');
+  const returnUrl = useMemo(() => sanitizeReturnUrl(rawReturnUrl), [rawReturnUrl]);
 
   useEffect(() => {
     // Add login-prompt styles to body
@@ -25,11 +33,11 @@ function LoginPageContent() {
   const handleSuccess = () => {
     setIsLoggedIn(true);
     setTimeout(() => {
-      // Refresh to ensure auth state is updated
-      if (returnUrl === '/') {
-        window.location.reload();
+      const target = sanitizeReturnUrl(returnUrl);
+      if (typeof window !== 'undefined') {
+        window.location.href = target;
       } else {
-        router.push(returnUrl);
+        router.push(target);
       }
     }, 100);
   };

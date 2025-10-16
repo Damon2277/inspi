@@ -198,13 +198,6 @@ export function DesktopHomePage() {
                 ))}
               </ul>
               <div className="desktop-hero__actions">
-                <button
-                  type="button"
-                  className="modern-btn modern-btn-primary modern-btn-lg"
-                  onClick={() => handleCreateClick(HERO_CREATE_PROMPT_MESSAGE)}
-                >
-                  立即开启创作
-                </button>
                 <Link href="/square" className="modern-btn modern-btn-secondary modern-btn-lg">
                   浏览灵感案例
                 </Link>
@@ -222,7 +215,7 @@ export function DesktopHomePage() {
                   placeholder="例如：二次函数的图像与性质，包括开口方向、对称轴、顶点坐标等..."
                   value={inputContent}
                   onChange={handleInputChange}
-                  rows={6}
+                  rows={2}
                 />
                 <p className="desktop-creation-panel__helper">
                   <span className="desktop-creation-panel__helper-icon" aria-hidden="true">💡</span>
@@ -241,6 +234,15 @@ export function DesktopHomePage() {
                       <span className="desktop-card-type__desc">{type.description}</span>
                     </button>
                   ))}
+                </div>
+                <div className="desktop-card-type-actions">
+                  <button
+                    type="button"
+                    className="modern-btn modern-btn-primary modern-btn-lg desktop-card-type-actions__cta"
+                    onClick={() => handleCreateClick(HERO_CREATE_PROMPT_MESSAGE)}
+                  >
+                    立即开启创作
+                  </button>
                 </div>
               </div>
             </aside>

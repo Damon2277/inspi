@@ -51,6 +51,13 @@ export function LoginForm({ onSuccess, redirectTo = '/', className = '' }: Login
   const router = useSafeRouter();
   const auth = useAuth();
   const { login, loading } = auth;
+  const safeRedirectTo = useMemo(() => {
+    if (!redirectTo) return '/';
+    if (redirectTo.startsWith('http://') || redirectTo.startsWith('https://')) {
+      return '/';
+    }
+    return redirectTo.startsWith('/') ? redirectTo : `/${redirectTo}`;
+  }, [redirectTo]);
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
@@ -109,11 +116,11 @@ export function LoginForm({ onSuccess, redirectTo = '/', className = '' }: Login
 
         // 稍微延迟以确保状态更新
         setTimeout(() => {
-          // 如果是默认路径，刷新页面以确保状态更新
-          if (redirectTo === '/') {
-            window.location.reload();
+          const target = safeRedirectTo;
+          if (typeof window !== 'undefined') {
+            window.location.href = target;
           } else {
-            router.push(redirectTo);
+            router.push(target);
           }
         }, 100);
       } else {
@@ -125,7 +132,7 @@ export function LoginForm({ onSuccess, redirectTo = '/', className = '' }: Login
   };
 
   const handleGoogleLogin = () => {
-    const returnPath = redirectTo || '/';
+    const returnPath = safeRedirectTo || '/';
     const target = `/api/auth/google?returnUrl=${encodeURIComponent(returnPath)}`;
     if (typeof window !== 'undefined') {
       window.location.href = target;
@@ -139,9 +146,9 @@ export function LoginForm({ onSuccess, redirectTo = '/', className = '' }: Login
 
   const registerHref = useMemo(() => {
     const base = '/auth/register';
-    if (!redirectTo || redirectTo === '/') return base;
-    return `${base}?returnUrl=${encodeURIComponent(redirectTo)}`;
-  }, [redirectTo]);
+    if (!safeRedirectTo || safeRedirectTo === '/') return base;
+    return `${base}?returnUrl=${encodeURIComponent(safeRedirectTo)}`;
+  }, [safeRedirectTo]);
 
   return (
     <div className={containerClass}>

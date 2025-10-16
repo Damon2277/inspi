@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import {
   exportElementToImage,
@@ -13,7 +13,6 @@ import {
   shareToSocial,
   generateShareLink,
   trackShareEvent,
-  sharePlatforms,
   type ShareContent,
   type SharePlatform,
 } from '@/lib/share/share-service';
@@ -29,6 +28,7 @@ interface ExportSharePanelProps {
   className?: string;
   prepareExportElement?: () => Promise<HTMLElement | null>;
   finalizeExport?: () => void;
+  onPreview?: () => void;
 }
 
 export function ExportSharePanel({
@@ -37,49 +37,35 @@ export function ExportSharePanel({
   className = '',
   prepareExportElement,
   finalizeExport,
+  onPreview,
 }: ExportSharePanelProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
-  const [showExportOptions, setShowExportOptions] = useState(false);
-  const [showShareOptions, setShowShareOptions] = useState(false);
   const [exportProgress, setExportProgress] = useState('');
   const [feedback, setFeedback] = useState<{
     type: 'success' | 'error' | 'info';
     message: string;
   } | null>(null);
+  const [showMoreActions, setShowMoreActions] = useState(false);
+  const moreActionsRef = useRef<HTMLDivElement>(null);
 
   const showFeedback = (type: 'success' | 'error' | 'info', message: string) => {
     setFeedback({ type, message });
     setTimeout(() => setFeedback(null), 3000);
   };
 
-  // 导出格式选项
-  const exportFormats = [
-    {
-      key: 'social',
-      name: '课堂展示 (PNG)',
-      description: '944×600 高清画布，适合投屏',
-      icon: '📱',
-    },
-    {
-      key: 'print',
-      name: '高清导出 (PNG)',
-      description: '3× 分辨率，保留细节',
-      icon: '🖨️',
-    },
-    {
-      key: 'web',
-      name: '网页使用 (JPG)',
-      description: '标准尺寸，便于分享',
-      icon: '🌐',
-    },
-    {
-      key: 'transparent',
-      name: '透明背景 (PNG)',
-      description: '无背景，便于设计',
-      icon: '🎨',
-    },
-  ];
+  useEffect(() => {
+    if (!showMoreActions) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!moreActionsRef.current) return;
+      if (!moreActionsRef.current.contains(event.target as Node)) {
+        setShowMoreActions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMoreActions]);
 
   const resolveExportTarget = async (): Promise<{ target: HTMLElement | null; prepared: boolean }> => {
     if (prepareExportElement) {
@@ -94,6 +80,7 @@ export function ExportSharePanel({
    * 导出图片
    */
   const handleExport = async (presetKey: keyof typeof exportPresets) => {
+    setShowMoreActions(false);
     setIsExporting(true);
     setExportProgress('准备导出...');
 
@@ -126,7 +113,6 @@ export function ExportSharePanel({
         finalizeExport();
       }
       setIsExporting(false);
-      setShowExportOptions(false);
       setTimeout(() => setExportProgress(''), 2000);
     }
   };
@@ -214,61 +200,206 @@ export function ExportSharePanel({
         finalizeExport();
       }
       setIsSharing(false);
-      setShowShareOptions(false);
       setExportProgress('');
     }
   };
 
   return (
-    <div className={`export-share-panel ${className}`}>
-      {/* 主要操作按钮 */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-        {/* 快速导出按钮 */}
+    <div className={`export-share-panel ${className}`} style={{ position: 'relative' }}>
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
         <button
           onClick={() => handleExport('social')}
           disabled={isExporting || (!cardElement && !prepareExportElement)}
           style={{
             padding: '8px 16px',
-            backgroundColor: '#3b82f6',
-            color: 'white',
+            backgroundColor: '#2563eb',
+            color: '#ffffff',
             border: 'none',
-            borderRadius: '6px',
+            borderRadius: '8px',
             fontSize: '14px',
             fontWeight: '500',
             cursor: isExporting ? 'not-allowed' : 'pointer',
-            opacity: isExporting ? 0.6 : 1,
-            display: 'flex',
+            opacity: isExporting ? 0.7 : 1,
+            display: 'inline-flex',
             alignItems: 'center',
             gap: '6px',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            if (!isExporting) {
+              e.currentTarget.style.backgroundColor = '#1d4ed8';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#2563eb';
+            e.currentTarget.style.transform = 'translateY(0)';
           }}
         >
-          {isExporting ? '⏳' : '📥'}
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
+            <path d="M3 12h10v2H3v-2z" fill="currentColor"/>
+          </svg>
           {isExporting ? '导出中...' : '下载图片'}
         </button>
 
+        <div ref={moreActionsRef} style={{ position: 'relative' }}>
+          <button
+            type="button"
+            onClick={() => setShowMoreActions(prev => !prev)}
+            disabled={isExporting}
+            style={{
+              padding: '8px',
+              width: '32px',
+              height: '32px',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0',
+              backgroundColor: '#ffffff',
+              color: '#64748b',
+              fontSize: '16px',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f8fafc';
+              e.currentTarget.style.borderColor = '#cbd5e1';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#ffffff';
+              e.currentTarget.style.borderColor = '#e2e8f0';
+            }}
+            title="更多操作"
+          >
+            ⋯
+          </button>
 
-        {/* 分享按钮 */}
-        <button
-          onClick={() => handleShare('wechat' as SharePlatform)}
-          disabled={isSharing}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#10b981',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: isSharing ? 'not-allowed' : 'pointer',
-            opacity: isSharing ? 0.6 : 1,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-        >
-          {isSharing ? '⏳' : '💬'}
-          {isSharing ? '分享中...' : '分享到微信'}
-        </button>
+          {showMoreActions && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 4px)',
+                right: 0,
+                minWidth: '160px',
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                padding: '4px',
+                zIndex: 20,
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setShowMoreActions(false);
+                  handleCopyImage();
+                }}
+                disabled={isExporting}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  background: 'transparent',
+                  textAlign: 'left',
+                  fontSize: '13px',
+                  color: '#475569',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f1f5f9';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M10 1H3a2 2 0 00-2 2v7h2V3h7V1z" fill="currentColor"/>
+                  <rect x="5" y="5" width="8" height="8" rx="1" fill="currentColor"/>
+                </svg>
+                复制图片
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowMoreActions(false);
+                  handleShare('wechat' as SharePlatform);
+                }}
+                disabled={isSharing}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  background: 'transparent',
+                  textAlign: 'left',
+                  fontSize: '13px',
+                  color: '#475569',
+                  cursor: isSharing ? 'not-allowed' : 'pointer',
+                  opacity: isSharing ? 0.6 : 1,
+                  transition: 'background 0.15s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSharing) {
+                    e.currentTarget.style.backgroundColor = '#f1f5f9';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M10.5 9.5a2 2 0 11-1.3-.48l-3.4-2a2 2 0 010-.04l3.4-2a2 2 0 11-.4-.96L5.4 6a2 2 0 100 2l3.4 2a2 2 0 111.7-.5z" fill="currentColor"/>
+                </svg>
+                分享微信
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowMoreActions(false);
+                  if (onPreview) onPreview();
+                }}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  background: 'transparent',
+                  textAlign: 'left',
+                  fontSize: '13px',
+                  color: '#475569',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f1f5f9';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <rect x="2" y="3" width="10" height="8" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                  <path d="M4 1h6M7 11v2" stroke="currentColor" strokeWidth="1.5"/>
+                </svg>
+                全屏预览
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {feedback && (

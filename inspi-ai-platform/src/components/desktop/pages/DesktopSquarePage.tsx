@@ -31,7 +31,7 @@ export function DesktopSquarePage() {
       subject: '语文',
       grade: '初中',
       description: '结合古诗词的创作背景，引导学生感受诗人的情感世界，提升文学鉴赏能力。',
-      cardCount: 6,
+      cardCount: 4,
       likes: 156,
       views: 2100,
       reuses: 45,
@@ -47,7 +47,7 @@ export function DesktopSquarePage() {
       subject: '化学',
       grade: '高中',
       description: '通过实验现象和理论分析，帮助学生掌握化学反应速率的影响因素和化学平衡的建立过程。',
-      cardCount: 5,
+      cardCount: 4,
       likes: 67,
       views: 890,
       reuses: 18,
@@ -63,7 +63,7 @@ export function DesktopSquarePage() {
       subject: '英语',
       grade: '初中',
       description: '系统梳理英语各种时态的用法，通过丰富的例句和练习，让学生轻松掌握时态变化规律。',
-      cardCount: 8,
+      cardCount: 4,
       likes: 234,
       views: 3200,
       reuses: 67,
@@ -79,7 +79,7 @@ export function DesktopSquarePage() {
       subject: '物理',
       grade: '高中',
       description: '从生活实例出发，讲解力的概念、牛顿定律等基础知识，培养学生的物理思维。',
-      cardCount: 7,
+      cardCount: 4,
       likes: 123,
       views: 1800,
       reuses: 34,
@@ -95,7 +95,7 @@ export function DesktopSquarePage() {
       subject: '生物',
       grade: '初中',
       description: '通过显微镜观察和模型展示，让学生深入了解细胞的基本结构和功能。',
-      cardCount: 5,
+      cardCount: 4,
       likes: 98,
       views: 1400,
       reuses: 28,
@@ -132,27 +132,35 @@ export function DesktopSquarePage() {
           <div style={{
             display: 'flex',
             flexWrap: 'wrap',
-            alignItems: 'flex-end',
+            alignItems: 'center',
             justifyContent: 'space-between',
             gap: '24px',
           }}>
-            <div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: '16px',
+              flexWrap: 'wrap',
+              maxWidth: '60%',
+            }}>
               <h1 style={{
-                fontSize: '36px',
+                fontSize: 'var(--font-size-4xl)',
                 fontWeight: '800',
                 color: 'var(--gray-900)',
-                marginBottom: '8px',
+                margin: 0,
               }}>
                 智慧广场
               </h1>
               <p style={{
-                fontSize: '18px',
+                fontSize: 'var(--font-size-lg)',
                 color: 'var(--gray-600)',
+                margin: 0,
+                whiteSpace: 'nowrap',
               }}>
-                看同行们正在创造什么。每一份作品，都是一份可以借鉴的灵感
+                看同行们正在创造什么，每一份作品都是灵感
               </p>
             </div>
-            <div style={{ flexBasis: '320px', flexGrow: 1, maxWidth: '420px' }}>
+            <div style={{ flexBasis: '280px', flexGrow: 1, maxWidth: '360px' }}>
               <div style={{ position: 'relative' }}>
                 <input
                   className="modern-input"
@@ -193,20 +201,27 @@ export function DesktopSquarePage() {
                 style={{ cursor: 'pointer' }}
                 onClick={() => handleCardClick(work.id)}
               >
-                <div className="modern-card-body">
+                <div
+                  className="modern-card-body"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%',
+                  }}
+                >
                   <div style={{
                     display: 'flex',
                     alignItems: 'flex-start',
                     justifyContent: 'space-between',
                     marginBottom: '16px',
                   }}>
-                    <div style={{ fontSize: '32px' }}>{work.thumbnail}</div>
+                    <div style={{ fontSize: 'var(--font-size-3xl)' }}>{work.thumbnail}</div>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <span style={{
                         padding: '4px 8px',
                         background: 'var(--gray-100)',
                         borderRadius: 'var(--radius-sm)',
-                        fontSize: '12px',
+                        fontSize: 'var(--font-size-xs)',
                         color: 'var(--gray-600)',
                       }}>
                         {work.subject}
@@ -215,7 +230,7 @@ export function DesktopSquarePage() {
                         padding: '4px 8px',
                         background: 'var(--gray-100)',
                         borderRadius: 'var(--radius-sm)',
-                        fontSize: '12px',
+                        fontSize: 'var(--font-size-xs)',
                         color: 'var(--gray-600)',
                       }}>
                         {work.grade}
@@ -224,7 +239,7 @@ export function DesktopSquarePage() {
                   </div>
 
                   <h3 style={{
-                    fontSize: '18px',
+                    fontSize: 'var(--font-size-lg)',
                     fontWeight: '600',
                     color: 'var(--gray-900)',
                     marginBottom: '8px',
@@ -235,7 +250,7 @@ export function DesktopSquarePage() {
 
                   <p style={{
                     color: 'var(--gray-600)',
-                    fontSize: '14px',
+                    fontSize: 'var(--font-size-sm)',
                     marginBottom: '16px',
                     lineHeight: '1.5',
                     display: '-webkit-box',
@@ -246,89 +261,68 @@ export function DesktopSquarePage() {
                     {work.description}
                   </p>
 
-                  <div style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '4px',
-                    marginBottom: '16px',
-                  }}>
-                    {work.tags.map((tag, index) => (
-                      <span key={index} style={{
-                        padding: '2px 8px',
-                        background: 'var(--primary-100)',
-                        color: 'var(--primary-700)',
-                        fontSize: '12px',
-                        borderRadius: 'var(--radius-sm)',
-                      }}>
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    fontSize: '14px',
-                    color: 'var(--gray-500)',
-                    marginBottom: '16px',
-                  }}>
-                    <span>by {work.author}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span>⭐ {work.rating}</span>
-                      <span>•</span>
-                      <span>{work.cardCount}张卡片</span>
-                    </div>
-                  </div>
-
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingTop: '16px',
-                    borderTop: '1px solid var(--gray-200)',
-                  }}>
+                  <div style={{ marginTop: 'auto' }}>
                     <div style={{
                       display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '4px',
+                      alignItems: 'flex-end',
+                      marginBottom: '12px',
+                    }}>
+                      {work.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          style={{
+                            padding: '2px 8px',
+                            background: 'var(--primary-100)',
+                            color: 'var(--primary-700)',
+                            fontSize: 'var(--font-size-xs)',
+                            borderRadius: 'var(--radius-sm)',
+                            alignSelf: 'flex-end',
+                          }}
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr auto',
                       alignItems: 'center',
                       gap: '16px',
-                      fontSize: '14px',
-                      color: 'var(--gray-500)',
+                      paddingTop: '16px',
+                      borderTop: '1px solid var(--gray-200)',
                     }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        {work.views}
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                        {work.likes}
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                        {work.reuses}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <button
-                        className="modern-btn modern-btn-ghost modern-btn-sm"
-                        onClick={(event) => handleLike(event, work.id)}
-                      >
-                        ❤️
-                      </button>
-                      <button
-                        className="modern-btn modern-btn-outline modern-btn-sm"
-                        style={{ whiteSpace: 'nowrap' }}
-                        onClick={(event) => handleReuse(event, work.id)}
-                      >
-                        致敬复用
-                      </button>
+                      <div style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '12px',
+                        fontSize: 'var(--font-size-sm)',
+                        color: 'var(--gray-500)',
+                      }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                          {work.likes}
+                        </span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          {work.reuses}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                        <button
+                          className="modern-btn modern-btn-outline modern-btn-sm"
+                          style={{ whiteSpace: 'nowrap', minWidth: '84px' }}
+                          onClick={(event) => handleReuse(event, work.id)}
+                        >
+                          致敬复用
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

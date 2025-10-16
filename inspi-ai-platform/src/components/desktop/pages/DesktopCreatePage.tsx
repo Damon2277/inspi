@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 /**
  * 现代化桌面端创作页面组件
@@ -8,6 +8,13 @@ import { useLoginPrompt } from '@/components/auth/LoginPrompt';
 import { GeneratedCard } from '@/components/cards/GeneratedCard';
 import { useAuth } from '@/shared/hooks/useAuth';
 import type { CardType, TeachingCard, GenerateCardsResponse } from '@/shared/types/teaching';
+
+const CARD_TYPE_TO_RAW: Record<CardType, 'concept' | 'example' | 'practice' | 'extension'> = {
+  visualization: 'concept',
+  analogy: 'example',
+  thinking: 'practice',
+  interaction: 'extension',
+};
 
 export function DesktopCreatePage() {
   const [formData, setFormData] = useState({
@@ -20,24 +27,69 @@ export function DesktopCreatePage() {
   const [generatedCards, setGeneratedCards] = useState<TeachingCard[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [showNewCardsToast, setShowNewCardsToast] = useState(false);
+  const [showFloatingControls, setShowFloatingControls] = useState(false);
+  const [isFormCollapsed, setIsFormCollapsed] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [lastRequest, setLastRequest] = useState<{
+    knowledgePoint: string;
+    subject: string;
+    gradeLevel: string;
+  } | null>(null);
+  const [retryingCardId, setRetryingCardId] = useState<string | null>(null);
+  const actionMessageTimeoutRef = useRef<number | null>(null);
+  const cardsContainerRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated } = useAuth();
   const { showPrompt, LoginPromptComponent } = useLoginPrompt();
+  const shouldCompactForm = isFormCollapsed || isGenerating || generatedCards.length > 0;
 
-  const subjects = [
-    '数学', '语文', '英语', '物理', '化学', '生物',
-    '历史', '地理', '政治', '音乐', '美术', '体育',
-  ];
+  const normalizeCard = (
+    incomingCard: TeachingCard,
+    sequenceIndex: number,
+    fallback: { knowledgePoint: string; subject: string; gradeLevel: string },
+  ): TeachingCard => {
+    const fallbackTitle = incomingCard.title && incomingCard.title.trim().length > 0
+      ? incomingCard.title
+      : `教学卡片 ${sequenceIndex + 1}`;
 
-  const gradeLevels = [
-    '小学', '初中', '高中', '大学',
-  ];
+    const knowledgePointValue = incomingCard.metadata?.knowledgePoint ?? fallback.knowledgePoint;
+    const subjectValue = incomingCard.metadata?.subject ?? fallback.subject;
+    const gradeLevelValue = incomingCard.metadata?.gradeLevel ?? fallback.gradeLevel;
+
+    return {
+      ...incomingCard,
+      id: incomingCard.id || `card-${Date.now()}-${sequenceIndex}`,
+      title: fallbackTitle,
+      explanation: incomingCard.explanation || `AI生成的${fallbackTitle}，帮助理解“${knowledgePointValue}”`,
+      metadata: {
+        ...incomingCard.metadata,
+        knowledgePoint: knowledgePointValue,
+        subject: subjectValue,
+        gradeLevel: gradeLevelValue,
+        generatedAt: incomingCard.metadata?.generatedAt ?? new Date().toISOString(),
+      },
+      sop: incomingCard.sop ?? [],
+    };
+  };
+
+  const subjects = useMemo(
+    () => [
+      '数学', '语文', '英语', '物理', '化学', '生物',
+      '历史', '地理', '政治', '音乐', '美术', '体育',
+    ],
+    [],
+  );
+
+  const gradeLevels = useMemo(() => ['小学', '初中', '高中', '大学'], []);
 
   const cardTypes: Array<{
     id: CardType;
     name: string;
     description: string;
     icon: string;
-  }> = [
+  }> = useMemo(() => [
     {
       id: 'visualization',
       name: '可视化卡',
@@ -62,15 +114,15 @@ export function DesktopCreatePage() {
       description: '让课堂破冰升温',
       icon: '🎭',
     },
-  ];
+  ], []);
 
-  const recentProjects = [
+  const recentProjects = useMemo(() => [
     { name: '二次函数教学', time: '2小时前', cards: 4 },
     { name: '古诗词赏析', time: '1天前', cards: 6 },
     { name: '化学反应原理', time: '3天前', cards: 5 },
-  ];
+  ].slice(0, 3), []);
 
-  const templates = [
+  const templates = useMemo(() => [
     {
       id: 'math-concept',
       name: '数学概念模板',
@@ -107,7 +159,16 @@ export function DesktopCreatePage() {
         cardTypes: ['visualization', 'interaction'] as CardType[],
       },
     },
-  ];
+  ], []);
+
+  const cardGridStyle = useMemo(
+    () => ({
+      display: 'grid',
+      gap: '20px',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+    }),
+    [],
+  );
 
   const applyTemplate = (templateId: string) => {
     const template = templates.find(item => item.id === templateId);
@@ -120,6 +181,7 @@ export function DesktopCreatePage() {
       gradeLevel: template.preset.gradeLevel,
       cardTypes: Array.from(new Set(template.preset.cardTypes)),
     });
+    setShowNewCardsToast(false);
   };
 
   const handleGenerate = async () => {
@@ -131,8 +193,10 @@ export function DesktopCreatePage() {
       return;
     }
 
+    setIsFormCollapsed(true);
     setIsGenerating(true);
     setGeneratedCards([]);
+    setRetryingCardId(null);
 
     try {
       const headers: Record<string, string> = {
@@ -168,34 +232,159 @@ export function DesktopCreatePage() {
 
       const result: GenerateCardsResponse = await response.json();
 
-      const normalizedCards: TeachingCard[] = (result.cards as TeachingCard[]).map((card, index) => {
-        const fallbackTitle = card.title || `教学卡片 ${index + 1}`;
-        const knowledgePoint = card.metadata?.knowledgePoint ?? formData.content;
-        return {
-          ...card,
-          id: card.id || `card-${Date.now()}-${index}`,
-          title: fallbackTitle,
-          explanation: card.explanation || `AI生成的${fallbackTitle}，帮助理解"${knowledgePoint}"`,
-          metadata: {
-            ...card.metadata,
-            knowledgePoint,
-            subject: card.metadata?.subject ?? formData.subject,
-            gradeLevel: card.metadata?.gradeLevel ?? formData.gradeLevel,
-            generatedAt: card.metadata?.generatedAt ?? new Date().toISOString(),
-          },
-          sop: card.sop ?? [],
-          presentation: card.presentation,
-        };
-      });
+      const fallbackContext = {
+        knowledgePoint: formData.content,
+        subject: formData.subject,
+        gradeLevel: formData.gradeLevel,
+      };
+
+      const normalizedCards: TeachingCard[] = (result.cards as TeachingCard[]).map((card, index) =>
+        normalizeCard(card as TeachingCard, index, fallbackContext),
+      );
 
       setGeneratedCards(normalizedCards);
+      setLastRequest(fallbackContext);
 
     } catch (error) {
       console.error('生成卡片失败:', error);
+      setIsFormCollapsed(false);
       setErrorMessage(`生成失败：${error instanceof Error ? error.message : '未知错误'}`);
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleRetryCard = async (card: TeachingCard, index: number) => {
+    const fallback = lastRequest || {
+      knowledgePoint: formData.content,
+      subject: formData.subject,
+      gradeLevel: formData.gradeLevel,
+    };
+
+    if (!fallback.knowledgePoint) {
+      setActionMessage('请先填写知识点，再尝试重新生成。');
+      return;
+    }
+
+    const rawType = CARD_TYPE_TO_RAW[card.type];
+
+    setRetryingCardId(card.id);
+    setErrorMessage(null);
+
+    try {
+      const response = await fetch('/api/magic/regenerate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cardType: rawType,
+          knowledgePoint: fallback.knowledgePoint,
+          subject: fallback.subject,
+          gradeLevel: fallback.gradeLevel,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: '重新生成失败' }));
+        throw new Error(errorData.error || '重新生成失败');
+      }
+
+      const data = await response.json();
+      const newCard = normalizeCard(data.card as TeachingCard, index, fallback);
+
+      setGeneratedCards((prev) => prev.map((item, idx) => (idx === index ? newCard : item)));
+      showActionFeedback('已重新生成卡片');
+    } catch (error) {
+      console.error('重新生成卡片失败:', error);
+      setErrorMessage(`重新生成失败：${error instanceof Error ? error.message : '未知错误'}`);
+    } finally {
+      setRetryingCardId(null);
+    }
+  };
+
+  const showActionFeedback = (message: string) => {
+    setActionMessage(message);
+    if (actionMessageTimeoutRef.current) {
+      window.clearTimeout(actionMessageTimeoutRef.current);
+    }
+    actionMessageTimeoutRef.current = window.setTimeout(() => {
+      setActionMessage(null);
+      actionMessageTimeoutRef.current = null;
+    }, 2200);
+  };
+
+  const handleBatchExport = () => {
+    showActionFeedback('已准备批量导出，请在卡片内完成最终导出操作');
+  };
+
+  const handleBatchFavorite = () => {
+    showActionFeedback('已收藏全部教学卡片');
+  };
+
+  const handleBatchShare = () => {
+    showActionFeedback('分享链接已准备，可在下方卡片中获取导出信息');
+  };
+
+  const openGalleryAt = (index: number) => {
+    if (generatedCards.length === 0) return;
+    setGalleryIndex(index);
+    setGalleryOpen(true);
+  };
+
+  const closeGallery = () => setGalleryOpen(false);
+
+  const goPrevGallery = () => {
+    setGalleryIndex((prev) => (prev - 1 + generatedCards.length) % generatedCards.length);
+  };
+
+  const goNextGallery = () => {
+    setGalleryIndex((prev) => (prev + 1) % generatedCards.length);
+  };
+
+  const handleOpenGallery = () => {
+    if (generatedCards.length === 0) return;
+    openGalleryAt(0);
+  };
+
+  useEffect(() => () => {
+    if (actionMessageTimeoutRef.current) {
+      window.clearTimeout(actionMessageTimeoutRef.current);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (generatedCards.length === 0) {
+      return;
+    }
+    setShowNewCardsToast(true);
+    setShowFloatingControls(false);
+    const container = cardsContainerRef.current;
+    if (container) {
+      requestAnimationFrame(() => {
+        container.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+    const timer = window.setTimeout(() => setShowNewCardsToast(false), 2400);
+    return () => window.clearTimeout(timer);
+  }, [generatedCards]);
+
+  const handleCardsScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const element = event.currentTarget;
+    setShowFloatingControls(element.scrollTop > 260);
+  };
+
+
+  const toggleFormCollapsed = () => {
+    setIsFormCollapsed((prev) => {
+      const next = !prev;
+      if (!next) {
+        requestAnimationFrame(() => {
+          cardsContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+      return next;
+    });
   };
 
   const toggleCardType = (typeId: CardType) => {
@@ -212,16 +401,16 @@ export function DesktopCreatePage() {
     !formData.content || formData.cardTypes.length === 0 || isGenerating;
 
   return (
-    <div>
+    <React.Fragment>
       <LoginPromptComponent />
       <div style={{ display: 'flex', height: 'calc(100vh - 80px)', background: 'var(--gray-50)' }}>
         {/* 侧边栏 - 缩小宽度 */}
         <aside style={{
-          width: '200px',
+          width: '168px',
           flexShrink: 0,
           background: 'white',
           borderRight: '1px solid var(--gray-200)',
-          padding: '20px 12px',
+          padding: '16px 10px',
           overflowY: 'auto',
         }}>
           {/* 最近项目 */}
@@ -234,7 +423,7 @@ export function DesktopCreatePage() {
             }}>
               最近项目
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {recentProjects.map((project, index) => (
                 <button
                   key={index}
@@ -250,7 +439,7 @@ export function DesktopCreatePage() {
                   className="modern-card"
                   style={{
                     width: '100%',
-                    padding: '10px',
+                    padding: '8px',
                     cursor: 'pointer',
                     transition: 'all var(--transition-base)',
                     textAlign: 'left',
@@ -268,9 +457,10 @@ export function DesktopCreatePage() {
                 >
                   <div style={{
                     fontSize: '12px',
-                    fontWeight: '500',
+                    fontWeight: '600',
                     color: 'var(--gray-900)',
                     marginBottom: '2px',
+                    lineHeight: 1.35,
                   }}>
                     {project.name}
                   </div>
@@ -295,7 +485,7 @@ export function DesktopCreatePage() {
             }}>
               推荐模板
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {templates.map((template) => {
                 const isActive = selectedTemplate === template.id;
                 return (
@@ -305,27 +495,29 @@ export function DesktopCreatePage() {
                     onClick={() => applyTemplate(template.id)}
                     className="modern-card"
                     style={{
-                      padding: '10px',
+                      padding: '8px',
                       textAlign: 'left',
                       cursor: 'pointer',
                       transition: 'all var(--transition-base)',
-                      border: isActive ? '2px solid var(--primary-500)' : '1px solid var(--gray-200)',
-                      background: isActive ? 'var(--primary-50)' : 'white',
+                      border: isActive ? '2px solid #3b82f6' : '1px solid var(--gray-200)',
+                      background: isActive ? '#eff6ff' : 'white',
                     }}
                   >
                     <div style={{
                       fontSize: '12px',
-                      fontWeight: '500',
+                      fontWeight: '600',
                       color: 'var(--gray-900)',
-                      marginBottom: '2px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '8px',
                     }}>
-                      {template.name}
-                    </div>
-                    <div style={{
-                      fontSize: '10px',
-                      color: 'var(--gray-500)',
-                    }}>
-                      {template.usage}次 • ⭐{template.rating}
+                      <span>{template.name}</span>
+                      <span style={{
+                        fontSize: '10px',
+                        color: 'var(--gray-500)',
+                        fontWeight: '400',
+                      }}>{template.usage}次</span>
                     </div>
                   </button>
                 );
@@ -333,37 +525,38 @@ export function DesktopCreatePage() {
             </div>
           </div>
 
-          {/* 使用小贴士 */}
-          <div>
-            <h3 style={{
-              fontSize: '14px',
-              fontWeight: '600',
-              color: 'var(--gray-900)',
-              marginBottom: '12px',
-            }}>
-              使用小贴士
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-                <span style={{ fontSize: '12px' }}>💡</span>
-                <span style={{ fontSize: '11px', color: 'var(--gray-600)', lineHeight: '1.4' }}>
-                  详细描述知识点，AI会生成更精准的内容
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-                <span style={{ fontSize: '12px' }}>🎯</span>
-                <span style={{ fontSize: '11px', color: 'var(--gray-600)', lineHeight: '1.4' }}>
-                  选择合适的学科和学段
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-                <span style={{ fontSize: '12px' }}>✨</span>
-                <span style={{ fontSize: '11px', color: 'var(--gray-600)', lineHeight: '1.4' }}>
-                  多选卡片类型，构建完整教学体系
-                </span>
+          {!shouldCompactForm && (
+            <div>
+              <h3 style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: 'var(--gray-900)',
+                marginBottom: '12px',
+              }}>
+                使用小贴士
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
+                  <span style={{ fontSize: '12px' }}>💡</span>
+                  <span style={{ fontSize: '11px', color: 'var(--gray-600)', lineHeight: '1.4' }}>
+                    详细描述知识点，AI会生成更精准的内容
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
+                  <span style={{ fontSize: '12px' }}>🎯</span>
+                  <span style={{ fontSize: '11px', color: 'var(--gray-600)', lineHeight: '1.4' }}>
+                    选择合适的学科和学段
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
+                  <span style={{ fontSize: '12px' }}>✨</span>
+                  <span style={{ fontSize: '11px', color: 'var(--gray-600)', lineHeight: '1.4' }}>
+                    多选卡片类型，构建完整教学体系
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </aside>
 
         {/* 主内容区 - 上下布局 */}
@@ -390,196 +583,489 @@ export function DesktopCreatePage() {
               gap: '12px',
             }}>
               <h1 style={{
-                fontSize: 'var(--font-size-2xl)',
+                fontSize: 'var(--font-size-4xl)',
                 fontWeight: '700',
                 color: 'var(--gray-900)',
               }}>
                 AI教学魔法师工作区
               </h1>
-              <p style={{
-                fontSize: 'var(--font-size-sm)',
-                color: 'var(--gray-600)',
-              }}>
-                让抽象知识变得可见，用生活温度点亮学习
-              </p>
+              {!shouldCompactForm && (
+                <p style={{
+                  fontSize: 'var(--font-size-lg)',
+                  color: 'var(--gray-600)',
+                }}>
+                  让抽象知识变得可见，用生活温度点亮学习
+                </p>
+              )}
             </div>
           </div>
 
           {/* 上部：输入区域 */}
-          <div
-            style={{
-              padding: '20px 24px',
-              background: 'white',
-              borderBottom: '1px solid var(--gray-200)',
-            }}
-          >
-            {/* 创作设置 */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: '12px', alignItems: 'start' }}>
-                <div className="modern-form-group" style={{ marginBottom: 0 }}>
-                  <label className="modern-label" style={{ fontSize: 'var(--font-size-sm)' }}>知识点内容</label>
-                  <textarea
-                    className="modern-input"
-                    style={{
-                      fontSize: 'var(--font-size-base)',
-                      minHeight: '60px',
-                      resize: 'none',
-                    }}
-                    placeholder="请详细描述你要教授的知识点..."
-                    value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    required
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '28px' }}>
-                  <div className="modern-form-group" style={{ marginBottom: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <label className="modern-label" style={{ fontSize: 'var(--font-size-sm)', marginBottom: 0, whiteSpace: 'nowrap' }}>学科</label>
-                      <select
-                        className="modern-input"
-                        style={{ fontSize: 'var(--font-size-sm)', padding: '4px 8px' }}
-                        value={formData.subject}
-                        onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      >
-                        <option value="">选择学科</option>
-                        {subjects.map(subject => (
-                          <option key={subject} value={subject}>{subject}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="modern-form-group" style={{ marginBottom: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <label className="modern-label" style={{ fontSize: 'var(--font-size-sm)', marginBottom: 0, whiteSpace: 'nowrap' }}>学段</label>
-                      <select
-                        className="modern-input"
-                        style={{ fontSize: 'var(--font-size-sm)', padding: '4px 8px' }}
-                        value={formData.gradeLevel}
-                        onChange={(e) => setFormData({ ...formData, gradeLevel: e.target.value })}
-                      >
-                        <option value="">选择学段</option>
-                        {gradeLevels.map(level => (
-                          <option key={level} value={level}>{level}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 卡片类型选择 */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                {cardTypes.map((type) => (
-                  <div
-                    key={type.id}
-                    onClick={() => toggleCardType(type.id)}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      cursor: 'pointer',
-                      border: formData.cardTypes.includes(type.id)
-                        ? '2px solid var(--primary-500)'
-                        : '1px solid var(--gray-200)',
-                      borderRadius: '8px',
-                      background: formData.cardTypes.includes(type.id)
-                        ? 'var(--primary-50)'
-                        : 'white',
-                      transition: 'all 0.2s',
-                      textAlign: 'center',
-                      position: 'relative',
-                    }}
-                  >
-                    {formData.cardTypes.includes(type.id) && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '8px',
-                        right: '8px',
-                        width: '20px',
-                        height: '20px',
-                        borderRadius: '50%',
-                        background: 'var(--primary-500)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}>
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                          <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
-                    )}
-                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>
-                      {type.icon}
-                    </div>
-                    <h4 style={{
-                      fontSize: 'var(--font-size-xs)',
-                      fontWeight: '600',
-                      color: 'var(--gray-900)',
-                      marginBottom: '2px',
-                    }}>
-                      {type.name}
-                    </h4>
-                    <p style={{
-                      fontSize: '10px',
-                      color: 'var(--gray-600)',
-                      lineHeight: '1.3',
-                    }}>
-                      {type.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 生成按钮 */}
-            <div style={{ textAlign: 'center' }}>
-              {errorMessage && (
-                <p style={{
-                  color: '#dc2626',
-                  fontSize: '13px',
-                  marginBottom: '12px',
-                }}>
-                  {errorMessage}
-                </p>
-              )}
+          {isFormCollapsed ? (
+            <div
+              style={{
+                padding: '12px 24px',
+                background: 'white',
+                borderBottom: '1px solid var(--gray-200)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '12px',
+                flexWrap: 'wrap',
+              }}
+            >
+              <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>
+                创作表单已收起{isGenerating ? '，正在生成教学卡片...' : '，点击箭头重新展开继续编辑'}
+              </span>
               <button
-                className="modern-btn modern-btn-primary"
-                style={{ minWidth: '200px', fontSize: 'var(--font-size-base)', padding: '10px 24px' }}
-                onClick={handleGenerate}
-                disabled={isGenerateDisabled}
+                type="button"
+                onClick={toggleFormCollapsed}
+                style={{
+                  border: '1px solid var(--gray-200)',
+                  borderRadius: '8px',
+                  background: '#fff',
+                  padding: '6px 10px',
+                  fontSize: '12px',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f8fafc';
+                  e.currentTarget.style.borderColor = '#cbd5e1';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#fff';
+                  e.currentTarget.style.borderColor = 'var(--gray-200)';
+                }}
+                aria-label="展开创作表单"
               >
-                {isGenerating ? (
-                  <>
-                    <div className="modern-spinner" style={{ width: '16px', height: '16px' }}></div>
-                    正在生成中...
-                  </>
-                ) : (
-                  <>
-                    <span>✨</span>
-                    开启教学魔法
-                  </>
-                )}
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </button>
             </div>
-          </div>
+          ) : (
+            <div
+              style={{
+                padding: '20px 24px',
+                background: 'white',
+                borderBottom: '1px solid var(--gray-200)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '16px',
+                  gap: '12px',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, color: 'var(--gray-900)', margin: 0 }}>
+                  创作设置
+                </h2>
+                <button
+                  type="button"
+                  onClick={toggleFormCollapsed}
+                  style={{
+                    border: '1px solid var(--gray-200)',
+                    borderRadius: '8px',
+                    background: '#fff',
+                    padding: '6px 10px',
+                    fontSize: '12px',
+                    color: '#64748b',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8fafc';
+                    e.currentTarget.style.borderColor = '#cbd5e1';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#fff';
+                    e.currentTarget.style.borderColor = 'var(--gray-200)';
+                  }}
+                  aria-label="收起创作表单"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M3 7.5L6 4.5L9 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: '12px', alignItems: 'start' }}>
+                  <div className="modern-form-group" style={{ marginBottom: 0 }}>
+                    <textarea
+                      className="modern-input"
+                      style={{
+                        fontSize: 'var(--font-size-base)',
+                        minHeight: '60px',
+                        resize: 'none',
+                      }}
+                      placeholder="请详细描述你要教授的知识点、课堂目标或学习活动..."
+                      value={formData.content}
+                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div className="modern-form-group" style={{ marginBottom: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <label className="modern-label" style={{ fontSize: 'var(--font-size-sm)', marginBottom: 0, whiteSpace: 'nowrap' }}>学科</label>
+                        <select
+                          className="modern-input"
+                          style={{ fontSize: 'var(--font-size-sm)', padding: '4px 8px' }}
+                          value={formData.subject}
+                          onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                        >
+                          <option value="">选择学科</option>
+                          {subjects.map(subject => (
+                            <option key={subject} value={subject}>{subject}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="modern-form-group" style={{ marginBottom: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <label className="modern-label" style={{ fontSize: 'var(--font-size-sm)', marginBottom: 0, whiteSpace: 'nowrap' }}>学段</label>
+                        <select
+                          className="modern-input"
+                          style={{ fontSize: 'var(--font-size-sm)', padding: '4px 8px' }}
+                          value={formData.gradeLevel}
+                          onChange={(e) => setFormData({ ...formData, gradeLevel: e.target.value })}
+                        >
+                          <option value="">选择学段</option>
+                          {gradeLevels.map(level => (
+                            <option key={level} value={level}>{level}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  {cardTypes.map((type) => (
+                    <div
+                      key={type.id}
+                      onClick={() => toggleCardType(type.id)}
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        cursor: 'pointer',
+                        border: formData.cardTypes.includes(type.id)
+                          ? '2px solid var(--primary-500)'
+                          : '1px solid var(--gray-200)',
+                        borderRadius: '8px',
+                        background: formData.cardTypes.includes(type.id)
+                          ? 'var(--primary-50)'
+                          : 'white',
+                        transition: 'all 0.2s',
+                        textAlign: 'center',
+                        position: 'relative',
+                      }}
+                    >
+                      {formData.cardTypes.includes(type.id) && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '50%',
+                          background: 'var(--primary-500)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                      )}
+                      <div style={{ fontSize: '20px', marginBottom: '4px' }}>
+                        {type.icon}
+                      </div>
+                      <h4 style={{
+                        fontSize: 'var(--font-size-xs)',
+                        fontWeight: '600',
+                        color: 'var(--gray-900)',
+                        marginBottom: '2px',
+                      }}>
+                        {type.name}
+                      </h4>
+                      <p style={{
+                        fontSize: '10px',
+                        color: 'var(--gray-600)',
+                        lineHeight: '1.3',
+                      }}>
+                        {type.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'center' }}>
+                {errorMessage && (
+                  <p style={{
+                    color: '#dc2626',
+                    fontSize: '13px',
+                    marginBottom: '12px',
+                  }}>
+                    {errorMessage}
+                  </p>
+                )}
+                <button
+                  className="modern-btn modern-btn-primary"
+                  style={{ minWidth: '200px', fontSize: 'var(--font-size-base)', padding: '10px 24px' }}
+                  onClick={handleGenerate}
+                  disabled={isGenerateDisabled}
+                >
+                  {isGenerating ? (
+                    <>
+                      <div className="modern-spinner" style={{ width: '16px', height: '16px' }}></div>
+                      正在生成中...
+                    </>
+                  ) : (
+                    <>
+                      <span>✨</span>
+                      开启教学魔法
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* 下部：结果区域 */}
-          <div style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '24px',
-          }}>
-            {generatedCards.length === 0 && (
-              <h2 style={{
-                fontSize: 'var(--font-size-lg)',
-                fontWeight: '600',
-                color: 'var(--gray-900)',
-                marginBottom: '20px',
-              }}>
-                预览区域
-              </h2>
+          <div
+            ref={cardsContainerRef}
+            onScroll={handleCardsScroll}
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '24px 28px 120px',
+              position: 'relative',
+            }}
+          >
+            {showNewCardsToast && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '20px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  background: 'rgba(13,148,136,0.92)',
+                  color: '#fff',
+                  padding: '8px 18px',
+                  borderRadius: '999px',
+                  fontSize: 'var(--font-size-sm)',
+                  boxShadow: '0 18px 36px rgba(13,148,136,0.35)',
+                  zIndex: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <span role="img" aria-label="sparkles">🎉</span>
+                <span>新的教学卡片已生成</span>
+              </div>
             )}
+
+            <div
+              style={{
+                position: 'sticky',
+                top: 0,
+                zIndex: 5,
+                marginBottom: '18px',
+                paddingBottom: '16px',
+                background: 'linear-gradient(180deg, rgba(248,250,252,0.96) 0%, rgba(248,250,252,0.86) 70%, rgba(248,250,252,0) 100%)',
+                backdropFilter: 'blur(6px)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: '16px',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={toggleFormCollapsed}
+                    style={{
+                      border: '1px solid var(--gray-200)',
+                      borderRadius: '8px',
+                      background: '#fff',
+                      padding: '6px 10px',
+                      fontSize: '12px',
+                      color: '#64748b',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#f8fafc';
+                      e.currentTarget.style.borderColor = '#cbd5e1';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#fff';
+                      e.currentTarget.style.borderColor = 'var(--gray-200)';
+                    }}
+                    aria-label={isFormCollapsed ? '展开创作区' : '收起创作区'}
+                    title={isFormCollapsed ? '展开创作区' : '收起创作区'}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      {isFormCollapsed ? (
+                        <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      ) : (
+                        <path d="M3 7.5L6 4.5L9 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      )}
+                    </svg>
+                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, color: 'var(--gray-900)', margin: 0 }}>
+                      生成结果
+                    </h2>
+                    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-500)' }}>
+                      {generatedCards.length} 张卡片
+                    </span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={handleBatchExport}
+                    disabled={generatedCards.length === 0}
+                    style={{
+                      border: '1px solid var(--gray-200)',
+                      borderRadius: '8px',
+                      background: generatedCards.length === 0 ? 'var(--gray-100)' : '#fff',
+                      padding: '8px',
+                      width: '36px',
+                      height: '36px',
+                      color: generatedCards.length === 0 ? 'var(--gray-400)' : '#2563eb',
+                      cursor: generatedCards.length === 0 ? 'not-allowed' : 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s',
+                    }}
+                    title="批量导出"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path d="M9 12L5 8h8l-4 4z" fill="currentColor"/>
+                      <path d="M4 14h10v2H4v-2z" fill="currentColor"/>
+                      <rect x="2" y="2" width="14" height="10" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleBatchFavorite}
+                    disabled={generatedCards.length === 0}
+                    style={{
+                      border: '1px solid var(--gray-200)',
+                      borderRadius: '8px',
+                      background: generatedCards.length === 0 ? 'var(--gray-100)' : '#fff',
+                      padding: '8px',
+                      width: '36px',
+                      height: '36px',
+                      color: generatedCards.length === 0 ? 'var(--gray-400)' : '#047857',
+                      cursor: generatedCards.length === 0 ? 'not-allowed' : 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s',
+                    }}
+                    title="收藏全部"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path d="M9 2l2.163 4.279L16 6.967l-3.5 3.378.826 4.655L9 12.779 4.674 15 5.5 10.345 2 6.967l4.837-.688L9 2z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleBatchShare}
+                    disabled={generatedCards.length === 0}
+                    style={{
+                      border: '1px solid var(--gray-200)',
+                      borderRadius: '8px',
+                      background: generatedCards.length === 0 ? 'var(--gray-100)' : '#fff',
+                      padding: '8px',
+                      width: '36px',
+                      height: '36px',
+                      color: generatedCards.length === 0 ? 'var(--gray-400)' : '#7c3aed',
+                      cursor: generatedCards.length === 0 ? 'not-allowed' : 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s',
+                    }}
+                    title="分享链接"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path d="M14 6a2 2 0 100-4 2 2 0 000 4zM14 16a2 2 0 100-4 2 2 0 000 4zM4 11a2 2 0 100-4 2 2 0 000 4z" fill="currentColor"/>
+                      <path d="M5.5 9.5l7-3M5.5 8.5l7 3" stroke="currentColor" strokeWidth="1.5"/>
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleOpenGallery}
+                    style={{
+                      border: '1px solid var(--gray-200)',
+                      borderRadius: '8px',
+                      background: generatedCards.length === 0 ? 'var(--gray-100)' : '#fff',
+                      padding: '8px',
+                      width: '36px',
+                      height: '36px',
+                      color: generatedCards.length === 0 ? 'var(--gray-400)' : '#0f172a',
+                      cursor: generatedCards.length === 0 ? 'not-allowed' : 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s',
+                    }}
+                    disabled={generatedCards.length === 0}
+                    title="全屏预览"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path d="M3 3h4v2H5v2H3V3zM15 3h-4v2h2v2h2V3zM3 15h4v-2H5v-2H3v4zM15 15h-4v-2h2v-2h2v4z" fill="currentColor"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              {actionMessage && (
+                <div
+                  style={{
+                    marginTop: '12px',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    background: 'rgba(37, 99, 235, 0.1)',
+                    color: '#1d4ed8',
+                    fontSize: 'var(--font-size-sm)',
+                  }}
+                >
+                  {actionMessage}
+                </div>
+              )}
+            </div>
 
             {isGenerating ? (
               <div className="modern-card" style={{ textAlign: 'center', padding: '60px 0' }}>
@@ -590,13 +1076,15 @@ export function DesktopCreatePage() {
                 </p>
               </div>
             ) : generatedCards.length > 0 ? (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
-                gap: '20px',
-              }}>
-                {generatedCards.map((card) => (
-                  <GeneratedCard key={card.id} card={card} />
+              <div style={cardGridStyle}>
+                {generatedCards.map((card, index) => (
+                  <GeneratedCard
+                    key={card.id}
+                    card={card}
+                    onPreview={() => openGalleryAt(index)}
+                    onRetry={() => handleRetryCard(card, index)}
+                    retrying={retryingCardId === card.id}
+                  />
                 ))}
               </div>
             ) : formData.cardTypes.length > 0 ? (
@@ -637,13 +1125,87 @@ export function DesktopCreatePage() {
                   开始创作
                 </h3>
                 <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-base)' }}>
-                  填写知识点内容，选择卡片类型，AI将为您生成教学卡片
+                  填入教学主题或课堂目标，选择卡片类型，AI将为您生成教学卡片
                 </p>
               </div>
             )}
+
           </div>
         </main>
       </div>
-    </div>
+
+      {galleryOpen && generatedCards[galleryIndex] && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.92)',
+            zIndex: 1000,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 28px', color: '#e2e8f0' }}>
+            <div>
+              <div style={{ fontSize: '18px', fontWeight: 600 }}>{generatedCards[galleryIndex].title}</div>
+              <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
+                {galleryIndex + 1} / {generatedCards.length}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={closeGallery}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                color: '#f8fafc',
+                fontSize: '28px',
+                cursor: 'pointer',
+              }}
+              aria-label="关闭预览"
+            >
+              ×
+            </button>
+          </div>
+
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 80px 40px' }}>
+            <div style={{ width: 'min(960px, 100%)', maxHeight: '90vh', overflowY: 'auto' }}>
+              <GeneratedCard card={generatedCards[galleryIndex]} className="gallery-card" />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 40px 32px', color: '#cbd5f5' }}>
+            <button
+              type="button"
+              onClick={goPrevGallery}
+              style={{
+                border: '1px solid rgba(148, 163, 184, 0.4)',
+                background: 'rgba(30, 64, 175, 0.25)',
+                padding: '10px 20px',
+                borderRadius: '999px',
+                color: '#e0f2fe',
+                cursor: 'pointer',
+              }}
+            >
+              ← 上一张
+            </button>
+            <button
+              type="button"
+              onClick={goNextGallery}
+              style={{
+                border: '1px solid rgba(148, 163, 184, 0.4)',
+                background: 'rgba(30, 64, 175, 0.25)',
+                padding: '10px 20px',
+                borderRadius: '999px',
+                color: '#e0f2fe',
+                cursor: 'pointer',
+              }}
+            >
+              下一张 →
+            </button>
+          </div>
+        </div>
+      )}
+    </React.Fragment>
   );
 }

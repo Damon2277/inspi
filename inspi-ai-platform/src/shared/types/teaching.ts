@@ -6,6 +6,28 @@ import type { CardType } from './cards';
 
 export type { CardType };
 
+export type VisualizationTheme = 'ocean' | 'sunrise' | 'forest' | 'galaxy' | 'neutral';
+
+export interface VisualizationBranch {
+  id: string;
+  title: string;
+  summary: string;
+  keywords?: string[];
+  icon?: string;
+  color?: string;
+}
+
+export interface VisualizationSpec {
+  type: 'concept-map' | 'process-flow' | 'matrix';
+  theme: VisualizationTheme;
+  center: {
+    title: string;
+    subtitle?: string;
+  };
+  branches: VisualizationBranch[];
+  footerNote?: string;
+}
+
 export interface TeachingCard {
   id: string;
   type: CardType;
@@ -19,6 +41,7 @@ export interface TeachingCard {
     knowledgePoint?: string;
     generatedAt?: Date | string;
   };
+  visual?: VisualizationSpec;
   sop?: CardSOPSection[];
   presentation?: CardPresentationMeta;
   cached?: boolean;
