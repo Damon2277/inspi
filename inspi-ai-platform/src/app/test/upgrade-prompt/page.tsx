@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 
+import { useToast } from '@/shared/hooks';
 import { QuotaType, UserTier } from '@/shared/types/subscription';
 
 // 升级提示组件（简化版，用于测试）
@@ -22,6 +23,8 @@ function UpgradePrompt({
   limit,
   currentTier,
 }: UpgradePromptProps) {
+  const { toast } = useToast();
+
   if (!isOpen) return null;
 
   const quotaInfo = {
@@ -153,7 +156,10 @@ function UpgradePrompt({
             </button>
             <button
               onClick={() => {
-                alert(`升级到${recommended.name} - ¥${recommended.price}/月`);
+                toast({
+                  title: `升级到${recommended.name}`,
+                  description: `已为您记录意向，套餐费用为 ¥${recommended.price}/月。`,
+                });
                 onClose();
               }}
               className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors"

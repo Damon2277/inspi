@@ -10,7 +10,6 @@ jest.mock('@/lib/mongodb');
 jest.mock('@/lib/models/Work');
 jest.mock('@/lib/models/Comment');
 jest.mock('@/lib/models/Bookmark');
-jest.mock('@/lib/models/Follow');
 jest.mock('@/lib/models/User');
 
 describe('WorkService', () => {

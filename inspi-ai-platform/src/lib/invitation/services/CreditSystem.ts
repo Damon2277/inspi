@@ -62,8 +62,21 @@ export interface CreditUsage {
 
 export interface CreditSystemService {
   // 积分管理
-  addCredits(userId: string, amount: number, source: CreditSource, sourceId: string, description: string, expiresAt?: Date): Promise<CreditRecord>
-  useCredits(userId: string, amount: number, purpose: string, metadata?: Record<string, any>): Promise<boolean>
+  addCredits(
+    userId: string,
+    amount: number,
+    source: CreditSource,
+    sourceId: string,
+    description: string,
+    expiresAt?: Date,
+  ): Promise<CreditRecord>
+
+  useCredits(
+    userId: string,
+    amount: number,
+    purpose: string,
+    metadata?: Record<string, any>,
+  ): Promise<boolean>
 
   // 余额查询
   getUserBalance(userId: string): Promise<UserCreditBalance>
@@ -83,7 +96,7 @@ export interface CreditSystemService {
     totalUsed: number
     totalExpired: number
     averageDaily: number
-    topSources: Array<{ source: CreditSource, amount: number }>
+    topSources: Array<{ source: CreditSource; amount: number }>
   }>
 }
 
@@ -466,7 +479,9 @@ export class CreditSystemServiceImpl implements CreditSystemService {
 
       let averageDaily = 0;
       if (firstRecord.first_date) {
-        const daysSinceFirst = Math.max(1, Math.floor((Date.now() - firstRecord.first_date.getTime()) / (24 * 60 * 60 * 1000)));
+        const msInDay = 24 * 60 * 60 * 1000;
+        const elapsedMs = Date.now() - firstRecord.first_date.getTime();
+        const daysSinceFirst = Math.max(1, Math.floor(elapsedMs / msInDay));
         averageDaily = earnedResult.total / daysSinceFirst;
       }
 

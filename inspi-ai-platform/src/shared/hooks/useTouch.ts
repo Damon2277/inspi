@@ -3,7 +3,7 @@
  * 提供触摸手势识别和优化
  */
 
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useMemo } from 'react';
 
 import { useIsTouchDevice } from './useResponsive';
 
@@ -60,7 +60,7 @@ export const useTouch = (
   options: TouchOptions = {},
 ) => {
   const isTouchDevice = useIsTouchDevice();
-  const config = { ...defaultOptions, ...options };
+  const config = useMemo(() => ({ ...defaultOptions, ...options }), [options]);
 
   const touchStartRef = useRef<TouchPoint | null>(null);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);

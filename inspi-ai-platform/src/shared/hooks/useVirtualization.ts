@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
-import { logger } from '@/lib/logging/logger';
+import { logger } from '@/shared/utils/logger';
 
 /**
  * 虚拟化配置

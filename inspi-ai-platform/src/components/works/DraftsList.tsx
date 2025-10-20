@@ -2,6 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 
+interface FeedbackState {
+  type: 'success' | 'error';
+  message: string;
+}
+
 import { WorkDocument } from '@/lib/models/Work';
 
 interface DraftsListProps {
@@ -18,6 +23,9 @@ export default function DraftsList({
   const [drafts, setDrafts] = useState<WorkDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchDrafts();
@@ -41,30 +49,41 @@ export default function DraftsList({
     }
   };
 
-  const handleDelete = async (draftId: string, e: React.MouseEvent) => {
+  const requestDelete = (draftId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    setFeedback(null);
+    setPendingDeleteId(draftId);
+  };
 
-    if (!confirm('确定要删除这个草稿吗？此操作不可恢复。')) {
+  const handleDelete = async () => {
+    if (!pendingDeleteId) {
       return;
     }
 
+    setDeleting(true);
     try {
-      const response = await fetch(`/api/works/${draftId}`, {
+      const response = await fetch(`/api/works/${pendingDeleteId}`, {
         method: 'DELETE',
       });
 
       const data = await response.json();
 
       if (data.success) {
-        setDrafts(drafts.filter(draft => String(draft._id) !== draftId));
-        onDeleteDraft && onDeleteDraft(draftId);
+        setDrafts(prev => prev.filter(draft => String(draft._id) !== pendingDeleteId));
+        onDeleteDraft?.(pendingDeleteId);
+        setFeedback({ type: 'success', message: '草稿已删除' });
       } else {
-        alert(data.message || '删除失败');
+        setFeedback({ type: 'error', message: data.message || '删除失败，请稍后重试' });
       }
     } catch (err) {
-      alert('删除失败，请稍后重试');
+      setFeedback({ type: 'error', message: '删除失败，请稍后重试' });
+    } finally {
+      setDeleting(false);
+      setPendingDeleteId(null);
     }
   };
+
+  const dismissFeedback = () => setFeedback(null);
 
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleString('zh-CN', {
@@ -119,6 +138,26 @@ export default function DraftsList({
 
   return (
     <div className={`${className}`}>
+      {feedback ? (
+        <div
+          className={`mb-4 flex items-start justify-between rounded-md px-4 py-3 text-sm ${
+            feedback.type === 'success'
+              ? 'bg-emerald-50 text-emerald-700'
+              : 'bg-rose-50 text-rose-700'
+          }`}
+          role="alert"
+        >
+          <span>{feedback.message}</span>
+          <button
+            type="button"
+            onClick={dismissFeedback}
+            className="ml-4 text-xs font-medium underline-offset-2 hover:underline"
+          >
+            知道了
+          </button>
+        </div>
+      ) : null}
+
       <div className="space-y-3">
         {drafts.map((draft) => (
           <div
@@ -158,7 +197,7 @@ export default function DraftsList({
 
               <div className="ml-3 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
-                  onClick={(e) => handleDelete(String(draft._id), e)}
+                  onClick={(e) => requestDelete(String(draft._id), e)}
                   className="p-1 text-gray-400 hover:text-red-600 rounded"
                   title="删除草稿"
                 >
@@ -179,6 +218,40 @@ export default function DraftsList({
           </p>
         </div>
       )}
+
+      {pendingDeleteId ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm rounded-lg bg-white p-6 shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-900">确认删除草稿？</h3>
+            <p className="mt-2 text-sm text-gray-600">
+              删除后将无法恢复，确定继续执行该操作吗？
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-md border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
+                onClick={() => {
+                  if (!deleting) {
+                    setPendingDeleteId(null);
+                  }
+                }}
+                disabled={deleting}
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:bg-red-400"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? '正在删除...' : '确认删除'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

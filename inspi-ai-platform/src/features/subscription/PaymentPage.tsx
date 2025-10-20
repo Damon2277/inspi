@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { WeChatPayUtils } from '@/core/subscription/wechat-pay';
 import { PaymentRecord, PaymentStatus, PaymentMethod } from '@/shared/types/subscription';
@@ -23,23 +24,8 @@ export function PaymentPage({
   const [isPolling, setIsPolling] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  // 生成二维码
-  useEffect(() => {
-    if (paymentRecord.paymentMethod === 'wechat_pay') {
-      generateQRCode();
-    }
-  }, [paymentRecord]);
-
-  // 倒计时
-  useEffect(() => {
-    if (countdown > 0 && paymentStatus === 'pending') {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [countdown, paymentStatus]);
-
   // 生成微信支付二维码
-  const generateQRCode = async () => {
+  const generateQRCode = useCallback(async () => {
     try {
       const result = await WeChatPayUtils.createWeChatPayOrder({
         amount: paymentRecord.amount,
@@ -51,7 +37,22 @@ export function PaymentPage({
       console.error('生成二维码失败:', error);
       setErrorMessage('生成支付二维码失败，请重试');
     }
-  };
+  }, [paymentRecord.amount, paymentRecord.planId, paymentRecord.userId]);
+
+  // 生成二维码
+  useEffect(() => {
+    if (paymentRecord.paymentMethod === 'wechat_pay') {
+      generateQRCode();
+    }
+  }, [paymentRecord.paymentMethod, generateQRCode]);
+
+  // 倒计时
+  useEffect(() => {
+    if (countdown > 0 && paymentStatus === 'pending') {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown, paymentStatus]);
 
   // 刷新支付状态
   const handleRefresh = async () => {
@@ -196,10 +197,13 @@ export function PaymentPage({
       <div className="text-center mb-6">
         {qrCodeUrl ? (
           <div className="inline-block p-4 bg-white border-2 border-gray-200 rounded-lg">
-            <img
+            <Image
               src={qrCodeUrl}
               alt="支付二维码"
+              width={192}
+              height={192}
               className="w-48 h-48 mx-auto"
+              unoptimized
             />
           </div>
         ) : (

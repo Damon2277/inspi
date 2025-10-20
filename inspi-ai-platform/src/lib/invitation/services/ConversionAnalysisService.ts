@@ -211,6 +211,16 @@ export class ConversionAnalysisServiceImpl implements ConversionAnalysisService 
     try {
       const metrics = await this.getOverallConversionAnalysis(period);
 
+      const percentage = (part: number, total: number) => {
+        if (!total) return 0;
+        return (part / total) * 100;
+      };
+
+      const dropoff = (previous: number, next: number) => {
+        if (!previous) return 0;
+        return ((previous - next) / previous) * 100;
+      };
+
       const funnelData: ConversionFunnelData[] = [
         {
           step: '邀请生成',
@@ -221,20 +231,20 @@ export class ConversionAnalysisServiceImpl implements ConversionAnalysisService 
         {
           step: '链接点击',
           count: metrics.totalClicks,
-          percentage: metrics.totalInvites > 0 ? (metrics.totalClicks / metrics.totalInvites) * 100 : 0,
-          dropoffRate: metrics.totalInvites > 0 ? ((metrics.totalInvites - metrics.totalClicks) / metrics.totalInvites) * 100 : 0,
+          percentage: percentage(metrics.totalClicks, metrics.totalInvites),
+          dropoffRate: dropoff(metrics.totalInvites, metrics.totalClicks),
         },
         {
           step: '用户注册',
           count: metrics.totalRegistrations,
-          percentage: metrics.totalInvites > 0 ? (metrics.totalRegistrations / metrics.totalInvites) * 100 : 0,
-          dropoffRate: metrics.totalClicks > 0 ? ((metrics.totalClicks - metrics.totalRegistrations) / metrics.totalClicks) * 100 : 0,
+          percentage: percentage(metrics.totalRegistrations, metrics.totalInvites),
+          dropoffRate: dropoff(metrics.totalClicks, metrics.totalRegistrations),
         },
         {
           step: '用户激活',
           count: metrics.totalActivations,
-          percentage: metrics.totalInvites > 0 ? (metrics.totalActivations / metrics.totalInvites) * 100 : 0,
-          dropoffRate: metrics.totalRegistrations > 0 ? ((metrics.totalRegistrations - metrics.totalActivations) / metrics.totalRegistrations) * 100 : 0,
+          percentage: percentage(metrics.totalActivations, metrics.totalInvites),
+          dropoffRate: dropoff(metrics.totalRegistrations, metrics.totalActivations),
         },
       ];
 

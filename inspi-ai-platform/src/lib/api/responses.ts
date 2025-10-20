@@ -377,7 +377,7 @@ export function getDefaultErrorMessage(code: ErrorCode): string {
   return ERROR_CODE_MAP[code]?.message || '未知错误';
 }
 
-export default {
+const apiResponseUtils = {
   createSuccessResponse,
   createErrorResponse,
   createValidationErrorResponse,
@@ -392,3 +392,5 @@ export default {
   validateRequestBody,
   validateQueryParams,
 };
+
+export default apiResponseUtils;

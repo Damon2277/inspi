@@ -362,7 +362,7 @@ export function generateEdgeTooltip(edge: D3Edge): string {
   `;
 }
 
-export default {
+const graphUtils = {
   transformGraphData,
   createZoomBehavior,
   createDragBehavior,
@@ -376,3 +376,5 @@ export default {
   generateNodeTooltip,
   generateEdgeTooltip,
 };
+
+export default graphUtils;

@@ -137,8 +137,10 @@ export class PerformanceMonitor {
       const navObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
           if (entry.entryType === 'navigation') {
-            const navEntry = entry as PerformanceNavigationTiming;
-            const navigationStart = (navEntry as PerformanceNavigationTiming & { navigationStart?: number }).navigationStart ?? navEntry.startTime ?? 0;
+            const navEntry = entry as PerformanceNavigationTiming & {
+              navigationStart?: number;
+            };
+            const navigationStart = navEntry.navigationStart ?? navEntry.startTime ?? 0;
             const loadEventEnd = navEntry.loadEventEnd ?? navEntry.responseEnd ?? navigationStart;
             const domContentLoadedEnd = navEntry.domContentLoadedEventEnd ?? loadEventEnd;
             const responseStart = navEntry.responseStart ?? navigationStart;

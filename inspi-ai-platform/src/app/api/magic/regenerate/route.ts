@@ -2,15 +2,16 @@ import { NextResponse } from 'next/server';
 
 import { geminiService } from '@/core/ai/geminiService';
 import type { PromptContext } from '@/core/ai/promptTemplates';
-import { generateTeachingCard } from '../card-engine';
 import { requireAuth, AuthenticatedRequest } from '@/core/auth/middleware';
 import { quotaManager } from '@/lib/quota/quotaManager';
 import { validateContent } from '@/lib/security';
-import type { RegenerateCardRequest } from '@/shared/types/teaching';
+import type { RegenerateCardRequest, RawCardType } from '@/shared/types/teaching';
 import { logger } from '@/shared/utils/logger';
 
+import { generateTeachingCard } from '../card-engine';
+
 const SUPPORTED_PLANS = new Set(['free', 'pro', 'super']);
-const CARD_TYPES = new Set(['concept', 'example', 'practice', 'extension']);
+const CARD_TYPES = new Set<RawCardType>(['concept', 'example', 'practice', 'extension']);
 
 export const POST = requireAuth(async (request: AuthenticatedRequest) => {
   const startTime = Date.now();

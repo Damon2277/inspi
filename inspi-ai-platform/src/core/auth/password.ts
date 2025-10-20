@@ -96,9 +96,11 @@ export function generateRandomPassword(length: number = 12): string {
   return password.split('').sort(() => Math.random() - 0.5).join('');
 }
 
-export default {
+const passwordService = {
   hashPassword,
   comparePassword,
   validatePassword,
   generateRandomPassword,
 };
+
+export default passwordService;

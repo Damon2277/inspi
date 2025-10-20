@@ -210,7 +210,7 @@ export async function cleanupConnections(): Promise<void> {
   }
 }
 
-export default {
+const databaseTestUtils = {
   testMongoConnection,
   testRedisConnection,
   testModelInitialization,
@@ -218,3 +218,5 @@ export default {
   runDatabaseTests,
   cleanupConnections,
 };
+
+export default databaseTestUtils;

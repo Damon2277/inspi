@@ -144,8 +144,10 @@ export async function sendPasswordResetEmail(
   });
 }
 
-export default {
+const emailService = {
   sendEmail,
   sendVerificationEmail,
   sendPasswordResetEmail,
 };
+
+export default emailService;

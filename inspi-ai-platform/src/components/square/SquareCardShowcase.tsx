@@ -2,9 +2,9 @@
 
 import React from 'react';
 
+import { GeneratedCard } from '@/components/cards/GeneratedCard';
 import type { TeachingCard } from '@/shared/types/teaching';
 
-import { GeneratedCard } from '@/components/cards/GeneratedCard';
 
 interface SquareCardShowcaseProps {
   cards: TeachingCard[];

@@ -179,7 +179,7 @@ export function withLazyLoadTracking<T extends object>(
       return () => {
         finishTracking(componentName);
       };
-    }, []);
+    }, [finishTracking, startTracking]);
 
     return createElement(WrappedComponent, props);
   };

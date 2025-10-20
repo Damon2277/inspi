@@ -4,6 +4,8 @@
  */
 require('whatwg-fetch');
 
+const globalScope = typeof globalThis !== 'undefined' ? globalThis : global;
+
 // 设置测试超时
 jest.setTimeout(10000);
 
@@ -71,19 +73,26 @@ global.console = {
 };
 
 // 模拟DOM API
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
+if (typeof globalScope.window === 'undefined') {
+  globalScope.window = {};
+}
+
+if (!globalScope.window.matchMedia) {
+  Object.defineProperty(globalScope.window, 'matchMedia', {
+    writable: true,
+    configurable: true,
+    value: jest.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  });
+}
 
 // 模拟IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {

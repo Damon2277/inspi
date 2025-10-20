@@ -6,7 +6,6 @@ import mongoose from 'mongoose';
 
 import Bookmark from '@/lib/models/Bookmark';
 import Comment from '@/lib/models/Comment';
-import Follow from '@/lib/models/Follow';
 import User from '@/lib/models/User';
 import Work, { WorkDocument, getWorkAuthorId, getWorkAuthorObjectId } from '@/lib/models/Work';
 import connectDB from '@/lib/mongodb';
@@ -234,7 +233,7 @@ export class WorkService {
       await connectDB();
 
       const work = await (Work.findById as any)(workId)
-        .populate('author', 'name avatar bio followersCount')
+        .populate('author', 'name avatar bio')
         .populate('originalWork', 'title author');
 
       if (!work) {
@@ -264,22 +263,17 @@ export class WorkService {
       // 获取用户交互状态
       let userInteractions = {};
       if (userId) {
-        const [isLiked, isBookmarked, isFollowing] = await Promise.all([
+        const [isLiked, isBookmarked] = await Promise.all([
           work.likes.includes(new mongoose.Types.ObjectId(userId)),
           Bookmark.isBookmarked(
             new mongoose.Types.ObjectId(userId),
             new mongoose.Types.ObjectId(workId),
-          ),
-          Follow.isFollowing(
-            new mongoose.Types.ObjectId(userId),
-            getWorkAuthorObjectId(work.author),
           ),
         ]);
 
         userInteractions = {
           isLiked,
           isBookmarked: !!isBookmarked,
-          isFollowing: !!isFollowing,
         };
       }
 
@@ -602,44 +596,19 @@ export class WorkService {
       return this.getPopularWorks(limit);
     }
 
-    const followingUsers = await (Follow.find as any)({
-      follower: new mongoose.Types.ObjectId(userId),
-      status: 'active',
+    // 获取推荐作品（不再基于关注关系）
+    const recommendedWorks = await (Work.find as any)({
+      status: 'published',
+      visibility: 'public',
+      moderationStatus: 'approved',
+      author: { $ne: new mongoose.Types.ObjectId(userId) },
     })
-      .select('following')
-      .exec() as any;
+      .sort({ qualityScore: -1, likesCount: -1, createdAt: -1 })
+      .limit(limit)
+      .populate('author', 'name avatar')
+      .exec();
 
-    const followingIds = followingUsers.map(item => item.following);
-
-    const followingWorks = followingIds.length
-      ? await (Work.find as any)({
-          author: { $in: followingIds },
-          status: 'published',
-          visibility: 'public',
-          moderationStatus: 'approved',
-        })
-          .sort({ createdAt: -1 })
-          .limit(Math.max(1, Math.floor(limit / 2)))
-          .populate('author', 'name avatar')
-          .exec()
-      : [];
-
-    const remaining = Math.max(0, limit - followingWorks.length);
-
-    const similarWorks = remaining
-      ? await (Work.find as any)({
-          status: 'published',
-          visibility: 'public',
-          moderationStatus: 'approved',
-          author: { $ne: new mongoose.Types.ObjectId(userId) },
-        })
-          .sort({ qualityScore: -1, likesCount: -1 })
-          .limit(remaining)
-          .populate('author', 'name avatar')
-          .exec()
-      : [];
-
-    return [...followingWorks, ...similarWorks].slice(0, limit);
+    return recommendedWorks;
   }
 
   /**

@@ -276,7 +276,7 @@ export function KnowledgeGraphDemo() {
 
   const handleError = (error: string) => {
     console.error('图谱错误:', error);
-    alert(`图谱错误: ${error}`);
+    console.error(`图谱错误: ${error}`);
   };
 
   const resetGraph = () => {

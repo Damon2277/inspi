@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 import CardEditor from '@/features/magic/CardEditor';
 import { TeachingCard } from '@/shared/types/teaching';
@@ -55,8 +55,7 @@ export default function WorkEditor({
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   // 自动保存逻辑
-  const debouncedAutoSave = useCallback(
-    debounce((data: any) => {
+  const debouncedAutoSave = useMemo(() => debounce((data: any) => {
       if (onAutoSave && hasChanges) {
         setAutoSaveStatus('saving');
         try {
@@ -82,9 +81,7 @@ export default function WorkEditor({
           setTimeout(() => setAutoSaveStatus('idle'), 3000);
         }
       }
-    }, 2000),
-    [onAutoSave, hasChanges],
-  );
+    }, 2000), [onAutoSave, hasChanges]);
 
   // 监听数据变化，触发自动保存
   useEffect(() => {

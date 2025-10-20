@@ -10,10 +10,9 @@ import type {
   VisualizationBranch,
   VisualizationSpec,
   VisualizationTheme,
+  RawCardType,
 } from '@/shared/types/teaching';
 import { logger } from '@/shared/utils/logger';
-
-export type RawCardType = 'concept' | 'example' | 'practice' | 'extension';
 
 export interface GenerateCardOptions {
   cardType: RawCardType;
@@ -143,9 +142,11 @@ async function buildCardFromAIResponse(params: BuildCardParams): Promise<Teachin
   return enrichCard(baseCard, knowledgePoint, subject, gradeLevel);
 }
 
-async function parseVisualizationJSON(rawContent: string, knowledgePoint: string): Promise<{ summary: string; visual: VisualizationSpec }>
-{
-  let jsonPayload = extractJSON(rawContent);
+async function parseVisualizationJSON(
+  rawContent: string,
+  knowledgePoint: string,
+): Promise<{ summary: string; visual: VisualizationSpec }> {
+  const jsonPayload = extractJSON(rawContent);
 
   if (!jsonPayload) {
     logger.warn('Visualization payload missing JSON, using fallback');
@@ -215,18 +216,20 @@ async function parseVisualizationJSON(rawContent: string, knowledgePoint: string
       ? await cleanUserContent(parsed.visual.footerNote)
       : undefined;
 
+    const visualSpec: VisualizationSpec = {
+      type: 'concept-map',
+      theme,
+      center: {
+        title: centerTitle,
+        subtitle,
+      },
+      branches,
+      footerNote,
+    };
+
     return {
       summary,
-      visual: {
-        type: 'concept-map',
-        theme,
-        center: {
-          title: centerTitle,
-          subtitle,
-        },
-        branches,
-        footerNote,
-      },
+      visual: visualSpec,
     };
   } catch (error) {
     logger.warn('Failed to parse visualization JSON', {
@@ -256,7 +259,10 @@ function extractJSON(content: string): string | null {
   return null;
 }
 
-async function buildVisualizationFallback(knowledgePoint: string) {
+async function buildVisualizationFallback(knowledgePoint: string): Promise<{
+  summary: string;
+  visual: VisualizationSpec;
+}> {
   const summary = await cleanUserContent(`用图示梳理“${knowledgePoint}”的核心要素，帮助学生建立整体认知。`);
   const fallbackBranches: VisualizationBranch[] = [
     {
@@ -289,18 +295,20 @@ async function buildVisualizationFallback(knowledgePoint: string) {
     },
   ];
 
+  const visualSpec: VisualizationSpec = {
+    type: 'concept-map',
+    theme: 'neutral',
+    center: {
+      title: knowledgePoint,
+      subtitle: '围绕中心概念展开的关联要素',
+    },
+    branches: fallbackBranches,
+    footerNote: undefined,
+  };
+
   return {
     summary,
-    visual: {
-      type: 'concept-map',
-      theme: 'neutral',
-      center: {
-        title: knowledgePoint,
-        subtitle: '围绕中心概念展开的关联要素',
-      },
-      branches: fallbackBranches,
-      footerNote: undefined,
-    },
+    visual: visualSpec,
   };
 }
 
@@ -746,7 +754,7 @@ function generateFallbackCard(cardType: RawCardType, knowledgePoint: string): Te
       id: `fallback_practice_${Date.now()}`,
       type: 'thinking',
       title: '练习巩固',
-      content: `优先使用视觉化练习矩阵，帮助学生快速定位到适合自己的训练任务。`,
+      content: '优先使用视觉化练习矩阵，帮助学生快速定位到适合自己的训练任务。',
       explanation: `练习巩固卡片 - ${knowledgePoint}`,
       visual: {
         type: 'matrix',
@@ -842,4 +850,3 @@ function generateFallbackCard(cardType: RawCardType, knowledgePoint: string): Te
 }
 
 export { enrichCard, generateFallbackCard };
-export type { RawCardType };

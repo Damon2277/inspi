@@ -198,7 +198,6 @@ export interface UserCardProps {
   user: User;
   showStats?: boolean;
   showActions?: boolean;
-  onFollow?: () => void;
   onMessage?: () => void;
   className?: string;
 }

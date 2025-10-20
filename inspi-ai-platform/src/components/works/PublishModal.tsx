@@ -45,15 +45,17 @@ export default function PublishModal({
 }: PublishModalProps) {
   const [description, setDescription] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const handleConfirm = () => {
     if (!agreedToTerms) {
-      alert('请先同意发布协议');
+      setFormError('请先勾选并同意发布协议。');
       return;
     }
 
+    setFormError(null);
     onConfirm({
       ...workData,
       description: description.trim(),
@@ -88,6 +90,12 @@ export default function PublishModal({
 
         {/* 内容 */}
         <div className="p-6 space-y-6">
+          {formError ? (
+            <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
+              {formError}
+            </div>
+          ) : null}
+
           {/* 作品基本信息 */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="font-semibold text-gray-900 mb-3">作品信息</h3>

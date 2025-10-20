@@ -27,7 +27,12 @@ interface KeyboardNavigationProviderProps {
 
 export function KeyboardNavigationProvider({ children }: KeyboardNavigationProviderProps) {
   const containerRef = useRef<HTMLElement>(null!);
-  const { focusFirst, focusLast, focusNext, focusPrevious } = useFocusManagement(containerRef as React.RefObject<HTMLElement>);
+  const {
+    focusFirst,
+    focusLast,
+    focusNext,
+    focusPrevious,
+  } = useFocusManagement(containerRef as React.RefObject<HTMLElement>);
 
   // 设置全局键盘导航
   useKeyboardNavigation({

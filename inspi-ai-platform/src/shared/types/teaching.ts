@@ -6,6 +6,8 @@ import type { CardType } from './cards';
 
 export type { CardType };
 
+export type RawCardType = 'concept' | 'example' | 'practice' | 'extension';
+
 export type VisualizationTheme = 'ocean' | 'sunrise' | 'forest' | 'galaxy' | 'neutral';
 
 export interface VisualizationBranch {
@@ -106,7 +108,7 @@ export interface GenerateCardsResponse {
 export interface RegenerateCardRequest {
   cardId: string;
   knowledgePoint: string;
-  cardType: CardType;
+  cardType: RawCardType;
   subject?: string;
   gradeLevel?: string;
 }

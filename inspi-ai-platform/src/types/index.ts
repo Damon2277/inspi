@@ -20,8 +20,6 @@ export interface User {
   stats?: {
     worksCreated: number;
     likesReceived: number;
-    followersCount: number;
-    followingCount: number;
   };
 }
 
@@ -155,7 +153,7 @@ export interface SubscriptionInfo {
 export interface Notification {
   id: string;
   userId: string;
-  type: 'info' | 'success' | 'warning' | 'error' | 'like' | 'comment' | 'follow' | 'mention';
+  type: 'info' | 'success' | 'warning' | 'error' | 'like' | 'comment' | 'mention';
   title: string;
   message: string;
   read: boolean;

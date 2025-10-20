@@ -6,9 +6,9 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 
 import { ApiError, ApiClient } from '@/lib/api/client';
 import { RetryManager, DEFAULT_RETRY_STRATEGY, RetryStrategy } from '@/lib/api/retry';
-import { logger } from '@/lib/logging/logger';
+import { logger } from '@/shared/utils/logger';
 
-import { useErrorToast } from '@/shared/components/ErrorToast';
+// import { useErrorToast } from '@/shared/components/ErrorToast';
 
 /**
  * API错误处理Hook配置
@@ -52,7 +52,7 @@ export function useApiError(options: UseApiErrorOptions = {}) {
     canRetry: false,
   });
 
-  const errorToast = useErrorToast();
+  // const errorToast = useErrorToast();
   const retryManager = useMemo(
     () => new RetryManager({ ...DEFAULT_RETRY_STRATEGY, ...retryStrategy }),
     [retryStrategy],
@@ -72,13 +72,8 @@ export function useApiError(options: UseApiErrorOptions = {}) {
 
     // 显示Toast通知
     if (showToast) {
-      if (error.isNetworkError()) {
-        errorToast.showNetworkError();
-      } else if (error.isClientError()) {
-        errorToast.showValidationError(error.message);
-      } else {
-        errorToast.showError(error);
-      }
+      // TODO: Implement toast notifications
+      console.error('Toast notification:', error.message);
     }
 
     // 记录错误日志

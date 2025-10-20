@@ -48,7 +48,13 @@ export class FrontendOptimizer {
       });
 
       this.performanceObserver.observe({
-        entryTypes: ['navigation', 'paint', 'largest-contentful-paint', 'first-input'] });
+        entryTypes: [
+          'navigation',
+          'paint',
+          'largest-contentful-paint',
+          'first-input',
+        ],
+      });
     }
   }
 
@@ -59,12 +65,15 @@ export class FrontendOptimizer {
     entries.forEach(entry => {
       if (entry.entryType === 'navigation') {
         const navEntry = entry as PerformanceNavigationTiming;
-        const domLoading = (navEntry as Partial<PerformanceNavigationTiming> & { domLoading?: number }).domLoading ?? navEntry.fetchStart;
+        const domLoading = (
+          navEntry as Partial<PerformanceNavigationTiming> & { domLoading?: number }
+        ).domLoading ?? navEntry.fetchStart;
         this.recordMetrics({
           loadTime: navEntry.loadEventEnd - navEntry.loadEventStart,
           renderTime: navEntry.domContentLoadedEventEnd - navEntry.domContentLoadedEventStart,
           interactionTime: navEntry.domInteractive - domLoading,
-          memoryUsage: this.getMemoryUsage() });
+          memoryUsage: this.getMemoryUsage(),
+        });
       }
     });
   }
@@ -73,7 +82,11 @@ export class FrontendOptimizer {
    * 获取内存使用情况
    */
   private getMemoryUsage(): number {
-    if (typeof window !== 'undefined' && 'performance' in window && 'memory' in (window.performance as any)) {
+    if (
+      typeof window !== 'undefined' &&
+      'performance' in window &&
+      'memory' in (window.performance as any)
+    ) {
       return (window.performance as any).memory.usedJSHeapSize;
     }
     return 0;
@@ -383,21 +396,28 @@ export class FrontendOptimizer {
     return function Component() {
       const [loading, setLoading] = React.useState(false);
       const containerRef = React.useRef<HTMLDivElement>(null);
+      const hasMoreRef = React.useRef(hasMore);
+      const thresholdRef = React.useRef(threshold);
+      const loadMoreRef = React.useRef(loadMore);
+
+      hasMoreRef.current = hasMore;
+      thresholdRef.current = threshold;
+      loadMoreRef.current = loadMore;
 
       const handleScroll = React.useCallback(async () => {
-        if (!containerRef.current || loading || !hasMore) return null;
+        if (!containerRef.current || loading || !hasMoreRef.current) return;
 
         const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
 
-        if (scrollHeight - scrollTop - clientHeight < threshold) {
+        if (scrollHeight - scrollTop - clientHeight < thresholdRef.current) {
           setLoading(true);
           try {
-            await loadMore();
+            await loadMoreRef.current();
           } finally {
             setLoading(false);
           }
         }
-      }, [loading, hasMore, loadMore, threshold]);
+      }, [loading]);
 
       React.useEffect(() => {
         const container = containerRef.current;
@@ -407,15 +427,27 @@ export class FrontendOptimizer {
         }
       }, [handleScroll]);
 
-      return React.createElement('div',
+      return React.createElement(
+        'div',
         {
           ref: containerRef,
-          style: { height: '100%', overflow: 'auto' } },
+          style: {
+            height: '100%',
+            overflow: 'auto',
+          },
+        },
         items.map((item, index) => renderItem(item, index)),
-        loading && React.createElement('div',
-          { style: { padding: '20px', textAlign: 'center' } },
-          'Loading...',
-        ),
+        loading &&
+          React.createElement(
+            'div',
+            {
+              style: {
+                padding: '20px',
+                textAlign: 'center',
+              },
+            },
+            'Loading...',
+          ),
       );
     };
   }

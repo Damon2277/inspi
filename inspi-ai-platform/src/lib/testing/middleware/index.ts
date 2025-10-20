@@ -500,7 +500,7 @@ export const IntegrationTestHelpers = {
   }),
 };
 
-export default {
+const middlewareTesting = {
   MiddlewareTestFramework,
   MiddlewareTestUtils,
   MiddlewareAssertions,
@@ -513,3 +513,5 @@ export default {
   PerformanceTestHelpers,
   IntegrationTestHelpers,
 };
+
+export default middlewareTesting;

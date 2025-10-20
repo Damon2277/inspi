@@ -237,10 +237,12 @@ export function rateLimit(maxRequests: number = 100, windowMs: number = 15 * 60 
   };
 }
 
-export default {
+const authMiddleware = {
   authenticateToken,
   requireAuth,
   optionalAuth,
   requireSubscription,
   rateLimit,
 };
+
+export default authMiddleware;

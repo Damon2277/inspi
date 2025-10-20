@@ -3,6 +3,7 @@
  */
 
 import { POST } from '@/app/api/magic/generate/route';
+import { POST as RegeneratePost } from '@/app/api/magic/regenerate/route';
 
 import {
   ApiTestHelper,
@@ -13,7 +14,6 @@ import {
   responseValidators,
 } from '../setup/api-test-setup';
 
-import { POST as RegeneratePost } from '@/app/api/magic/regenerate/route';
 import { createUserFixture, createCardSetFixture } from '@/fixtures';
 
 // Mock外部依赖

@@ -84,7 +84,9 @@ if (typeof window !== 'undefined') {
   }, 1000);
 }
 
-export default {
+const monitoring = {
   initializeMonitoring,
   getMonitoringStatus,
 };
+
+export default monitoring;

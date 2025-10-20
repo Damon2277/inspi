@@ -35,7 +35,6 @@ interface Work {
   userInteractions?: {
     isLiked: boolean
     isBookmarked: boolean
-    isFollowing: boolean
   }
 }
 

@@ -507,4 +507,6 @@ export interface SquareResponse {
   filters: any;
 }
 
-export default new WorkService();
+export const workService = new WorkService();
+
+export default workService;

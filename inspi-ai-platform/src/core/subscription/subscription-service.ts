@@ -16,6 +16,8 @@ import {
 import { DEFAULT_PLANS } from './constants';
 import { validatePlanData, validateSubscriptionData } from './validators';
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
 export interface CreateSubscriptionRequest {
   userId: string;
   planId: string;
@@ -519,8 +521,10 @@ export class SubscriptionService {
   ): number {
     const now = new Date();
     const endDate = new Date(subscription.endDate);
-    const totalDays = Math.ceil((endDate.getTime() - new Date(subscription.startDate).getTime()) / (1000 * 60 * 60 * 24));
-    const remainingDays = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const totalMs = endDate.getTime() - new Date(subscription.startDate).getTime();
+    const remainingMs = endDate.getTime() - now.getTime();
+    const totalDays = Math.ceil(totalMs / MS_PER_DAY);
+    const remainingDays = Math.ceil(remainingMs / MS_PER_DAY);
 
     if (remainingDays <= 0) return 0;
 

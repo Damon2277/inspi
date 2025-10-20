@@ -69,7 +69,7 @@ export function useVirtualScroll<T>(
       height += getItemHeight(i);
     }
     return height;
-  }, [items.length, getItemHeight]);
+  }, [items, itemHeight, getItemHeight]);
 
   // 计算可见范围
   const visibleRange = useMemo(() => {
@@ -116,7 +116,7 @@ export function useVirtualScroll<T>(
     }
 
     return { startIndex, endIndex, offsetY };
-  }, [scrollTop, containerHeight, items.length, getItemHeight, overscan]);
+  }, [scrollTop, containerHeight, items, itemHeight, getItemHeight, overscan]);
 
   // 可见项目
   const visibleItems = useMemo(() => {
@@ -187,7 +187,7 @@ export function useVirtualScroll<T>(
     } else {
       containerRef.current.scrollTop = targetScrollTop;
     }
-  }, [containerHeight, totalHeight, getItemHeight, config.enableSmoothScrolling]);
+  }, [containerHeight, totalHeight, getItemHeight, config.enableSmoothScrolling, itemHeight]);
 
   return {
     containerRef,
@@ -410,8 +410,8 @@ export function useInfiniteScroll<T>(
         setHasMore(false);
       }
 
-      setItems([...items, ...newItems]);
-      setPage(page + 1);
+      setItems(prev => [...prev, ...newItems]);
+      setPage(prev => prev + 1);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('加载失败'));
     } finally {

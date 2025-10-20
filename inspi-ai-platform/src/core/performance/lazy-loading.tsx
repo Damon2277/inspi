@@ -130,11 +130,11 @@ export function useContentLazyLoading<T>(
     } finally {
       setLoading(false);
     }
-  }, deps);
+  }, [loadFn]);
 
   React.useEffect(() => {
     load();
-  }, [load]);
+  }, [load, deps]);
 
   return { data, loading, error, reload: load };
 }

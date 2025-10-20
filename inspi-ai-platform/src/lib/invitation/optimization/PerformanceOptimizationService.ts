@@ -147,7 +147,9 @@ export class PerformanceOptimizationService {
       // 使用优化查询
       if (this.databaseOptimizer) {
         const optimizedQuery = this.databaseOptimizer.optimizeInviteCodeQuery(code);
-        const result = await this.databaseOptimizer.executeOptimizedQuery<InviteCode & Record<string, unknown>>(optimizedQuery);
+        const result = await this.databaseOptimizer.executeOptimizedQuery<
+          InviteCode & Record<string, unknown>
+        >(optimizedQuery);
         const inviteCode = result[0];
 
         // 缓存结果
@@ -189,7 +191,9 @@ export class PerformanceOptimizationService {
       // 使用优化查询
       if (this.databaseOptimizer) {
         const optimizedQuery = this.databaseOptimizer.optimizeUserStatsQuery(userId);
-        const result = await this.databaseOptimizer.executeOptimizedQuery<InviteStats & Record<string, unknown>>(optimizedQuery);
+        const result = await this.databaseOptimizer.executeOptimizedQuery<
+          InviteStats & Record<string, unknown>
+        >(optimizedQuery);
         const userStats = result[0];
 
         // 缓存结果
@@ -223,15 +227,29 @@ export class PerformanceOptimizationService {
   /**
    * 异步发放奖励
    */
-  async grantRewardAsync(userId: string, rewards: any[], sourceType: string, sourceId: string): Promise<string | null> {
+  async grantRewardAsync(
+    userId: string,
+    rewards: any[],
+    sourceType: string,
+    sourceId: string,
+  ): Promise<string | null> {
     if (!this.taskProcessor) {
       logger.warn('Task processor not available, falling back to synchronous reward granting');
       return null;
     }
 
     try {
-      const taskId = await this.taskProcessor.grantRewardAsync(userId, rewards, sourceType, sourceId);
-      logger.info('Reward grant task queued', { taskId, userId, rewardsCount: rewards.length });
+      const taskId = await this.taskProcessor.grantRewardAsync(
+        userId,
+        rewards,
+        sourceType,
+        sourceId,
+      );
+      logger.info('Reward grant task queued', {
+        taskId,
+        userId,
+        rewardsCount: rewards.length,
+      });
       return taskId;
     } catch (error) {
       logger.error('Failed to queue reward grant task', { error, userId });
@@ -242,13 +260,21 @@ export class PerformanceOptimizationService {
   /**
    * 异步发送通知
    */
-  async sendNotificationAsync(userId: string, type: string, content: any): Promise<string | null> {
+  async sendNotificationAsync(
+    userId: string,
+    type: string,
+    content: any,
+  ): Promise<string | null> {
     if (!this.taskProcessor) {
       return null;
     }
 
     try {
-      const taskId = await this.taskProcessor.sendNotificationAsync(userId, type, content);
+      const taskId = await this.taskProcessor.sendNotificationAsync(
+        userId,
+        type,
+        content,
+      );
       logger.info('Notification task queued', { taskId, userId, type });
       return taskId;
     } catch (error) {

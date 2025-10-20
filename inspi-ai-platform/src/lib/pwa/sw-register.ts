@@ -2,6 +2,23 @@
  * Service Worker注册和管理
  */
 
+const notifyUpdateAvailable = (applyUpdate: () => void) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const event = new CustomEvent('inspi:sw-update-available', {
+    cancelable: true,
+    detail: { applyUpdate },
+  });
+
+  const shouldApplyImmediately = window.dispatchEvent(event);
+
+  if (shouldApplyImmediately) {
+    applyUpdate();
+  }
+};
+
 export const registerServiceWorker = async () => {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
     return;
@@ -23,11 +40,10 @@ export const registerServiceWorker = async () => {
             // 新版本可用
             console.log('New version available');
 
-            // 可以在这里显示更新提示
-            if (window.confirm('发现新版本，是否立即更新？')) {
+            notifyUpdateAvailable(() => {
               newWorker.postMessage({ type: 'SKIP_WAITING' });
               window.location.reload();
-            }
+            });
           }
         });
       }

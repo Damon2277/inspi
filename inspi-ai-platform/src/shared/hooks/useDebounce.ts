@@ -44,7 +44,7 @@ export function useDebouncedCallback<T extends(...args: any[]) => any>(
     return () => {
       clearTimeout(handler);
     };
-  }, [callback, delay, ...deps]);
+  }, [callback, delay, deps]);
 
   return debouncedCallback;
 }

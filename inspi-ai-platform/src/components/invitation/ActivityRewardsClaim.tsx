@@ -18,7 +18,7 @@ import {
   Crown,
   Zap,
 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { ActivityResult, RewardType } from '@/lib/invitation/types';
 import { Badge } from '@/shared/components/badge';
@@ -57,11 +57,7 @@ export function ActivityRewardsClaim({
   const [claiming, setClaiming] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadRewards();
-  }, [activityId, userId]);
-
-  const loadRewards = async () => {
+  const loadRewards = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -87,7 +83,11 @@ export function ActivityRewardsClaim({
     } finally {
       setLoading(false);
     }
-  };
+  }, [activityId, userId]);
+
+  useEffect(() => {
+    loadRewards();
+  }, [loadRewards]);
 
   const claimReward = async (rewardId: string) => {
     try {
@@ -105,12 +105,11 @@ export function ActivityRewardsClaim({
 
       if (data.success) {
         // 更新奖励状态
-        const updatedRewards = rewards.map(reward =>
+        setRewards(prev => prev.map(reward =>
           reward.id === rewardId
             ? { ...reward, isClaimed: true, claimedAt: new Date() }
             : reward,
-        );
-        setRewards(updatedRewards);
+        ));
 
         onRewardClaimed && onRewardClaimed(rewardId);
       } else {

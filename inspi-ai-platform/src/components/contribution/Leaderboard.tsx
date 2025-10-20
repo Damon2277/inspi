@@ -5,6 +5,7 @@
 
 'use client';
 
+import Image from 'next/image';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { LeaderboardResponse, LeaderboardEntry, LeaderboardType } from '@/shared/types/contribution';
@@ -63,11 +64,20 @@ const LeaderboardItem: React.FC<LeaderboardItemProps> = ({
       <div className="flex-1 ml-4">
         <div className="flex items-center">
           {entry.userAvatar && (
-            <img
-              src={entry.userAvatar}
-              alt={entry.userName}
-              className="w-8 h-8 rounded-full mr-3"
-            />
+            entry.userAvatar.startsWith('http') ? (
+              <Image
+                src={entry.userAvatar}
+                alt={entry.userName}
+                width={32}
+                height={32}
+                className="w-8 h-8 rounded-full mr-3"
+                unoptimized
+              />
+            ) : (
+              <span className="w-8 h-8 rounded-full mr-3 flex items-center justify-center bg-gray-100 text-lg">
+                {entry.userAvatar}
+              </span>
+            )
           )}
           <div>
             <h3 className={`font-semibold ${isCurrentUser ? 'text-blue-900' : 'text-gray-900'}`}>

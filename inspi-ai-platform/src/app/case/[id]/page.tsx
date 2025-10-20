@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import React from 'react';
 
 import { AppLayout } from '@/components/layout';
+import { useToast } from '@/shared/hooks';
 
 
 // 案例数据接口
@@ -30,6 +31,7 @@ interface CaseItem {
 export default function CaseDetailPage() {
   const params = useParams();
   const caseId = params.id as string;
+  const { toast } = useToast();
 
   // 模拟案例详情数据 - 实际应该从API获取
   const getCaseDetail = (id: string): CaseItem | null => {
@@ -221,6 +223,67 @@ export default function CaseDetailPage() {
   };
 
   const caseDetail = getCaseDetail(caseId);
+
+  const handleLike = () => {
+    toast({
+      title: '功能开发中',
+      description: '点赞功能即将上线，敬请期待。',
+    });
+  };
+
+  const handleFavorite = () => {
+    toast({
+      title: '功能开发中',
+      description: '收藏功能正在筹备中。',
+    });
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: caseDetail?.title ?? '教学案例',
+      text: caseDetail?.description ?? '来自 Inspi 的教学案例分享',
+      url: typeof window !== 'undefined' ? window.location.href : undefined,
+    };
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareData.title,
+          text: shareData.text,
+          url: shareData.url,
+        });
+        toast({
+          title: '分享成功',
+          description: '感谢分享，让更多老师看到这个案例。',
+        });
+      } catch (error) {
+        if ((error as DOMException)?.name !== 'AbortError') {
+          toast({
+            title: '分享失败',
+            description: '请稍后重试或复制链接分享。',
+            variant: 'destructive',
+          });
+        }
+      }
+      return;
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard && shareData.url) {
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        toast({
+          title: '链接已复制',
+          description: '现在可以粘贴链接分享给同事了。',
+        });
+      } catch {
+        toast({
+          title: '复制失败',
+          description: '请手动复制浏览器地址栏中的链接。',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
 
   if (!caseDetail) {
     return (
@@ -416,40 +479,21 @@ export default function CaseDetailPage() {
                   <button
                     className="modern-btn modern-btn-primary"
                     style={{ width: '100%' }}
-                    onClick={() => {
-                      // 这里可以添加点赞功能
-                      alert('点赞功能开发中...');
-                    }}
+                    onClick={handleLike}
                   >
                     ❤️ 点赞
                   </button>
                   <button
                     className="modern-btn modern-btn-outline"
                     style={{ width: '100%' }}
-                    onClick={() => {
-                      // 这里可以添加收藏功能
-                      alert('收藏功能开发中...');
-                    }}
+                    onClick={handleFavorite}
                   >
                     ⭐ 收藏
                   </button>
                   <button
                     className="modern-btn modern-btn-ghost"
                     style={{ width: '100%' }}
-                    onClick={() => {
-                      // 这里可以添加分享功能
-                      if (navigator.share) {
-                        navigator.share({
-                          title: caseDetail.title,
-                          text: caseDetail.description,
-                          url: window.location.href,
-                        });
-                      } else {
-                        // 复制链接到剪贴板
-                        navigator.clipboard.writeText(window.location.href);
-                        alert('链接已复制到剪贴板');
-                      }
-                    }}
+                    onClick={handleShare}
                   >
                     🔗 分享
                   </button>

@@ -8,16 +8,17 @@
  * - 增量测试的准确性验证
  */
 
+import { AccuracyVerifier } from './AccuracyVerifier';
+import type { VerificationResult, AccuracyMetrics } from './AccuracyVerifier';
+import { IncrementalTestRunner } from './IncrementalTestRunner';
+import type { IncrementalTestOptions, IncrementalTestResult } from './IncrementalTestRunner';
+import type { CacheStats } from './TestCacheManager';
+
 export { GitChangeDetector } from './GitChangeDetector';
 export { DependencyAnalyzer } from './DependencyAnalyzer';
 export { TestCacheManager } from './TestCacheManager';
 export { IncrementalTestRunner } from './IncrementalTestRunner';
 export { AccuracyVerifier } from './AccuracyVerifier';
-
-// Import the classes for internal use
-import { AccuracyVerifier } from './AccuracyVerifier';
-import type { VerificationResult, AccuracyMetrics } from './AccuracyVerifier';
-import { IncrementalTestRunner } from './IncrementalTestRunner';
 
 export type {
   GitChange,
@@ -115,8 +116,3 @@ export class IncrementalTestSystem {
     this.runner.destroy();
   }
 }
-
-// 重新导入类型
-import type { IncrementalTestOptions } from './IncrementalTestRunner';
-import type { IncrementalTestResult } from './IncrementalTestRunner';
-import type { CacheStats } from './TestCacheManager';

@@ -1,44 +1,34 @@
-/**
- * 获取用户订阅状态API
- */
-
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+
+import authOptions from '@/core/auth/next-auth-config';
+import connectDB from '@/lib/mongodb';
+import { QuotaService } from '@/services/quota.service';
 
 export async function GET(request: NextRequest) {
   try {
-    // 临时mock数据，避免数据库连接问题
-    const mockResponseData = {
-      subscription: {
-        id: 'mock-subscription-id',
-        plan: 'free',
-        status: 'active',
-        startDate: new Date().toISOString(),
-        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1年后
-        autoRenew: false,
-        paymentMethod: 'none',
-      },
-      usage: {
-        date: new Date().toISOString().split('T')[0],
-        generations: {
-          current: 5,
-          limit: 10,
-          remaining: 5,
-        },
-        reuses: {
-          current: 2,
-          limit: 5,
-          remaining: 3,
-        },
-      },
-      plan: 'free',
-    };
+    // 连接数据库
+    await connectDB();
 
-    return NextResponse.json(mockResponseData);
+    // 获取用户信息
+    const session = await getServerSession(authOptions);
 
-  } catch (error) {
-    console.error('Get subscription status error:', error);
+    const userId = (session?.user as { id?: string } | undefined)?.id || 'demo-user-id';
+
+    // 获取额度状态
+    const quotaStatus = await QuotaService.getQuotaStatus(userId);
+
+    return NextResponse.json({
+      success: true,
+      data: quotaStatus,
+    });
+  } catch (error: any) {
+    console.error('GET /api/subscription/status error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        success: false,
+        error: error.message || 'Failed to get subscription status',
+      },
       { status: 500 },
     );
   }

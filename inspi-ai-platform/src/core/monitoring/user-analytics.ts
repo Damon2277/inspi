@@ -155,12 +155,17 @@ export class UserAnalytics {
     document.addEventListener('scroll', () => {
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
+        const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollPercentage = scrollableHeight > 0
+          ? Math.round((window.scrollY / scrollableHeight) * 100)
+          : 0;
+
         this.track('scroll', {
           scrollY: window.scrollY,
           scrollX: window.scrollX,
           documentHeight: document.documentElement.scrollHeight,
           viewportHeight: window.innerHeight,
-          scrollPercentage: Math.round((window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100),
+          scrollPercentage,
         });
       }, 1000);
     });

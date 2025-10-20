@@ -4,6 +4,7 @@ import React from 'react';
 
 import { DesktopLayout, DesktopNavigation } from '@/components/desktop';
 import { KeyboardNavigationProvider } from '@/components/providers/KeyboardNavigationProvider';
+import { UserProvider } from '@/contexts/UserContext';
 import { AuthProvider } from '@/shared/hooks/useAuth';
 
 interface AppLayoutProps {
@@ -23,14 +24,16 @@ export function AppLayout({
 }: AppLayoutProps) {
   return (
     <AuthProvider>
-      <KeyboardNavigationProvider>
-        <DesktopLayout
-          className={className}
-          header={showNavigation ? <DesktopNavigation /> : undefined}
-        >
-          {children}
-        </DesktopLayout>
-      </KeyboardNavigationProvider>
+      <UserProvider>
+        <KeyboardNavigationProvider>
+          <DesktopLayout
+            className={className}
+            header={showNavigation ? <DesktopNavigation /> : undefined}
+          >
+            {children}
+          </DesktopLayout>
+        </KeyboardNavigationProvider>
+      </UserProvider>
     </AuthProvider>
   );
 }

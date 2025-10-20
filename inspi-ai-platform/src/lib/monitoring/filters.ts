@@ -397,8 +397,10 @@ if (typeof window !== 'undefined') {
   }, 300000); // 每5分钟清理一次
 }
 
-export default {
+const monitoringFilters = {
   errorFilter,
   requestFilter,
   performanceFilter,
 };
+
+export default monitoringFilters;

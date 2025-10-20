@@ -35,12 +35,7 @@ export function useUpgradeRecommendation({
 
   const { showPrompt, hidePrompt, UpgradePromptComponent } = useUpgradePrompt();
 
-  // 加载用户行为数据
-  useEffect(() => {
-    loadUserBehaviorData();
-  }, [userId]);
-
-  const loadUserBehaviorData = async () => {
+  const loadUserBehaviorData = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await fetchUserBehaviorData(userId);
@@ -52,7 +47,12 @@ export function useUpgradeRecommendation({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentTier, userId]);
+
+  // 加载用户行为数据
+  useEffect(() => {
+    loadUserBehaviorData();
+  }, [loadUserBehaviorData]);
 
   // 检查是否应该显示升级提示
   const checkUpgradeRecommendation = useCallback(async (
@@ -99,7 +99,7 @@ export function useUpgradeRecommendation({
     }
 
     return false;
-  }, [behaviorData, isLoading, lastPromptTime, enablePreventivePrompts, showPrompt]);
+  }, [behaviorData, enablePreventivePrompts, isLoading, lastPromptTime, showUpgradePrompt]);
 
   // 智能时机推荐（基于用户行为模式）
   const checkSmartTimingRecommendation = useCallback(async () => {
@@ -125,17 +125,17 @@ export function useUpgradeRecommendation({
     }
 
     return false;
-  }, [behaviorData, enableSmartTiming, showPrompt]);
+  }, [behaviorData, enableSmartTiming, showUpgradePrompt]);
 
   // 显示升级提示
-  const showUpgradePrompt = (
+  const showUpgradePrompt = useCallback((
     quotaType: QuotaType,
     currentUsage: number,
     limit: number,
     recommendation: UpgradeRecommendation,
   ) => {
     showPrompt(quotaType, currentUsage, limit, currentTier, recommendation);
-  };
+  }, [currentTier, showPrompt]);
 
   // 手动触发升级推荐
   const triggerUpgradeRecommendation = useCallback(async (
@@ -153,14 +153,12 @@ export function useUpgradeRecommendation({
 
     showUpgradePrompt(quotaType, currentUsage, limit, recommendation);
     trackUpgradePromptShown(quotaType, 'manual');
-  }, [behaviorData, showPrompt]);
+  }, [behaviorData, showUpgradePrompt]);
 
   // 更新用户行为数据
   const updateBehaviorData = useCallback((updates: Partial<UserBehaviorData>) => {
-    if (behaviorData) {
-      setBehaviorData({ ...behaviorData, ...updates });
-    }
-  }, [behaviorData]);
+    setBehaviorData(prev => (prev ? { ...prev, ...updates } : prev));
+  }, []);
 
   // 记录用户交互
   const recordUserInteraction = useCallback(async (

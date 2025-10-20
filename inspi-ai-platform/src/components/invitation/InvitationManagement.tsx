@@ -18,8 +18,9 @@ import {
   Check,
   X,
 } from 'lucide-react';
+import Image from 'next/image';
 import QRCode from 'qrcode';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { Badge } from '@/shared/components/badge';
 import { Button } from '@/shared/components/button';
@@ -82,11 +83,7 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ userId }) =
     { id: 'link', name: '复制链接', icon: '🔗', color: 'bg-gray-500', available: true },
   ];
 
-  useEffect(() => {
-    loadInvitationData();
-  }, [userId]);
-
-  const loadInvitationData = async () => {
+  const loadInvitationData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -113,7 +110,11 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ userId }) =
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast, userId]);
+
+  useEffect(() => {
+    loadInvitationData();
+  }, [loadInvitationData]);
 
   const generateNewInviteCode = async () => {
     try {
@@ -549,10 +550,13 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ userId }) =
 
             <div className="text-center">
               {qrCodeDataUrl && (
-                <img
+                <Image
                   src={qrCodeDataUrl}
                   alt="邀请二维码"
+                  width={240}
+                  height={240}
                   className="mx-auto mb-4 border rounded-lg"
+                  unoptimized
                 />
               )}
               <p className="text-sm text-gray-600 mb-4">

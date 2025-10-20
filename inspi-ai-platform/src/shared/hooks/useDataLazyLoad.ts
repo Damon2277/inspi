@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-import { logger } from '@/lib/logging/logger';
+import { logger } from '@/shared/utils/logger';
 
 /**
  * 数据懒加载配置
@@ -156,10 +156,12 @@ export function useDataLazyLoad<T>(
     abortControllerRef.current = new AbortController();
     const { signal } = abortControllerRef.current;
 
-    setState({ ...state, isLoading: true,
+    setState(prev => ({
+      ...prev,
+      isLoading: true,
       error: null,
       retryCount,
-     });
+    }));
 
     onLoadStart && onLoadStart();
 
@@ -217,10 +219,12 @@ export function useDataLazyLoad<T>(
         return;
       }
 
-      setState({ ...state, isLoading: false,
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
         error: err,
         retryCount,
-       });
+      }));
 
       onError && onError(err);
     }

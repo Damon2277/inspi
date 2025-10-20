@@ -1,124 +1,64 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+
+import { SquareQuickReuseButton } from '@/components/square/SquareQuickReuseButton';
+import { mockSquareWorks } from '@/data/mockSquareWorks';
+import { useAdvancedSearch } from '@/hooks/useSearch';
+import { useAuth } from '@/shared/hooks/useAuth';
+import { useReuseState } from '@/shared/hooks/useReuseState';
 
 /**
  * 现代化桌面端广场页面组件
  */
 export function DesktopSquarePage() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const { user } = useAuth();
+  const { reusedThemes } = useReuseState(user?._id);
 
-  const works = [
-    {
-      id: 1,
-      title: '二次函数的图像与性质',
-      author: '张老师',
-      subject: '数学',
-      grade: '高中',
-      description: '通过动态图像展示二次函数的变化规律，帮助学生理解抛物线的开口方向、对称轴等重要概念。',
-      cardCount: 4,
-      likes: 89,
-      views: 1250,
-      reuses: 23,
-      rating: 4.8,
-      tags: ['函数', '图像', '性质'],
-      thumbnail: '📊',
-      createdAt: '2024-01-15',
-    },
-    {
-      id: 2,
-      title: '古诗词意境赏析',
-      author: '李老师',
-      subject: '语文',
-      grade: '初中',
-      description: '结合古诗词的创作背景，引导学生感受诗人的情感世界，提升文学鉴赏能力。',
-      cardCount: 4,
-      likes: 156,
-      views: 2100,
-      reuses: 45,
-      rating: 4.9,
-      tags: ['古诗词', '意境', '赏析'],
-      thumbnail: '📜',
-      createdAt: '2024-01-14',
-    },
-    {
-      id: 3,
-      title: '化学反应速率与平衡',
-      author: '王老师',
-      subject: '化学',
-      grade: '高中',
-      description: '通过实验现象和理论分析，帮助学生掌握化学反应速率的影响因素和化学平衡的建立过程。',
-      cardCount: 4,
-      likes: 67,
-      views: 890,
-      reuses: 18,
-      rating: 4.7,
-      tags: ['化学反应', '速率', '平衡'],
-      thumbnail: '⚗️',
-      createdAt: '2024-01-13',
-    },
-    {
-      id: 4,
-      title: '英语时态语法精讲',
-      author: '陈老师',
-      subject: '英语',
-      grade: '初中',
-      description: '系统梳理英语各种时态的用法，通过丰富的例句和练习，让学生轻松掌握时态变化规律。',
-      cardCount: 4,
-      likes: 234,
-      views: 3200,
-      reuses: 67,
-      rating: 4.6,
-      tags: ['时态', '语法', '练习'],
-      thumbnail: '🔤',
-      createdAt: '2024-01-12',
-    },
-    {
-      id: 5,
-      title: '物理力学基础',
-      author: '赵老师',
-      subject: '物理',
-      grade: '高中',
-      description: '从生活实例出发，讲解力的概念、牛顿定律等基础知识，培养学生的物理思维。',
-      cardCount: 4,
-      likes: 123,
-      views: 1800,
-      reuses: 34,
-      rating: 4.8,
-      tags: ['力学', '牛顿定律', '基础'],
-      thumbnail: '⚡',
-      createdAt: '2024-01-11',
-    },
-    {
-      id: 6,
-      title: '生物细胞结构',
-      author: '孙老师',
-      subject: '生物',
-      grade: '初中',
-      description: '通过显微镜观察和模型展示，让学生深入了解细胞的基本结构和功能。',
-      cardCount: 4,
-      likes: 98,
-      views: 1400,
-      reuses: 28,
-      rating: 4.7,
-      tags: ['细胞', '结构', '功能'],
-      thumbnail: '🔬',
-      createdAt: '2024-01-10',
-    },
-  ];
+  const baseReuseCountsRef = useRef<Map<number, number>>(new Map(mockSquareWorks.map(work => [work.id, work.reuses])));
+  const [works, setWorks] = useState(() => mockSquareWorks.map(work => ({ ...work })));
 
-  const handleSearch = (query: string) => {
-    console.warn('搜索:', query);
-  };
+  useEffect(() => {
+    setWorks(mockSquareWorks.map(work => ({
+      ...work,
+      reuses: (baseReuseCountsRef.current.get(work.id) ?? work.reuses) + (reusedThemes.includes(work.id) ? 1 : 0),
+    })));
+  }, [reusedThemes]);
 
-  const handleLike = (event: React.MouseEvent<HTMLButtonElement>, workId: number) => {
-    event.stopPropagation();
-    console.warn('点赞作品:', workId);
-  };
-
-  const handleReuse = (event: React.MouseEvent<HTMLButtonElement>, workId: number) => {
-    event.stopPropagation();
-    console.warn('复用作品:', workId);
-  };
+  // 使用高级搜索 Hook
+  const {
+    searchQuery,
+    setSearchQuery,
+    filterValues,
+    updateFilter,
+    clearFilters,
+    filteredItems: filteredWorks,
+    activeFilterCount,
+    searchStats,
+  } = useAdvancedSearch(
+    works,
+    [
+      { field: 'subject', type: 'select', label: '学科', options: [
+        { value: '数学', label: '数学' },
+        { value: '语文', label: '语文' },
+        { value: '英语', label: '英语' },
+        { value: '物理', label: '物理' },
+        { value: '化学', label: '化学' },
+        { value: '生物', label: '生物' },
+      ] },
+      { field: 'grade', type: 'select', label: '年级', options: [
+        { value: '小学', label: '小学' },
+        { value: '初中', label: '初中' },
+        { value: '高中', label: '高中' },
+        { value: '大学', label: '大学' },
+      ] },
+      { field: 'rating', type: 'range', label: '评分' },
+    ],
+    {
+      fields: ['title', 'description', 'author', 'tags'],
+      fuzzy: true,
+      minScore: 0.3,
+    },
+  );
 
   const handleCardClick = (workId: number) => {
     window.location.href = `/square/${workId}`;
@@ -168,11 +108,6 @@ export function DesktopSquarePage() {
                   placeholder="搜索教学内容、作者或标签..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && searchQuery) {
-                      handleSearch(searchQuery);
-                    }
-                  }}
                   style={{ paddingLeft: '48px' }}
                 />
                 <div style={{
@@ -191,10 +126,59 @@ export function DesktopSquarePage() {
           </div>
         </div>
 
+        {/* 搜索结果统计 */}
+        {searchStats.hasFilters && (
+          <div className="modern-container" style={{ marginBottom: '16px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '12px 16px',
+              background: 'var(--primary-50)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--primary-200)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '14px', color: 'var(--gray-700)' }}>
+                  找到 <strong>{searchStats.filtered}</strong> 个结果
+                  {searchQuery && (
+                    <span> 关于 "<strong>{searchQuery}</strong>"</span>
+                  )}
+                </span>
+                {activeFilterCount > 0 && (
+                  <span style={{
+                    padding: '2px 8px',
+                    background: 'var(--primary-600)',
+                    color: 'white',
+                    borderRadius: 'var(--radius-full)',
+                    fontSize: '12px',
+                  }}>
+                    {activeFilterCount} 个筛选
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={clearFilters}
+                style={{
+                  padding: '6px 12px',
+                  background: 'white',
+                  border: '1px solid var(--gray-300)',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '13px',
+                  color: 'var(--gray-700)',
+                  cursor: 'pointer',
+                }}
+              >
+                清除筛选
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* 作品网格 */}
         <div className="modern-container">
           <div className="modern-grid modern-grid-3">
-            {works.map((work) => (
+            {filteredWorks.map((work) => (
               <div
                 key={work.id}
                 className="modern-card modern-card-elevated group"
@@ -314,14 +298,12 @@ export function DesktopSquarePage() {
                           {work.reuses}
                         </span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                        <button
-                          className="modern-btn modern-btn-outline modern-btn-sm"
-                          style={{ whiteSpace: 'nowrap', minWidth: '84px' }}
-                          onClick={(event) => handleReuse(event, work.id)}
-                        >
-                          致敬复用
-                        </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}
+                        onClick={(event) => event.stopPropagation()}>
+                        <SquareQuickReuseButton
+                          themeId={work.id}
+                          themeTitle={work.title}
+                        />
                       </div>
                     </div>
                   </div>
@@ -329,6 +311,31 @@ export function DesktopSquarePage() {
               </div>
             ))}
           </div>
+
+          {/* 空状态 */}
+          {filteredWorks.length === 0 && (
+            <div style={{
+              textAlign: 'center',
+              padding: '80px 20px',
+              color: 'var(--gray-500)',
+            }}>
+              <svg width="64" height="64" fill="none" viewBox="0 0 24 24" style={{ margin: '0 auto 16px', color: 'var(--gray-300)' }}>
+                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <h3 style={{ fontSize: '18px', marginBottom: '8px', color: 'var(--gray-700)' }}>
+                没有找到匹配的作品
+              </h3>
+              <p style={{ marginBottom: '24px' }}>
+                尝试使用不同的关键词或筛选条件
+              </p>
+              <button
+                onClick={clearFilters}
+                className="modern-btn modern-btn-primary"
+              >
+                清除所有筛选
+              </button>
+            </div>
+          )}
 
           {/* 加载更多 */}
           <div style={{ textAlign: 'center', marginTop: '48px' }}>

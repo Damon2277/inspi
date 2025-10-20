@@ -81,11 +81,11 @@ export function SimpleCardEditor({
               }}
               placeholder="输入卡片内容..."
             />
-            <div style={{ 
-              marginTop: '12px', 
-              display: 'flex', 
-              gap: '8px', 
-              justifyContent: 'flex-end' 
+            <div style={{
+              marginTop: '12px',
+              display: 'flex',
+              gap: '8px',
+              justifyContent: 'flex-end',
             }}>
               <button
                 onClick={handleCancel}
@@ -119,8 +119,8 @@ export function SimpleCardEditor({
           </>
         ) : (
           <>
-            <div 
-              style={{ 
+            <div
+              style={{
                 whiteSpace: 'pre-wrap',
                 lineHeight: '1.6',
                 wordBreak: 'break-word',

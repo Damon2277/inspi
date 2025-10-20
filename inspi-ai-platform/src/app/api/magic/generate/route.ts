@@ -7,16 +7,18 @@ import { NextResponse } from 'next/server';
 
 import { geminiService } from '@/core/ai/geminiService';
 import type { PromptContext } from '@/core/ai/promptTemplates';
-import { generateTeachingCard } from '../card-engine';
 import { requireAuth, AuthenticatedRequest } from '@/core/auth/middleware';
-import { quotaManager } from '@/lib/quota/quotaManager';
+import connectDB from '@/lib/mongodb';
 import { validateContent } from '@/lib/security';
+import { QuotaService } from '@/services/quota.service';
 import type {
   GenerateCardsRequest,
   GenerateCardsResponse,
   TeachingCard,
 } from '@/shared/types/teaching';
 import { logger } from '@/shared/utils/logger';
+
+import { generateTeachingCard } from '../card-engine';
 
 
 const SUPPORTED_PLANS = new Set(['free', 'pro', 'super']);
@@ -84,23 +86,44 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     // 使用清理后的内容
     const cleanKnowledgePoint = contentValidation.cleanContent;
 
-    // 4. 检查用户配额
-    const canConsume = await quotaManager.consumeQuota(userId, userPlan, 1);
-    if (!canConsume) {
-      const quota = await quotaManager.checkQuota(userId, userPlan);
-      return NextResponse.json(
-        {
-          error: '今日AI生成次数已用完',
-          quota: {
-            current: quota.currentUsage,
-            limit: quota.dailyLimit,
-            remaining: quota.remaining,
-            resetTime: quota.resetTime,
+    // 4. 检查用户配额 - 使用新的订阅系统
+    await connectDB(); // 确保数据库连接
+    const quotaCheck = await QuotaService.checkAndConsume(userId);
+
+    if (!quotaCheck.allowed) {
+      // 如果是免费用户额度用尽，返回提示升级的信息
+      if (quotaCheck.quotaType === 'daily') {
+        return NextResponse.json(
+          {
+            error: quotaCheck.reason || '今日免费额度已用尽',
+            needSubscription: true,
+            quota: {
+              type: quotaCheck.quotaType,
+              used: quotaCheck.limit - quotaCheck.remaining,
+              remaining: quotaCheck.remaining,
+              total: quotaCheck.limit,
+            },
           },
-        },
-        { status: 429 },
-      );
+          { status: 429 },
+        );
+      } else {
+        // 订阅用户月度额度用尽
+        return NextResponse.json(
+          {
+            error: quotaCheck.reason || '本月额度已用尽',
+            quota: {
+              type: quotaCheck.quotaType,
+              used: quotaCheck.limit - quotaCheck.remaining,
+              remaining: quotaCheck.remaining,
+              total: quotaCheck.limit,
+            },
+          },
+          { status: 429 },
+        );
+      }
     }
+
+    logger.info('Quota consumed', { userId, plan: userPlan, amount: 1 });
 
     // 5. 检查AI服务健康状态
     if (!isMockMode) {
@@ -148,11 +171,11 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     }
 
     // 8. 获取更新后的配额信息
-    const updatedQuota = await quotaManager.checkQuota(userId, userPlan);
+    const quotaStatus = await QuotaService.getQuotaStatus(userId);
     const usage = {
-      current: updatedQuota.currentUsage,
-      limit: updatedQuota.dailyLimit,
-      remaining: updatedQuota.remaining,
+      current: quotaStatus.quota.used,
+      limit: quotaStatus.quota.total,
+      remaining: quotaStatus.quota.remaining,
     };
 
     // 9. 构建响应

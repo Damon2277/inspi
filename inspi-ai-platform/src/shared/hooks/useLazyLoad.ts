@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-import { logger } from '@/lib/logging/logger';
+import { logger } from '@/shared/utils/logger';
 
 /**
  * 懒加载选项

@@ -215,11 +215,7 @@ test.describe('用户完整旅程测试', () => {
     await page.click('[data-testid="submit-reply"]');
     await expect(page.locator('[data-testid="reply-item"]').last()).toContainText('谢谢你的反馈');
 
-    // 11. 关注作者
-    await page.click('[data-testid="follow-author-button"]');
-    await expect(page.locator('[data-testid="follow-success"]')).toBeVisible();
-
-    // 12. 复用作品
+    // 11. 复用作品
     await page.click('[data-testid="reuse-button"]');
     await expect(page).toHaveURL(/.*\/works\/create.*/);
     await expect(page.locator('[data-testid="work-title"]')).toHaveValue(/.*基于.*/);

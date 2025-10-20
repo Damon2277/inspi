@@ -1,104 +1,72 @@
-# Inspi.AI 项目管理规则增强系统
+# Inspi.AI 教学创作平台
 
 ## 项目概述
 
-本项目包含了完整的项目管理规则增强系统，为 Inspi.AI 教师智慧生态平台提供全面的开发流程管理、质量保证和系统监控功能。
+该仓库托管 Inspi.AI 教学创作平台的源代码与文档。项目现已聚焦于主应用本身，历史的 `.kiro` 管理工具、快照与脚本均已清理，仓库结构更轻量、便于维护。
 
-### 🏗️ 项目结构
+### 🏗️ 目录结构
 
 ```
 inspi/
-├── inspi-ai-platform/          # 主应用平台
-│   ├── src/                    # 应用源码
-│   ├── scripts/                # 版本管理脚本
-│   └── docs/                   # 应用文档
-├── .kiro/                      # 项目管理规则增强系统
-│   ├── quality-checks/         # 质量检查系统
-│   ├── style-recovery/         # 样式恢复系统
-│   ├── recovery-points/        # 恢复点系统
-│   ├── dashboard/              # 开发者仪表板
-│   ├── config-manager/         # 配置管理系统
-│   ├── integration-tests/      # 集成验证工具
-│   └── specs/                  # 规范文档
-└── README.md                   # 本文件
+├── inspi-ai-platform/          # 主应用
+│   ├── src/                    # 前后端源码
+│   ├── public/                 # 静态资源与图标
+│   ├── docs/                   # 应用内文档
+│   └── package.json            # NPM 依赖与脚本
+├── docs/                       # 额外设计与运维文档
+├── README.md                   # 根级说明（本文件）
+└── ...
 ```
 
 ## 🚀 快速开始
 
-> **💡 新用户推荐**: 查看 [快速开始指南](QUICK_START.md) 获得详细的5分钟快速启动教程
->
-> **提示**: 当前代码仓库未包含 `.kiro` 项目管理规则系统目录，相关脚本会自动跳过对应检查。若需要使用完整的质量/监控工具，请在本地补全 `.kiro` 资源或联系维护者获取。
-
 ### 1. 环境准备
 
 ```bash
-# 安装依赖
 cd inspi-ai-platform
 npm install
 
-# 配置环境变量
 cp .env.example .env.local
-# 编辑 .env.local 填入相应配置
+# 根据需要配置 GEMINI_API_KEY、USE_MOCK_GEMINI 等环境变量
 ```
 
-### 2. 验证系统集成
+### 2. 本地开发
 
 ```bash
-# 运行系统集成验证
-node .kiro/integration-tests/run-tests.js
+npm run dev    # 默认监听 http://localhost:3007
 ```
 
-### 3. 启动服务
+主要入口：
+- **创作页**：使用“AI教学魔法师”生成可视化教学卡片
+- **广场页**：浏览主题卡片，进入详情可直接复用
+
+### 3. 常用校验
 
 ```bash
-# 启动主应用 (终端1)
-cd inspi-ai-platform
-npm run dev
-
-# 启动项目管理系统 (终端2)
-node .kiro/dashboard/cli.js start
+npm run lint        # ESLint 检查（仍存在部分历史 warning）
+npm run type-check  # TypeScript 类型检查
 ```
 
-### 4. 访问应用
-
-- **主应用**: http://localhost:3000
-- **项目仪表板**: http://localhost:3001
+> 提示：原 `.kiro` 目录已删除，如需质量治理脚本、请参考 `docs/quality-improvement-plan.md` 自定义方案。
 
 ## 📚 文档导航
 
-### 主要文档
-- **[主应用README](inspi-ai-platform/README.md)** - Inspi.AI平台详细介绍
-- **[系统架构文档](docs/ARCHITECTURE.md)** - 完整的系统架构设计
-- **[开发指南](docs/DEVELOPMENT_GUIDE.md)** - 开发规范和最佳实践
-- **[部署指南](docs/DEPLOYMENT_GUIDE.md)** - 部署和运维指南
-- **[任务管理](MASTER_TASKS.md)** - 主任务管理文档
-- **[变更日志](CHANGELOG.md)** - 项目变更历史
+- **[主应用 README](inspi-ai-platform/README.md)**：运行、部署、环境变量说明
+- **docs/ARCHITECTURE.md**：系统架构设计与模块拆分
+- **docs/quality-improvement-plan.md**：Lint 警告治理与代码健康计划
+- **docs/card-experience-roadmap.md**：教学卡片体验迭代路线
 
+## 🔄 提交流程
 
-### 发布文档
-- **[发布说明](docs/releases/)** - 版本发布说明
-- **[发布模板](docs/releases/template.md)** - 发布文档模板
-
-
-### 开发规范
-
-- 遵循项目代码规范
-- 使用项目管理工具进行开发
-- 提交前运行完整检查
-- 及时更新文档
+1. 针对改动运行 `npm run lint` / `npm run type-check`
+2. 如有必要，补充或更新相关文档与测试
+3. 使用 `git add` 提交变更，遵循约定式提交信息（如 `feat: ...`、`fix: ...`、`chore: ...`）
 
 ## 📞 支持与联系
 
-- **项目邮箱**: sundp1980@gmail.com
-- **文档问题**: 查看相关系统的README文档
-- **技术支持**: 运行系统诊断工具获取详细信息
+- 维护者邮箱：`sundp1980@gmail.com`
+- 如果在协作平台或 Issue 中提问，请附上复现步骤与期望结果
 
 ## 📄 许可证
 
 [MIT License](LICENSE)
-
----
-
-**最后更新**: 2025年9月5日  
-**系统版本**: v1.0.0  
-**集成状态**: 🟢 优秀 (100% 通过率)

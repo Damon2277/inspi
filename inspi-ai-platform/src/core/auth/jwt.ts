@@ -81,7 +81,7 @@ export function decodeToken(token: string): JWTPayload | null {
   }
 }
 
-export default {
+const jwtService = {
   generateToken,
   generateRefreshToken,
   verifyToken,
@@ -89,3 +89,5 @@ export default {
   extractTokenFromHeader,
   decodeToken,
 };
+
+export default jwtService;

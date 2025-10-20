@@ -160,4 +160,6 @@ export class RedisService {
   }
 }
 
-export default new RedisService();
+export const redisService = new RedisService();
+
+export default redisService;

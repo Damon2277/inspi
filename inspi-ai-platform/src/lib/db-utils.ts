@@ -206,8 +206,10 @@ export class TransactionUtils {
 }
 
 // 默认导出
-export default {
+const dbUtils = {
   DatabaseUtils,
   CacheUtils,
   TransactionUtils,
 };
+
+export default dbUtils;

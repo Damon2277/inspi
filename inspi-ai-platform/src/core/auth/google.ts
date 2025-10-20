@@ -187,8 +187,10 @@ export async function exchangeCodeForTokens(code: string): Promise<{
   }
 }
 
-export default {
+const googleAuthService = {
   verifyGoogleToken,
   getGoogleAuthUrl,
   exchangeCodeForTokens,
 };
+
+export default googleAuthService;

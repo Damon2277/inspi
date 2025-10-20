@@ -626,23 +626,34 @@ export class DataVisualizationServiceImpl implements DataVisualizationService {
       const yesterdayInvites = Number(yesterdayResult?.yesterday_invites) || 0;
       const yesterdayRegistrations = Number(yesterdayResult?.yesterday_registrations) || 0;
 
-      const inviteChange = yesterdayInvites > 0 ? ((todayInvites - yesterdayInvites) / yesterdayInvites) * 100 : 0;
-      const registrationChange = yesterdayRegistrations > 0 ? ((todayRegistrations - yesterdayRegistrations) / yesterdayRegistrations) * 100 : 0;
+      const calculateChange = (today: number, yesterday: number) => {
+        if (!yesterday) return 0;
+        return ((today - yesterday) / yesterday) * 100;
+      };
+
+      const calculateTrend = (change: number) => {
+        if (change > 0) return 'up' as const;
+        if (change < 0) return 'down' as const;
+        return 'stable' as const;
+      };
+
       const conversionRate = todayInvites > 0 ? (todayRegistrations / todayInvites) * 100 : 0;
+      const inviteChange = calculateChange(todayInvites, yesterdayInvites);
+      const registrationChange = calculateChange(todayRegistrations, yesterdayRegistrations);
 
       const metrics = [
         {
           title: '今日邀请',
           value: todayInvites,
           change: inviteChange,
-          trend: inviteChange > 0 ? 'up' as const : inviteChange < 0 ? 'down' as const : 'stable' as const,
+          trend: calculateTrend(inviteChange),
           format: 'number' as const,
         },
         {
           title: '今日注册',
           value: todayRegistrations,
           change: registrationChange,
-          trend: registrationChange > 0 ? 'up' as const : registrationChange < 0 ? 'down' as const : 'stable' as const,
+          trend: calculateTrend(registrationChange),
           format: 'number' as const,
         },
         {

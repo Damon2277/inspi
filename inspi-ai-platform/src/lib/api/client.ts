@@ -2,8 +2,8 @@
  * API客户端错误处理
  */
 
-import { logger } from '@/lib/logging/logger';
-import { reportError, monitoringContext } from '@/lib/monitoring';
+import { logger } from '@/shared/utils/logger';
+// import { reportError, monitoringContext } from '@/lib/monitoring';
 import { CustomError } from '@/shared/errors/CustomError';
 import { ErrorCode } from '@/shared/errors/types';
 
@@ -123,33 +123,33 @@ export class ApiClient {
     const requestConfig = this.buildRequestConfig(config, requestId);
 
     // 设置请求上下文
-    monitoringContext.setRequest({
-      id: requestId,
-      method: requestConfig.method || 'GET',
-      url: fullUrl,
-      startTime: Date.now(),
-    });
+    // monitoringContext.setRequest({
+    //   id: requestId,
+    //   method: requestConfig.method || 'GET',
+    //   url: fullUrl,
+    //   startTime: Date.now(),
+    // });
 
     try {
       const response = await this.executeRequest<T>(fullUrl, requestConfig, requestId);
 
       // 更新请求上下文
-      monitoringContext.setRequest({
-        id: requestId,
-        endTime: Date.now(),
-        duration: Date.now() - (monitoringContext.getCurrentContext().request.startTime || Date.now()),
-        statusCode: response.status,
-      });
+      // monitoringContext.setRequest({
+      //   id: requestId,
+      //   endTime: Date.now(),
+      //   duration: Date.now() - (monitoringContext.getCurrentContext().request.startTime || Date.now()),
+      //   statusCode: response.status,
+      // });
 
       return response;
     } catch (error) {
       // 更新请求上下文
-      monitoringContext.setRequest({
-        id: requestId,
-        endTime: Date.now(),
-        duration: Date.now() - (monitoringContext.getCurrentContext().request.startTime || Date.now()),
-        statusCode: error instanceof ApiError ? error.status : 0,
-      });
+      // monitoringContext.setRequest({
+      //   id: requestId,
+      //   endTime: Date.now(),
+      //   duration: Date.now() - (monitoringContext.getCurrentContext().request.startTime || Date.now()),
+      //   statusCode: error instanceof ApiError ? error.status : 0,
+      // });
 
       throw error;
     } finally {
@@ -401,19 +401,19 @@ export class ApiClient {
     });
 
     // 报告错误到监控系统
-    if (!apiError.isClientError() || apiError.status >= 500) {
-      reportError(apiError, {
-        tags: {
-          api_client: 'true',
-          request_id: requestId,
-          status: apiError.status.toString(),
-        },
-        extra: {
-          url,
-          traceId: apiError.traceId,
-        },
-      });
-    }
+    // if (!apiError.isClientError() || apiError.status >= 500) {
+    //   reportError(apiError, {
+    //     tags: {
+    //       api_client: 'true',
+    //       request_id: requestId,
+    //       status: apiError.status.toString(),
+    //     },
+    //     extra: {
+    //       url,
+    //       traceId: apiError.traceId,
+    //     },
+    //   });
+    // }
 
     // 调用错误回调
     if (this.config.onError) {

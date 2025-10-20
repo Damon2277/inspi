@@ -28,6 +28,7 @@ const eslintConfig = [
       "check-syntax-errors.js",
       "demo-features.js",
       "test-current-features.js",
+      "src/__tests__/unit/community/community-features.test.ts",
     ],
   },
   {

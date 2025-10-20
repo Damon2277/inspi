@@ -967,4 +967,6 @@ class ContributionService {
   }
 }
 
-export default new ContributionService();
+export const contributionService = new ContributionService();
+
+export default contributionService;

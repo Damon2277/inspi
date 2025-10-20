@@ -3,6 +3,7 @@
  * 提供完整的邀请分享界面
  */
 
+import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 
 import { ShareService } from '../../lib/invitation/services/ShareService';
@@ -165,10 +166,13 @@ export const SharePanel: React.FC<SharePanelProps> = ({
 
         {showQRCode && qrCodeUrl && (
           <div className="share-panel__qrcode-container">
-            <img
+            <Image
               src={qrCodeUrl}
               alt="邀请二维码"
+              width={200}
+              height={200}
               className="share-panel__qrcode-image"
+              unoptimized
             />
             <p className="share-panel__qrcode-text">
               扫描二维码分享邀请链接

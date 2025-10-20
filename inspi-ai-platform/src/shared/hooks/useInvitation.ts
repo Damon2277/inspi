@@ -2,7 +2,7 @@
  * 邀请管理相关的自定义Hook
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import { useToast } from '@/shared/hooks/use-toast';
 
@@ -34,7 +34,7 @@ export const useInvitation = (userId: string) => {
 
   const { toast } = useToast();
 
-  const loadInvitationData = async () => {
+  const loadInvitationData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -61,7 +61,7 @@ export const useInvitation = (userId: string) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast, userId]);
 
   const generateNewInviteCode = async () => {
     try {
@@ -123,7 +123,7 @@ export const useInvitation = (userId: string) => {
     if (userId) {
       loadInvitationData();
     }
-  }, [userId]);
+  }, [loadInvitationData, userId]);
 
   return {
     inviteCode,

@@ -4,7 +4,7 @@
  */
 'use client';
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 
 import {
   D3GraphRenderer,
@@ -79,24 +79,29 @@ export function KnowledgeGraphEditor({
   });
   const [showToolbar, setShowToolbar] = useState(true);
   const [showSidebar, setShowSidebar] = useState(true);
+  const editStateRef = useRef(editState);
+
+  useEffect(() => {
+    editStateRef.current = editState;
+  }, [editState]);
 
   // 合并配置
-  const mergedLayoutConfig: LayoutConfig = {
+  const mergedLayoutConfig: LayoutConfig = useMemo(() => ({
     ...DEFAULT_LAYOUT_CONFIG,
     width,
     height,
     ...layoutConfig,
-  };
+  }), [height, layoutConfig, width]);
 
-  const mergedVisualConfig: VisualConfig = {
+  const mergedVisualConfig: VisualConfig = useMemo(() => ({
     ...DEFAULT_VISUAL_CONFIG,
     ...visualConfig,
-  };
+  }), [visualConfig]);
 
-  const mergedInteractionConfig: InteractionConfig = {
+  const mergedInteractionConfig: InteractionConfig = useMemo(() => ({
     ...DEFAULT_INTERACTION_CONFIG,
     ...interactionConfig,
-  };
+  }), [interactionConfig]);
 
   // 初始化管理器
   const initializeManagers = useCallback(() => {
@@ -127,7 +132,7 @@ export function KnowledgeGraphEditor({
       console.error('Failed to initialize graph editor:', error);
       onError && onError(error instanceof Error ? error.message : 'Failed to initialize graph editor');
     }
-  }, [graph, mergedLayoutConfig, mergedVisualConfig, mergedInteractionConfig, onError]);
+  }, [bindEventHandlers, graph, mergedInteractionConfig, mergedLayoutConfig, mergedVisualConfig, onError]);
 
   // 绑定事件处理器
   const bindEventHandlers = useCallback(() => {
@@ -138,8 +143,9 @@ export function KnowledgeGraphEditor({
 
     // 渲染器事件
     renderer.on('node:click', (event) => {
+      const currentState = editStateRef.current;
       if (event.target && interactionManager) {
-        if (editState.mode === 'create_edge' && editState.pendingEdge) {
+        if (currentState?.mode === 'create_edge' && currentState.pendingEdge) {
           // 完成创建边
           interactionManager.finishCreateEdge(event.target.id);
         } else {
@@ -162,11 +168,17 @@ export function KnowledgeGraphEditor({
     });
 
     renderer.on('canvas:click', () => {
-      if (editState.mode === 'create_node') {
+      const currentState = editStateRef.current;
+      if (!currentState) {
+        interactionManager.clearSelection();
+        return;
+      }
+
+      if (currentState.mode === 'create_node') {
         // 在点击位置创建节点
         const position = { x: 100, y: 100 }; // 这里应该从事件中获取实际位置
         interactionManager.startCreateNode(position);
-      } else if (editState.mode === 'create_edge') {
+      } else if (currentState.mode === 'create_edge') {
         // 取消创建边
         interactionManager.cancelCreateEdge();
       } else {
@@ -190,7 +202,7 @@ export function KnowledgeGraphEditor({
     });
 
     interactionManager.on('edit:mode:changed', (mode: EditingState['mode']) => {
-      setEditState({ ...editState, mode });
+      setEditState(prev => ({ ...prev, mode }));
     });
 
     interactionManager.on('filter:changed', (filter: FilterState) => {
@@ -200,7 +212,7 @@ export function KnowledgeGraphEditor({
       renderer.update(filteredData);
     });
 
-  }, [editState, readonly, onSelectionChange, onGraphChange]);
+  }, [onGraphChange, onSelectionChange, readonly]);
 
   // 初始化
   useEffect(() => {

@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { SimulationLinkDatum, SimulationNodeDatum } from 'd3-force';
 
 // D3.js v6+ 类型兼容性修复
 type D3Selection = d3.Selection<any, any, any, any>;
@@ -6,9 +7,6 @@ type D3Simulation = d3.Simulation<any, any>;
 type D3Force = d3.Force<any, any>;
 type D3Zoom = d3.ZoomBehavior<any, any>;
 type D3Drag = d3.DragBehavior<any, any, any>;
-
-
-import { SimulationNodeDatum, SimulationLinkDatum } from 'd3-force';
 
 interface GraphNode extends SimulationNodeDatum {
   id: string;
@@ -295,7 +293,13 @@ export class D3GraphRenderer implements GraphRenderer {
       .style('user-select', 'none');
 
     // 合并选择
-    this.labelSelection = labelEnter.merge(labelSelection) as d3.Selection<SVGTextElement, D3Node, SVGGElement, unknown>;
+    this.labelSelection = labelEnter
+      .merge(labelSelection) as d3.Selection<
+        SVGTextElement,
+        D3Node,
+        SVGGElement,
+        unknown
+      >;
 
     // 设置标签样式和内容
     this.labelSelection

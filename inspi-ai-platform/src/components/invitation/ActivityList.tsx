@@ -8,7 +8,7 @@
 import { formatDistanceToNow, format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { CalendarDays, Trophy, Users, Target, Clock } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { InvitationActivity, ActivityType, ActivityStatus } from '@/lib/invitation/types';
 import { Badge } from '@/shared/components/badge';
@@ -30,11 +30,7 @@ export function ActivityList({ onActivitySelect, onJoinActivity, className }: Ac
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  useEffect(() => {
-    loadActivities();
-  }, []);
-
-  const loadActivities = async (pageNum = 1) => {
+  const loadActivities = useCallback(async (pageNum = 1) => {
     try {
       setLoading(true);
       const response = await fetch(`/api/activities?page=${pageNum}&limit=10`);
@@ -44,7 +40,7 @@ export function ActivityList({ onActivitySelect, onJoinActivity, className }: Ac
         if (pageNum === 1) {
           setActivities(data.data.activities);
         } else {
-          setActivities([...activities, ...data.data.activities]);
+          setActivities(prev => [...prev, ...data.data.activities]);
         }
         setHasMore(data.data.activities.length === 10);
       } else {
@@ -55,7 +51,11 @@ export function ActivityList({ onActivitySelect, onJoinActivity, className }: Ac
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadActivities();
+  }, [loadActivities]);
 
   const loadMore = () => {
     const nextPage = page + 1;

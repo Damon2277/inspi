@@ -3,6 +3,8 @@
  * 在应用启动时初始化所有性能优化功能
  */
 
+import React from 'react';
+
 import { CacheFactory, MemoryCache, RedisCache } from './cache-strategy';
 import { QueryOptimizer, ConnectionPoolManager } from './database-optimization';
 
@@ -471,6 +473,3 @@ export function useAppPerformance() {
 
   return { manager, stats };
 }
-
-// React import
-import React from 'react';

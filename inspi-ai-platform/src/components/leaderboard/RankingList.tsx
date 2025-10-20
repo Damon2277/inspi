@@ -4,7 +4,7 @@
  */
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import LoadingSpinner from '@/shared/components/LoadingSpinner';
 import { LeaderboardEntry, LeaderboardResponse } from '@/shared/types/contribution';
@@ -31,7 +31,7 @@ export function RankingList({
   const [hasMore, setHasMore] = useState(true);
 
   // 获取排行榜数据
-  const fetchLeaderboard = async (offset = 0, append = false) => {
+  const fetchLeaderboard = useCallback(async (offset = 0, append = false) => {
     try {
       if (offset === 0) setLoading(true);
       else setLoadingMore(true);
@@ -53,14 +53,15 @@ export function RankingList({
 
       const newData = result.data as LeaderboardResponse;
 
-      if (append && leaderboard) {
-        setLeaderboard({
-          ...newData,
-          entries: [...leaderboard.entries, ...newData.entries],
-        });
-      } else {
-        setLeaderboard(newData);
-      }
+      setLeaderboard(prev => {
+        if (append && prev) {
+          return {
+            ...newData,
+            entries: [...prev.entries, ...newData.entries],
+          };
+        }
+        return newData;
+      });
 
       // 检查是否还有更多数据
       setHasMore(newData.entries.length === limit);
@@ -71,7 +72,7 @@ export function RankingList({
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [currentUserId, limit, type]);
 
   // 加载更多数据
   const loadMore = () => {
@@ -83,7 +84,7 @@ export function RankingList({
   // 初始加载和类型变化时重新加载
   useEffect(() => {
     fetchLeaderboard();
-  }, [type, currentUserId]);
+  }, [fetchLeaderboard]);
 
   // 获取类型标题
   const getTypeTitle = (type: string) => {

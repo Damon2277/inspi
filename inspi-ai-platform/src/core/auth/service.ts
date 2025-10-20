@@ -327,10 +327,12 @@ export async function changePassword(
   }
 }
 
-export default {
+const authService = {
   registerUser,
   loginUser,
   getUserProfile,
   updateUserProfile,
   changePassword,
 };
+
+export default authService;

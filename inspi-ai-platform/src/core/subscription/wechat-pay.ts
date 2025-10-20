@@ -554,11 +554,15 @@ export const WeChatPayUtils = {
   /**
    * 创建微信支付订单（前端预留桩实现）
    */
-  async createWeChatPayOrder({ amount, description, userId, clientIp }: CreateWeChatPayOrderOptions): Promise<CreateWeChatPayOrderResult> {
+  async createWeChatPayOrder(
+    { amount, description, userId, clientIp }: CreateWeChatPayOrderOptions,
+  ): Promise<CreateWeChatPayOrderResult> {
     const outTradeNo = this.generateOutTradeNo('PAY');
 
     return {
-      qrCodeUrl: `/api/wechat-pay/qrcode?order=${outTradeNo}&user=${encodeURIComponent(userId)}`,
+      qrCodeUrl: `/api/wechat-pay/qrcode?order=${outTradeNo}&user=${encodeURIComponent(
+        userId,
+      )}`,
       prepayId: `mock_prepay_${outTradeNo}`,
       outTradeNo,
     };

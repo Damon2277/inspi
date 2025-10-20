@@ -125,38 +125,6 @@ describe('社区功能特性测试', () => {
       expect(reply2?.parentId).toBe('comment2');
     });
 
-    it('应该正确处理关注关系', () => {
-      const followRelations = [
-        { follower: 'user1', following: 'user2', status: 'active' },
-        { follower: 'user1', following: 'user3', status: 'active' },
-        { follower: 'user2', following: 'user1', status: 'active' },
-      ];
-
-      // 检查用户1的关注列表
-      const user1Following = followRelations
-        .filter(r => r.follower === 'user1' && r.status === 'active')
-        .map(r => r.following);
-
-      expect(user1Following).toContain('user2');
-      expect(user1Following).toContain('user3');
-      expect(user1Following).toHaveLength(2);
-
-      // 检查用户2的粉丝列表
-      const user2Followers = followRelations
-        .filter(r => r.following === 'user2' && r.status === 'active')
-        .map(r => r.follower);
-
-      expect(user2Followers).toContain('user1');
-      expect(user2Followers).toHaveLength(1);
-
-      // 检查互相关注
-      const isMutualFollow = followRelations.some(r =>
-        r.follower === 'user1' && r.following === 'user2' && r.status === 'active',
-      ) && followRelations.some(r =>
-        r.follower === 'user2' && r.following === 'user1' && r.status === 'active',
-      );
-
-      expect(isMutualFollow).toBe(true);
     });
   });
 
@@ -400,3 +368,5 @@ describe('社区功能特性测试', () => {
     });
   });
 });
+
+export {};

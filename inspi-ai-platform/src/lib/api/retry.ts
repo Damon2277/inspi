@@ -2,7 +2,7 @@
  * API重试机制
  */
 
-import { logger } from '@/lib/logging/logger';
+import { logger } from '@/shared/utils/logger';
 import { ErrorCode } from '@/shared/errors/types';
 
 import { ApiError } from './client';
@@ -403,7 +403,7 @@ export function withCircuitBreaker<T extends any[], R>(
   };
 }
 
-export default {
+const retryUtilities = {
   RetryManager,
   CircuitBreaker,
   createRetryManager,
@@ -415,3 +415,5 @@ export default {
   LINEAR_RETRY_STRATEGY,
   FAST_RETRY_STRATEGY,
 };
+
+export default retryUtilities;

@@ -4,7 +4,7 @@
  */
 'use client';
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 
 import { transformGraphData } from '@/core/graph/d3-utils';
 import { D3GraphRenderer } from '@/core/graph/graph-renderer';
@@ -84,46 +84,22 @@ export function KnowledgeGraphViewer({
     : hookVisualizationData;
 
   // 合并配置
-  const mergedLayoutConfig: LayoutConfig = {
+  const mergedLayoutConfig: LayoutConfig = useMemo(() => ({
     ...DEFAULT_LAYOUT_CONFIG,
     width,
     height,
     ...layoutConfig,
-  };
+  }), [height, layoutConfig, width]);
 
-  const mergedVisualConfig: VisualConfig = {
+  const mergedVisualConfig: VisualConfig = useMemo(() => ({
     ...DEFAULT_VISUAL_CONFIG,
     ...visualConfig,
-  };
+  }), [visualConfig]);
 
-  const mergedInteractionConfig: InteractionConfig = {
+  const mergedInteractionConfig: InteractionConfig = useMemo(() => ({
     ...DEFAULT_INTERACTION_CONFIG,
     ...interactionConfig,
-  };
-
-  // 初始化渲染器
-  const initializeRenderer = useCallback(() => {
-    if (!containerRef.current || !currentVisualizationData) return;
-
-    // 清理现有渲染器
-    if (rendererRef.current) {
-      rendererRef.current.destroy();
-    }
-
-    // 创建新渲染器
-    rendererRef.current = new D3GraphRenderer({
-      container: containerRef.current,
-      layout: mergedLayoutConfig,
-      visual: mergedVisualConfig,
-      interaction: mergedInteractionConfig,
-      data: currentVisualizationData,
-    });
-
-    // 绑定事件处理器
-    bindEventHandlers();
-
-    setIsInitialized(true);
-  }, [currentVisualizationData, mergedLayoutConfig, mergedVisualConfig, mergedInteractionConfig]);
+  }), [interactionConfig]);
 
   // 绑定事件处理器
   const bindEventHandlers = useCallback(() => {
@@ -168,7 +144,32 @@ export function KnowledgeGraphViewer({
         onSelectionChange({ nodes: [], edges: [] });
       }
     });
-  }, [onNodeClick, onNodeDoubleClick, onEdgeClick, onSelectionChange]);
+  }, [onEdgeClick, onNodeClick, onNodeDoubleClick, onSelectionChange]);
+
+  // 初始化渲染器
+  const initializeRenderer = useCallback(() => {
+    if (!containerRef.current || !currentVisualizationData) return;
+
+    // 清理现有渲染器
+    if (rendererRef.current) {
+      rendererRef.current.destroy();
+    }
+
+    // 创建新渲染器
+    rendererRef.current = new D3GraphRenderer({
+      container: containerRef.current,
+      layout: mergedLayoutConfig,
+      visual: mergedVisualConfig,
+      interaction: mergedInteractionConfig,
+      data: currentVisualizationData,
+    });
+
+    // 绑定事件处理器
+    bindEventHandlers();
+
+    setIsInitialized(true);
+  }, [bindEventHandlers, currentVisualizationData, mergedInteractionConfig, mergedLayoutConfig, mergedVisualConfig]);
+
 
   // 更新渲染器数据
   const updateRenderer = useCallback(() => {

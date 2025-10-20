@@ -22,7 +22,12 @@ type DailyQuotaType = 'create' | 'reuse' | 'export';
 export interface QuotaDataSource {
   getDailyUsage(userId: string, type: DailyQuotaType, isoDate: string): Promise<number>;
   getTotalGraphNodes(userId: string): Promise<number>;
-  consumeQuota(input: { userId: string; type: QuotaType; amount: number; subscriptionId?: string | null }): Promise<boolean>;
+  consumeQuota(input: {
+    userId: string;
+    type: QuotaType;
+    amount: number;
+    subscriptionId?: string | null;
+  }): Promise<boolean>;
   resetDailyQuotas(userId: string): Promise<boolean>;
 }
 
@@ -77,14 +82,19 @@ export class EnhancedQuotaChecker {
     options: EnhancedQuotaCheckerOptions = {},
   ) {
     const { dataSource, dataSourceOptions } = options;
-    this.dataSource = dataSource ?? (dataSourceOptions ? createDefaultQuotaDataSource(dataSourceOptions) : defaultQuotaDataSource);
+    this.dataSource = dataSource
+      ?? (dataSourceOptions
+        ? createDefaultQuotaDataSource(dataSourceOptions)
+        : defaultQuotaDataSource);
   }
 
   /**
    * 检查指定类型的配额
    */
   async checkQuota(type: QuotaType, amount: number = 1): Promise<QuotaCheckResult> {
-    const requestedAmount = Number.isFinite(amount) && amount > 0 ? amount : 0;
+    const requestedAmount = Number.isFinite(amount) && amount > 0
+      ? amount
+      : 0;
     // 获取用户配额限制
     const quotaLimits = this.getQuotaLimits();
     const usage = await this.getQuotaUsage(type, quotaLimits);
