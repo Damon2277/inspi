@@ -115,7 +115,15 @@ export function SquareReuseActions({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end', minWidth: '240px' }}>
       <LoginPromptComponent />
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          flexWrap: 'wrap',
+          justifyContent: 'flex-end',
+        }}
+      >
         <span style={{
           fontSize: '14px',
           color: 'var(--gray-500)',
@@ -134,7 +142,12 @@ export function SquareReuseActions({
         <button
           type="button"
           className="modern-btn modern-btn-primary"
-          style={{ whiteSpace: 'nowrap', padding: '10px 20px' }}
+          style={{
+            whiteSpace: 'nowrap',
+            padding: '10px 20px',
+            minWidth: '110px',
+            justifyContent: 'center',
+          }}
           onClick={handleReuse}
           disabled={hasUserReused || actionState === 'reusing'}
         >
@@ -144,7 +157,12 @@ export function SquareReuseActions({
           <button
             type="button"
             className="modern-btn modern-btn-ghost"
-            style={{ whiteSpace: 'nowrap', padding: '10px 16px' }}
+            style={{
+              whiteSpace: 'nowrap',
+              padding: '10px 16px',
+              minWidth: '110px',
+              justifyContent: 'center',
+            }}
             onClick={handleCancelReuse}
             disabled={actionState === 'cancelling'}
           >

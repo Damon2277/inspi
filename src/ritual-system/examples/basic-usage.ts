@@ -130,26 +130,51 @@ export async function demonstrateRitualSystem() {
     reason: createResult.reason
   });
 
-  // 示例4: 分享作品
-  console.log('\n🚀 示例4: 分享作品');
-  const shareAction: UserAction = {
-    type: 'content_shared',
+  // 示例4A: 分享到微博
+  console.log('\n🚀 示例4A: 分享到微博');
+  const shareWeiboAction: UserAction = {
+    type: 'content_shared_weibo',
     timestamp: Date.now(),
     userId: 'user-123',
     context: {
       contentType: 'artwork',
-      platform: 'social',
+      platform: 'weibo',
       visibility: 'public'
     }
   };
 
-  const shareResult = await ritualSystem.processUserAction(exampleUser, shareAction);
-  console.log('作品分享仪式感检测结果:', {
-    shouldTrigger: shareResult.shouldTrigger,
-    ritualType: shareResult.ritualType,
-    intensity: shareResult.intensity,
-    confidence: `${Math.round(shareResult.confidence * 100)}%`,
-    reason: shareResult.reason
+  const shareWeiboResult = await ritualSystem.processUserAction(exampleUser, shareWeiboAction);
+  console.log('微博分享仪式感检测结果:', {
+    shouldTrigger: shareWeiboResult.shouldTrigger,
+    ritualType: shareWeiboResult.ritualType,
+    intensity: shareWeiboResult.intensity,
+    confidence: `${Math.round(shareWeiboResult.confidence * 100)}%`,
+    reason: shareWeiboResult.reason,
+    shareChannel: shareWeiboResult.shareChannel
+  });
+
+  // 示例4B: 分享给学生邮件
+  console.log('\n📬 示例4B: 邮件群发给学生');
+  const shareEmailAction: UserAction = {
+    type: 'content_shared_email',
+    timestamp: Date.now(),
+    userId: 'user-123',
+    context: {
+      contentType: 'lesson-plan',
+      platform: 'email',
+      recipients: 32,
+      tone: 'encouraging'
+    }
+  };
+
+  const shareEmailResult = await ritualSystem.processUserAction(exampleUser, shareEmailAction);
+  console.log('邮件分享仪式感检测结果:', {
+    shouldTrigger: shareEmailResult.shouldTrigger,
+    ritualType: shareEmailResult.ritualType,
+    intensity: shareEmailResult.intensity,
+    confidence: `${Math.round(shareEmailResult.confidence * 100)}%`,
+    reason: shareEmailResult.reason,
+    shareChannel: shareEmailResult.shareChannel
   });
 
   // 示例5: 等级提升

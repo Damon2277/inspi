@@ -29,7 +29,25 @@ export function QuotaDisplay() {
       const data = await response.json();
 
       if (data.success) {
-        setQuotaStatus(data.data);
+        // Transform API response to match QuotaStatus format
+        const transformedData: QuotaStatus = {
+          status: data.data.plan === 'free' ? 'free' : 'subscribed',
+          quota: {
+            type: 'monthly',
+            used: data.data.used || 0,
+            remaining: data.data.remaining || data.data.limit || 1000,
+            total: data.data.limit || 1000,
+          },
+          subscription:
+            data.data.plan !== 'free'
+              ? {
+                  status: 'active',
+                  nextBillingAt: data.data.resetDate,
+                  autoRenew: true,
+                }
+              : undefined,
+        };
+        setQuotaStatus(transformedData);
       }
     } catch (error) {
       console.error('Fetch quota status error:', error);

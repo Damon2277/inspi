@@ -517,7 +517,7 @@ export class PlanFeatureMapper {
 export class PlanQuotaMapper {
   private static tierQuotas: Record<UserTier, PlanQuotas> = {
     free: {
-      dailyCreateQuota: 3,
+      dailyCreateQuota: 5,
       dailyReuseQuota: 1,
       maxExportsPerDay: 10,
       maxGraphNodes: 50,

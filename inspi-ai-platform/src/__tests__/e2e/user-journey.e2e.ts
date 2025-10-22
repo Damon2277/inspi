@@ -51,7 +51,7 @@ test.describe('用户完整旅程测试', () => {
 
     // 6. 检查免费用户的配额显示
     await expect(page.locator('[data-testid="quota-display"]')).toBeVisible();
-    await expect(page.locator('[data-testid="create-quota"]')).toContainText('3'); // 免费用户每日3次
+    await expect(page.locator('[data-testid="create-quota"]')).toContainText('5'); // 免费用户每日5次
 
     // 7. 点击创建作品
     await page.click('[data-testid="create-work-button"]');

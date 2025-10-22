@@ -75,7 +75,7 @@ function LoginPageContent() {
               <ul className="login-prompt-benefits-list">
                 <li className="login-prompt-benefit">
                   <span className="login-prompt-benefit-icon" aria-hidden="true">✔</span>
-                  <span className="login-prompt-benefit-text">每日3次免费创建额度</span>
+                  <span className="login-prompt-benefit-text">每日5次免费创建额度</span>
                 </li>
                 <li className="login-prompt-benefit">
                   <span className="login-prompt-benefit-icon" aria-hidden="true">✔</span>

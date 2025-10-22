@@ -2,11 +2,26 @@
 
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import Image from 'next/image';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { DesktopConfirmDialog } from '@/components/desktop/DesktopModal';
 import { useToast } from '@/shared/hooks';
 import { useAuth } from '@/shared/hooks/useAuth';
+
+interface CommentAttachment {
+  id: string;
+  name: string;
+  size: number;
+  type?: string;
+  previewUrl?: string;
+}
+
+interface CommentCategory {
+  value: string;
+  label: string;
+  hint?: string;
+}
 
 interface Comment {
   id: string;
@@ -21,6 +36,22 @@ interface Comment {
   replies: Comment[];
   parentId?: string;
   isLiked?: boolean;
+  category?: CommentCategory;
+  expectation?: string;
+  attachments?: CommentAttachment[];
+}
+
+interface CommentFormConfig {
+  categories?: CommentCategory[];
+  placeholder?: string;
+  requireCategory?: boolean;
+  allowAttachment?: boolean;
+  displayExpectation?: boolean;
+  expectationLabel?: string;
+  expectationPlaceholder?: string;
+  maxAttachments?: number;
+  maxAttachmentSizeMb?: number;
+  defaultCategory?: string;
 }
 
 interface CommentSystemProps {
@@ -28,6 +59,7 @@ interface CommentSystemProps {
   workTitle?: string;
   onCommentCountChange?: (count: number) => void;
   initialComments?: Comment[];
+  formConfig?: CommentFormConfig;
 }
 
 function countComments(commentList: Comment[]): number {
@@ -36,10 +68,23 @@ function countComments(commentList: Comment[]): number {
   }, 0);
 }
 
-export function CommentSystem({ workId, workTitle, onCommentCountChange, initialComments }: CommentSystemProps) {
+export function CommentSystem({
+  workId,
+  workTitle,
+  onCommentCountChange,
+  initialComments,
+  formConfig,
+}: CommentSystemProps) {
   const { user, isAuthenticated } = useAuth();
   const [comments, setComments] = useState<Comment[]>(() => initialComments ?? []);
   const [newComment, setNewComment] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    formConfig?.defaultCategory ?? formConfig?.categories?.[0]?.value ?? '',
+  );
+  const [expectation, setExpectation] = useState('');
+  const [attachments, setAttachments] = useState<CommentAttachment[]>([]);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -50,6 +95,23 @@ export function CommentSystem({ workId, workTitle, onCommentCountChange, initial
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (formConfig?.categories && formConfig.categories.length > 0) {
+      const defaultValue = formConfig.defaultCategory ?? formConfig.categories[0].value;
+      setSelectedCategory(defaultValue);
+    } else {
+      setSelectedCategory('');
+    }
+  }, [formConfig?.categories, formConfig?.defaultCategory]);
+
+  const maxAttachments = formConfig?.maxAttachments ?? 3;
+  const maxAttachmentSizeMb = formConfig?.maxAttachmentSizeMb ?? 5;
+
+  const getCategoryByValue = useCallback(
+    (value: string | undefined) => formConfig?.categories?.find(category => category.value === value),
+    [formConfig?.categories],
+  );
 
   // 加载评论
   const loadComments = useCallback(async () => {
@@ -112,6 +174,79 @@ export function CommentSystem({ workId, workTitle, onCommentCountChange, initial
     }
   }, [initialComments, onCommentCountChange, workId]);
 
+  const formatFileSize = useCallback((size: number) => {
+    if (!size) return '0B';
+    if (size < 1024) return `${size}B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)}KB`;
+    return `${(size / (1024 * 1024)).toFixed(1)}MB`;
+  }, []);
+
+  const handleAttachmentChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!formConfig?.allowAttachment) return;
+
+    const fileList = event.target.files;
+    if (!fileList || fileList.length === 0) return;
+
+    const remainingSlots = maxAttachments - attachments.length;
+    if (remainingSlots <= 0) {
+      setUploadError(`最多上传${maxAttachments}张截图`);
+      event.target.value = '';
+      return;
+    }
+
+    const files = Array.from(fileList).slice(0, remainingSlots);
+    const oversizeFile = files.find(file => file.size > maxAttachmentSizeMb * 1024 * 1024);
+    if (oversizeFile) {
+      setUploadError(`文件 ${oversizeFile.name} 超过 ${maxAttachmentSizeMb}MB 限制`);
+      event.target.value = '';
+      return;
+    }
+
+    try {
+      const processed = await Promise.all(files.map(file => new Promise<CommentAttachment>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          resolve({
+            id: `${Date.now()}-${file.name}`,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            previewUrl: typeof reader.result === 'string' ? reader.result : undefined,
+          });
+        };
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      })));
+
+      setAttachments(prev => [...prev, ...processed]);
+      setUploadError(null);
+    } catch (error) {
+      console.error('上传附件失败:', error);
+      setUploadError('截图上传失败，请重试');
+    } finally {
+      event.target.value = '';
+    }
+  }, [attachments.length, formConfig?.allowAttachment, maxAttachmentSizeMb, maxAttachments]);
+
+  const handleRemoveAttachment = useCallback((attachmentId: string) => {
+    setAttachments(prev => prev.filter(attachment => attachment.id !== attachmentId));
+    setUploadError(null);
+  }, []);
+
+  const resetFormState = useCallback(() => {
+    setNewComment('');
+    setExpectation('');
+    setAttachments([]);
+    setUploadError(null);
+    setFormError(null);
+    if (formConfig?.categories && formConfig.categories.length > 0) {
+      const defaultValue = formConfig.defaultCategory ?? formConfig.categories[0].value;
+      setSelectedCategory(defaultValue);
+    } else {
+      setSelectedCategory('');
+    }
+  }, [formConfig?.categories, formConfig?.defaultCategory]);
+
   useEffect(() => {
     loadComments();
   }, [loadComments]);
@@ -125,27 +260,42 @@ export function CommentSystem({ workId, workTitle, onCommentCountChange, initial
 
   // 提交新评论
   const handleSubmitComment = async () => {
-    if (!newComment.trim() || !isAuthenticated) return;
+    if (!isAuthenticated) return;
+
+    if (formConfig?.requireCategory && !selectedCategory) {
+      setFormError('请选择反馈类型');
+      return;
+    }
+
+    if (!newComment.trim()) {
+      setFormError('请填写具体描述内容');
+      return;
+    }
 
     setIsSubmitting(true);
+    setFormError(null);
     try {
       // 模拟API调用
       await new Promise(resolve => setTimeout(resolve, 500));
 
+      const categoryInfo = selectedCategory ? getCategoryByValue(selectedCategory) : undefined;
       const newCommentObj: Comment = {
         id: Date.now().toString(),
         workId,
         userId: user?._id || 'current-user',
         userName: user?.name || '当前用户',
         userAvatar: '👤',
-        content: newComment,
+        content: newComment.trim(),
         createdAt: new Date().toISOString(),
         likes: 0,
         replies: [],
+        category: categoryInfo ? { ...categoryInfo } : undefined,
+        expectation: formConfig?.displayExpectation && expectation.trim() ? expectation.trim() : undefined,
+        attachments: attachments.length > 0 ? attachments.map(item => ({ ...item })) : undefined,
       };
 
       setComments(prev => [newCommentObj, ...prev]);
-      setNewComment('');
+      resetFormState();
       onCommentCountChange?.(countComments([newCommentObj, ...comments]));
     } catch (error) {
       console.error('发表评论失败:', error);
@@ -275,6 +425,8 @@ export function CommentSystem({ workId, workTitle, onCommentCountChange, initial
     }
   });
 
+  const submitDisabled = isSubmitting || !newComment.trim() || (formConfig?.requireCategory && !selectedCategory);
+
   // 渲染单条评论
   const renderComment = (comment: Comment, isReply: boolean = false) => (
     <div
@@ -333,6 +485,39 @@ export function CommentSystem({ workId, workTitle, onCommentCountChange, initial
           )}
         </div>
 
+        {(comment.category || comment.expectation) && (
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '12px',
+            marginBottom: '12px',
+          }}>
+            {comment.category && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: '4px 10px',
+                borderRadius: '999px',
+                background: 'var(--primary-50)',
+                color: 'var(--primary-700)',
+                fontSize: '12px',
+                fontWeight: 600,
+              }}>
+                {comment.category.label}
+              </span>
+            )}
+            {comment.expectation && (
+              <span style={{
+                fontSize: '12px',
+                color: 'var(--gray-600)',
+                lineHeight: 1.6,
+              }}>
+                期望：{comment.expectation}
+              </span>
+            )}
+          </div>
+        )}
+
         {editingId === comment.id ? (
           <div style={{ marginBottom: '12px' }}>
             <textarea
@@ -382,6 +567,60 @@ export function CommentSystem({ workId, workTitle, onCommentCountChange, initial
           }}>
             {comment.content}
           </p>
+        )}
+
+        {comment.attachments && comment.attachments.length > 0 && (
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '12px',
+            marginBottom: '12px',
+          }}>
+            {comment.attachments.map(attachment => (
+              <div
+                key={attachment.id}
+                style={{
+                  width: '120px',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--gray-200)',
+                  overflow: 'hidden',
+                  background: 'white',
+                  boxShadow: '0 4px 8px rgba(15, 23, 42, 0.08)',
+                }}
+              >
+                {attachment.previewUrl ? (
+                  <Image
+                    src={attachment.previewUrl}
+                    alt={attachment.name}
+                    width={120}
+                    height={80}
+                    unoptimized
+                    style={{ width: '100%', height: '80px', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <div style={{
+                    padding: '16px',
+                    textAlign: 'center',
+                    fontSize: '12px',
+                    color: 'var(--gray-600)',
+                  }}>
+                    {attachment.name}
+                  </div>
+                )}
+                <div style={{ padding: '8px' }}>
+                  <p style={{
+                    fontSize: '12px',
+                    color: 'var(--gray-700)',
+                    marginBottom: '4px',
+                    wordBreak: 'break-word',
+                  }}>
+                    {attachment.name}
+                  </p>
+                  <p style={{ fontSize: '11px', color: 'var(--gray-500)' }}>{formatFileSize(attachment.size ?? 0)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
 
         <div style={{
@@ -578,13 +817,196 @@ export function CommentSystem({ workId, workTitle, onCommentCountChange, initial
           background: 'var(--gray-50)',
           borderRadius: 'var(--radius-md)',
         }}>
+          {formConfig?.categories && formConfig.categories.length > 0 && (
+            <div style={{ marginBottom: '16px' }}>
+              <span style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: 'var(--gray-700)',
+                marginBottom: '6px',
+              }}>
+                问题类型
+              </span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {formConfig.categories.map(category => {
+                  const isActive = selectedCategory === category.value;
+                  return (
+                    <button
+                      key={category.value}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategory(category.value);
+                        setFormError(null);
+                      }}
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: 'var(--radius-md)',
+                        border: `1px solid ${isActive ? 'var(--primary-500)' : 'var(--gray-300)'}`,
+                        background: isActive ? 'var(--primary-50)' : 'white',
+                        color: isActive ? 'var(--primary-700)' : 'var(--gray-700)',
+                        minWidth: '120px',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <span style={{ fontWeight: 600, fontSize: '13px' }}>{category.label}</span>
+                      {category.hint && (
+                        <span style={{
+                          display: 'block',
+                          fontSize: '11px',
+                          color: 'var(--gray-500)',
+                          marginTop: '4px',
+                          lineHeight: 1.4,
+                        }}>
+                          {category.hint}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {formConfig?.displayExpectation && (
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: 'var(--gray-700)',
+                marginBottom: '6px',
+              }}>
+                {formConfig.expectationLabel ?? '期望结果'}
+              </label>
+              <input
+                type="text"
+                value={expectation}
+                onChange={(e) => {
+                  setExpectation(e.target.value);
+                  setFormError(null);
+                }}
+                placeholder={formConfig.expectationPlaceholder ?? '希望新增或优化哪些能力？'}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '1px solid var(--gray-300)',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '14px',
+                }}
+              />
+            </div>
+          )}
+
+          {formConfig?.allowAttachment && (
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: 'var(--gray-700)',
+                marginBottom: '6px',
+              }}>
+                截图上传
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleAttachmentChange}
+                  style={{ fontSize: '13px' }}
+                />
+                <span style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
+                  支持 jpg/png，最多 {maxAttachments} 张，每张不超过 {maxAttachmentSizeMb}MB
+                </span>
+              </div>
+              {uploadError && (
+                <p style={{ color: 'var(--danger-600)', fontSize: '12px', marginTop: '8px' }}>{uploadError}</p>
+              )}
+              {attachments.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '12px' }}>
+                  {attachments.map(attachment => (
+                    <div
+                      key={attachment.id}
+                      style={{
+                        position: 'relative',
+                        width: '120px',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--gray-200)',
+                        background: 'white',
+                        overflow: 'hidden',
+                        boxShadow: '0 4px 8px rgba(15, 23, 42, 0.08)',
+                      }}
+                    >
+                      {attachment.previewUrl ? (
+                        <Image
+                          src={attachment.previewUrl}
+                          alt={attachment.name}
+                          width={120}
+                          height={80}
+                          unoptimized
+                          style={{ width: '100%', height: '80px', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <div style={{
+                          padding: '16px',
+                          textAlign: 'center',
+                          fontSize: '12px',
+                          color: 'var(--gray-600)',
+                        }}>
+                          {attachment.name}
+                        </div>
+                      )}
+                      <div style={{ padding: '8px', background: 'white' }}>
+                        <p style={{
+                          fontSize: '12px',
+                          color: 'var(--gray-700)',
+                          marginBottom: '4px',
+                          wordBreak: 'break-word',
+                        }}>
+                          {attachment.name}
+                        </p>
+                        <p style={{ fontSize: '11px', color: 'var(--gray-500)' }}>{formatFileSize(attachment.size)}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAttachment(attachment.id)}
+                        aria-label="移除截图"
+                        style={{
+                          position: 'absolute',
+                          top: '6px',
+                          right: '6px',
+                          width: '22px',
+                          height: '22px',
+                          borderRadius: '50%',
+                          border: 'none',
+                          background: 'rgba(15, 23, 42, 0.75)',
+                          color: 'white',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <textarea
             value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder={`对「${workTitle || '这个作品'}」有什么想说的...`}
+            onChange={(e) => {
+              setNewComment(e.target.value);
+              if (formError) setFormError(null);
+            }}
+            placeholder={formConfig?.placeholder ?? `对「${workTitle || '这个作品'}」有什么想说的...`}
             style={{
               width: '100%',
-              minHeight: '100px',
+              minHeight: '120px',
               padding: '12px',
               border: '1px solid var(--gray-300)',
               borderRadius: 'var(--radius-md)',
@@ -592,6 +1014,9 @@ export function CommentSystem({ workId, workTitle, onCommentCountChange, initial
               resize: 'vertical',
             }}
           />
+          {formError && (
+            <p style={{ color: 'var(--danger-600)', fontSize: '13px', marginTop: '8px' }}>{formError}</p>
+          )}
           <div style={{
             display: 'flex',
             justifyContent: 'flex-end',
@@ -599,10 +1024,10 @@ export function CommentSystem({ workId, workTitle, onCommentCountChange, initial
           }}>
             <button
               onClick={handleSubmitComment}
-              disabled={!newComment.trim() || isSubmitting}
+              disabled={submitDisabled}
               className="modern-btn modern-btn-primary"
             >
-              {isSubmitting ? '发表中...' : '发表评论'}
+              {isSubmitting ? '发表中...' : '提交反馈'}
             </button>
           </div>
         </div>

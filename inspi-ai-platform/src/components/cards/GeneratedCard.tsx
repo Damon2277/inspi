@@ -2,12 +2,17 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DEFAULT_EXPORT_DIMENSIONS } from '@/lib/export/html-to-image';
+import {
+  copyImageToClipboard,
+  DEFAULT_EXPORT_DIMENSIONS,
+  downloadImage,
+  exportElementToImage,
+  exportPresets,
+} from '@/lib/export/html-to-image';
+import { shareToSocial, generateShareLink, trackShareEvent } from '@/lib/share/share-service';
 import type { TeachingCard, VisualizationSpec, VisualizationTheme } from '@/shared/types/teaching';
 
 import { SimpleCardEditor } from './SimpleCardEditor';
-import { exportElementToImage, downloadImage, copyImageToClipboard, exportPresets } from '@/lib/export/html-to-image';
-import { shareToSocial, generateShareLink, trackShareEvent } from '@/lib/share/share-service';
 
 interface GeneratedCardProps {
   card: TeachingCard;
@@ -223,7 +228,6 @@ export function GeneratedCard({
 
   const handleShare = async (platform: 'wechat') => {
     setIsExporting(true);
-    let prepared = false;
 
     try {
       const shareUrl = await generateShareLink(card.id, card);
@@ -241,7 +245,7 @@ export function GeneratedCard({
     } catch (error) {
       showFeedback('error', `分享失败：${error instanceof Error ? error.message : '未知错误'}`);
     } finally {
-      if (prepared && finalizeExport) {
+      if (finalizeExport) {
         finalizeExport();
       }
       setIsExporting(false);
@@ -627,7 +631,7 @@ export function GeneratedCard({
     }
     const textLength = cardContent.replace(/<[^>]+>/g, '').length;
     return textLength > 320;
-  }, [card.type, cardContent]);
+  }, [card.visual, cardContent]);
 
   const renderCardSurface = (forExport: boolean = false) => {
     const effectivePadding = 32;
@@ -722,15 +726,16 @@ export function GeneratedCard({
           </div>
         )}
         {!forExport && (
-          <div 
+          <div
             ref={moreActionsRef}
             style={{
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            display: 'flex',
-            gap: '8px',
-          }}>
+              position: 'absolute',
+              top: '20px',
+              right: '20px',
+              display: 'flex',
+              gap: '8px',
+            }}
+          >
             <button
               type="button"
               onClick={(e) => {
@@ -971,17 +976,19 @@ export function GeneratedCard({
             </div>
           </div>
         ) : (
-          <div style={{ 
-            position: 'absolute',
-            bottom: effectivePadding,
-            right: effectivePadding,
-            fontSize: '10px',
-            color: '#cbd5e1',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
-            opacity: 0.7,
-          }}>
+          <div
+            style={{
+              position: 'absolute',
+              bottom: effectivePadding,
+              right: effectivePadding,
+              fontSize: '10px',
+              color: '#cbd5e1',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              opacity: 0.7,
+            }}
+          >
             <span>AI生成</span>
           </div>
         )}

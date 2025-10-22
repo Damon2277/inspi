@@ -589,38 +589,56 @@ export function WorkList({
                       </div>
                       <span>•</span>
                       <span>{formatDate(work.publishedAt)}</span>
-                      <span>•</span>
-                      <span>{work.views} 浏览</span>
-                      <span>•</span>
-                      <span>{work.likesCount} 点赞</span>
-                      <span>•</span>
-                      <span>{work.reuseCount} 复用</span>
                     </div>
 
-                    {user && (
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleLike(work._id)}
-                          className={`p-1 rounded-full hover:bg-gray-100 ${
-                            work.userInteractions?.isLiked ? 'text-red-500' : 'text-gray-400'
-                          }`}
+                    <div className="flex items-center text-sm text-gray-500 space-x-3">
+                      <div className="flex items-center space-x-1">
+                        <svg
+                          className="w-4 h-4 text-gray-400"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
                         >
-                          <svg className="w-4 h-4" fill={work.userInteractions?.isLiked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => handleBookmark(work._id)}
-                          className={`p-1 rounded-full hover:bg-gray-100 ${
-                            work.userInteractions?.isBookmarked ? 'text-yellow-500' : 'text-gray-400'
-                          }`}
-                        >
-                          <svg className="w-4 h-4" fill={work.userInteractions?.isBookmarked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                          </svg>
-                        </button>
+                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                        </svg>
+                        <span>{work.likesCount}</span>
                       </div>
-                    )}
+                      <div className="flex items-center space-x-1">
+                        <svg
+                          className="w-4 h-4 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 16h14M5 12h14" />
+                        </svg>
+                        <span>{work.reuseCount}</span>
+                      </div>
+
+                      {user && (
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleLike(work._id)}
+                            className={`p-1 rounded-full hover:bg-gray-100 ${
+                              work.userInteractions?.isLiked ? 'text-red-500' : 'text-gray-400'
+                            }`}
+                          >
+                            <svg className="w-4 h-4" fill={work.userInteractions?.isLiked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleBookmark(work._id)}
+                            className={`p-1 rounded-full hover:bg-gray-100 ${
+                              work.userInteractions?.isBookmarked ? 'text-yellow-500' : 'text-gray-400'
+                            }`}
+                          >
+                            <svg className="w-4 h-4" fill={work.userInteractions?.isBookmarked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </>

@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import React, { useCallback, useEffect, useMemo, useState, Suspense, lazy } from 'react';
 
-import { QuotaDisplay } from './QuotaDisplay';
-import { SubscriptionModal } from './SubscriptionModal';
+// Lazy load heavy components
+const QuotaDisplay = lazy(() => import('./QuotaDisplay').then(module => ({ default: module.QuotaDisplay })));
+const SubscriptionModal = lazy(() => import('./SubscriptionModal').then(module => ({ default: module.SubscriptionModal })));
 
 interface SubscriptionInfo {
   status: 'free' | 'subscribed';
@@ -23,35 +25,143 @@ interface SubscriptionInfo {
 
 interface SubscriptionManagementProps {
   variant?: 'page' | 'embedded';
+  prefetchedData?: SubscriptionInfo | null;
 }
 
-export function SubscriptionManagement({ variant = 'page' }: SubscriptionManagementProps) {
+// Skeleton loader component
+function SubscriptionSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="h-8 bg-gray-200 rounded w-48 mb-4"></div>
+      <div className="h-4 bg-gray-200 rounded w-96 mb-8"></div>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="h-32 bg-gray-200 rounded-xl"></div>
+          <div className="h-48 bg-gray-200 rounded-xl"></div>
+        </div>
+        <div className="h-64 bg-gray-200 rounded-xl"></div>
+      </div>
+    </div>
+  );
+}
+
+// Error boundary for subscription loading
+class SubscriptionErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-red-600 mb-4">订阅信息加载失败</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            重新加载
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export function SubscriptionManagementOptimized({
+  variant = 'page',
+  prefetchedData = null,
+}: SubscriptionManagementProps) {
+  const router = useRouter();
   const isEmbedded = variant === 'embedded';
-  const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo | null>(prefetchedData);
+  const [loading, setLoading] = useState(!prefetchedData);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  const fetchSubscriptionInfo = useCallback(async () => {
+  const fetchSubscriptionInfo = useCallback(async (isRetry = false) => {
+    // Skip if we have prefetched data and this is the initial load
+    if (prefetchedData && !isRetry) {
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await fetch('/api/subscription/status');
+
+      // Add abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+      const response = await fetch('/api/subscription/status', {
+        signal: controller.signal,
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
 
       if (data.success) {
         setSubscriptionInfo(data.data);
+        setRetryCount(0); // Reset retry count on success
+      } else {
+        throw new Error(data.error || 'Failed to load subscription info');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Fetch subscription info error:', error);
+
+      // Implement exponential backoff retry
+      if (retryCount < 3 && error.name !== 'AbortError') {
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 5000);
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+          fetchSubscriptionInfo(true);
+        }, delay);
+      } else {
+        // Fallback to free tier on persistent errors
+        setSubscriptionInfo({
+          status: 'free',
+          quota: {
+            type: 'daily',
+            used: 0,
+            remaining: 5,
+            total: 5,
+          },
+        });
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [prefetchedData, retryCount]);
 
   useEffect(() => {
     fetchSubscriptionInfo();
+
+    // Set up periodic refresh every 5 minutes
+    const refreshInterval = setInterval(() => {
+      fetchSubscriptionInfo(true);
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(refreshInterval);
   }, [fetchSubscriptionInfo]);
 
   const handleCancelSubscription = useCallback(async () => {
@@ -59,23 +169,39 @@ export function SubscriptionManagement({ variant = 'page' }: SubscriptionManagem
     setFeedback(null);
 
     try {
-      const response = await fetch('/api/subscription/cancel', { method: 'POST' });
+      const response = await fetch('/api/subscription/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
 
       if (data.success) {
         setFeedback({ type: 'success', message: data.data.message });
-        await fetchSubscriptionInfo();
+        // Refresh subscription info after cancel
+        await fetchSubscriptionInfo(true);
+
+        // Refresh the page after 2 seconds
+        setTimeout(() => {
+          router.refresh();
+        }, 2000);
       } else {
         setFeedback({ type: 'error', message: data.error || '取消失败，请稍后重试' });
       }
     } catch (error) {
       console.error('Cancel subscription error:', error);
-      setFeedback({ type: 'error', message: '操作失败，请稍后重试' });
+      setFeedback({ type: 'error', message: '操作失败，请检查网络连接后重试' });
     } finally {
       setCancelLoading(false);
       setShowCancelConfirm(false);
     }
-  }, [fetchSubscriptionInfo]);
+  }, [fetchSubscriptionInfo, router]);
 
   const isSubscribed = subscriptionInfo?.status === 'subscribed';
 
@@ -94,26 +220,7 @@ export function SubscriptionManagement({ variant = 'page' }: SubscriptionManagem
   }, [isSubscribed]);
 
   if (loading) {
-    const loader = (
-      <div className="flex flex-col items-center gap-3 text-slate-500">
-        <span className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-500" aria-hidden />
-        加载订阅信息...
-      </div>
-    );
-
-    if (isEmbedded) {
-      return (
-        <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-slate-200 bg-white">
-          {loader}
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center bg-slate-50">
-        {loader}
-      </div>
-    );
+    return <SubscriptionSkeleton />;
   }
 
   const subscriptionActions = isSubscribed && subscriptionInfo?.subscription ? (
@@ -127,7 +234,7 @@ export function SubscriptionManagement({ variant = 'page' }: SubscriptionManagem
           {subscriptionInfo.subscription.nextBillingAt ? (
             <p>
               <span className="font-medium text-slate-800">下次扣款：</span>
-              {new Date(subscriptionInfo.subscription.nextBillingAt).toLocaleDateString()}
+              {new Date(subscriptionInfo.subscription.nextBillingAt).toLocaleDateString('zh-CN')}
             </p>
           ) : null}
         </div>
@@ -135,7 +242,7 @@ export function SubscriptionManagement({ variant = 'page' }: SubscriptionManagem
           {subscriptionInfo.subscription.currentPeriodEnd ? (
             <p>
               <span className="font-medium text-slate-800">周期结束：</span>
-              {new Date(subscriptionInfo.subscription.currentPeriodEnd).toLocaleDateString()}
+              {new Date(subscriptionInfo.subscription.currentPeriodEnd).toLocaleDateString('zh-CN')}
             </p>
           ) : null}
         </div>
@@ -235,7 +342,9 @@ export function SubscriptionManagement({ variant = 'page' }: SubscriptionManagem
             </div>
           </header>
 
-          <QuotaDisplay />
+          <Suspense fallback={<div className="h-32 bg-gray-100 rounded animate-pulse"></div>}>
+            <QuotaDisplay />
+          </Suspense>
 
           {subscriptionActions}
         </section>
@@ -248,57 +357,49 @@ export function SubscriptionManagement({ variant = 'page' }: SubscriptionManagem
               每月最高 150 次生成额度，适配高密度备课场景。
             </li>
             <li>
-              <span className="font-medium text-slate-800">复用/导出：</span>
-              一键复用内容，生成 PPT/讲义，更快完成课堂准备。
+              <span className="font-medium text-slate-800">无限复用：</span>
+              不限次数保存优质教案，打造个人教学资源库。
             </li>
             <li>
-              <span className="font-medium text-slate-800">课堂展示：</span>
-              支持卡片串联播放，适配教室投屏与大屏展示。
-            </li>
-            <li>
-              <span className="font-medium text-slate-800">服务支持：</span>
-              专属服务通道，及时响应教学场景反馈。
+              <span className="font-medium text-slate-800">批量导出：</span>
+              支持 Word/PDF 格式导出，满足各类备课需求。
             </li>
           </ul>
-          <div className="rounded-lg bg-slate-50 p-4 text-xs text-slate-500">
-            微信支付仅支持扫码订阅，扣款日前可随时取消，取消后当前周期仍可使用完额度。
-          </div>
         </aside>
       </div>
 
-      <section className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">常见问题</h3>
-        <div className="mt-4 space-y-3 text-sm text-slate-600">
-          <p>• 订阅随时可取消，当前周期结束前仍可使用全部功能。</p>
-          <p>• 额度会在每月账单日自动刷新，未使用部分不结转。</p>
-          <p>• 如需发票或企业采购，请通过客服渠道联系我们。</p>
-        </div>
-      </section>
-
-      <SubscriptionModal
-        isOpen={showSubscriptionModal}
-        onClose={() => setShowSubscriptionModal(false)}
-        onSuccess={fetchSubscriptionInfo}
-        currentQuota={subscriptionInfo?.quota}
-      />
+      {showSubscriptionModal ? (
+        <Suspense fallback={<div className="fixed inset-0 bg-black/50 z-50"></div>}>
+          <SubscriptionModal
+            isOpen={showSubscriptionModal}
+            onClose={() => setShowSubscriptionModal(false)}
+            onSuccess={async () => {
+              setShowSubscriptionModal(false);
+              await fetchSubscriptionInfo(true);
+            }}
+          />
+        </Suspense>
+      ) : null}
     </>
   );
 
   if (isEmbedded) {
     return (
-      <div className="flex flex-col gap-6">
-        {content}
-      </div>
+      <SubscriptionErrorBoundary>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6">
+          {content}
+        </div>
+      </SubscriptionErrorBoundary>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        {content}
+    <SubscriptionErrorBoundary>
+      <div className="min-h-[60vh] bg-slate-50 py-12 px-4">
+        <div className="mx-auto max-w-7xl">
+          {content}
+        </div>
       </div>
-    </div>
+    </SubscriptionErrorBoundary>
   );
 }
-
-export default SubscriptionManagement;

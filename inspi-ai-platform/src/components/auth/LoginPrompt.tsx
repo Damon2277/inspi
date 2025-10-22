@@ -60,7 +60,7 @@ export function LoginPrompt({
   const getOperationBenefits = (op: WriteOperation) => {
     const benefits = {
       create: [
-        '每日3次免费创建额度',
+        '每日5次免费创建额度',
         '四种专业卡片类型',
         '智能内容生成',
         '个人作品管理',

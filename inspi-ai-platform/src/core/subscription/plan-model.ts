@@ -122,7 +122,7 @@ export class PlanModel {
         monthlyPrice: 0,
         currency: 'CNY',
         quotas: {
-          dailyCreateQuota: 3,
+          dailyCreateQuota: 5,
           dailyReuseQuota: 1,
           maxExportsPerDay: 10,
           maxGraphNodes: 50,
@@ -137,7 +137,7 @@ export class PlanModel {
           useCases: ['产品体验', '简单创作', '学习使用'],
           limitations: ['配额限制', '功能受限', '无客服支持'],
           benefits: ['免费使用', '快速上手', '基础功能'],
-          comparisonPoints: ['每日3张卡片', '基础模板', '标准导出'],
+          comparisonPoints: ['每日5张卡片', '基础模板', '标准导出'],
           marketingTags: ['免费', '入门', '体验'],
         },
         createdAt: new Date(),

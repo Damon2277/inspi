@@ -122,14 +122,14 @@ export class VisualRitualOrchestrator {
   /**
    * 创建仪式感场景
    */
-  createRitualScene(type: RitualType, intensity: RitualIntensity): VisualScene {
+  createRitualScene(type: RitualType, intensity: RitualIntensity, options: { shareChannel?: 'weibo' | 'email' | null } = {}): VisualScene {
     const sceneId = `ritual-scene-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     const scene: VisualScene = {
       id: sceneId,
       type,
       intensity,
-      elements: this.generateSceneElements(type, intensity),
+      elements: this.generateSceneElements(type, intensity, options),
       duration: this.calculateSceneDuration(type, intensity),
       transitions: this.generateTransitions(type, intensity)
     };
@@ -197,7 +197,7 @@ export class VisualRitualOrchestrator {
   /**
    * 生成场景元素
    */
-  private generateSceneElements(type: RitualType, intensity: RitualIntensity): VisualElement[] {
+  private generateSceneElements(type: RitualType, intensity: RitualIntensity, options: { shareChannel?: 'weibo' | 'email' | null } = {}): VisualElement[] {
     const elements: VisualElement[] = [];
 
     switch (type) {
@@ -211,7 +211,7 @@ export class VisualRitualOrchestrator {
         elements.push(...this.generateCreationElements(intensity));
         break;
       case RitualType.SHARING:
-        elements.push(...this.generateSharingElements(intensity));
+        elements.push(...this.generateSharingElements(intensity, options.shareChannel));
         break;
       case RitualType.MILESTONE:
         elements.push(...this.generateMilestoneElements(intensity));
@@ -375,42 +375,124 @@ export class VisualRitualOrchestrator {
   /**
    * 生成分享仪式元素
    */
-  private generateSharingElements(intensity: RitualIntensity): VisualElement[] {
+  private generateSharingElements(intensity: RitualIntensity, channel: 'weibo' | 'email' | undefined | null): VisualElement[] {
     const elements: VisualElement[] = [];
 
-    // 分享光芒
-    elements.push({
-      id: 'sharing-radiance',
-      type: 'glow',
-      styles: {
-        background: 'var(--ritual-gradient-celestial)',
-        opacity: '0.3',
-        filter: 'blur(20px)'
-      },
-      animation: {
-        name: 'ritual-pulse',
-        duration: 2500,
-        easing: 'ease-in-out',
-        iterations: 'infinite'
-      }
-    });
+    const isWeibo = channel === 'weibo';
+    const isEmail = channel === 'email';
 
-    if (intensity >= RitualIntensity.MODERATE) {
+    if (isWeibo) {
       elements.push({
-        id: 'sharing-sparkles',
-        type: 'particles',
+        id: 'sharing-radiance',
+        type: 'glow',
         styles: {
-          pointerEvents: 'none',
-          background: 'radial-gradient(2px 2px at center, rgba(255, 255, 255, 0.8), transparent)',
-          opacity: intensity >= RitualIntensity.DRAMATIC ? '0.8' : '0.5'
+          background: 'linear-gradient(135deg, rgba(255, 68, 0, 0.55), rgba(255, 199, 0, 0.45))',
+          opacity: '0.45',
+          filter: 'blur(22px)'
         },
         animation: {
-          name: 'ritual-twinkle',
-          duration: intensity >= RitualIntensity.DRAMATIC ? 1800 : 2400,
+          name: 'ritual-pulse',
+          duration: 2200,
           easing: 'ease-in-out',
           iterations: 'infinite'
         }
       });
+
+      elements.push({
+        id: 'sharing-bursts',
+        type: 'particles',
+        styles: {
+          pointerEvents: 'none',
+          background: 'radial-gradient(2px 2px at center, rgba(255,255,255,0.9), transparent)',
+          opacity: intensity >= RitualIntensity.DRAMATIC ? '0.85' : '0.6'
+        },
+        animation: {
+          name: 'ritual-twinkle',
+          duration: 1800,
+          easing: 'ease-in-out',
+          iterations: 'infinite'
+        }
+      });
+    } else if (isEmail) {
+      elements.push({
+        id: 'sharing-soft-glow',
+        type: 'glow',
+        styles: {
+          background: 'linear-gradient(145deg, rgba(255, 224, 178, 0.5), rgba(255, 239, 213, 0.6))',
+          opacity: '0.35',
+          filter: 'blur(18px)'
+        },
+        animation: {
+          name: 'ritual-pulse',
+          duration: 3200,
+          easing: 'ease-in-out',
+          iterations: 'infinite'
+        }
+      });
+
+      elements.push({
+        id: 'sharing-soft-petals',
+        type: 'particles',
+        styles: {
+          pointerEvents: 'none',
+          background: 'radial-gradient(2px 2px at center, rgba(255, 182, 193, 0.65), transparent)',
+          opacity: intensity >= RitualIntensity.DRAMATIC ? '0.7' : '0.45'
+        },
+        animation: {
+          name: 'ritual-float',
+          duration: 4200,
+          easing: 'ease-in-out',
+          iterations: 'infinite'
+        }
+      });
+
+      if (intensity >= RitualIntensity.MODERATE) {
+        elements.push({
+          id: 'sharing-encouragement-frame',
+          type: 'frame',
+          styles: {
+            border: '3px solid rgba(255, 213, 128, 0.6)',
+            borderRadius: '18px',
+            padding: '1.5rem',
+            background: 'rgba(255, 248, 225, 0.35)'
+          }
+        });
+      }
+    } else {
+      // 默认分享光芒
+      elements.push({
+        id: 'sharing-radiance',
+        type: 'glow',
+        styles: {
+          background: 'var(--ritual-gradient-celestial)',
+          opacity: '0.3',
+          filter: 'blur(20px)'
+        },
+        animation: {
+          name: 'ritual-pulse',
+          duration: 2500,
+          easing: 'ease-in-out',
+          iterations: 'infinite'
+        }
+      });
+
+      if (intensity >= RitualIntensity.MODERATE) {
+        elements.push({
+          id: 'sharing-sparkles',
+          type: 'particles',
+          styles: {
+            pointerEvents: 'none',
+            background: 'radial-gradient(2px 2px at center, rgba(255, 255, 255, 0.8), transparent)',
+            opacity: intensity >= RitualIntensity.DRAMATIC ? '0.8' : '0.5'
+          },
+          animation: {
+            name: 'ritual-twinkle',
+            duration: intensity >= RitualIntensity.DRAMATIC ? 1800 : 2400,
+            easing: 'ease-in-out',
+            iterations: 'infinite'
+          }
+        });
+      }
     }
 
     return elements;

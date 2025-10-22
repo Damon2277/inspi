@@ -110,7 +110,7 @@ const mockApiHandlers = {
           displayName: '免费版',
           tier: 'free',
           monthlyPrice: 0,
-          quotas: { dailyCreateQuota: 3, dailyReuseQuota: 1 },
+          quotas: { dailyCreateQuota: 5, dailyReuseQuota: 1 },
         },
         {
           id: 'plan_basic',

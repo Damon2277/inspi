@@ -17,13 +17,13 @@ export const DEFAULT_PLANS: SubscriptionPlan[] = [
     monthlyPrice: 0,
     currency: 'CNY',
     quotas: {
-      dailyCreateQuota: 3,
+      dailyCreateQuota: 5,
       dailyReuseQuota: 1,
       maxExportsPerDay: 10,
       maxGraphNodes: 50,
     },
     features: [
-      '每日创建3张卡片',
+      '每日创建5张卡片',
       '每日复用1张模板',
       '每日导出10张图片',
       '最多50个知识图谱节点',

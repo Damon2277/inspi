@@ -2,10 +2,9 @@
  * API客户端错误处理
  */
 
-import { logger } from '@/shared/utils/logger';
-// import { reportError, monitoringContext } from '@/lib/monitoring';
 import { CustomError } from '@/shared/errors/CustomError';
 import { ErrorCode } from '@/shared/errors/types';
+import { logger } from '@/shared/utils/logger';
 
 import { ApiResponse } from './responses';
 

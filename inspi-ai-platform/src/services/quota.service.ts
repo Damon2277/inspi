@@ -12,8 +12,8 @@ export interface QuotaCheckResult {
 }
 
 export class QuotaService {
-  private static readonly DAILY_FREE_QUOTA = 3;
-  private static readonly MONTHLY_SUBSCRIPTION_QUOTA = 300;
+  private static readonly DAILY_FREE_QUOTA = 5;
+  private static readonly MONTHLY_SUBSCRIPTION_QUOTA = 150;
 
   /**
    * 检查并消费额度

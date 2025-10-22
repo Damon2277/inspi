@@ -11,6 +11,8 @@ import { PersonalizedRitualEngine, UserRitualProfile, ResponseTone } from './per
 import { RitualConfigurationManager } from './config/RitualConfiguration';
 import { RitualType, RitualIntensity, User, UserAction } from './types';
 
+type ShareChannel = 'weibo' | 'email' | null;
+
 // 系统配置接口
 export interface RitualSystemConfig {
   enableVisual: boolean;
@@ -47,6 +49,7 @@ export interface RitualExecutionResult {
     animation: boolean;
   };
   error?: string;
+  shareChannel?: 'weibo' | 'email';
 }
 
 /**
@@ -146,9 +149,12 @@ export class RitualDesignSystem {
           intensity: detection.intensity,
           duration: 0,
           components: { visual: false, audio: false, animation: false },
-          error: detection.reason
+          error: detection.reason,
+          shareChannel: detection.ritualType === RitualType.SHARING ? this.getShareChannelFromAction(action) ?? undefined : undefined
         };
       }
+
+      const shareChannel = this.getShareChannelFromAction(action);
 
       // 2. 个性化调整
       let intensity = detection.intensity;
@@ -165,16 +171,19 @@ export class RitualDesignSystem {
 
       // 视觉效果
       if (this.visualOrchestrator && this.config.enableVisual) {
-        promises.push(this.executeVisualRitual(detection.ritualType!, intensity).then(() => {
+        promises.push(this.executeVisualRitual(detection.ritualType!, intensity, shareChannel).then(() => {
           components.visual = true;
         }));
       }
 
       // 音频效果
       if (this.audioManager && this.config.enableAudio) {
-        promises.push(this.executeAudioRitual(detection.ritualType!, intensity).then(() => {
-          components.audio = true;
-        }));
+        const shouldSkipAudio = detection.ritualType === RitualType.SHARING && shareChannel === 'weibo';
+        if (!shouldSkipAudio) {
+          promises.push(this.executeAudioRitual(detection.ritualType!, intensity, shareChannel).then(() => {
+            components.audio = true;
+          }));
+        }
       }
 
       // 动画效果
@@ -207,6 +216,7 @@ export class RitualDesignSystem {
         intensity,
         duration,
         components,
+        shareChannel: detection.ritualType === RitualType.SHARING && shareChannel ? shareChannel : undefined
       };
 
     } catch (error) {
@@ -227,15 +237,15 @@ export class RitualDesignSystem {
   /**
    * 执行视觉仪式
    */
-  private async executeVisualRitual(type: RitualType, intensity: RitualIntensity): Promise<void> {
+  private async executeVisualRitual(type: RitualType, intensity: RitualIntensity, shareChannel: ShareChannel): Promise<void> {
     if (!this.visualOrchestrator || !this.hasDOMSupport()) return;
 
-    const scene = this.visualOrchestrator.createRitualScene(type, intensity);
+    const scene = this.visualOrchestrator.createRitualScene(type, intensity, { shareChannel });
     
     // 应用视觉效果到页面元素
     const targetElement = document.body; // 或其他目标元素
     const style: RitualStyle = {
-      colorTheme: this.getColorThemeForType(type),
+      colorTheme: this.getColorThemeForType(type, shareChannel),
       intensity,
       decorativeLevel: this.getDecorativeLevelForIntensity(intensity),
       culturalContext: this.config.culturalAdaptation ? 'neutral' : undefined,
@@ -255,14 +265,14 @@ export class RitualDesignSystem {
   /**
    * 执行音频仪式
    */
-  private async executeAudioRitual(type: RitualType, intensity: RitualIntensity): Promise<void> {
+  private async executeAudioRitual(type: RitualType, intensity: RitualIntensity, shareChannel: ShareChannel): Promise<void> {
     if (!this.audioManager || typeof Audio === 'undefined') return;
 
     // 播放仪式音效
     this.audioManager.playRitualSound(type, intensity);
 
     // 根据类型设置环境音乐
-    const mood = this.getMoodForType(type);
+    const mood = this.getMoodForType(type, shareChannel);
     if (mood) {
       this.audioManager.createAmbientAtmosphere(mood);
     }
@@ -380,7 +390,16 @@ export class RitualDesignSystem {
   /**
    * 辅助方法：根据类型获取颜色主题
    */
-  private getColorThemeForType(type: RitualType): 'gold' | 'purple' | 'blue' | 'divine' {
+  private getColorThemeForType(type: RitualType, shareChannel: ShareChannel): 'gold' | 'purple' | 'blue' | 'divine' {
+    if (type === RitualType.SHARING) {
+      if (shareChannel === 'email') {
+        return 'gold';
+      }
+      if (shareChannel === 'weibo') {
+        return 'divine';
+      }
+    }
+
     const themeMap: Record<RitualType, 'gold' | 'purple' | 'blue' | 'divine'> = {
       [RitualType.WELCOME]: 'gold',
       [RitualType.ACHIEVEMENT]: 'purple',
@@ -408,7 +427,16 @@ export class RitualDesignSystem {
   /**
    * 辅助方法：根据类型获取心情
    */
-  private getMoodForType(type: RitualType): Mood | null {
+  private getMoodForType(type: RitualType, shareChannel: ShareChannel): Mood | null {
+    if (type === RitualType.SHARING) {
+      if (shareChannel === 'email') {
+        return Mood.CALM;
+      }
+      if (shareChannel === 'weibo') {
+        return Mood.ENERGETIC;
+      }
+    }
+
     const moodMap: Record<RitualType, Mood | null> = {
       [RitualType.WELCOME]: Mood.CALM,
       [RitualType.ACHIEVEMENT]: Mood.CELEBRATORY,
@@ -418,6 +446,27 @@ export class RitualDesignSystem {
       [RitualType.TRANSITION]: null
     };
     return moodMap[type];
+  }
+
+  private getShareChannelFromAction(action: UserAction): ShareChannel {
+    switch (action.type) {
+      case 'content_shared_weibo':
+        return 'weibo';
+      case 'content_shared_email':
+        return 'email';
+      default: {
+        const context = action.context as Record<string, unknown> | undefined;
+        if (context && typeof context.platform === 'string') {
+          if (context.platform === 'weibo') {
+            return 'weibo';
+          }
+          if (context.platform === 'email') {
+            return 'email';
+          }
+        }
+        return null;
+      }
+    }
   }
 
   /**

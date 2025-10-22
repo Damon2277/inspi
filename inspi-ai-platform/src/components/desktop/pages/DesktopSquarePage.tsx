@@ -182,7 +182,24 @@ export function DesktopSquarePage() {
               <div
                 key={work.id}
                 className="modern-card modern-card-elevated group"
-                style={{ cursor: 'pointer' }}
+                style={{
+                  cursor: 'pointer',
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  transition: 'all 0.3s ease',
+                  border: '1px solid transparent',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.15)';
+                  e.currentTarget.style.borderColor = 'var(--primary-200)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '';
+                  e.currentTarget.style.borderColor = 'transparent';
+                }}
                 onClick={() => handleCardClick(work.id)}
               >
                 <div
@@ -193,55 +210,65 @@ export function DesktopSquarePage() {
                     height: '100%',
                   }}
                 >
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
-                    marginBottom: '16px',
-                  }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'space-between',
+                      marginBottom: '16px',
+                    }}
+                  >
                     <div style={{ fontSize: 'var(--font-size-3xl)' }}>{work.thumbnail}</div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                       <span style={{
-                        padding: '4px 8px',
-                        background: 'var(--gray-100)',
+                        padding: '5px 10px',
+                        background: '#fef3c7',
                         borderRadius: 'var(--radius-sm)',
                         fontSize: 'var(--font-size-xs)',
-                        color: 'var(--gray-600)',
+                        color: '#92400e',
+                        fontWeight: '500',
+                        lineHeight: '1.2',
                       }}>
                         {work.subject}
                       </span>
                       <span style={{
-                        padding: '4px 8px',
-                        background: 'var(--gray-100)',
+                        padding: '5px 10px',
+                        background: '#e0f2fe',
                         borderRadius: 'var(--radius-sm)',
                         fontSize: 'var(--font-size-xs)',
-                        color: 'var(--gray-600)',
+                        color: '#075985',
+                        fontWeight: '500',
+                        lineHeight: '1.2',
                       }}>
                         {work.grade}
                       </span>
                     </div>
                   </div>
 
-                  <h3 style={{
-                    fontSize: 'var(--font-size-lg)',
-                    fontWeight: '600',
-                    color: 'var(--gray-900)',
-                    marginBottom: '8px',
-                    transition: 'color var(--transition-base)',
-                  }}>
+                  <h3
+                    style={{
+                      fontSize: 'var(--font-size-lg)',
+                      fontWeight: '600',
+                      color: 'var(--gray-900)',
+                      marginBottom: '8px',
+                      transition: 'color var(--transition-base)',
+                    }}
+                  >
                     {work.title}
                   </h3>
 
-                  <p style={{
-                    color: 'var(--gray-600)',
-                    fontSize: 'var(--font-size-sm)',
-                    marginBottom: '16px',
-                    lineHeight: '1.5',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 3,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                  }}>
+                  <p
+                    style={{
+                      color: 'var(--gray-600)',
+                      fontSize: 'var(--font-size-sm)',
+                      marginBottom: '16px',
+                      lineHeight: '1.5',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
                     {work.description}
                   </p>
 
@@ -257,12 +284,23 @@ export function DesktopSquarePage() {
                         <span
                           key={index}
                           style={{
-                            padding: '2px 8px',
-                            background: 'var(--primary-100)',
-                            color: 'var(--primary-700)',
+                            padding: '4px 10px',
+                            background: 'transparent',
+                            color: 'var(--primary-600)',
                             fontSize: 'var(--font-size-xs)',
                             borderRadius: 'var(--radius-sm)',
+                            border: '1px solid var(--primary-300)',
                             alignSelf: 'flex-end',
+                            lineHeight: '1.2',
+                            transition: 'all 0.2s ease',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'var(--primary-50)';
+                            e.currentTarget.style.borderColor = 'var(--primary-400)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.borderColor = 'var(--primary-300)';
                           }}
                         >
                           #{tag}
@@ -270,36 +308,58 @@ export function DesktopSquarePage() {
                       ))}
                     </div>
 
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr auto',
-                      alignItems: 'center',
-                      gap: '16px',
-                      paddingTop: '16px',
-                      borderTop: '1px solid var(--gray-200)',
-                    }}>
-                      <div style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: '12px',
-                        fontSize: 'var(--font-size-sm)',
-                        color: 'var(--gray-500)',
-                      }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr auto',
+                        alignItems: 'center',
+                        gap: '16px',
+                        paddingTop: '16px',
+                        borderTop: '1px solid var(--gray-200)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '18px',
+                          fontSize: '14px',
+                          color: 'var(--gray-500)',
+                        }}
+                      >
+                        <span
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'color 0.2s ease' }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = '#ef4444';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = 'var(--gray-500)';
+                          }}
+                        >
+                          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ strokeWidth: '1.5' }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                           </svg>
-                          {work.likes}
+                          <span style={{ fontWeight: '500' }}>{work.likes}</span>
                         </span>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        <span
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'color 0.2s ease' }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = 'var(--primary-600)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = 'var(--gray-500)';
+                          }}
+                        >
+                          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ strokeWidth: '1.5' }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                           </svg>
-                          {work.reuses}
+                          <span style={{ fontWeight: '500' }}>{work.reuses}</span>
                         </span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}
-                        onClick={(event) => event.stopPropagation()}>
+                      <div
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}
+                        onClick={(event) => event.stopPropagation()}
+                      >
                         <SquareQuickReuseButton
                           themeId={work.id}
                           themeTitle={work.title}

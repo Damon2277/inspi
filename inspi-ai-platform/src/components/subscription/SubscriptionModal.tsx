@@ -222,7 +222,7 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, currentQuota }: 
                 ✓
               </div>
               <h3 className="text-lg font-semibold text-emerald-700">支付成功，已为您开通专业版</h3>
-              <p className="text-sm text-emerald-600">页面即将刷新额度信息，可立即体验 300 次/月 的生成额度。</p>
+              <p className="text-sm text-emerald-600">页面即将刷新额度信息，可立即体验 150 次/月 的生成额度。</p>
             </div>
           ) : null}
 
@@ -232,7 +232,7 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, currentQuota }: 
                 <span className="text-2xl font-bold text-slate-900">
                   ¥15<span className="ml-1 text-base font-normal">/月</span>
                 </span>
-                <p className="text-sm text-slate-600">自动续费，可随时取消。订阅后每月获得 300 次生成额度。</p>
+                <p className="text-sm text-slate-600">自动续费，可随时取消。订阅后每月获得 150 次生成额度。</p>
               </div>
 
               <div className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-center shadow-sm">
@@ -297,7 +297,7 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, currentQuota }: 
               <div className="grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-5 sm:grid-cols-3">
                 <div>
                   <p className="text-sm font-semibold text-slate-800">额度升级</p>
-                  <p className="mt-1 text-sm text-slate-600">每月 300 次生成额度，支持高并发创作。</p>
+                  <p className="mt-1 text-sm text-slate-600">每月 150 次生成额度，支持高并发创作。</p>
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-slate-800">一键复用</p>

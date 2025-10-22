@@ -75,9 +75,20 @@ export class RitualTrigger implements IRitualTrigger {
         cooldownMs: 10 * 60 * 1000 // 10分钟冷却
       },
 
-      // 分享仪式 - 分享作品
+      // 分享仪式 - 微博分享
       {
-        actionType: 'content_shared',
+        actionType: 'content_shared_weibo',
+        conditions: [
+          { type: 'user_level', operator: 'gte', value: 2 }
+        ],
+        ritualType: RitualType.SHARING,
+        baseIntensity: RitualIntensity.MODERATE,
+        cooldownMs: 15 * 60 * 1000 // 15分钟冷却
+      },
+
+      // 分享仪式 - 邮件分享
+      {
+        actionType: 'content_shared_email',
         conditions: [
           { type: 'user_level', operator: 'gte', value: 2 }
         ],

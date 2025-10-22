@@ -184,21 +184,45 @@ export async function demonstrateCompleteSystem() {
     });
 
     // 3.4 分享仪式
-    console.log('\n🚀 场景4: 分享作品 - 分享仪式');
-    const shareAction = createUserAction('content_shared', {
+    console.log('\n🚀 场景4A: 分享到微博 - 分享仪式');
+    const shareWeiboAction = createUserAction('content_shared_weibo', {
       contentType: 'artwork',
-      platform: 'social',
+      platform: 'weibo',
       visibility: 'public',
       expectedReach: 'medium'
     });
 
-    const shareResult = await ritualSystem.processUserAction(user, shareAction);
-    console.log('分享仪式执行结果:', {
-      success: shareResult.success,
-      ritualType: shareResult.ritualType,
-      intensity: shareResult.intensity,
-      duration: `${shareResult.duration}ms`,
-      components: shareResult.components
+    const shareWeiboResult = await ritualSystem.processUserAction(user, shareWeiboAction);
+    console.log('微博分享仪式执行结果:', {
+      success: shareWeiboResult.success,
+      ritualType: shareWeiboResult.ritualType,
+      intensity: shareWeiboResult.intensity,
+      duration: `${shareWeiboResult.duration}ms`,
+      components: shareWeiboResult.components,
+      shareChannel: shareWeiboResult.shareChannel
+    });
+
+    await new Promise<void>(resolve => {
+      const timer = setTimeout(resolve, 1000);
+      maybeUnrefTimeout(timer);
+    });
+
+    console.log('\n📬 场景4B: 邮件分享课程资料 - 分享仪式');
+    const shareEmailAction = createUserAction('content_shared_email', {
+      contentType: 'lesson-plan',
+      platform: 'email',
+      recipients: 40,
+      tone: 'supportive'
+    });
+
+    const shareEmailResult = await ritualSystem.processUserAction(user, shareEmailAction);
+    console.log('邮件分享仪式执行结果:', {
+      success: shareEmailResult.success,
+      ritualType: shareEmailResult.ritualType,
+      intensity: shareEmailResult.intensity,
+      duration: `${shareEmailResult.duration}ms`,
+      components: shareEmailResult.components,
+      shareChannel: shareEmailResult.shareChannel
     });
 
     await new Promise<void>(resolve => {

@@ -33,7 +33,7 @@ describe('QuotaManager', () => {
       const result = await quotaManager.checkQuota('user123', 'create', 1);
 
       expect(result.allowed).toBe(true);
-      expect(result.remaining).toBe(1); // 免费用户每日3次，已用2次，剩余1次
+      expect(result.remaining).toBe(3); // 免费用户每日5次，已用2次，剩余3次
       expect(result.tier).toBe('free');
     });
 
@@ -47,7 +47,7 @@ describe('QuotaManager', () => {
       User.findById = jest.fn().mockResolvedValue(mockUser);
 
       const { redis } = require('@/lib/cache/redis');
-      redis.get = jest.fn().mockResolvedValue('3'); // 已使用3次，达到上限
+      redis.get = jest.fn().mockResolvedValue('5'); // 已使用5次，达到上限
 
       const result = await quotaManager.checkQuota('user123', 'create', 1);
 
@@ -91,7 +91,7 @@ describe('QuotaManager', () => {
 
       expect(result.success).toBe(true);
       expect(result.newUsage).toBe(2);
-      expect(result.remaining).toBe(1); // 3-2=1
+      expect(result.remaining).toBe(3); // 5-2=3
     });
 
     it('应该拒绝超出配额的消费', async () => {
@@ -104,7 +104,7 @@ describe('QuotaManager', () => {
       User.findById = jest.fn().mockResolvedValue(mockUser);
 
       const { redis } = require('@/lib/cache/redis');
-      redis.get = jest.fn().mockResolvedValue('3'); // 已达上限
+      redis.get = jest.fn().mockResolvedValue('5'); // 已达上限
 
       const result = await quotaManager.consumeQuota('user123', 'create', 1);
 

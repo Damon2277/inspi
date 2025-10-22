@@ -165,7 +165,7 @@ describe('订阅管理页面视觉测试', () => {
         popular: false,
         recommended: false,
         features: ['基础功能'],
-        quotas: { dailyCreateQuota: 3, dailyReuseQuota: 1, maxExportsPerDay: 10, maxGraphNodes: 50 },
+        quotas: { dailyCreateQuota: 5, dailyReuseQuota: 1, maxExportsPerDay: 10, maxGraphNodes: 50 },
       },
       {
         id: 'plan-basic',

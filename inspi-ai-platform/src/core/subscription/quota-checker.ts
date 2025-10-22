@@ -156,7 +156,7 @@ export class EnhancedQuotaChecker {
     // 默认使用免费套餐配额
     const freePlan = (DEFAULT_PLANS.find as any)(p => p.tier === 'free');
     return freePlan?.quotas || {
-      dailyCreateQuota: 3,
+      dailyCreateQuota: 5,
       dailyReuseQuota: 1,
       maxExportsPerDay: 10,
       maxGraphNodes: 50,

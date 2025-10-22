@@ -52,7 +52,6 @@ export function useApiError(options: UseApiErrorOptions = {}) {
     canRetry: false,
   });
 
-  // const errorToast = useErrorToast();
   const retryManager = useMemo(
     () => new RetryManager({ ...DEFAULT_RETRY_STRATEGY, ...retryStrategy }),
     [retryStrategy],
@@ -90,7 +89,7 @@ export function useApiError(options: UseApiErrorOptions = {}) {
     if (onError) {
       onError(error);
     }
-  }, [showToast, errorToast, onError]);
+  }, [showToast, onError]);
 
   /**
    * 清除错误

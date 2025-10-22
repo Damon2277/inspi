@@ -8,7 +8,7 @@ describe('订阅系统功能特性测试', () => {
   describe('配额计算逻辑', () => {
     it('应该正确计算免费用户配额', () => {
       const quotaLimits = {
-        free: { dailyCreateQuota: 3, dailyReuseQuota: 1, maxExportsPerDay: 10, maxGraphNodes: 50 },
+        free: { dailyCreateQuota: 5, dailyReuseQuota: 1, maxExportsPerDay: 10, maxGraphNodes: 50 },
         basic: { dailyCreateQuota: 20, dailyReuseQuota: 5, maxExportsPerDay: 50, maxGraphNodes: -1 },
         pro: { dailyCreateQuota: 100, dailyReuseQuota: 50, maxExportsPerDay: 200, maxGraphNodes: -1 },
       };
@@ -25,7 +25,7 @@ describe('订阅系统功能特性测试', () => {
         graph_nodes: quotaLimits.free.maxGraphNodes - freeUser.currentUsage.graph_nodes,
       };
 
-      expect(remaining.create).toBe(1);
+      expect(remaining.create).toBe(3);
       expect(remaining.reuse).toBe(1);
       expect(remaining.export).toBe(5);
       expect(remaining.graph_nodes).toBe(20);
@@ -57,8 +57,8 @@ describe('订阅系统功能特性测试', () => {
 
     it('应该正确判断配额是否足够', () => {
       const scenarios = [
-        { current: 2, limit: 3, requested: 1, allowed: true },
-        { current: 3, limit: 3, requested: 1, allowed: false },
+        { current: 2, limit: 5, requested: 1, allowed: true },
+        { current: 5, limit: 5, requested: 1, allowed: false },
         { current: 0, limit: -1, requested: 100, allowed: true }, // 无限制
         { current: 2, limit: 5, requested: 4, allowed: false },
       ];
@@ -146,7 +146,7 @@ describe('订阅系统功能特性测试', () => {
 
     it('应该正确计算配额差异', () => {
       const currentPlan = {
-        quotas: { dailyCreateQuota: 3, dailyReuseQuota: 1, maxExportsPerDay: 10, maxGraphNodes: 50 },
+        quotas: { dailyCreateQuota: 5, dailyReuseQuota: 1, maxExportsPerDay: 10, maxGraphNodes: 50 },
       };
 
       const newPlan = {

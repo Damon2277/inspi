@@ -184,6 +184,13 @@ const eslintConfig = [
     },
   },
   {
+    // 库类工具文件通常包含长描述，放宽字符限制
+    files: ["src/lib/**/*.{ts,tsx}", "src/shared/types/**/*.{ts,tsx}"],
+    rules: {
+      'max-len': 'off',
+    },
+  },
+  {
     // 配置文件的宽松规则
     files: ["*.config.{js,ts,mjs}", "*.setup.{js,ts}"],
     rules: {

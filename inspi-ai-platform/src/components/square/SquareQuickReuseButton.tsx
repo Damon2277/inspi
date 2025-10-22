@@ -12,6 +12,7 @@ interface SquareQuickReuseButtonProps {
   themeTitle: string;
   onReuseSuccess?: () => void;
   onCancelSuccess?: () => void;
+  reusedLabel?: string;
 }
 
 export function SquareQuickReuseButton({
@@ -19,6 +20,7 @@ export function SquareQuickReuseButton({
   themeTitle,
   onReuseSuccess,
   onCancelSuccess,
+  reusedLabel = '已复用',
 }: SquareQuickReuseButtonProps) {
   const { isAuthenticated, user } = useAuth();
   const { showPrompt, LoginPromptComponent } = useLoginPrompt();
@@ -29,10 +31,7 @@ export function SquareQuickReuseButton({
 
   const isReused = hasReusedTheme(themeId);
 
-  const handleReuse = async (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    if (isReused) return;
-
+  const handleReuse = async () => {
     if (!isAuthenticated || !user?._id) {
       showPrompt('reuse', '登录后即可复用教学卡片');
       return;
@@ -58,10 +57,7 @@ export function SquareQuickReuseButton({
     setStatus('idle');
   };
 
-  const handleCancelReuse = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    if (!isReused) return;
-
+  const handleCancelReuse = () => {
     if (!isAuthenticated || !user?._id) {
       showPrompt('reuse', '登录后即可管理复用记录');
       return;
@@ -71,35 +67,67 @@ export function SquareQuickReuseButton({
     setFeedback(null);
 
     unmarkThemeReused(themeId);
-    setFeedback('已取消复用');
     onCancelSuccess?.();
     setStatus('idle');
   };
 
+  const handlePrimaryClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (status !== 'idle') {
+      return;
+    }
+
+    if (isReused) {
+      handleCancelReuse();
+    } else {
+      void handleReuse();
+    }
+  };
+
+  const buttonLabel = (() => {
+    if (status === 'reusing') return '复用中...';
+    if (status === 'cancelling') return '取消中...';
+    return isReused ? reusedLabel : '致敬复用';
+  })();
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
       <LoginPromptComponent />
-      <div style={{ display: 'flex', gap: '8px' }}>
+      <div style={{ display: 'flex', gap: '12px' }}>
         <button
           type="button"
-          className="modern-btn modern-btn-outline modern-btn-sm"
-          style={{ whiteSpace: 'nowrap' }}
-          onClick={handleReuse}
-          disabled={isReused || status === 'reusing'}
+          className={`modern-btn modern-btn-sm ${isReused ? 'modern-btn-success' : 'modern-btn-primary'}`}
+          style={{
+            whiteSpace: 'nowrap',
+            background: isReused ? '#dcfce7' : '#2563eb',
+            color: isReused ? '#166534' : 'white',
+            border: isReused ? '1px solid #86efac' : 'none',
+            fontWeight: '500',
+            fontSize: '13px',
+            padding: '6px 16px',
+            minWidth: '112px',
+            transition: 'all 0.2s ease',
+            cursor: status === 'idle' ? 'pointer' : 'not-allowed',
+          }}
+          onMouseEnter={(e) => {
+            if (status === 'idle') {
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              if (!isReused) {
+                e.currentTarget.style.background = '#1d4ed8';
+              }
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            if (!isReused) {
+              e.currentTarget.style.background = '#2563eb';
+            }
+          }}
+          onClick={handlePrimaryClick}
+          disabled={status !== 'idle'}
         >
-          {isReused ? '已复用' : status === 'reusing' ? '复用中...' : '致敬复用'}
+          {buttonLabel}
         </button>
-        {isReused ? (
-          <button
-            type="button"
-            className="modern-btn modern-btn-ghost modern-btn-sm"
-            style={{ whiteSpace: 'nowrap' }}
-            onClick={handleCancelReuse}
-            disabled={status === 'cancelling'}
-          >
-            {status === 'cancelling' ? '取消中...' : '取消复用'}
-          </button>
-        ) : null}
       </div>
       {feedback ? (
         <span style={{ fontSize: '12px', color: 'var(--gray-500)' }}>{feedback}</span>

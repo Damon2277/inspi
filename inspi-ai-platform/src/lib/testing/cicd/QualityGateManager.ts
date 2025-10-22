@@ -47,7 +47,6 @@ export class QualityGateManager {
     customMetrics?: Record<string, number>,
   ): Promise<QualityGate> {
     let value: number;
-    let status: 'passed' | 'failed' | 'warning';
 
     switch (config.type) {
       case 'coverage':
@@ -68,7 +67,7 @@ export class QualityGateManager {
 
     // Evaluate against threshold
     const passed = this.evaluateThreshold(value, config.threshold, config.operator);
-    status = passed ? 'passed' : (config.blocking ? 'failed' : 'warning');
+    const status: 'passed' | 'failed' | 'warning' = passed ? 'passed' : (config.blocking ? 'failed' : 'warning');
 
     return {
       id: `gate-${config.name}`,

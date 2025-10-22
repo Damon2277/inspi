@@ -190,7 +190,7 @@ export default function ComprehensiveTestPage() {
     // 测试配额限制配置
     try {
       const quotaLimits = {
-        free: { dailyCreateQuota: 3, dailyReuseQuota: 1, maxExportsPerDay: 10, maxGraphNodes: 50 },
+        free: { dailyCreateQuota: 5, dailyReuseQuota: 1, maxExportsPerDay: 10, maxGraphNodes: 50 },
         basic: { dailyCreateQuota: 20, dailyReuseQuota: 5, maxExportsPerDay: 50, maxGraphNodes: -1 },
         pro: { dailyCreateQuota: 100, dailyReuseQuota: 50, maxExportsPerDay: 200, maxGraphNodes: -1 },
         admin: { dailyCreateQuota: -1, dailyReuseQuota: -1, maxExportsPerDay: -1, maxGraphNodes: -1 },

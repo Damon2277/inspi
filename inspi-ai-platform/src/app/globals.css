@@ -34,6 +34,12 @@ body {
   overflow-x: hidden;
 }
 
+/* Loading spinner animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .selectable {
   -webkit-user-select: text;
   -moz-user-select: text;

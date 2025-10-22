@@ -202,6 +202,8 @@ export class RitualDetector {
     // 最终决策
     const finalShouldTrigger = shouldTrigger && confidence > 0.4;
 
+    const shareChannel = this.getShareChannel(action);
+
     return {
       shouldTrigger: finalShouldTrigger,
       ritualType,
@@ -213,7 +215,8 @@ export class RitualDetector {
         adjustedIntensity: intensity,
         actionFrequency,
         specialContext,
-        sessionDuration: user.context.sessionDuration
+        sessionDuration: user.context.sessionDuration,
+        shareChannel
       }
     };
   }
@@ -303,12 +306,33 @@ export class RitualDetector {
       [RitualType.WELCOME]: ['user_login', 'session_start'],
       [RitualType.ACHIEVEMENT]: ['task_completed', 'goal_reached', 'challenge_completed'],
       [RitualType.CREATION]: ['project_created', 'content_created', 'design_started'],
-      [RitualType.SHARING]: ['content_shared', 'post_published', 'collaboration_invited'],
+      [RitualType.SHARING]: ['content_shared', 'content_shared_weibo', 'content_shared_email', 'post_published', 'collaboration_invited'],
       [RitualType.MILESTONE]: ['level_up', 'badge_earned', 'milestone_reached'],
       [RitualType.TRANSITION]: ['page_transition', 'mode_changed', 'view_switched']
     };
 
     return relevanceMap[ritualType]?.includes(pattern.type) || false;
+  }
+
+  private getShareChannel(action: UserAction): 'weibo' | 'email' | null {
+    switch (action.type) {
+      case 'content_shared_weibo':
+        return 'weibo';
+      case 'content_shared_email':
+        return 'email';
+      default: {
+        const context = action.context as Record<string, unknown> | undefined;
+        if (context && typeof context.platform === 'string') {
+          if (context.platform === 'weibo') {
+            return 'weibo';
+          }
+          if (context.platform === 'email') {
+            return 'email';
+          }
+        }
+        return null;
+      }
+    }
   }
 
   /**

@@ -80,14 +80,14 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
       canManageContent: false,
     },
     quotas: {
-      dailyCreateQuota: 3,
+      dailyCreateQuota: 5,
       dailyReuseQuota: 1,
       maxHistoryCards: 100,
       maxGraphNodes: 50,
       maxExportsPerDay: 10,
     },
     features: [
-      '每日3次AI卡片创建',
+      '每日5次AI卡片创建',
       '每日1次卡片复用',
       '基础图片导出',
       '个人知识图谱（50个节点）',

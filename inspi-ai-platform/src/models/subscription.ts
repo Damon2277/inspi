@@ -52,7 +52,7 @@ const UserSubscriptionSchema = new Schema<IUserSubscription>({
   },
   monthlyQuotaTotal: {
     type: Number,
-    default: 300,
+    default: 150,
     required: true,
   },
   monthlyQuotaUsed: {
@@ -62,7 +62,7 @@ const UserSubscriptionSchema = new Schema<IUserSubscription>({
   },
   monthlyQuotaRemaining: {
     type: Number,
-    default: 300,
+    default: 150,
     required: true,
   },
   autoRenew: {
@@ -103,14 +103,14 @@ const UsageStatsSchema = new Schema<IUsageStats>({
     type: Number,
     default: 0,
     min: 0,
-    max: 3,
+    max: 5,
     required: true,
   },
   monthlyUsage: {
     type: Number,
     default: 0,
     min: 0,
-    max: 300,
+    max: 150,
     required: true,
   },
   lastResetDate: {

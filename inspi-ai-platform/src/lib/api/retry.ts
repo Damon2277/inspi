@@ -2,8 +2,8 @@
  * API重试机制
  */
 
-import { logger } from '@/shared/utils/logger';
 import { ErrorCode } from '@/shared/errors/types';
+import { logger } from '@/shared/utils/logger';
 
 import { ApiError } from './client';
 
