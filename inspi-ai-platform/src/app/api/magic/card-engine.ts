@@ -1,4 +1,4 @@
-import { geminiService } from '@/core/ai/geminiService';
+import { aiService } from '@/core/ai/aiProvider';
 import { generatePrompt, PromptContext, validateCardContent } from '@/core/ai/promptTemplates';
 import { cleanUserContent } from '@/lib/security';
 import type {
@@ -54,9 +54,10 @@ export async function generateTeachingCard(options: GenerateCardOptions): Promis
 
   try {
     const prompt = generatePrompt(cardType, promptContext);
-    const cacheKey = `card_${cardType}_${knowledgePoint}_${subject || 'general'}`;
+    const cacheVersion = 'v2';
+    const cacheKey = `card_${cacheVersion}_${cardType}_${knowledgePoint}_${subject || 'general'}`;
 
-    const result = await geminiService.generateContent(prompt, {
+    const result = await aiService.generateContent(prompt, {
       temperature: cardType === 'concept' ? 0.4 : 0.7,
       maxTokens: cardType === 'concept' ? 750 : 520,
       useCache: true,
@@ -159,20 +160,19 @@ async function parseVisualizationJSON(
     const summary = await cleanUserContent(parsed.summary || `抓住“${knowledgePoint}”的核心脉络。`);
 
     const theme = normalizeTheme(parsed.visual?.theme);
+    const layout = normalizeLayout(parsed.visual?.layout);
     const branchesInput = Array.isArray(parsed.visual?.branches)
       ? parsed.visual.branches.slice(0, 6)
       : [];
 
-    if (branchesInput.length === 0) {
-      return buildVisualizationFallback(knowledgePoint);
-    }
-
+    const branchIds = new Set<string>();
     const branches: VisualizationBranch[] = [];
     for (let index = 0; index < branchesInput.length; index += 1) {
       const branch = branchesInput[index];
       const id = typeof branch?.id === 'string' && branch.id.trim().length > 0
         ? branch.id.trim()
         : `branch-${index + 1}`;
+      branchIds.add(id.toLowerCase());
 
       const title = await cleanUserContent(branch?.title || `要点${index + 1}`);
       const summaryText = await cleanUserContent(branch?.summary || '');
@@ -203,10 +203,6 @@ async function parseVisualizationJSON(
       });
     }
 
-    if (branches.length === 0) {
-      return buildVisualizationFallback(knowledgePoint);
-    }
-
     const centerTitle = await cleanUserContent(parsed.visual?.center?.title || knowledgePoint);
     const subtitle = parsed.visual?.center?.subtitle
       ? await cleanUserContent(parsed.visual.center.subtitle)
@@ -216,15 +212,71 @@ async function parseVisualizationJSON(
       ? await cleanUserContent(parsed.visual.footerNote)
       : undefined;
 
+    const visualType = normalizeVisualType(parsed.visual?.type, layout, branchIds);
+    const rawImagePrompt = typeof parsed.visual?.imagePrompt === 'string'
+      ? await cleanUserContent(parsed.visual.imagePrompt)
+      : '';
+    const imagePrompt = rawImagePrompt.trim().length > 0 ? rawImagePrompt.trim() : undefined;
+
+    if (visualType !== 'hero-illustration') {
+      return buildVisualizationFallback(knowledgePoint);
+    }
+
+    const compositionInput = parsed.visual?.composition;
+    const composition = compositionInput && typeof compositionInput === 'object'
+      ? {
+          metaphor: await cleanUserContent((compositionInput.metaphor ?? '').toString()) || undefined,
+          visualFocus: await cleanUserContent((compositionInput.visualFocus ?? '').toString()) || undefined,
+          backgroundMood: await cleanUserContent((compositionInput.backgroundMood ?? '').toString()) || undefined,
+          colorPalette: Array.isArray(compositionInput.colorPalette)
+            ? compositionInput.colorPalette
+                .map((color: unknown) => (typeof color === 'string' ? color.trim() : ''))
+                .filter(Boolean)
+                .slice(0, 4)
+            : undefined,
+        }
+      : undefined;
+
+    const annotationsInput = Array.isArray(parsed.visual?.annotations)
+      ? parsed.visual.annotations.slice(0, 4)
+      : [];
+
+    const annotations = await Promise.all(
+      annotationsInput.map(async (annotation: any, index: number) => {
+        const title = await cleanUserContent(annotation?.title || `要点${index + 1}`);
+        const description = await cleanUserContent(annotation?.description || '');
+        if (!title && !description) {
+          return null;
+        }
+        const icon = typeof annotation?.icon === 'string' && annotation.icon.trim().length <= 4
+          ? annotation.icon.trim()
+          : undefined;
+        const placement = typeof annotation?.placement === 'string'
+          ? annotation.placement.toLowerCase().trim()
+          : undefined;
+
+        return {
+          title,
+          description,
+          icon,
+          placement,
+        };
+      }),
+    ).then((items) => items.filter(Boolean) as VisualizationSpec['annotations']);
+
     const visualSpec: VisualizationSpec = {
-      type: 'concept-map',
+      type: visualType,
       theme,
+      layout,
+      imagePrompt,
       center: {
         title: centerTitle,
         subtitle,
       },
-      branches,
+      branches: visualType === 'hero-illustration' ? [] : branches,
       footerNote,
+      composition,
+      annotations,
     };
 
     return {
@@ -263,47 +315,44 @@ async function buildVisualizationFallback(knowledgePoint: string): Promise<{
   summary: string;
   visual: VisualizationSpec;
 }> {
-  const summary = await cleanUserContent(`用图示梳理“${knowledgePoint}”的核心要素，帮助学生建立整体认知。`);
-  const fallbackBranches: VisualizationBranch[] = [
-    {
-      id: 'definition',
-      title: '核心定义',
-      summary: await cleanUserContent(`${knowledgePoint}的基本含义与关键对象。`),
-      keywords: ['定义', '要素'],
-      icon: '📘',
-    },
-    {
-      id: 'features',
-      title: '关键特征',
-      summary: await cleanUserContent('列出最能代表该概念的3个特征。'),
-      keywords: ['特征', '指标'],
-      icon: '🔍',
-    },
-    {
-      id: 'application',
-      title: '应用场景',
-      summary: await cleanUserContent('学习时常见的情境或生活应用案例。'),
-      keywords: ['应用', '场景'],
-      icon: '🧭',
-    },
-    {
-      id: 'memory',
-      title: '记忆线索',
-      summary: await cleanUserContent('提供好记的口诀或联想帮助记忆。'),
-      keywords: ['记忆', '联想'],
-      icon: '🧠',
-    },
-  ];
+  const summary = await cleanUserContent(`将“${knowledgePoint}”绘成一幅隐喻插画，让学生用视觉记住它的核心含义。`);
 
   const visualSpec: VisualizationSpec = {
-    type: 'concept-map',
+    type: 'hero-illustration',
     theme: 'neutral',
+    layout: 'radial',
+    imagePrompt: await cleanUserContent(`${knowledgePoint} 的信息图插画，中心发光，周围有象征意义的元素，扁平渐层风格`),
     center: {
       title: knowledgePoint,
-      subtitle: '围绕中心概念展开的关联要素',
+      subtitle: '用一幅画呈现概念的灵魂瞬间',
     },
-    branches: fallbackBranches,
-    footerNote: undefined,
+    branches: [],
+    composition: {
+      metaphor: await cleanUserContent(`${knowledgePoint} 像一座正在运转的能量中枢`),
+      visualFocus: await cleanUserContent('中央主体以光束连接四周元素，突出概念核心'),
+      backgroundMood: await cleanUserContent('柔和蓝绿渐变，营造沉浸式学习氛围'),
+      colorPalette: ['天光蓝', '竹叶绿', '暖乳白'],
+    },
+    annotations: [
+      {
+        title: await cleanUserContent('核心象征'),
+        description: await cleanUserContent('中心发光的形体代表概念的关键机制或定律。'),
+        icon: '✨',
+        placement: 'top',
+      },
+      {
+        title: await cleanUserContent('能量流动'),
+        description: await cleanUserContent('环绕的箭形光轨寓意知识的输入与反馈。'),
+        icon: '🔄',
+        placement: 'left',
+      },
+      {
+        title: await cleanUserContent('课堂提问'),
+        description: await cleanUserContent('引导学生寻找图中象征现实应用的元素。'),
+        icon: '💬',
+        placement: 'right',
+      },
+    ],
   };
 
   return {
@@ -319,6 +368,54 @@ function normalizeTheme(theme: unknown): VisualizationTheme {
     return lowered as VisualizationTheme;
   }
   return 'neutral';
+}
+
+function normalizeLayout(layout: unknown): VisualizationSpec['layout'] {
+  if (typeof layout !== 'string' || layout.trim().length === 0) {
+    return 'left-to-right';
+  }
+  const lowered = layout.toLowerCase();
+  const allowed: Array<NonNullable<VisualizationSpec['layout']>> = [
+    'left-to-right',
+    'right-to-left',
+    'radial',
+    'grid',
+    'hierarchical',
+  ];
+
+  if (allowed.includes(lowered as NonNullable<VisualizationSpec['layout']>)) {
+    return lowered as VisualizationSpec['layout'];
+  }
+
+  return lowered;
+}
+
+function normalizeVisualType(
+  type: unknown,
+  layout: VisualizationSpec['layout'],
+  branchIds: Set<string>,
+): VisualizationSpec['type'] {
+  if (typeof type === 'string' && type.trim().length > 0) {
+    const lowered = type.trim().toLowerCase();
+    if (lowered === 'process-flow' || lowered === 'concept-map' || lowered === 'matrix' || lowered === 'hero-illustration') {
+      return lowered as VisualizationSpec['type'];
+    }
+  }
+
+  const hasProcessFlowIds = ['input', 'process', 'output'].every((key) => branchIds.has(key));
+  if (hasProcessFlowIds) {
+    return 'process-flow';
+  }
+
+  if (branchIds.size === 0) {
+    return 'hero-illustration';
+  }
+
+  if (layout === 'grid') {
+    return 'matrix';
+  }
+
+  return 'concept-map';
 }
 
 const THEMATIC_ICONS = ['🌟', '🔍', '🧠', '🧭', '🛠️', '📈'];
@@ -661,43 +758,42 @@ function generateFallbackCard(cardType: RawCardType, knowledgePoint: string): Te
       id: `fallback_concept_${Date.now()}`,
       type: 'visualization',
       title: '概念可视化',
-      content: `围绕“${knowledgePoint}”的核心结构一览。`,
+      content: `以“${knowledgePoint}”为主题绘制隐喻插画，帮助学生一眼抓住概念灵魂。`,
       explanation: `概念解释卡片 - ${knowledgePoint}`,
       visual: {
-        type: 'concept-map',
+        type: 'hero-illustration',
         theme: 'neutral',
+        layout: 'radial',
+        imagePrompt: `${knowledgePoint} 的信息图插画，中央发光并由光束连接周围象征元素，扁平渐层风格`,
         center: {
           title: knowledgePoint,
-          subtitle: '理解核心、特征、应用与记忆线索',
+          subtitle: '通过隐喻插画捕捉概念的灵魂瞬间',
         },
-        branches: [
+        branches: [],
+        composition: {
+          metaphor: `${knowledgePoint} 仿佛一座能量枢纽`,
+          visualFocus: '中央发光主体与环绕光轨形成视觉焦点',
+          backgroundMood: '柔和蓝绿渐变搭配漂浮光雾，营造静谧课堂感',
+          colorPalette: ['湖水蓝', '竹叶绿', '暖白'],
+        },
+        annotations: [
           {
-            id: 'definition',
-            title: '核心定义',
-            summary: `${knowledgePoint}的基本含义`,
-            keywords: ['概念', '定义'],
-            icon: '📘',
+            title: '核心象征',
+            description: '中央发光体代表概念的关键机制或定律。',
+            icon: '✨',
+            placement: 'top',
           },
           {
-            id: 'feature',
-            title: '关键特征',
-            summary: '记住最能代表该概念的三个特征。',
-            keywords: ['特征', '指标'],
-            icon: '🔍',
+            title: '能量轨迹',
+            description: '环绕的箭形光束寓意知识输入与反馈。',
+            icon: '🔄',
+            placement: 'left',
           },
           {
-            id: 'application',
-            title: '应用场景',
-            summary: '举例说明在课堂或生活中的应用。',
-            keywords: ['应用', '例子'],
-            icon: '🧭',
-          },
-          {
-            id: 'memory',
-            title: '记忆线索',
-            summary: '提供口诀/联想帮助学生记忆。',
-            keywords: ['记忆', '方法'],
-            icon: '🧠',
+            title: '课堂提问',
+            description: '引导学生指出图中象征现实应用的元素。',
+            icon: '💬',
+            placement: 'right',
           },
         ],
       },

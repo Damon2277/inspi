@@ -3,7 +3,7 @@
  * 使用AI模型进行智能内容审核
  */
 
-import { geminiService } from '@/core/ai/geminiService';
+import { aiService } from '@/core/ai/aiProvider';
 import { logger } from '@/shared/utils/logger';
 
 import { ValidationIssue } from './types';
@@ -84,7 +84,7 @@ export class AIContentFilter {
   private async analyzeContent(content: string): Promise<AIFilterResult> {
     const prompt = this.buildAnalysisPrompt(content);
 
-    const response = await geminiService.generateContent(prompt, {
+    const response = await aiService.generateContent(prompt, {
       temperature: 0.1, // 低温度确保一致性
       maxTokens: 200,
       useCache: true,

@@ -36,6 +36,10 @@ export const env = {
   AI: {
     GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
     OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
+    DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY || '',
+    PROVIDER: process.env.AI_PROVIDER || 'gemini',
+    DEEPSEEK_MODEL: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
+    DEEPSEEK_BASE_URL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com',
     SERVICE_TIMEOUT: parseInt(process.env.AI_SERVICE_TIMEOUT || '30000', 10),
     MAX_RETRIES: 3,
     RETRY_DELAY: 1000,

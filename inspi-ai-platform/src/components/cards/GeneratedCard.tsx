@@ -103,6 +103,7 @@ const visualizationThemes: Record<VisualizationTheme, {
 };
 
 const visualizationBranchPalette = ['#38bdf8', '#34d399', '#f97316', '#a855f7', '#f472b6', '#facc15'];
+const linearLayouts = ['left-to-right', 'right-to-left'];
 
 export function GeneratedCard({
   card,
@@ -275,10 +276,204 @@ export function GeneratedCard({
     const visual: VisualizationSpec = card.visual;
     const theme = visualizationThemes[visual.theme] ?? visualizationThemes.neutral;
     const branches = Array.isArray(visual.branches) ? visual.branches.slice(0, 6) : [];
+    const layout = typeof visual.layout === 'string' ? visual.layout.toLowerCase() : undefined;
+
+    const renderHeroIllustration = () => {
+      const annotations = Array.isArray(visual.annotations) ? visual.annotations.slice(0, 4) : [];
+      const composition = visual.composition ?? {};
+
+      return (
+        <div
+          style={{
+            background: theme.background,
+            borderRadius: '28px',
+            padding: forExport ? '48px' : '32px',
+            margin: '0 auto 24px',
+            boxShadow: '0 36px 72px rgba(15, 23, 42, 0.18)',
+            maxWidth: forExport ? 720 : 560,
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              inset: forExport ? '24px' : '18px',
+              borderRadius: '24px',
+              background: 'rgba(255, 255, 255, 0.28)',
+              filter: 'blur(60px)',
+            }}
+          />
+
+          <div
+            style={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: forExport ? '28px' : '20px',
+            }}
+          >
+            <div
+              style={{
+                alignSelf: 'center',
+                borderRadius: '999px',
+                padding: '10px 18px',
+                fontSize: '12px',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: '#1e293b',
+                background: 'rgba(255,255,255,0.6)',
+                backdropFilter: 'blur(6px)',
+              }}
+            >
+              概念可视化插画
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '12px',
+                textAlign: 'center',
+                color: '#0f172a',
+              }}
+            >
+              <div style={{ fontSize: forExport ? '28px' : '24px', fontWeight: 700 }}>
+                {visual.center.title}
+              </div>
+              {visual.center.subtitle ? (
+                <div style={{ fontSize: '14px', opacity: 0.8, lineHeight: 1.6 }}>
+                  {visual.center.subtitle}
+                </div>
+              ) : null}
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: forExport ? 'minmax(0, 1fr) minmax(0, 1fr)' : '1fr',
+                gap: '16px',
+              }}
+            >
+              <div
+                style={{
+                  background: 'rgba(255,255,255,0.72)',
+                  borderRadius: '24px',
+                  padding: forExport ? '28px' : '24px',
+                  boxShadow: '0 24px 48px rgba(15, 23, 42, 0.15)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: '12px',
+                    borderRadius: '20px',
+                    background: 'linear-gradient(135deg, rgba(148, 163, 184,0.16) 0%, rgba(59,130,246,0.12) 100%)',
+                  }}
+                />
+                <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {composition.metaphor ? (
+                    <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>{composition.metaphor}</div>
+                  ) : null}
+                  {composition.visualFocus ? (
+                    <p style={{ margin: 0, fontSize: '13px', color: '#334155', lineHeight: 1.6 }}>{composition.visualFocus}</p>
+                  ) : null}
+                  {composition.backgroundMood ? (
+                    <p style={{ margin: 0, fontSize: '12px', color: '#475569', lineHeight: 1.6 }}>{composition.backgroundMood}</p>
+                  ) : null}
+                  {Array.isArray(composition.colorPalette) && composition.colorPalette.length > 0 ? (
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '4px' }}>
+                      {composition.colorPalette.slice(0, 4).map((color, index) => (
+                        <span
+                          key={`${color}-${index}`}
+                          style={{
+                            fontSize: '11px',
+                            padding: '4px 10px',
+                            borderRadius: '999px',
+                            background: 'rgba(37, 99, 235, 0.12)',
+                            color: '#1d4ed8',
+                          }}
+                        >
+                          {color}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              {annotations.length > 0 ? (
+                <div
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.82)',
+                    borderRadius: '24px',
+                    padding: forExport ? '28px' : '24px',
+                    color: 'white',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '16px',
+                  }}
+                >
+                  {annotations.map((annotation, index) => (
+                    <div key={index} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                      {annotation.icon ? (
+                        <span style={{ fontSize: '20px' }}>{annotation.icon}</span>
+                      ) : (
+                        <span style={{ fontSize: '20px' }}>🔹</span>
+                      )}
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '14px' }}>{annotation.title}</div>
+                        {annotation.description ? (
+                          <p style={{ margin: '4px 0 0', fontSize: '12px', lineHeight: 1.6, opacity: 0.85 }}>
+                            {annotation.description}
+                          </p>
+                        ) : null}
+                        {annotation.placement ? (
+                          <span style={{ fontSize: '11px', opacity: 0.5 }}>⊙ 位置：{annotation.placement}</span>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    if (visual.type === 'hero-illustration') {
+      return renderHeroIllustration();
+    }
 
     if (branches.length === 0) {
       return null;
     }
+
+    const preferredOrder = ['input', 'process', 'output', 'insight'];
+    const shouldApplyPreferredOrder = linearLayouts.includes(layout ?? '') || visual.type === 'process-flow';
+    const prioritizedBranches = shouldApplyPreferredOrder
+      ? [...branches].sort((a, b) => {
+          const idA = typeof a.id === 'string' ? a.id.toLowerCase() : '';
+          const idB = typeof b.id === 'string' ? b.id.toLowerCase() : '';
+          const indexA = preferredOrder.indexOf(idA);
+          const indexB = preferredOrder.indexOf(idB);
+
+          if (indexA === -1 && indexB === -1) {
+            return 0;
+          }
+          if (indexA === -1) {
+            return 1;
+          }
+          if (indexB === -1) {
+            return -1;
+          }
+          return indexA - indexB;
+        })
+      : branches;
 
     const renderConceptMap = () => {
       const size = forExport ? 520 : 360;
@@ -449,7 +644,7 @@ export function GeneratedCard({
       );
     };
 
-    const renderProcessFlow = () => (
+    const renderProcessFlow = (direction: 'left-to-right' | 'right-to-left' | string = 'left-to-right') => (
       <div
         style={{
           background: theme.background,
@@ -470,6 +665,7 @@ export function GeneratedCard({
         <div
           style={{
             display: 'flex',
+            flexDirection: direction === 'right-to-left' ? 'row-reverse' : 'row',
             gap: forExport ? '24px' : '20px',
             alignItems: 'stretch',
             justifyContent: 'space-between',
@@ -477,7 +673,7 @@ export function GeneratedCard({
             flexWrap: 'wrap',
           }}
         >
-          {branches.map((branch, index) => (
+          {prioritizedBranches.map((branch, index) => (
             <React.Fragment key={branch.id}>
               <div
                 style={{
@@ -516,7 +712,7 @@ export function GeneratedCard({
                   </div>
                 ) : null}
               </div>
-              {index < branches.length - 1 ? (
+              {index < prioritizedBranches.length - 1 ? (
                 <div
                   aria-hidden
                   style={{
@@ -525,7 +721,7 @@ export function GeneratedCard({
                     fontSize: '24px',
                   }}
                 >
-                  ➔
+                  {direction === 'right-to-left' ? '⬅' : '➔'}
                 </div>
               ) : null}
             </React.Fragment>
@@ -614,13 +810,19 @@ export function GeneratedCard({
       );
     };
 
+    const isLinearFlow = visual.type === 'process-flow'
+      || linearLayouts.includes(layout ?? '');
+
     switch (visual.type) {
       case 'process-flow':
-        return renderProcessFlow();
+        return renderProcessFlow(layout === 'right-to-left' ? 'right-to-left' : 'left-to-right');
       case 'matrix':
         return renderMatrix();
       case 'concept-map':
       default:
+        if (isLinearFlow) {
+          return renderProcessFlow(layout === 'right-to-left' ? 'right-to-left' : 'left-to-right');
+        }
         return renderConceptMap();
     }
   };
@@ -953,7 +1155,33 @@ export function GeneratedCard({
         </h2>
 
         {hasVisualization ? (
-          renderVisualizationCanvas(forExport)
+          <>
+            {renderVisualizationCanvas(forExport)}
+            {card.visual?.imagePrompt && !forExport ? (
+              <div
+                style={{
+                  marginTop: '-12px',
+                  marginBottom: '24px',
+                  padding: '14px 16px',
+                  borderRadius: '12px',
+                  background: '#f8fafc',
+                  border: '1px dashed #cbd5f5',
+                  color: '#334155',
+                  fontSize: '13px',
+                  lineHeight: 1.6,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                }}
+              >
+                <span style={{ fontSize: '16px' }}>🎨</span>
+                <div>
+                  <div style={{ fontWeight: 600, marginBottom: '4px' }}>图像灵感提示</div>
+                  <div>{card.visual.imagePrompt}</div>
+                </div>
+              </div>
+            ) : null}
+          </>
         ) : (
           <div
             dangerouslySetInnerHTML={{ __html: cardContent }}

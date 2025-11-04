@@ -26,12 +26,10 @@ export interface CardTemplate {
  */
 const conceptCardTemplate: CardTemplate = {
   type: 'concept',
-  name: '概念解释卡片',
-  description: '以可视化结构呈现核心概念与关键要素',
-  expectedLength: 600,
-  prompt: `你是一名擅长信息可视化的教学设计师，现在需要为以下知识点设计一张“概念可视化卡片”。
-
-请仅返回符合 JSON 规范的数据，不要包含任何额外说明或注释。
+  name: '概念可视化卡片',
+  description: '用单幅信息图或隐喻插画帮助学生“一眼看懂”核心概念',
+  expectedLength: 780,
+  prompt: `你是一名教育视觉设计师，要将给定知识点转化为一张“概念可视化插画卡片”。请把注意力放在单幅视觉表达（非流程步骤），让学生通过图像隐喻与色彩感知迅速理解概念。务必只输出合法 JSON（不要包含 Markdown、注释或额外文字）。
 
 输入信息：
 - 知识点：{knowledgePoint}
@@ -39,42 +37,90 @@ const conceptCardTemplate: CardTemplate = {
 - 年级：{gradeLevel}
 - 难度：{difficulty}
 
-请按照下述结构输出 JSON（注意字段名必须一致）：
+JSON 输出结构（字段名必须一致）：
 {
-  "summary": "用 1-2 句话概括这个知识点的核心含义，便于教师在图表下方作为文字说明",
+  "summary": "1-2 句，用形象比喻概括整幅图带来的直观感受",
   "visual": {
-    "type": "concept-map",
-    "theme": "ocean | sunrise | forest | galaxy | neutral 之一，结合知识点特点选择",
+    "type": "hero-illustration",
+    "theme": "ocean | sunrise | forest | galaxy | neutral 之一",
+    "imagePrompt": "30-45 字中文描述，包含场景/主体/材质/气氛，可直接用于图像生成",
     "center": {
-      "title": "知识点的核心名称",
-      "subtitle": "一句话提示或课堂引导语"
+      "title": "{knowledgePoint}",
+      "subtitle": "一句隐喻或提示，例如“光合作用：绿叶工厂的能量收集站”"
     },
-    "branches": [
+    "composition": {
+      "metaphor": "说明整幅图的类比隐喻，如“温室工厂”",
+      "visualFocus": "描述画面的主体与动态",
+      "backgroundMood": "交代背景环境氛围，如“晨光透过树林的柔和蓝绿调”",
+      "colorPalette": ["主色", "辅色", "点缀色"]
+    },
+    "annotations": [
       {
-        "id": "唯一ID",
-        "title": "关键要素/子概念",
-        "summary": "用简洁语言解释该要素",
-        "keywords": ["关键词1", "关键词2"],
-        "icon": "贴切的Emoji符号"
+        "title": "视觉锚点1",
+        "description": "说明这个图形元素代表的概念或特征，文字不超过30字",
+        "icon": "单个 Emoji",
+        "placement": "left | right | top | bottom 之一"
+      },
+      {
+        "title": "视觉锚点2",
+        "description": "描述另一个关键元素或互动关系",
+        "icon": "单个 Emoji",
+        "placement": "left | right | top | bottom 之一"
+      },
+      {
+        "title": "视觉锚点3",
+        "description": "可选，可强调学习迁移或课堂提问",
+        "icon": "单个 Emoji",
+        "placement": "left | right | top | bottom 之一"
       }
-      ... 至少4个分支，至多6个
-    ],
-    "footerNote": "可选：给教师的提示或课堂关注点"
+    ]
   }
 }
 
-要求与限制：
-- JSON 顶层只能包含 summary 与 visual 两个字段
-- branches 数组中每个分支的关键词不得少于2个
-- icon 必须是单个 Emoji 字符
-- 所有字符串须使用中文
-- 不允许输出 Markdown 或代码块标记`,
+创作原则：
+- 插画要聚焦单幅隐喻或场景，避免“输入/过程/输出”流程结构。
+- summary、subtitle、annotations 描述需包含具体画面感受或触觉词汇（如“光束”“能量流”）。
+- annotations 至少提供 2 个，至多 3 个；icon 必须是单个 Emoji。
+- composition.colorPalette 仅填写颜色名称（中文或常见英文），不写额外说明。
+- 所有内容使用中文，保持 10-14 岁学生可读性。
+- 输出必须是无多余空格的 JSON 字符串，不要包裹在 Markdown 代码块。`,
   validation: (content: string) => {
     try {
       const parsed = JSON.parse(content);
       if (!parsed || typeof parsed !== 'object') return false;
-      if (!parsed.visual || !Array.isArray(parsed.visual.branches)) return false;
-      return parsed.visual.branches.length >= 3;
+      if (!parsed.visual || typeof parsed.visual !== 'object') return false;
+
+      if (parsed.visual.type !== 'hero-illustration') {
+        return false;
+      }
+
+      if (!parsed.visual.center || typeof parsed.visual.center.title !== 'string') {
+        return false;
+      }
+
+      if (!parsed.visual.composition || typeof parsed.visual.composition !== 'object') {
+        return false;
+      }
+
+      const annotations = parsed.visual.annotations;
+      if (!Array.isArray(annotations) || annotations.length < 2) {
+        return false;
+      }
+
+      const hasValidAnnotation = annotations.every((item: any) => (
+        item
+        && typeof item.title === 'string'
+        && item.title.trim().length > 0
+        && typeof item.description === 'string'
+        && item.description.trim().length > 0
+      ));
+
+      if (!hasValidAnnotation) {
+        return false;
+      }
+
+      return typeof parsed.visual.imagePrompt === 'string'
+        && parsed.visual.imagePrompt.trim().length > 0;
     } catch (error) {
       return false;
     }

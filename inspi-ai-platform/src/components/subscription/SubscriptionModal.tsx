@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -30,6 +31,12 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, currentQuota }: 
   const [paymentStatus, setPaymentStatus] = useState<PaymentState>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [countdownMs, setCountdownMs] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
@@ -181,11 +188,23 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, currentQuota }: 
   const showQrSection = qrCodeData && paymentStatus !== 'success';
   const isExpired = countdownMs !== null && countdownMs <= 0;
 
-  if (!isOpen) {
+  useEffect(() => {
+    if (!mounted) return;
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+    return undefined;
+  }, [isOpen, mounted]);
+
+  if (!isOpen || !mounted) {
     return null;
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/70 px-4 py-6">
       <div className="relative w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl">
         <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5 text-white">
@@ -329,7 +348,7 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, currentQuota }: 
         </div>
       </div>
     </div>
-  );
+  , document.body);
 }
 
 export default SubscriptionModal;

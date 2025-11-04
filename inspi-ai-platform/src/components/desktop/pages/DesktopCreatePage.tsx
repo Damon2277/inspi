@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 /**
  * 现代化桌面端创作页面组件
@@ -39,10 +40,13 @@ export function DesktopCreatePage() {
     gradeLevel: string;
   } | null>(null);
   const [retryingCardId, setRetryingCardId] = useState<string | null>(null);
+  const [quotaHint, setQuotaHint] = useState<string | null>(null);
+  const [quotaErrorCount, setQuotaErrorCount] = useState(0);
   const actionMessageTimeoutRef = useRef<number | null>(null);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated } = useAuth();
   const { showPrompt, LoginPromptComponent } = useLoginPrompt();
+  const router = useRouter();
   const shouldCompactForm = isFormCollapsed || isGenerating || generatedCards.length > 0;
 
   const normalizeCard = (
@@ -187,6 +191,7 @@ export function DesktopCreatePage() {
   const handleGenerate = async () => {
     const loginPromptMessage = '登录后即可生成专属教学卡片';
     setErrorMessage(null);
+    setQuotaHint(null);
 
     if (!isAuthenticated) {
       showPrompt('create', loginPromptMessage);
@@ -244,11 +249,21 @@ export function DesktopCreatePage() {
 
       setGeneratedCards(normalizedCards);
       setLastRequest(fallbackContext);
+      setQuotaHint(null);
+      setQuotaErrorCount(0);
 
     } catch (error) {
       console.error('生成卡片失败:', error);
       setIsFormCollapsed(false);
-      setErrorMessage(`生成失败：${error instanceof Error ? error.message : '未知错误'}`);
+      const rawMessage = error instanceof Error ? error.message : '未知错误';
+      setErrorMessage(`生成失败：${rawMessage}`);
+      if (/(额度|配额)/.test(rawMessage)) {
+        setQuotaHint(rawMessage);
+        setQuotaErrorCount((prev) => prev + 1);
+      } else {
+        setQuotaHint(null);
+        setQuotaErrorCount(0);
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -297,7 +312,12 @@ export function DesktopCreatePage() {
       showActionFeedback('已重新生成卡片');
     } catch (error) {
       console.error('重新生成卡片失败:', error);
-      setErrorMessage(`重新生成失败：${error instanceof Error ? error.message : '未知错误'}`);
+      const rawMessage = error instanceof Error ? error.message : '未知错误';
+      setErrorMessage(`重新生成失败：${rawMessage}`);
+      if (/(额度|配额)/.test(rawMessage)) {
+        setQuotaHint(rawMessage);
+        setQuotaErrorCount((prev) => prev + 1);
+      }
     } finally {
       setRetryingCardId(null);
     }
@@ -826,6 +846,78 @@ export function DesktopCreatePage() {
                   }}>
                     {errorMessage}
                   </p>
+                )}
+                {quotaHint && (
+                  <div
+                    style={{
+                      border: '1px solid rgba(59, 130, 246, 0.3)',
+                      background: 'rgba(239, 246, 255, 0.9)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      marginBottom: '16px',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                      <span style={{ fontSize: '18px' }}>⚡️</span>
+                      <div style={{ flex: 1 }}>
+                        <p style={{
+                          margin: 0,
+                          fontSize: '13px',
+                          fontWeight: 600,
+                          color: '#1d4ed8',
+                        }}>
+                          额度用尽，升级即可继续生成
+                        </p>
+                        <p style={{
+                          margin: '6px 0 0',
+                          fontSize: '12px',
+                          color: '#1e3a8a',
+                          lineHeight: 1.6,
+                        }}>
+                          {quotaHint}
+                          {quotaErrorCount > 1 ? '（已多次触发，可考虑立即升级或联系管理员）' : ''}
+                        </p>
+                        <div style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: '8px',
+                          marginTop: '12px',
+                        }}>
+                          <button
+                            type="button"
+                            onClick={() => router.push('/profile?tab=subscription&upgrade=1')}
+                            style={{
+                              background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+                              color: '#fff',
+                              borderRadius: '999px',
+                              padding: '8px 16px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              boxShadow: '0 8px 18px rgba(99, 102, 241, 0.25)',
+                            }}
+                          >
+                            升级获取更多额度
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => router.push('/subscription')}
+                            style={{
+                              background: '#ffffff',
+                              color: '#1d4ed8',
+                              border: '1px solid rgba(59, 130, 246, 0.35)',
+                              borderRadius: '999px',
+                              padding: '8px 16px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                            }}
+                          >
+                            查看订阅方案
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
                 <button
                   className="modern-btn modern-btn-primary"

@@ -85,63 +85,63 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
           </div>
         </div>
 
-        <div style={{ fontSize: '14px', color: 'var(--gray-600)', lineHeight: 1.7 }}>
+        <div style={{ marginTop: '12px', fontSize: '14px', color: 'var(--gray-600)', lineHeight: 1.7 }}>
           {user.bio}
         </div>
 
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '12px',
-          flexWrap: 'wrap',
-        }}>
-          {[
-            { label: '已创建卡片', value: user.stats.works },
-            { label: '被复用次数', value: user.stats.reuses },
-            { label: '收到点赞', value: user.stats.likes },
-          ].map((item) => (
-            <div
-              key={item.label}
-              style={{
-                border: '1px solid var(--gray-200)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '12px 16px',
-                background: 'white',
-                minWidth: '150px',
-                maxWidth: '180px',
-                textAlign: 'center',
-              }}
-            >
-              <p style={{ fontSize: '12px', color: 'var(--gray-500)', marginBottom: '4px' }}>{item.label}</p>
-              <p style={{ fontSize: '20px', fontWeight: 600, color: 'var(--gray-900)' }}>{item.value}</p>
-            </div>
-          ))}
+        <div style={{ marginTop: '24px' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--gray-900)', marginBottom: '12px' }}>个人概况</h3>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-start',
+            gap: '16px',
+            flexWrap: 'wrap',
+          }}>
+            {[
+              { label: '已创建卡片', value: user.stats.works },
+              { label: '被复用次数', value: user.stats.reuses },
+              { label: '收到点赞', value: user.stats.likes },
+            ].map((item) => (
+              <div
+                key={item.label}
+                style={{
+                  border: '1px solid var(--gray-200)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: '18px 24px',
+                  background: 'white',
+                  minWidth: '180px',
+                  maxWidth: '200px',
+                  textAlign: 'center',
+                }}
+              >
+                <p style={{ fontSize: '12px', color: 'var(--gray-500)', marginBottom: '6px' }}>{item.label}</p>
+                <p style={{ fontSize: '22px', fontWeight: 600, color: 'var(--gray-900)' }}>{item.value}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div style={{
           borderTop: '1px solid var(--gray-200)',
           paddingTop: '20px',
-          marginTop: '8px',
-          display: 'grid',
-          gap: '16px',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          alignItems: 'start',
+          marginTop: '20px',
+          background: 'var(--gray-50)',
+          borderRadius: 'var(--radius-lg)',
+          padding: '20px 24px',
         }}>
-          <div>
-            <h3 style={{ fontSize: '15px', fontWeight: '600', color: 'var(--gray-900)', marginBottom: '6px' }}>账户安全</h3>
-            <p style={{ fontSize: '13px', color: 'var(--gray-600)', marginBottom: '10px' }}>建议定期更新密码，保障账户安全。</p>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <button className="modern-btn modern-btn-outline" style={{ flex: '1 1 160px', fontSize: '14px' }}>
-                修改密码
-              </button>
-              <button
-                className="modern-btn modern-btn-primary"
-                style={{ flex: '1 1 160px', fontSize: '14px' }}
-                onClick={() => setShowProfileEditor(true)}
-              >
-                编辑个人资料
-              </button>
-            </div>
+          <h3 style={{ fontSize: '15px', fontWeight: '600', color: 'var(--gray-900)', marginBottom: '12px' }}>账户安全</h3>
+          <p style={{ fontSize: '13px', color: 'var(--gray-600)', marginBottom: '16px' }}>建议定期更新密码，保障账户安全。</p>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <button className="modern-btn modern-btn-outline" style={{ flex: '1 1 200px', fontSize: '14px', padding: '12px' }}>
+              修改密码
+            </button>
+            <button
+              className="modern-btn modern-btn-primary"
+              style={{ flex: '1 1 200px', fontSize: '14px', padding: '12px' }}
+              onClick={() => setShowProfileEditor(true)}
+            >
+              编辑个人资料
+            </button>
           </div>
         </div>
       </div>
@@ -161,9 +161,9 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '32px', width: '100%' }}>
         <div
           style={{
-            flex: '1 1 33%',
-            maxWidth: '380px',
-            minWidth: '280px',
+            flex: '1 1 360px',
+            maxWidth: '420px',
+            minWidth: '300px',
             display: 'flex',
             flexDirection: 'column',
           }}
@@ -171,7 +171,7 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
           {profileCard}
         </div>
 
-        <div style={{ flex: '2 1 64%', minWidth: '360px' }}>
+        <div style={{ flex: '2 1 520px', minWidth: '400px' }}>
           <SubscriptionManagement variant="embedded" />
         </div>
       </div>

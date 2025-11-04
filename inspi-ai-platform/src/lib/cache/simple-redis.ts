@@ -295,8 +295,11 @@ export class SimpleRedis {
     });
 
     client.on('error', (error: unknown) => {
-      const message = error instanceof Error ? error.message : String(error);
-      logger.warn('Redis 运行时错误', { error: message });
+      const message = error instanceof Error ? error.message : (typeof error === 'string' ? error : '');
+      logger.warn('Redis 运行时错误', {
+        error: message && message.trim().length > 0 ? message : 'Unknown runtime error',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
     });
   }
 

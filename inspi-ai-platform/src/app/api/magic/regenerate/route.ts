@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 
-import { geminiService } from '@/core/ai/geminiService';
+import { aiProvider, aiService } from '@/core/ai/aiProvider';
 import type { PromptContext } from '@/core/ai/promptTemplates';
 import { requireAuth, AuthenticatedRequest } from '@/core/auth/middleware';
 import { quotaManager } from '@/lib/quota/quotaManager';
 import { validateContent } from '@/lib/security';
 import type { RegenerateCardRequest, RawCardType } from '@/shared/types/teaching';
 import { logger } from '@/shared/utils/logger';
+
+import { env } from '@/shared/config/environment';
 
 import { generateTeachingCard } from '../card-engine';
 
@@ -72,10 +74,14 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
       );
     }
 
-    const isMockMode = !process.env.GEMINI_API_KEY || process.env.USE_MOCK_GEMINI === 'true';
+    const isMockMode = (
+      (aiProvider === 'deepseek' && !env.AI.DEEPSEEK_API_KEY) ||
+      (aiProvider === 'gemini' && !env.AI.GEMINI_API_KEY) ||
+      process.env.USE_MOCK_GEMINI === 'true'
+    );
 
     if (!isMockMode) {
-      const isHealthy = await geminiService.healthCheck();
+      const isHealthy = await aiService.healthCheck();
       if (!isHealthy) {
         logger.error('AI service health check failed (regenerate)');
         return NextResponse.json({ error: 'AI服务暂时不可用，请稍后重试' }, { status: 503 });

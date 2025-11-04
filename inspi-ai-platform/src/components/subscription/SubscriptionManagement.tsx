@@ -23,13 +23,14 @@ interface SubscriptionInfo {
 
 interface SubscriptionManagementProps {
   variant?: 'page' | 'embedded';
+  autoOpenModal?: boolean;
 }
 
-export function SubscriptionManagement({ variant = 'page' }: SubscriptionManagementProps) {
+export function SubscriptionManagement({ variant = 'page', autoOpenModal = false }: SubscriptionManagementProps) {
   const isEmbedded = variant === 'embedded';
   const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(autoOpenModal);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -53,6 +54,12 @@ export function SubscriptionManagement({ variant = 'page' }: SubscriptionManagem
   useEffect(() => {
     fetchSubscriptionInfo();
   }, [fetchSubscriptionInfo]);
+
+  useEffect(() => {
+    if (autoOpenModal) {
+      setShowSubscriptionModal(true);
+    }
+  }, [autoOpenModal]);
 
   const handleCancelSubscription = useCallback(async () => {
     setCancelLoading(true);

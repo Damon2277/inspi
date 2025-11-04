@@ -19,15 +19,31 @@ export interface VisualizationBranch {
   color?: string;
 }
 
+export interface VisualizationAnnotation {
+  title: string;
+  description: string;
+  icon?: string;
+  placement?: 'left' | 'right' | 'top' | 'bottom' | 'center';
+}
+
 export interface VisualizationSpec {
-  type: 'concept-map' | 'process-flow' | 'matrix';
+  type: 'concept-map' | 'process-flow' | 'matrix' | 'hero-illustration';
   theme: VisualizationTheme;
+  layout?: 'left-to-right' | 'right-to-left' | 'radial' | 'grid' | 'hierarchical' | string;
+  imagePrompt?: string;
   center: {
     title: string;
     subtitle?: string;
   };
   branches: VisualizationBranch[];
   footerNote?: string;
+  composition?: {
+    metaphor?: string;
+    visualFocus?: string;
+    backgroundMood?: string;
+    colorPalette?: string[];
+  };
+  annotations?: VisualizationAnnotation[];
 }
 
 export interface TeachingCard {
@@ -93,6 +109,7 @@ export interface GenerateCardsRequest {
   gradeLevel?: string;
   difficulty?: string;
   additionalContext?: string;
+  cardTypes?: (CardType | RawCardType)[];
 }
 
 export interface GenerateCardsResponse {
