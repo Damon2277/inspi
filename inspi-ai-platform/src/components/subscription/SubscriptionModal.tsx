@@ -21,6 +21,7 @@ interface SubscribeResponse {
   orderId?: string;
   expiresAt?: string;
   prepayId?: string;
+  codeUrl?: string;
 }
 
 type PaymentState = 'idle' | 'pending' | 'success' | 'failed';
@@ -249,13 +250,13 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, currentQuota }: 
             <div className="flex flex-col items-center gap-4">
               <div className="flex w-full flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
                 <span className="text-2xl font-bold text-slate-900">
-                  ¥15<span className="ml-1 text-base font-normal">/月</span>
+                  ¥0.1<span className="ml-1 text-base font-normal">/月</span>
                 </span>
                 <p className="text-sm text-slate-600">自动续费，可随时取消。订阅后每月获得 150 次生成额度。</p>
               </div>
 
               <div className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-center shadow-sm">
-                {qrCodeData.qrCodeImage ? (
+                {qrCodeData?.qrCodeImage ? (
                   <Image
                     src={qrCodeData.qrCodeImage}
                     alt="微信支付二维码"
@@ -264,6 +265,21 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, currentQuota }: 
                     className="mx-auto rounded-lg shadow-lg"
                     priority
                   />
+                ) : qrCodeData?.codeUrl ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="flex h-64 w-64 flex-col items-center justify-center gap-3 rounded-lg bg-slate-100">
+                      <span className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-500" aria-hidden />
+                      <p className="text-sm text-slate-500">二维码生成中...</p>
+                    </div>
+                    <a
+                      href={qrCodeData.codeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                    >
+                      打开微信支付页
+                    </a>
+                  </div>
                 ) : (
                   <div className="flex h-64 w-64 flex-col items-center justify-center gap-3 rounded-lg bg-slate-100">
                     <span className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-500" aria-hidden />
@@ -337,7 +353,7 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, currentQuota }: 
                 {loading ? (
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden />
                 ) : null}
-                立即升级 ¥15 / 月
+                立即升级 ¥0.1 / 月
               </button>
 
               <p className="text-center text-xs text-slate-500">

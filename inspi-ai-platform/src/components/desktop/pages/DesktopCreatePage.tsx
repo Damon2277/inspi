@@ -1,6 +1,6 @@
 'use client';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 /**
  * 现代化桌面端创作页面组件
@@ -225,17 +225,21 @@ export function DesktopCreatePage() {
         }),
       });
 
-      if (!response.ok) {
+      const rawPayload = await response.text();
+      const parsedPayload: GenerateCardsResponse & { error?: string } | null = safeParseJSON(rawPayload);
+
+      if (!response.ok || !parsedPayload) {
         if (response.status === 401) {
           showPrompt('create', loginPromptMessage);
           throw new Error('登录状态已失效，请重新登录后重试');
         }
 
-        const errorData = await response.json();
-        throw new Error(errorData.error || '生成失败');
+        const errorMessage = parsedPayload?.error || 'AI服务暂时不可用，请稍后重试';
+        console.warn('生成卡片额度检查跳过，原始错误：', errorMessage);
+        throw new Error(errorMessage);
       }
 
-      const result: GenerateCardsResponse = await response.json();
+      const result: GenerateCardsResponse = parsedPayload;
 
       const fallbackContext = {
         knowledgePoint: formData.content,
@@ -256,14 +260,10 @@ export function DesktopCreatePage() {
       console.error('生成卡片失败:', error);
       setIsFormCollapsed(false);
       const rawMessage = error instanceof Error ? error.message : '未知错误';
-      setErrorMessage(`生成失败：${rawMessage}`);
-      if (/(额度|配额)/.test(rawMessage)) {
-        setQuotaHint(rawMessage);
-        setQuotaErrorCount((prev) => prev + 1);
-      } else {
-        setQuotaHint(null);
-        setQuotaErrorCount(0);
-      }
+      const friendlyMessage = normalizeErrorMessage(rawMessage);
+      setErrorMessage(`生成失败：${friendlyMessage}`);
+      setQuotaHint(null);
+      setQuotaErrorCount(0);
     } finally {
       setIsGenerating(false);
     }
@@ -300,12 +300,14 @@ export function DesktopCreatePage() {
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: '重新生成失败' }));
-        throw new Error(errorData.error || '重新生成失败');
+      const rawData = await response.text();
+      const parsedData: { card?: TeachingCard; error?: string } | null = safeParseJSON(rawData);
+
+      if (!response.ok || !parsedData) {
+        throw new Error(parsedData?.error || '重新生成失败');
       }
 
-      const data = await response.json();
+      const data = parsedData;
       const newCard = normalizeCard(data.card as TeachingCard, index, fallback);
 
       setGeneratedCards((prev) => prev.map((item, idx) => (idx === index ? newCard : item)));
@@ -313,9 +315,10 @@ export function DesktopCreatePage() {
     } catch (error) {
       console.error('重新生成卡片失败:', error);
       const rawMessage = error instanceof Error ? error.message : '未知错误';
-      setErrorMessage(`重新生成失败：${rawMessage}`);
+      const friendlyMessage = normalizeErrorMessage(rawMessage);
+      setErrorMessage(`重新生成失败：${friendlyMessage}`);
       if (/(额度|配额)/.test(rawMessage)) {
-        setQuotaHint(rawMessage);
+        setQuotaHint(friendlyMessage);
         setQuotaErrorCount((prev) => prev + 1);
       }
     } finally {
@@ -1300,4 +1303,47 @@ export function DesktopCreatePage() {
       )}
     </React.Fragment>
   );
+}
+
+function safeParseJSON<T = any>(payload: string): T | null {
+  if (!payload) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(payload) as T;
+  } catch (error) {
+    return null;
+  }
+}
+
+function normalizeErrorMessage(message: string, fallback: string = '系统繁忙，请稍后再试'): string {
+  if (!message) {
+    return fallback;
+  }
+
+  const lower = message.toLowerCase();
+
+  if (/timeout|network|failed to fetch/.test(lower)) {
+    return '网络波动，请检查连接后重试';
+  }
+
+  if (/body stream already read/.test(lower) || /json/.test(lower)) {
+    return '服务响应异常，请稍后再试';
+  }
+
+  if (/ai服务暂时不可用/.test(message)) {
+    return 'AI服务暂时不可用，请稍后再试';
+  }
+
+  if (/(额度|配额)/.test(message)) {
+    return message;
+  }
+
+  const hasChinese = /[\u4e00-\u9fa5]/.test(message);
+  if (!hasChinese) {
+    return fallback;
+  }
+
+  return message;
 }

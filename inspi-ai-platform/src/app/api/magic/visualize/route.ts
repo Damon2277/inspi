@@ -6,13 +6,12 @@ import { requireAuth, AuthenticatedRequest } from '@/core/auth/middleware';
 import { quotaManager } from '@/lib/quota/quotaManager';
 import { validateContent } from '@/lib/security';
 import { env } from '@/shared/config/environment';
-import type { RegenerateCardRequest, RawCardType } from '@/shared/types/teaching';
+import type { VisualizationSpec } from '@/shared/types/teaching';
 import { logger } from '@/shared/utils/logger';
 
 import { generateTeachingCard } from '../card-engine';
 
 const SUPPORTED_PLANS = new Set(['free', 'pro', 'super']);
-const CARD_TYPES = new Set<RawCardType>(['concept', 'example', 'practice', 'extension']);
 
 export const POST = requireAuth(async (request: AuthenticatedRequest) => {
   const startTime = Date.now();
@@ -23,14 +22,10 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
       return NextResponse.json({ error: '用户未认证' }, { status: 401 });
     }
 
-    const body: RegenerateCardRequest = await request.json();
-    const { cardType, knowledgePoint, subject, gradeLevel } = body;
+    const body = await request.json();
+    const { knowledgePoint, subject, gradeLevel } = body ?? {};
 
-    if (!CARD_TYPES.has(cardType)) {
-      return NextResponse.json({ error: '不支持的卡片类型' }, { status: 400 });
-    }
-
-    if (!knowledgePoint || knowledgePoint.trim().length === 0) {
+    if (typeof knowledgePoint !== 'string' || knowledgePoint.trim().length === 0) {
       return NextResponse.json({ error: '请输入知识点' }, { status: 400 });
     }
 
@@ -66,7 +61,6 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
             current: quota.currentUsage,
             limit: quota.dailyLimit,
             remaining: quota.remaining,
-            resetTime: quota.resetTime,
           },
         },
         { status: 429 },
@@ -74,15 +68,14 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     }
 
     const isMockMode = (
-      (aiProvider === 'deepseek' && !env.AI.DEEPSEEK_API_KEY) ||
-      (aiProvider === 'gemini' && !env.AI.GEMINI_API_KEY) ||
-      process.env.USE_MOCK_GEMINI === 'true'
+      (aiProvider === 'deepseek' && !env.AI.DEEPSEEK_API_KEY)
+      || (aiProvider === 'gemini' && !env.AI.GEMINI_API_KEY)
+      || process.env.USE_MOCK_GEMINI === 'true'
     );
 
     if (!isMockMode) {
       const isHealthy = await aiService.healthCheck();
       if (!isHealthy) {
-        logger.error('AI service health check failed (regenerate)');
         return NextResponse.json({ error: 'AI服务暂时不可用，请稍后重试' }, { status: 503 });
       }
     }
@@ -95,10 +88,10 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
       difficulty: 'medium',
     };
 
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const sessionId = `visual_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
     const card = await generateTeachingCard({
-      cardType,
+      cardType: 'concept',
       knowledgePoint: cleanKnowledgePoint,
       subject,
       gradeLevel,
@@ -107,35 +100,36 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
       sessionId,
     });
 
+    const visual: VisualizationSpec | undefined = card.visual;
+    if (!visual) {
+      throw new Error('未生成可用的辅助图示');
+    }
+
     const updatedQuota = await quotaManager.checkQuota(userId, userPlan);
 
-    const duration = Date.now() - startTime;
-    logger.info('AI card regeneration completed', {
+    logger.info('AI visual assist generation completed', {
       userId,
       knowledgePoint: cleanKnowledgePoint,
-      cardType,
-      duration,
+      duration: Date.now() - startTime,
     });
 
     return NextResponse.json({
-      card,
+      visual,
       usage: {
         current: updatedQuota.currentUsage,
         limit: updatedQuota.dailyLimit,
         remaining: updatedQuota.remaining,
       },
     });
-
   } catch (error) {
-    const duration = Date.now() - startTime;
-    logger.error('AI card regeneration failed', {
+    logger.error('AI visual assist generation failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      duration,
     });
 
     return NextResponse.json(
-      { error: '卡片重新生成失败，请稍后重试' },
+      { error: '辅助图示生成失败，请稍后再试' },
       { status: 500 },
     );
   }
 });
+

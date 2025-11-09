@@ -1,5 +1,7 @@
 import { aiService } from '@/core/ai/aiProvider';
+import { imageService } from '@/core/ai/imageService';
 import { generatePrompt, PromptContext, validateCardContent } from '@/core/ai/promptTemplates';
+import { planVisualizationPrompt } from '@/core/ai/visualPromptPlanner';
 import { cleanUserContent } from '@/lib/security';
 import type {
   CardPresentationCue,
@@ -7,7 +9,6 @@ import type {
   CardSOPMicroStep,
   CardSOPSection,
   TeachingCard,
-  VisualizationBranch,
   VisualizationSpec,
   VisualizationTheme,
   RawCardType,
@@ -40,16 +41,58 @@ const CARD_TITLES: Record<RawCardType, string> = {
 
 const THEME_ORDER: VisualizationTheme[] = ['ocean', 'sunrise', 'forest', 'galaxy', 'neutral'];
 
+function getHeroFallbackConfig(knowledgePoint: string) {
+  const warmKeywords = ['太阳', 'sun', '恒星', '火', '火焰', '火山', '熔岩', '热能'];
+  const lower = knowledgePoint.toLowerCase();
+  const isWarmConcept = warmKeywords.some((keyword) =>
+    keyword === keyword.toLowerCase()
+      ? lower.includes(keyword)
+      : knowledgePoint.includes(keyword),
+  );
+
+  const theme: VisualizationTheme = isWarmConcept ? 'sunrise' : 'neutral';
+
+  const palette = isWarmConcept
+    ? ['#F97316', '#DC2626', '#FBBF24']
+    : ['#0EA5E9', '#1E3A8A', '#FACC15'];
+
+  const imagePrompt = isWarmConcept
+    ? `${knowledgePoint} 概念插画，炽热金橙色光焰，星体细节清晰，科普海报风`
+    : `${knowledgePoint} 概念插画，电影感光影，蓝绿色主色调，清晰的能量流动，科普海报风`;
+
+  return {
+    summary: `以视觉隐喻呈现“${knowledgePoint}”的核心形象与能量流向。`,
+    centerSubtitle: '把抽象概念化成一幅可以“看懂”的画面',
+    imagePrompt,
+    footerNote: '提示：可让学生描述插画中的元素与知识点的对应关系',
+    theme,
+    composition: {
+      metaphor: `${knowledgePoint} 被拟作可视化的自然或课堂场景`,
+      visualFocus: '画面中央突出概念核心，周围用流线或光束表现流动',
+      backgroundMood: isWarmConcept
+        ? '炽热金橙色光晕，营造能量爆发的课堂氛围'
+        : '柔和的蓝绿渐层，营造理性与启发的课堂氛围',
+      colorPalette: palette,
+    } as {
+      metaphor: string;
+      visualFocus: string;
+      backgroundMood: string;
+      colorPalette: string[];
+    },
+  };
+}
+
 export async function generateTeachingCard(options: GenerateCardOptions): Promise<TeachingCard> {
   const { cardType, knowledgePoint, subject, gradeLevel, isMockMode, promptContext, sessionId } = options;
 
   if (isMockMode) {
-    return enrichCard(
+    const fallbackCard = enrichCard(
       generateFallbackCard(cardType, knowledgePoint),
       knowledgePoint,
       subject,
       gradeLevel,
     );
+    return attachVisualizationImage(fallbackCard, knowledgePoint);
   }
 
   try {
@@ -75,7 +118,7 @@ export async function generateTeachingCard(options: GenerateCardOptions): Promis
       cached: result.cached,
     });
 
-    return processed;
+    return attachVisualizationImage(processed, knowledgePoint);
   } catch (error) {
     logger.warn('generateTeachingCard failed, fallback used', {
       cardType,
@@ -83,12 +126,14 @@ export async function generateTeachingCard(options: GenerateCardOptions): Promis
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    return enrichCard(
+    const fallbackCard = enrichCard(
       generateFallbackCard(cardType, knowledgePoint),
       knowledgePoint,
       subject,
       gradeLevel,
     );
+
+    return attachVisualizationImage(fallbackCard, knowledgePoint);
   }
 }
 
@@ -114,7 +159,11 @@ async function buildCardFromAIResponse(params: BuildCardParams): Promise<Teachin
   }
 
   if (cardType === 'concept') {
-    const { summary, visual } = await parseVisualizationJSON(rawContent, knowledgePoint);
+    const parsedVisualization = await parseVisualizationJSON(rawContent, knowledgePoint, subject, gradeLevel);
+    const heroVisualization = parsedVisualization.visual?.type === 'hero-illustration'
+      ? parsedVisualization
+      : await buildVisualizationFallback(knowledgePoint, subject, gradeLevel);
+    const { summary, visual } = heroVisualization;
 
     const baseCard: TeachingCard = {
       id: `card_${sessionId}_${cardType}`,
@@ -143,117 +192,237 @@ async function buildCardFromAIResponse(params: BuildCardParams): Promise<Teachin
   return enrichCard(baseCard, knowledgePoint, subject, gradeLevel);
 }
 
+async function attachVisualizationImage(
+  card: TeachingCard,
+  knowledgePoint: string,
+): Promise<TeachingCard> {
+  if (card.type !== 'visualization' || !card.visual) {
+    return card;
+  }
+
+  if (!imageService.isEnabled()) {
+    return card;
+  }
+
+  try {
+    let updatedVisual = card.visual;
+    const subjectMeta = typeof card.metadata?.subject === 'string' ? card.metadata?.subject : undefined;
+    const gradeMeta = typeof card.metadata?.gradeLevel === 'string' ? card.metadata?.gradeLevel : undefined;
+
+    if (card.visual.imagePrompt) {
+      let positivePrompt = card.visual.imagePrompt.trim();
+      let negativePrompt = card.visual.negativePrompt?.trim();
+
+      if (!positivePrompt) {
+        positivePrompt = `${knowledgePoint} 概念教学插画`;
+      }
+
+      if (!negativePrompt) {
+        const plannedPrompt = await planVisualizationPrompt({
+          knowledgePoint,
+          subject: subjectMeta,
+          gradeLevel: gradeMeta,
+          basePrompt: positivePrompt,
+          visualSpec: card.visual,
+        });
+
+        if (plannedPrompt?.positivePrompt) {
+          positivePrompt = plannedPrompt.positivePrompt;
+        }
+        if (plannedPrompt?.negativePrompt) {
+          negativePrompt = plannedPrompt.negativePrompt;
+        }
+
+        if (plannedPrompt) {
+          updatedVisual = {
+            ...updatedVisual,
+            imagePrompt: plannedPrompt.positivePrompt ?? positivePrompt,
+            negativePrompt: plannedPrompt.negativePrompt ?? negativePrompt,
+          };
+        }
+      }
+
+      const sanitizedPositive = positivePrompt.trim() || `${knowledgePoint} 概念教学插画`;
+      const sanitizedNegative = negativePrompt?.trim();
+
+      const result = await imageService.generateHeroIllustration(sanitizedPositive, {
+        cacheKey: `visual-card:${knowledgePoint}:${sanitizedPositive}:${sanitizedNegative || 'none'}`,
+        negativePrompt: sanitizedNegative,
+      });
+
+      if (result?.imageUrl) {
+        updatedVisual = {
+          ...updatedVisual,
+          imageUrl: result.imageUrl,
+          imageMetadata: {
+            provider: result.provider,
+            width: result.width,
+            height: result.height,
+            generatedAt: new Date().toISOString(),
+          },
+        };
+      }
+    }
+
+    if (updatedVisual.type === 'structured-diagram' && updatedVisual.structured) {
+      const stagesWithImages = await Promise.all(
+        updatedVisual.structured.stages.map(async (stage) => {
+          if (!stage?.imagePrompt || stage.imageUrl) {
+            return stage;
+          }
+
+          const trimmedPrompt = stage.imagePrompt.trim();
+          if (!trimmedPrompt) {
+            return stage;
+          }
+
+          try {
+          const stageResult = await imageService.generateHeroIllustration(trimmedPrompt, {
+            cacheKey: `visual-stage:${knowledgePoint}:${stage.id}:${trimmedPrompt}`,
+            size: imageService.getStageImageSize(),
+          });
+
+            if (!stageResult?.imageUrl) {
+              return stage;
+            }
+
+            return {
+              ...stage,
+              imageUrl: stageResult.imageUrl,
+              imageMetadata: {
+                provider: stageResult.provider,
+                width: stageResult.width,
+                height: stageResult.height,
+                generatedAt: new Date().toISOString(),
+              },
+            };
+          } catch (error) {
+            logger.debug('Failed to generate stage illustration', {
+              knowledgePoint,
+              stageId: stage.id,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            });
+            return stage;
+          }
+        }),
+      );
+
+      updatedVisual = {
+        ...updatedVisual,
+        structured: {
+          ...updatedVisual.structured,
+          stages: stagesWithImages,
+        },
+      };
+    }
+
+    return {
+      ...card,
+      visual: updatedVisual,
+    };
+  } catch (error) {
+    logger.warn('attachVisualizationImage failed', {
+      knowledgePoint,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return card;
+  }
+}
+
 async function parseVisualizationJSON(
   rawContent: string,
   knowledgePoint: string,
+  subject?: string,
+  gradeLevel?: string,
 ): Promise<{ summary: string; visual: VisualizationSpec }> {
   const jsonPayload = extractJSON(rawContent);
 
   if (!jsonPayload) {
     logger.warn('Visualization payload missing JSON, using fallback');
-    return buildVisualizationFallback(knowledgePoint);
+    return buildVisualizationFallback(knowledgePoint, subject, gradeLevel);
   }
 
   try {
     const parsed = JSON.parse(jsonPayload);
+    const heroFallback = getHeroFallbackConfig(knowledgePoint);
 
-    const summary = await cleanUserContent(parsed.summary || `抓住“${knowledgePoint}”的核心脉络。`);
+    const summary = await sanitizeRequiredText(
+      parsed.summary,
+      `用一幅图掌握“${knowledgePoint}”的要点。`,
+    );
 
-    const theme = normalizeTheme(parsed.visual?.theme);
-    const layout = normalizeLayout(parsed.visual?.layout);
-    const branchesInput = Array.isArray(parsed.visual?.branches)
-      ? parsed.visual.branches.slice(0, 6)
+    const rawVisual = parsed.visual ?? {};
+    const theme = normalizeTheme(rawVisual.theme);
+    const layout =
+      typeof rawVisual.layout === 'string' && rawVisual.layout.trim().length > 0
+        ? rawVisual.layout.trim()
+        : 'centered';
+
+    const centerTitle = await sanitizeRequiredText(rawVisual.center?.title, knowledgePoint);
+    const centerSubtitle =
+      (await sanitizeOptionalText(rawVisual.center?.subtitle)) ?? heroFallback.centerSubtitle;
+
+    const stagesInput = Array.isArray(rawVisual.stages)
+      ? rawVisual.stages
+      : Array.isArray(rawVisual?.structured?.stages)
+      ? rawVisual.structured.stages
       : [];
 
-    const branchIds = new Set<string>();
-    const branches: VisualizationBranch[] = [];
-    for (let index = 0; index < branchesInput.length; index += 1) {
-      const branch = branchesInput[index];
-      const id = typeof branch?.id === 'string' && branch.id.trim().length > 0
-        ? branch.id.trim()
-        : `branch-${index + 1}`;
-      branchIds.add(id.toLowerCase());
-
-      const title = await cleanUserContent(branch?.title || `要点${index + 1}`);
-      const summaryText = await cleanUserContent(branch?.summary || '');
-      const keywords = Array.isArray(branch?.keywords)
-        ? await Promise.all(
-            branch.keywords
-              .filter((word: unknown) => typeof word === 'string')
-              .slice(0, 3)
-              .map((word: string) => cleanUserContent(word)),
-          )
-        : [];
-
-      const icon = typeof branch?.icon === 'string' && branch.icon.trim().length <= 4
-        ? branch.icon.trim()
-        : THEMATIC_ICONS[index % THEMATIC_ICONS.length];
-
-      const color = typeof branch?.color === 'string' && branch.color.trim().length > 0
-        ? branch.color.trim()
-        : undefined;
-
-      branches.push({
-        id,
-        title,
-        summary: summaryText,
-        keywords,
-        icon,
-        color,
-      });
-    }
-
-    const centerTitle = await cleanUserContent(parsed.visual?.center?.title || knowledgePoint);
-    const subtitle = parsed.visual?.center?.subtitle
-      ? await cleanUserContent(parsed.visual.center.subtitle)
-      : `理解“${knowledgePoint}”的结构与重点`;
-
-    const footerNote = parsed.visual?.footerNote
-      ? await cleanUserContent(parsed.visual.footerNote)
-      : undefined;
-
-    const visualType = normalizeVisualType(parsed.visual?.type, layout, branchIds);
-    const rawImagePrompt = typeof parsed.visual?.imagePrompt === 'string'
-      ? await cleanUserContent(parsed.visual.imagePrompt)
-      : '';
-    const imagePrompt = rawImagePrompt.trim().length > 0 ? rawImagePrompt.trim() : undefined;
-
-    if (visualType !== 'hero-illustration') {
-      return buildVisualizationFallback(knowledgePoint);
-    }
-
-    const compositionInput = parsed.visual?.composition;
-    const composition = compositionInput && typeof compositionInput === 'object'
-      ? {
-          metaphor: await cleanUserContent((compositionInput.metaphor ?? '').toString()) || undefined,
-          visualFocus: await cleanUserContent((compositionInput.visualFocus ?? '').toString()) || undefined,
-          backgroundMood: await cleanUserContent((compositionInput.backgroundMood ?? '').toString()) || undefined,
-          colorPalette: Array.isArray(compositionInput.colorPalette)
-            ? compositionInput.colorPalette
-                .map((color: unknown) => (typeof color === 'string' ? color.trim() : ''))
-                .filter(Boolean)
-                .slice(0, 4)
-            : undefined,
-        }
-      : undefined;
-
-    const annotationsInput = Array.isArray(parsed.visual?.annotations)
-      ? parsed.visual.annotations.slice(0, 4)
-      : [];
-
-    const annotations = await Promise.all(
-      annotationsInput.map(async (annotation: any, index: number) => {
-        const title = await cleanUserContent(annotation?.title || `要点${index + 1}`);
-        const description = await cleanUserContent(annotation?.description || '');
-        if (!title && !description) {
+    const stages = await Promise.all(
+      stagesInput.slice(0, 4).map(async (stage: any, index: number) => {
+        if (!stage || typeof stage !== 'object') {
           return null;
         }
-        const icon = typeof annotation?.icon === 'string' && annotation.icon.trim().length <= 4
-          ? annotation.icon.trim()
-          : undefined;
-        const placement = typeof annotation?.placement === 'string'
-          ? annotation.placement.toLowerCase().trim()
-          : undefined;
+
+        const title = await sanitizeRequiredText(stage.title, `要点${index + 1}`);
+        const summaryText = (await sanitizeOptionalText(stage.summary)) ?? '';
+        const icon =
+          typeof stage.icon === 'string' && stage.icon.trim().length <= 4
+            ? stage.icon.trim()
+            : undefined;
+        const imagePrompt = await sanitizeOptionalText(stage.imagePrompt);
+        const imageUrl =
+          typeof stage.imageUrl === 'string' && stage.imageUrl.trim().length > 0
+            ? stage.imageUrl.trim()
+            : undefined;
+        const imageMetadata = sanitizeImageMetadata(stage.imageMetadata);
+
+        return {
+          title,
+          summary: summaryText,
+          icon,
+          imagePrompt,
+          imageUrl,
+          imageMetadata,
+        } as ParsedStage;
+      }),
+    ).then((items) => items.filter(Boolean) as ParsedStage[]);
+
+    const annotationCandidates = Array.isArray(rawVisual.annotations)
+      ? rawVisual.annotations.slice(0, 4)
+      : [];
+
+    const annotationsFromPayload = await Promise.all(
+      annotationCandidates.map(async (annotation: any, index: number) => {
+        if (!annotation || typeof annotation !== 'object') {
+          return null;
+        }
+
+        const hasContent =
+          (typeof annotation.title === 'string' && annotation.title.trim().length > 0)
+          || (typeof annotation.description === 'string' && annotation.description.trim().length > 0);
+
+        if (!hasContent) {
+          return null;
+        }
+
+        const title = await sanitizeRequiredText(annotation.title, `要点${index + 1}`);
+        const description = (await sanitizeOptionalText(annotation.description)) ?? '';
+        const icon =
+          typeof annotation.icon === 'string' && annotation.icon.trim().length <= 4
+            ? annotation.icon.trim()
+            : undefined;
+        const placement = normalizeAnnotationPlacement(annotation.placement);
 
         return {
           title,
@@ -262,18 +431,92 @@ async function parseVisualizationJSON(
           placement,
         };
       }),
-    ).then((items) => items.filter(Boolean) as VisualizationSpec['annotations']);
+    ).then((items) => items.filter(Boolean));
+
+    let annotations: VisualizationSpec['annotations'] =
+      annotationsFromPayload.length > 0
+        ? (annotationsFromPayload as VisualizationSpec['annotations'])
+        : undefined;
+
+    if (!annotations && stages.length > 0) {
+      const placementOrder: Array<'left' | 'right' | 'bottom' | 'top'> = ['left', 'right', 'bottom', 'top'];
+      annotations = stages.slice(0, 3).map((stage, index) => ({
+        title: stage.title,
+        description: stage.summary,
+        icon: stage.icon,
+        placement: placementOrder[index % placementOrder.length],
+      }));
+    }
+
+    const footerNote =
+      (await sanitizeOptionalText(rawVisual.footerNote)) ?? heroFallback.footerNote;
+
+    const composition =
+      (await buildHeroComposition(rawVisual.composition))
+      ?? (await buildHeroComposition(heroFallback.composition));
+
+    const promptCandidates = [
+      rawVisual.imagePrompt,
+      rawVisual.heroPrompt,
+      parsed.imagePrompt,
+      parsed.prompt,
+      ...stages.map((stage) => stage.imagePrompt),
+      heroFallback.imagePrompt,
+    ];
+
+    let imagePrompt: string | undefined;
+    for (const candidate of promptCandidates) {
+      const cleaned = await sanitizeOptionalText(candidate);
+      if (cleaned) {
+        imagePrompt = cleaned;
+        break;
+      }
+    }
+
+    const stageWithImage = stages.find((stage) => stage.imageUrl);
+    const imageUrl =
+      typeof rawVisual.imageUrl === 'string' && rawVisual.imageUrl.trim().length > 0
+        ? rawVisual.imageUrl.trim()
+        : stageWithImage?.imageUrl;
+
+    const imageMetadata =
+      sanitizeImageMetadata(rawVisual.imageMetadata) ?? stageWithImage?.imageMetadata;
+
+    if (!imagePrompt) {
+      imagePrompt = await sanitizeRequiredText(heroFallback.imagePrompt, heroFallback.imagePrompt);
+    }
+
+    const enhancedPrompt = enhanceImagePrompt(imagePrompt, {
+      knowledgePoint,
+      subject,
+      summary,
+      stageHighlights: collectStageHighlights(stages),
+    });
+
+    const planned = await planVisualizationPrompt({
+      knowledgePoint,
+      subject,
+      gradeLevel,
+      basePrompt: enhancedPrompt,
+      visualSpec: rawVisual,
+    });
+
+    const finalPrompt = planned?.positivePrompt ?? enhancedPrompt;
+    const negativePrompt = planned?.negativePrompt;
 
     const visualSpec: VisualizationSpec = {
-      type: visualType,
+      type: 'hero-illustration',
       theme,
       layout,
-      imagePrompt,
+      imagePrompt: finalPrompt,
+      negativePrompt,
+      imageUrl,
+      imageMetadata,
       center: {
         title: centerTitle,
-        subtitle,
+        subtitle: centerSubtitle,
       },
-      branches: visualType === 'hero-illustration' ? [] : branches,
+      branches: [],
       footerNote,
       composition,
       annotations,
@@ -287,8 +530,222 @@ async function parseVisualizationJSON(
     logger.warn('Failed to parse visualization JSON', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-    return buildVisualizationFallback(knowledgePoint);
+    return buildVisualizationFallback(knowledgePoint, subject, gradeLevel);
   }
+}
+
+interface ParsedStage {
+  title: string;
+  summary: string;
+  icon?: string;
+  imagePrompt?: string;
+  imageUrl?: string;
+  imageMetadata?: VisualizationSpec['imageMetadata'];
+}
+
+async function sanitizeRequiredText(value: unknown, fallback: string): Promise<string> {
+  const source =
+    typeof value === 'string' && value.trim().length > 0 ? value : fallback;
+  return (await cleanUserContent(source)).trim();
+}
+
+async function sanitizeOptionalText(value: unknown): Promise<string | undefined> {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const cleaned = (await cleanUserContent(value)).trim();
+  return cleaned.length > 0 ? cleaned : undefined;
+}
+
+function sanitizeImageMetadata(input: unknown): VisualizationSpec['imageMetadata'] | undefined {
+  if (!input || typeof input !== 'object') {
+    return undefined;
+  }
+  const metadata = input as Record<string, unknown>;
+  const provider = typeof metadata.provider === 'string' ? metadata.provider : undefined;
+  const width = typeof metadata.width === 'number' ? metadata.width : undefined;
+  const height = typeof metadata.height === 'number' ? metadata.height : undefined;
+  const generatedAt = typeof metadata.generatedAt === 'string' ? metadata.generatedAt : undefined;
+
+  if (!provider && !width && !height && !generatedAt) {
+    return undefined;
+  }
+
+  return { provider, width, height, generatedAt };
+}
+
+function normalizeAnnotationPlacement(value: unknown): 'left' | 'right' | 'top' | 'bottom' | 'center' | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const lowered = value.trim().toLowerCase();
+  if (lowered === 'left' || lowered === 'right' || lowered === 'top' || lowered === 'bottom' || lowered === 'center') {
+    return lowered as 'left' | 'right' | 'top' | 'bottom' | 'center';
+  }
+  return undefined;
+}
+
+async function buildHeroComposition(input: unknown): Promise<VisualizationSpec['composition'] | undefined> {
+  if (!input || typeof input !== 'object') {
+    return undefined;
+  }
+
+  const composition = input as Record<string, unknown>;
+
+  const metaphor = await sanitizeOptionalText(composition.metaphor);
+  const visualFocus = await sanitizeOptionalText(composition.visualFocus);
+  const backgroundMood = await sanitizeOptionalText(composition.backgroundMood);
+  const colorPalette = Array.isArray(composition.colorPalette)
+    ? composition.colorPalette
+        .map((color: unknown) => (typeof color === 'string' ? color.trim() : ''))
+        .filter((color) => color.length > 0)
+        .slice(0, 4)
+    : undefined;
+
+  if (!metaphor && !visualFocus && !backgroundMood && (!colorPalette || colorPalette.length === 0)) {
+    return undefined;
+  }
+
+  return {
+    metaphor: metaphor ?? undefined,
+    visualFocus: visualFocus ?? undefined,
+    backgroundMood: backgroundMood ?? undefined,
+    colorPalette: colorPalette && colorPalette.length > 0 ? colorPalette : undefined,
+  };
+}
+
+interface PromptEnhancementContext {
+  knowledgePoint: string;
+  subject?: string;
+  summary?: string;
+  stageHighlights?: string[];
+}
+
+const SUBJECT_STYLE_HINT_RULES: Array<{ keys: string[]; hint: string }> = [
+  { keys: ['生物', 'biology', '生命'], hint: '科普插画，突出生物结构与能量循环' },
+  { keys: ['化学', 'chemistry'], hint: '科普插画，展示化学反应与分子结构' },
+  { keys: ['物理', 'physics'], hint: '科普插画，强调能量传递与运动轨迹' },
+  { keys: ['地理', 'geography'], hint: '地理教学插画，呈现自然环境层次' },
+  { keys: ['历史', 'history'], hint: '历史教学插画，带时间线与文明元素' },
+  { keys: ['数学', 'math', 'mathematics'], hint: '数学概念插画，突出结构与逻辑关系' },
+  { keys: ['天文', 'astronomy', '宇宙'], hint: '宇宙科普插画，凸显星体结构与能量' },
+];
+
+const DEFAULT_SUBJECT_HINT = '教学插画，清晰呈现知识重点';
+
+function enhanceImagePrompt(basePrompt: string, context: PromptEnhancementContext): string {
+  const trimmedBase = basePrompt.trim();
+  if (!trimmedBase) {
+    return `${context.knowledgePoint} 概念插画`;
+  }
+
+  const additions: string[] = [];
+  const stageHighlights = (context.stageHighlights ?? [])
+    .map((value) => normalizeHighlight(value))
+    .filter((value) => value.length > 0);
+
+  if (stageHighlights.length > 0) {
+    additions.push(`表现${stageHighlights.slice(0, 3).join('、')}`);
+  }
+
+  const summarySnippet = context.summary ? extractPromptSnippet(context.summary, 16) : undefined;
+  if (summarySnippet && !additions.some((item) => item.includes(summarySnippet))) {
+    additions.push(summarySnippet);
+  }
+
+  const subjectHint = resolveSubjectHint(context.subject);
+  if (subjectHint && !additions.includes(subjectHint)) {
+    additions.push(subjectHint);
+  }
+
+  const uniqueAdditions: string[] = [];
+  additions.forEach((item) => {
+    const normalized = item.replace(/[，。]+$/g, '').trim();
+    if (!normalized) {
+      return;
+    }
+    if (trimmedBase.includes(normalized)) {
+      return;
+    }
+    if (uniqueAdditions.some((existing) => existing.includes(normalized))) {
+      return;
+    }
+    uniqueAdditions.push(normalized);
+  });
+
+  if (uniqueAdditions.length === 0) {
+    return trimPromptLength(trimmedBase);
+  }
+
+  const enhanced = `${trimmedBase.replace(/[，。]+$/g, '')}，${uniqueAdditions.join('，')}`;
+  return trimPromptLength(enhanced);
+}
+
+function collectStageHighlights(stages: ParsedStage[], limit = 3): string[] {
+  const highlights: string[] = [];
+  for (const stage of stages) {
+    if (stage.title) {
+      const title = normalizeHighlight(stage.title);
+      if (title && !highlights.includes(title)) {
+        highlights.push(title);
+      }
+    }
+
+    if (stage.summary) {
+      const snippet = extractPromptSnippet(stage.summary, 8);
+      if (snippet && !highlights.includes(snippet)) {
+        highlights.push(snippet);
+      }
+    }
+
+    if (highlights.length >= limit) {
+      break;
+    }
+  }
+
+  return highlights.slice(0, limit);
+}
+
+function resolveSubjectHint(subject?: string): string | undefined {
+  if (!subject) {
+    return undefined;
+  }
+  const normalized = subject.trim().toLowerCase();
+  for (const rule of SUBJECT_STYLE_HINT_RULES) {
+    if (rule.keys.some((key) => normalized.includes(key.toLowerCase()))) {
+      return rule.hint;
+    }
+  }
+  return DEFAULT_SUBJECT_HINT;
+}
+
+function normalizeHighlight(text: string): string {
+  return text
+    .replace(/[\s\u3000]+/g, '')
+    .replace(/阶段|要点|部分|步骤|模块|环节|一图|示意/g, '')
+    .replace(/[，。,.;；:：]/g, '')
+    .slice(0, 8)
+    .trim();
+}
+
+function extractPromptSnippet(text: string, maxLength: number): string | undefined {
+  const cleaned = text
+    .replace(/\s+/g, '')
+    .replace(/[\r\n]/g, '')
+    .replace(/^[，。、]/g, '')
+    .replace(/[‘’“”]/g, '')
+    .trim();
+  if (!cleaned) {
+    return undefined;
+  }
+  return cleaned.length > maxLength ? cleaned.slice(0, maxLength) : cleaned;
+}
+
+function trimPromptLength(prompt: string, maxLength = 110): string {
+  if (prompt.length <= maxLength) {
+    return prompt;
+  }
+  return `${prompt.slice(0, maxLength - 1)}…`;
 }
 
 function extractJSON(content: string): string | null {
@@ -311,48 +768,73 @@ function extractJSON(content: string): string | null {
   return null;
 }
 
-async function buildVisualizationFallback(knowledgePoint: string): Promise<{
+async function buildVisualizationFallback(
+  knowledgePoint: string,
+  subject?: string,
+  gradeLevel?: string,
+): Promise<{
   summary: string;
   visual: VisualizationSpec;
 }> {
-  const summary = await cleanUserContent(`将“${knowledgePoint}”绘成一幅隐喻插画，让学生用视觉记住它的核心含义。`);
+  const config = getHeroFallbackConfig(knowledgePoint);
+
+  const summary = await sanitizeRequiredText(config.summary, config.summary);
+  const centerSubtitle = await sanitizeRequiredText(config.centerSubtitle, config.centerSubtitle);
+  const imagePrompt = await sanitizeRequiredText(config.imagePrompt, config.imagePrompt);
+  const footerNote = await sanitizeRequiredText(config.footerNote, config.footerNote);
+  const composition = await buildHeroComposition(config.composition);
+  const enhancedPrompt = enhanceImagePrompt(imagePrompt, {
+    knowledgePoint,
+    subject,
+    summary,
+    stageHighlights: [],
+  });
+  const planned = await planVisualizationPrompt({
+    knowledgePoint,
+    subject,
+    gradeLevel,
+    basePrompt: enhancedPrompt,
+  });
+  const fallbackPrompt = planned?.positivePrompt ?? enhancedPrompt;
+  const negativePrompt = planned?.negativePrompt;
+  const theme = config.theme ?? 'neutral';
+
+  const annotations = await Promise.all(
+    [
+      {
+        title: '核心要素',
+        description: '引导学生观察插画中央代表概念本身的元素。',
+        icon: '🌟',
+        placement: 'left' as const,
+      },
+      {
+        title: '能量流向',
+        description: '指出光束/箭头如何表现概念的转化或流动。',
+        icon: '🔄',
+        placement: 'right' as const,
+      },
+    ].map(async (item) => ({
+      title: await sanitizeRequiredText(item.title, item.title),
+      description: await sanitizeRequiredText(item.description, item.description),
+      icon: item.icon,
+      placement: item.placement,
+    })),
+  );
 
   const visualSpec: VisualizationSpec = {
     type: 'hero-illustration',
-    theme: 'neutral',
-    layout: 'radial',
-    imagePrompt: await cleanUserContent(`${knowledgePoint} 的信息图插画，中心发光，周围有象征意义的元素，扁平渐层风格`),
+    theme,
+    layout: 'centered',
+    imagePrompt: fallbackPrompt,
+    negativePrompt,
     center: {
       title: knowledgePoint,
-      subtitle: '用一幅画呈现概念的灵魂瞬间',
+      subtitle: centerSubtitle,
     },
     branches: [],
-    composition: {
-      metaphor: await cleanUserContent(`${knowledgePoint} 像一座正在运转的能量中枢`),
-      visualFocus: await cleanUserContent('中央主体以光束连接四周元素，突出概念核心'),
-      backgroundMood: await cleanUserContent('柔和蓝绿渐变，营造沉浸式学习氛围'),
-      colorPalette: ['天光蓝', '竹叶绿', '暖乳白'],
-    },
-    annotations: [
-      {
-        title: await cleanUserContent('核心象征'),
-        description: await cleanUserContent('中心发光的形体代表概念的关键机制或定律。'),
-        icon: '✨',
-        placement: 'top',
-      },
-      {
-        title: await cleanUserContent('能量流动'),
-        description: await cleanUserContent('环绕的箭形光轨寓意知识的输入与反馈。'),
-        icon: '🔄',
-        placement: 'left',
-      },
-      {
-        title: await cleanUserContent('课堂提问'),
-        description: await cleanUserContent('引导学生寻找图中象征现实应用的元素。'),
-        icon: '💬',
-        placement: 'right',
-      },
-    ],
+    footerNote,
+    composition,
+    annotations,
   };
 
   return {
@@ -369,56 +851,6 @@ function normalizeTheme(theme: unknown): VisualizationTheme {
   }
   return 'neutral';
 }
-
-function normalizeLayout(layout: unknown): VisualizationSpec['layout'] {
-  if (typeof layout !== 'string' || layout.trim().length === 0) {
-    return 'left-to-right';
-  }
-  const lowered = layout.toLowerCase();
-  const allowed: Array<NonNullable<VisualizationSpec['layout']>> = [
-    'left-to-right',
-    'right-to-left',
-    'radial',
-    'grid',
-    'hierarchical',
-  ];
-
-  if (allowed.includes(lowered as NonNullable<VisualizationSpec['layout']>)) {
-    return lowered as VisualizationSpec['layout'];
-  }
-
-  return lowered;
-}
-
-function normalizeVisualType(
-  type: unknown,
-  layout: VisualizationSpec['layout'],
-  branchIds: Set<string>,
-): VisualizationSpec['type'] {
-  if (typeof type === 'string' && type.trim().length > 0) {
-    const lowered = type.trim().toLowerCase();
-    if (lowered === 'process-flow' || lowered === 'concept-map' || lowered === 'matrix' || lowered === 'hero-illustration') {
-      return lowered as VisualizationSpec['type'];
-    }
-  }
-
-  const hasProcessFlowIds = ['input', 'process', 'output'].every((key) => branchIds.has(key));
-  if (hasProcessFlowIds) {
-    return 'process-flow';
-  }
-
-  if (branchIds.size === 0) {
-    return 'hero-illustration';
-  }
-
-  if (layout === 'grid') {
-    return 'matrix';
-  }
-
-  return 'concept-map';
-}
-
-const THEMATIC_ICONS = ['🌟', '🔍', '🧠', '🧭', '🛠️', '📈'];
 
 function enrichCard(
   card: TeachingCard,
@@ -753,46 +1185,48 @@ function buildPresentationMeta(cardType: TeachingCard['type'], knowledgePoint: s
 }
 
 function generateFallbackCard(cardType: RawCardType, knowledgePoint: string): TeachingCard {
+  const conceptConfig = getHeroFallbackConfig(knowledgePoint);
+  const fallbackImagePrompt = enhanceImagePrompt(conceptConfig.imagePrompt, {
+    knowledgePoint,
+    stageHighlights: [],
+  });
+
+  const planned = {
+    positivePrompt: fallbackImagePrompt,
+    negativePrompt: undefined,
+  };
+
   const fallbackMap: Record<RawCardType, TeachingCard> = {
     concept: {
       id: `fallback_concept_${Date.now()}`,
       type: 'visualization',
       title: '概念可视化',
-      content: `以“${knowledgePoint}”为主题绘制隐喻插画，帮助学生一眼抓住概念灵魂。`,
+      content: conceptConfig.summary,
       explanation: `概念解释卡片 - ${knowledgePoint}`,
       visual: {
         type: 'hero-illustration',
-        theme: 'neutral',
-        layout: 'radial',
-        imagePrompt: `${knowledgePoint} 的信息图插画，中央发光并由光束连接周围象征元素，扁平渐层风格`,
+        theme: conceptConfig.theme ?? 'neutral',
+        layout: 'centered',
+        imagePrompt: planned.positivePrompt,
+        negativePrompt: planned.negativePrompt,
         center: {
           title: knowledgePoint,
-          subtitle: '通过隐喻插画捕捉概念的灵魂瞬间',
+          subtitle: conceptConfig.centerSubtitle,
         },
         branches: [],
-        composition: {
-          metaphor: `${knowledgePoint} 仿佛一座能量枢纽`,
-          visualFocus: '中央发光主体与环绕光轨形成视觉焦点',
-          backgroundMood: '柔和蓝绿渐变搭配漂浮光雾，营造静谧课堂感',
-          colorPalette: ['湖水蓝', '竹叶绿', '暖白'],
-        },
+        footerNote: conceptConfig.footerNote,
+        composition: conceptConfig.composition,
         annotations: [
           {
-            title: '核心象征',
-            description: '中央发光体代表概念的关键机制或定律。',
-            icon: '✨',
-            placement: 'top',
-          },
-          {
-            title: '能量轨迹',
-            description: '环绕的箭形光束寓意知识输入与反馈。',
-            icon: '🔄',
+            title: '核心要素',
+            description: '引导学生观察插画中央代表概念本身的元素。',
+            icon: '🌟',
             placement: 'left',
           },
           {
-            title: '课堂提问',
-            description: '引导学生指出图中象征现实应用的元素。',
-            icon: '💬',
+            title: '能量流向',
+            description: '指出光束/箭头如何表现概念的转化或流动。',
+            icon: '🔄',
             placement: 'right',
           },
         ],

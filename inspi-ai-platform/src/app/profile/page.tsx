@@ -7,12 +7,11 @@ import React, { useEffect, useMemo, useState, Suspense } from 'react';
 import { AppLayout } from '@/components/layout';
 import { AccountSettingsPanel } from '@/components/profile/AccountSettingsPanel';
 import { SquareQuickReuseButton } from '@/components/square/SquareQuickReuseButton';
+import { SubscriptionManagement } from '@/components/subscription/SubscriptionManagement';
 import { useUser } from '@/contexts/UserContext';
 import { mockSquareWorks } from '@/data/mockSquareWorks';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { useReuseState } from '@/shared/hooks/useReuseState';
-
-import { SubscriptionManagement } from '@/components/subscription/SubscriptionManagement';
 
 interface UserWork {
   id: string;

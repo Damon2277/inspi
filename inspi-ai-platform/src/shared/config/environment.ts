@@ -45,6 +45,18 @@ export const env = {
     RETRY_DELAY: 1000,
     DEFAULT_MODEL: 'gemini-1.5-flash',
     FALLBACK_MODEL: 'gpt-3.5-turbo',
+    IMAGE_PROVIDER: process.env.AI_IMAGE_PROVIDER || 'none',
+    IMAGE_API_KEY: process.env.AI_IMAGE_API_KEY || '',
+    IMAGE_BASE_URL: process.env.AI_IMAGE_BASE_URL || '',
+    IMAGE_MODEL: process.env.AI_IMAGE_MODEL || 'dall-e-3',
+    IMAGE_DEFAULT_SIZE: process.env.AI_IMAGE_DEFAULT_SIZE || '1024x1024',
+    IMAGE_ENABLE_CACHE: process.env.AI_IMAGE_ENABLE_CACHE !== 'false',
+    IMAGE_STAGE_SIZE: process.env.AI_IMAGE_STAGE_SIZE || '512x512',
+    IMAGE_API_KEY_HEADER: process.env.AI_IMAGE_API_KEY_HEADER || 'Authorization',
+    IMAGE_RESPONSE_FORMAT: (process.env.AI_IMAGE_RESPONSE_FORMAT || 'b64_json').toLowerCase(),
+    IMAGE_WATERMARK: process.env.AI_IMAGE_WATERMARK === undefined
+      ? true
+      : process.env.AI_IMAGE_WATERMARK === 'true',
   },
 
   // 邮件服务配置

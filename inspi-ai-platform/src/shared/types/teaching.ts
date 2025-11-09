@@ -26,11 +26,58 @@ export interface VisualizationAnnotation {
   placement?: 'left' | 'right' | 'top' | 'bottom' | 'center';
 }
 
+export interface StructuredDiagramHeader {
+  title: string;
+  subtitle?: string;
+  formula?: string;
+  summary?: string;
+  conceptTagline?: string;
+}
+
+export interface StructuredDiagramStage {
+  id: string;
+  title: string;
+  summary: string;
+  details?: string[];
+  icon?: string;
+  outcome?: string;
+  imagePrompt?: string;
+  imageUrl?: string;
+  imageMetadata?: {
+    provider?: string;
+    width?: number;
+    height?: number;
+    generatedAt?: string;
+  };
+}
+
+export interface StructuredDiagramOutcome {
+  title: string;
+  description?: string;
+  icon?: string;
+}
+
+export interface StructuredDiagramSpec {
+  header: StructuredDiagramHeader;
+  stages: StructuredDiagramStage[];
+  outcomes?: StructuredDiagramOutcome[];
+  notes?: string[];
+  highlight?: string;
+}
+
 export interface VisualizationSpec {
-  type: 'concept-map' | 'process-flow' | 'matrix' | 'hero-illustration';
+  type: 'concept-map' | 'process-flow' | 'matrix' | 'hero-illustration' | 'structured-diagram';
   theme: VisualizationTheme;
   layout?: 'left-to-right' | 'right-to-left' | 'radial' | 'grid' | 'hierarchical' | string;
   imagePrompt?: string;
+  negativePrompt?: string;
+  imageUrl?: string;
+  imageMetadata?: {
+    provider?: string;
+    width?: number;
+    height?: number;
+    generatedAt?: string;
+  };
   center: {
     title: string;
     subtitle?: string;
@@ -44,6 +91,7 @@ export interface VisualizationSpec {
     colorPalette?: string[];
   };
   annotations?: VisualizationAnnotation[];
+  structured?: StructuredDiagramSpec;
 }
 
 export interface TeachingCard {

@@ -12,6 +12,7 @@ interface LazyImageProps {
   rootMargin?: string;
   onLoad?: () => void;
   onError?: () => void;
+  forceLoad?: boolean;
 }
 
 export function LazyImage({
@@ -24,6 +25,7 @@ export function LazyImage({
   rootMargin = '100px',
   onLoad,
   onError,
+  forceLoad = false,
 }: LazyImageProps) {
   const [imageSrc, setImageSrc] = useState(placeholder);
   const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
@@ -31,6 +33,23 @@ export function LazyImage({
   const [isError, setIsError] = useState(false);
 
   useEffect(() => {
+    if (forceLoad) {
+      setImageSrc(src);
+      setIsLoaded(true);
+      setIsError(false);
+      onLoad?.();
+    } else {
+      setImageSrc(placeholder);
+      setIsLoaded(false);
+      setIsError(false);
+    }
+  }, [forceLoad, src, placeholder, onLoad]);
+
+  useEffect(() => {
+    if (forceLoad) {
+      return () => undefined;
+    }
+
     let observer: IntersectionObserver | null = null;
 
     if (imageRef && !isLoaded) {
@@ -71,7 +90,7 @@ export function LazyImage({
     return () => {
       observer?.disconnect();
     };
-  }, [imageRef, src, isLoaded, threshold, rootMargin, onLoad, onError]);
+  }, [imageRef, src, isLoaded, threshold, rootMargin, onLoad, onError, forceLoad]);
 
   return (
     // 使用原生 <img> 以便完全掌控懒加载流程

@@ -11,6 +11,7 @@ import { requireAuth, AuthenticatedRequest } from '@/core/auth/middleware';
 import connectDB from '@/lib/mongodb';
 import { validateContent } from '@/lib/security';
 import { QuotaService } from '@/services/quota.service';
+import { env, isDevelopment } from '@/shared/config/environment';
 import type {
   GenerateCardsRequest,
   GenerateCardsResponse,
@@ -18,8 +19,6 @@ import type {
   TeachingCard,
 } from '@/shared/types/teaching';
 import { logger } from '@/shared/utils/logger';
-
-import { env } from '@/shared/config/environment';
 
 import { generateTeachingCard } from '../card-engine';
 
@@ -62,6 +61,11 @@ const normalizeRequestedCardTypes = (
 
   return normalized.length > 0 ? normalized : DEFAULT_CARD_TYPES;
 };
+
+const isQuotaCheckDisabled = (
+  (isDevelopment && process.env.DISABLE_QUOTA_CHECK !== 'false') ||
+  process.env.DISABLE_QUOTA_CHECK === 'true'
+);
 
 export const POST = requireAuth(async (request: AuthenticatedRequest) => {
   const startTime = Date.now();
@@ -132,25 +136,29 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
 
     // 4. 检查用户配额 - 使用新的订阅系统
     await connectDB(); // 确保数据库连接
-    const quotaCheck = await QuotaService.checkAndConsume(userId);
+    let quotaStatusData: Awaited<ReturnType<typeof QuotaService.getQuotaStatus>> | null = null;
 
-    if (!quotaCheck.allowed) {
-      // 如果是免费用户额度用尽，返回提示升级的信息
-      if (quotaCheck.quotaType === 'daily') {
-        return NextResponse.json(
-          {
-            error: quotaCheck.reason || '今日免费额度已用尽',
-            needSubscription: true,
-            quota: {
-              type: quotaCheck.quotaType,
-              used: quotaCheck.limit - quotaCheck.remaining,
-              remaining: quotaCheck.remaining,
-              total: quotaCheck.limit,
+    if (!isQuotaCheckDisabled) {
+      const quotaCheck = await QuotaService.checkAndConsume(userId);
+
+      if (!quotaCheck.allowed) {
+        // 如果是免费用户额度用尽，返回提示升级的信息
+        if (quotaCheck.quotaType === 'daily') {
+          return NextResponse.json(
+            {
+              error: quotaCheck.reason || '今日免费额度已用尽',
+              needSubscription: true,
+              quota: {
+                type: quotaCheck.quotaType,
+                used: quotaCheck.limit - quotaCheck.remaining,
+                remaining: quotaCheck.remaining,
+                total: quotaCheck.limit,
+              },
             },
-          },
-          { status: 429 },
-        );
-      } else {
+            { status: 429 },
+          );
+        }
+
         // 订阅用户月度额度用尽
         return NextResponse.json(
           {
@@ -165,9 +173,12 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
           { status: 429 },
         );
       }
-    }
 
-    logger.info('Quota consumed', { userId, plan: userPlan, amount: 1 });
+      logger.info('Quota consumed', { userId, plan: userPlan, amount: 1 });
+      quotaStatusData = await QuotaService.getQuotaStatus(userId);
+    } else {
+      logger.warn('Quota enforcement disabled for testing environment', { userId });
+    }
 
     // 5. 检查AI服务健康状态
     if (!isMockMode) {
@@ -217,12 +228,28 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     }
 
     // 9. 获取更新后的配额信息
-    const quotaStatus = await QuotaService.getQuotaStatus(userId);
-    const usage = {
-      current: quotaStatus.quota.used,
-      limit: quotaStatus.quota.total,
-      remaining: quotaStatus.quota.remaining,
-    };
+    const quotaStatus = quotaStatusData || (isQuotaCheckDisabled
+      ? {
+        quota: {
+          type: 'unlimited',
+          used: 0,
+          remaining: Number.MAX_SAFE_INTEGER,
+          total: Number.MAX_SAFE_INTEGER,
+        },
+      }
+      : await QuotaService.getQuotaStatus(userId));
+
+    const usage = isQuotaCheckDisabled
+      ? {
+        current: 0,
+        limit: Number.MAX_SAFE_INTEGER,
+        remaining: Number.MAX_SAFE_INTEGER,
+      }
+      : {
+        current: quotaStatus.quota.used,
+        limit: quotaStatus.quota.total,
+        remaining: quotaStatus.quota.remaining,
+      };
 
     // 10. 构建响应
     const response: GenerateCardsResponse = {

@@ -27,9 +27,11 @@ export interface CardTemplate {
 const conceptCardTemplate: CardTemplate = {
   type: 'concept',
   name: '概念可视化卡片',
-  description: '用单幅信息图或隐喻插画帮助学生“一眼看懂”核心概念',
-  expectedLength: 780,
-  prompt: `你是一名教育视觉设计师，要将给定知识点转化为一张“概念可视化插画卡片”。请把注意力放在单幅视觉表达（非流程步骤），让学生通过图像隐喻与色彩感知迅速理解概念。务必只输出合法 JSON（不要包含 Markdown、注释或额外文字）。
+  description: '用单幅概念插画帮助学生“一眼看懂”核心概念',
+  expectedLength: 620,
+  prompt: `你是一名教育插画设计师，要把给定知识点转化为一张“概念可视化 hero 插画”。
+- 插画需呈现知识点的核心比喻、能量流向或关键元素，整体具备电影级艺术感。
+- 只输出合法 JSON（不要包含 Markdown、注释或额外文字）。
 
 输入信息：
 - 知识点：{knowledgePoint}
@@ -39,88 +41,76 @@ const conceptCardTemplate: CardTemplate = {
 
 JSON 输出结构（字段名必须一致）：
 {
-  "summary": "1-2 句，用形象比喻概括整幅图带来的直观感受",
+  "summary": "1-2 句，用学生语言概括插画要带来的直观理解",
   "visual": {
     "type": "hero-illustration",
     "theme": "ocean | sunrise | forest | galaxy | neutral 之一",
-    "imagePrompt": "30-45 字中文描述，包含场景/主体/材质/气氛，可直接用于图像生成",
+    "layout": "centered",
+    "imagePrompt": "45 字以内，描述要交给图像模型的视觉提示（包含主体、氛围、光影、风格、构图等）",
     "center": {
-      "title": "{knowledgePoint}",
-      "subtitle": "一句隐喻或提示，例如“光合作用：绿叶工厂的能量收集站”"
+      "title": "图像上的主标题，例如“光合作用：植物的能量工厂”",
+      "subtitle": "一句课堂引子或类比句，12-18 字"
     },
     "composition": {
-      "metaphor": "说明整幅图的类比隐喻，如“温室工厂”",
-      "visualFocus": "描述画面的主体与动态",
-      "backgroundMood": "交代背景环境氛围，如“晨光透过树林的柔和蓝绿调”",
-      "colorPalette": ["主色", "辅色", "点缀色"]
+      "metaphor": "采用的视觉隐喻或场景设定",
+      "visualFocus": "画面最需要聚焦的元素及其动作",
+      "backgroundMood": "整体氛围、色调或光线描述",
+      "colorPalette": ["#638FFE", "#14213D", "#FCA311"]
     },
     "annotations": [
       {
-        "title": "视觉锚点1",
-        "description": "说明这个图形元素代表的概念或特征，文字不超过30字",
-        "icon": "单个 Emoji",
-        "placement": "left | right | top | bottom 之一"
+        "title": "标签说明 1",
+        "description": "15-25 字描述该标签的教学意义",
+        "icon": "单个 Emoji，最多 1 个字符",
+        "placement": "left | right | top | bottom | center"
       },
       {
-        "title": "视觉锚点2",
-        "description": "描述另一个关键元素或互动关系",
+        "title": "标签说明 2",
+        "description": "15-25 字描述",
         "icon": "单个 Emoji",
-        "placement": "left | right | top | bottom 之一"
-      },
-      {
-        "title": "视觉锚点3",
-        "description": "可选，可强调学习迁移或课堂提问",
-        "icon": "单个 Emoji",
-        "placement": "left | right | top | bottom 之一"
+        "placement": "left | right | top | bottom | center"
       }
-    ]
+    ],
+    "footerNote": "一句提醒教师的使用建议，可为空"
   }
 }
 
 创作原则：
-- 插画要聚焦单幅隐喻或场景，避免“输入/过程/输出”流程结构。
-- summary、subtitle、annotations 描述需包含具体画面感受或触觉词汇（如“光束”“能量流”）。
-- annotations 至少提供 2 个，至多 3 个；icon 必须是单个 Emoji。
-- composition.colorPalette 仅填写颜色名称（中文或常见英文），不写额外说明。
-- 所有内容使用中文，保持 10-14 岁学生可读性。
+- 所有字段使用中文（十六进制色值除外）。
+- colorPalette 至少 2 个、至多 4 个颜色值，使用 #RRGGBB。
+- annotations 2-3 个即可，内容围绕知识点要点或观察提示。
+- imagePrompt 需具备清晰的主体、场景、光影、风格信息，便于调用图像模型生成真实插画。
 - 输出必须是无多余空格的 JSON 字符串，不要包裹在 Markdown 代码块。`,
   validation: (content: string) => {
     try {
       const parsed = JSON.parse(content);
       if (!parsed || typeof parsed !== 'object') return false;
       if (!parsed.visual || typeof parsed.visual !== 'object') return false;
-
       if (parsed.visual.type !== 'hero-illustration') {
         return false;
       }
 
-      if (!parsed.visual.center || typeof parsed.visual.center.title !== 'string') {
+      if (typeof parsed.summary !== 'string' || parsed.summary.trim().length === 0) {
         return false;
       }
 
-      if (!parsed.visual.composition || typeof parsed.visual.composition !== 'object') {
+      if (!parsed.visual.center || typeof parsed.visual.center !== 'object') {
         return false;
       }
 
-      const annotations = parsed.visual.annotations;
-      if (!Array.isArray(annotations) || annotations.length < 2) {
+      if (typeof parsed.visual.center.title !== 'string' || parsed.visual.center.title.trim().length === 0) {
         return false;
       }
 
-      const hasValidAnnotation = annotations.every((item: any) => (
-        item
-        && typeof item.title === 'string'
-        && item.title.trim().length > 0
-        && typeof item.description === 'string'
-        && item.description.trim().length > 0
-      ));
-
-      if (!hasValidAnnotation) {
+      if (typeof parsed.visual.imagePrompt !== 'string' || parsed.visual.imagePrompt.trim().length === 0) {
         return false;
       }
 
-      return typeof parsed.visual.imagePrompt === 'string'
-        && parsed.visual.imagePrompt.trim().length > 0;
+      if (parsed.visual.annotations && !Array.isArray(parsed.visual.annotations)) {
+        return false;
+      }
+
+      return true;
     } catch (error) {
       return false;
     }

@@ -29,6 +29,37 @@ cp .env.example .env.local   # 根据下表填写变量
 npm run dev                   # 浏览器访问 http://localhost:3007
 ```
 
+### 使用 Docker Compose 一键拉起 Mongo + 前端
+
+如果希望由容器同时托管 Mongo 与前端（避免本机手动安装），可使用新增的开发编排：
+
+1. 安装 Docker Desktop，并启用 `docker compose`。
+2. 在 `inspi-ai-platform` 目录复制环境变量：
+
+   ```bash
+   cp .env.example .env.local
+   # 如果暂时没有真实 AI Key，可设置 USE_MOCK_GEMINI=true
+   # 本地调试常用：DISABLE_QUOTA_CHECK=true
+   ```
+
+3. 执行脚本启动服务（默认暴露 `http://localhost:3007`）：
+
+   ```bash
+   ./scripts/dev-stack.sh start
+   ```
+
+   - `frontend` 服务会自动 `npm install` 并运行 `npm run dev`，代码通过 volume 挂载支持热更新。
+   - `mongo` 服务使用官方 `mongo:6.0`，数据保存在命名卷 `mongo-data` 中。
+
+4. 停止与查看日志：
+
+   ```bash
+   ./scripts/dev-stack.sh stop   # 停止并清理容器
+   ./scripts/dev-stack.sh logs   # 实时查看 Mongo/前端日志
+   ```
+
+如果更习惯直接使用 `docker compose`，也可以执行 `docker compose -f docker-compose.dev.yml up --build`。
+
 ### 关键环境变量
 
 | 类别 | 变量 | 说明 |
