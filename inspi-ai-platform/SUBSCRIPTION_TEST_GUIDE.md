@@ -95,6 +95,12 @@ AUTO_PAY_SUCCESS=true  # 自动模拟支付成功
 WECHAT_APP_ID=mock_app_id
 WECHAT_MCH_ID=mock_mch_id
 WECHAT_API_KEY=mock_api_key
+WECHAT_API_V3_KEY=mock_api_v3_key_32_chars
+WECHAT_MCH_SERIAL_NO=mock_serial_no
+WECHAT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMOCK\n-----END PRIVATE KEY-----"
+WECHAT_PLATFORM_CERT="-----BEGIN CERTIFICATE-----\nMOCK\n-----END CERTIFICATE-----"
+WECHAT_PLATFORM_SERIAL_NO=mock_platform_serial
+WECHAT_NOTIFY_URL=http://localhost:3007/api/payment/wechat/callback
 ```
 
 ### 2. MongoDB 连接（可选）

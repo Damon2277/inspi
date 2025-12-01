@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 
+import { DEMO_USER_ID } from '@/core/auth/constants';
 import authOptions from '@/core/auth/next-auth-config';
 import connectDB from '@/lib/mongodb';
 import { QuotaService } from '@/services/quota.service';
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
     // 获取用户信息
     const session = await getServerSession(authOptions);
 
-    const userId = (session?.user as { id?: string } | undefined)?.id || 'demo-user-id';
+    const userId = (session?.user as { id?: string } | undefined)?.id || DEMO_USER_ID;
 
     // 获取额度状态
     const quotaStatus = await QuotaService.getQuotaStatus(userId);

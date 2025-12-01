@@ -426,6 +426,64 @@ export class WorkService {
   }
 
   /**
+   * 获取用户自己的作品
+   */
+  static async getUserWorks(
+    authorId: string,
+    options: {
+      status?: 'draft' | 'published' | 'private' | 'archived' | 'all';
+      limit?: number;
+    } = {},
+  ): Promise<{ success: boolean; works: WorkDocument[]; error?: string }> {
+    try {
+      const isValidObjectId = mongoose.Types.ObjectId.isValid(authorId);
+      if (!isValidObjectId) {
+        // Demo 登录使用的虚拟 ID，此时直接返回空结果以避免 400
+        if (process.env.NODE_ENV !== 'production') {
+          return {
+            success: true,
+            works: [],
+          };
+        }
+
+        return {
+          success: false,
+          error: '无效的用户标识',
+          works: [],
+        };
+      }
+
+      await connectDB();
+
+      const query: Record<string, any> = {
+        author: new mongoose.Types.ObjectId(authorId),
+      };
+
+      if (options.status && options.status !== 'all') {
+        query.status = options.status;
+      }
+
+      const works = await (Work.find as any)(query)
+        .sort({ updatedAt: -1 })
+        .limit(options.limit ?? 50)
+        .populate('author', 'name avatar')
+        .exec();
+
+      return {
+        success: true,
+        works,
+      };
+    } catch (error) {
+      console.error('Get user works error:', error);
+      return {
+        success: false,
+        error: '获取作品失败',
+        works: [],
+      };
+    }
+  }
+
+  /**
    * 点赞作品
    */
   static async toggleLike(

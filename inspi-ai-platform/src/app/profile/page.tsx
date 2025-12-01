@@ -23,11 +23,28 @@ interface UserWork {
   likes: number;
   uses: number;
   createdAt: string;
-  status: 'published' | 'draft' | 'private' | 'reused';
+  status: 'published' | 'draft' | 'private' | 'reused' | 'archived';
   description?: string;
   tags?: string[];
   reuseSourceId?: number;
 }
+
+const SUBJECT_EMOJI_MAP: Record<string, string> = {
+  数学: '📐',
+  语文: '📖',
+  英语: '🗣️',
+  物理: '⚙️',
+  化学: '⚗️',
+  生物: '🧬',
+  历史: '🏺',
+  地理: '🗺️',
+  政治: '🏛️',
+  音乐: '🎵',
+  美术: '🎨',
+  体育: '🏀',
+};
+
+const resolveSubjectEmoji = (subject?: string) => SUBJECT_EMOJI_MAP[subject || ''] || '📚';
 
 type TabKey = 'works' | 'subscription' | 'feedback' | 'settings';
 
@@ -54,6 +71,10 @@ function ProfileContent() {
   const [autoOpenModal, setAutoOpenModal] = useState<boolean>(() => (
     shouldAutoUpgrade && (!isTabKey(tabParam) || tabParam === 'subscription')
   ));
+  const [serverWorks, setServerWorks] = useState<UserWork[]>([]);
+  const [worksLoading, setWorksLoading] = useState(false);
+  const [worksError, setWorksError] = useState<string | null>(null);
+  const [worksReloadToken, setWorksReloadToken] = useState(0);
 
   useEffect(() => {
     if (isTabKey(tabParam) && tabParam !== activeTab) {
@@ -83,53 +104,64 @@ function ProfileContent() {
     return undefined;
   }, [autoOpenModal]);
 
-  const baseWorks = useMemo<UserWork[]>(
-    () => [
-      {
-        id: '1',
-        title: '二次函数的图像与性质',
-        type: '可视化卡',
-        subject: '数学',
-        grade: '高中',
-        thumbnail: '📊',
-        likes: 45,
-        uses: 23,
-        createdAt: '2024-01-15',
-        status: 'published',
-        description: '通过动态图像展示二次函数的变化规律，帮助学生掌握抛物线的重要特征。',
-        tags: ['函数', '图像', '性质'],
+  useEffect(() => {
+    if (!authUser?._id) {
+      setServerWorks([]);
+      return;
+    }
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    if (!token) {
+      setServerWorks([]);
+      setWorksError('登录状态已失效，请重新登录后重试');
+      return;
+    }
+
+    const controller = new AbortController();
+    setWorksLoading(true);
+    setWorksError(null);
+
+    fetch('/api/profile/works?status=all', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-      {
-        id: '2',
-        title: '三角函数的应用',
-        type: '类比延展卡',
-        subject: '数学',
-        grade: '高中',
-        thumbnail: '📐',
-        likes: 32,
-        uses: 18,
-        createdAt: '2024-01-12',
-        status: 'published',
-        description: '结合实际案例梳理三角函数的核心公式与求解思路，强化解题直觉。',
-        tags: ['三角函数', '应用', '建模'],
-      },
-      {
-        id: '3',
-        title: '立体几何入门',
-        type: '互动氛围卡',
-        subject: '数学',
-        grade: '高中',
-        thumbnail: '🔺',
-        likes: 28,
-        uses: 15,
-        createdAt: '2024-01-10',
-        status: 'draft',
-        description: '以模型拆解和小组讨论带学生走进立体几何世界，掌握空间想象技巧。',
-        tags: ['立体几何', '空间思维'],
-      },
-    ],
-    [],
-  );
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const payload = await response.json();
+        if (response.status === 401) {
+          throw new Error('登录状态已过期，请重新登录');
+        }
+        if (!response.ok || !payload?.success) {
+          throw new Error(payload?.error || '加载作品失败');
+        }
+        const mapped: UserWork[] = (payload.works || []).map((work: any) => ({
+          id: work._id || work.id,
+          title: work.title || '未命名作品',
+          type: '教学作品',
+          subject: work.subject || '通用学科',
+          grade: work.gradeLevel || '通用年级',
+          thumbnail: resolveSubjectEmoji(work.subject),
+          likes: work.likesCount || 0,
+          uses: work.reuseCount || 0,
+          createdAt: work.createdAt || new Date().toISOString(),
+          status: (work.status || 'draft') as UserWork['status'],
+          description: work.description,
+          tags: work.tags || [],
+        }));
+        setServerWorks(mapped);
+        setWorksLoading(false);
+      })
+      .catch(error => {
+        if (controller.signal.aborted) return;
+        setWorksError(error instanceof Error ? error.message : '加载作品失败');
+        setWorksLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [authUser?._id, worksReloadToken]);
 
   const reusedThemeWorks = useMemo<UserWork[]>(
     () => reusedThemes
@@ -154,12 +186,12 @@ function ProfileContent() {
   );
 
   const combinedWorks = useMemo(
-    () => [...reusedThemeWorks, ...baseWorks],
-    [baseWorks, reusedThemeWorks],
+    () => [...reusedThemeWorks, ...serverWorks],
+    [reusedThemeWorks, serverWorks],
   );
 
   const displayWorks = useMemo(
-    () => combinedWorks.filter(work => work.status === 'published' || work.status === 'reused'),
+    () => combinedWorks.filter(work => work.status !== 'archived'),
     [combinedWorks],
   );
 
@@ -416,10 +448,25 @@ function ProfileContent() {
             if (activeTab === 'works') {
               return (
                 <>
-                  <div className="work-card-grid">
-                    {displayWorks.map(renderWorkCard)}
-                  </div>
-                  {displayWorks.length === 0 ? (
+                  {worksLoading ? (
+                    <div className="modern-card" style={{ padding: '40px', textAlign: 'center' }}>
+                      <div className="modern-spinner" style={{ margin: '0 auto 12px' }} />
+                      <p style={{ color: 'var(--gray-600)' }}>正在加载作品...</p>
+                    </div>
+                  ) : worksError ? (
+                    <div className="modern-card" style={{ padding: '32px', textAlign: 'center', border: '1px solid rgba(248,113,113,0.4)' }}>
+                      <p style={{ color: '#b91c1c', marginBottom: '12px' }}>{worksError}</p>
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn-primary"
+                        onClick={() => {
+                          setWorksReloadToken(prev => prev + 1);
+                        }}
+                      >
+                        重试
+                      </button>
+                    </div>
+                  ) : displayWorks.length === 0 ? (
                     <div style={{
                       textAlign: 'center',
                       padding: '80px 20px',
@@ -429,13 +476,17 @@ function ProfileContent() {
                       border: '1px dashed var(--gray-200)',
                     }}>
                       <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
-                      <h3 style={{ fontSize: '18px', marginBottom: '8px', color: 'var(--gray-800)' }}>还没有发布的作品</h3>
-                      <p style={{ marginBottom: '24px' }}>开始创作你的第一个教学魔法吧！</p>
+                      <h3 style={{ fontSize: '18px', marginBottom: '8px', color: 'var(--gray-800)' }}>还没有作品</h3>
+                      <p style={{ marginBottom: '24px' }}>生成教学卡片后，可一键保存到这里。</p>
                       <a href="/create" className="modern-btn modern-btn-primary">
-                        开始创作
+                        立即创作
                       </a>
                     </div>
-                  ) : null}
+                  ) : (
+                    <div className="work-card-grid">
+                      {displayWorks.map(renderWorkCard)}
+                    </div>
+                  )}
                 </>
               );
             }

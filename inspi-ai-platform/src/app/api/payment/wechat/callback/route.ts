@@ -33,22 +33,31 @@ export async function POST(request: NextRequest) {
     const contentType = request.headers.get('content-type') || '';
     const rawBody = await request.text();
 
-    if (contentType.includes('application/json')) {
-      const jsonData = JSON.parse(rawBody);
+    const isJsonPayload = contentType.includes('application/json') || rawBody.trim().startsWith('{');
 
-      const result = await WeChatPayService.handlePaymentCallback({
-        orderId: jsonData.out_trade_no,
-        transactionId: jsonData.transaction_id,
-        status: jsonData.trade_state === 'SUCCESS' ? 'success' : 'failed',
-        paidAt: jsonData.success_time ? parseWeChatTimestamp(jsonData.success_time) : undefined,
-        failedReason: jsonData.trade_state_desc,
+    if (isJsonPayload) {
+      const notification = WeChatPayService.parseNativeNotification(rawBody, request.headers);
+
+      if (!notification) {
+        return new NextResponse(
+          JSON.stringify({ code: 'FAIL', message: '签名验证失败' }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        );
+      }
+
+      const result = await WeChatPayService.handlePaymentCallback(notification);
+      const responseBody = JSON.stringify({
+        code: result ? 'SUCCESS' : 'FAIL',
+        message: result ? '成功' : '处理失败',
       });
 
-      const responseXml = wechatPayService.generateNotificationResponse(result, result ? 'OK' : 'Process failed');
-      return new NextResponse(responseXml, {
-        status: result ? 200 : 500,
+      return new NextResponse(responseBody, {
+        status: 200,
         headers: {
-          'Content-Type': 'application/xml',
+          'Content-Type': 'application/json',
         },
       });
     }

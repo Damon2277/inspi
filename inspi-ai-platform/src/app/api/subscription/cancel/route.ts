@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 
+import { DEMO_USER_ID } from '@/core/auth/constants';
 import authOptions from '@/core/auth/next-auth-config';
 import connectDB from '@/lib/mongodb';
 import { SubscriptionLog } from '@/models/subscription';
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
 
     // 获取用户信息
     const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id?: string } | undefined)?.id || 'demo-user-id';
+    const userId = (session?.user as { id?: string } | undefined)?.id || DEMO_USER_ID;
 
     // 取消订阅
     const subscription = await QuotaService.cancelSubscription(userId);

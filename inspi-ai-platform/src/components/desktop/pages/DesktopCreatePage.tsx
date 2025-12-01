@@ -26,6 +26,9 @@ export function DesktopCreatePage() {
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCards, setGeneratedCards] = useState<TeachingCard[]>([]);
+  const [isSavingWork, setIsSavingWork] = useState(false);
+  const [savedWorkId, setSavedWorkId] = useState<string | null>(null);
+  const [saveWorkError, setSaveWorkError] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [showNewCardsToast, setShowNewCardsToast] = useState(false);
@@ -188,6 +191,48 @@ export function DesktopCreatePage() {
     setShowNewCardsToast(false);
   };
 
+  const deriveDifficulty = (gradeLevel?: string) => {
+    if (!gradeLevel) return 'beginner';
+    if (/高中|大学/.test(gradeLevel)) return 'advanced';
+    if (/初中/.test(gradeLevel)) return 'intermediate';
+    return 'beginner';
+  };
+
+  const buildWorkPayload = () => {
+    const trimmedContent = formData.content.trim();
+    const title = trimmedContent.length >= 2 ? trimmedContent : '未命名教学作品';
+    const description = `${formData.subject || '通用学科'} · ${formData.gradeLevel || '通用年级'} · Inspi.AI 自动生成`;
+    const difficulty = deriveDifficulty(formData.gradeLevel);
+    const estimatedTime = Math.min(90, Math.max(10, generatedCards.length * 8));
+    const tags = formData.cardTypes.map(type => {
+      const meta = cardTypes.find(item => item.id === type);
+      return meta ? meta.name : type;
+    });
+    const cards = generatedCards.map(card => ({
+      id: card.id,
+      type: card.type,
+      title: card.title,
+      content: card.content || card.explanation,
+      editable: true,
+    }));
+
+    return {
+      title,
+      description,
+      knowledgePoint: trimmedContent,
+      subject: formData.subject || '通用学科',
+      gradeLevel: formData.gradeLevel || '通用年级',
+      cards,
+      tags,
+      category: formData.subject || '教学创作',
+      difficulty,
+      estimatedTime,
+      visibility: 'public' as const,
+      allowReuse: true,
+      allowComments: true,
+    };
+  };
+
   const handleGenerate = async () => {
     const loginPromptMessage = '登录后即可生成专属教学卡片';
     setErrorMessage(null);
@@ -255,6 +300,8 @@ export function DesktopCreatePage() {
       setLastRequest(fallbackContext);
       setQuotaHint(null);
       setQuotaErrorCount(0);
+      setSavedWorkId(null);
+      setSaveWorkError(null);
 
     } catch (error) {
       console.error('生成卡片失败:', error);
@@ -266,6 +313,57 @@ export function DesktopCreatePage() {
       setQuotaErrorCount(0);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleSaveWork = async () => {
+    const loginPromptMessage = '登录后即可保存作品';
+
+    if (!isAuthenticated) {
+      showPrompt('create', loginPromptMessage);
+      return;
+    }
+
+    if (generatedCards.length === 0 || !formData.content.trim()) {
+      setSaveWorkError('请先生成卡片并填写知识点');
+      return;
+    }
+
+    setIsSavingWork(true);
+    setSaveWorkError(null);
+
+    try {
+      const authToken = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      if (!authToken) {
+        showPrompt('create', loginPromptMessage);
+        throw new Error('登录状态已失效，请重新登录后再尝试保存');
+      }
+
+      const payload = buildWorkPayload();
+      const response = await fetch('/api/works', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result?.success || !result.work) {
+        throw new Error(result?.error || '保存作品失败');
+      }
+
+      const workId = result.work._id || result.work.id || null;
+      setSavedWorkId(workId);
+      showActionFeedback('已保存到作品中心');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '保存作品失败';
+      setSaveWorkError(message);
+    } finally {
+      setIsSavingWork(false);
     }
   };
 
@@ -391,6 +489,11 @@ export function DesktopCreatePage() {
     const timer = window.setTimeout(() => setShowNewCardsToast(false), 2400);
     return () => window.clearTimeout(timer);
   }, [generatedCards]);
+
+  useEffect(() => {
+    setSavedWorkId(null);
+    setSaveWorkError(null);
+  }, [formData.content, formData.subject, formData.gradeLevel]);
 
   const handleCardsScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const element = event.currentTarget;
@@ -1145,6 +1248,26 @@ export function DesktopCreatePage() {
                     </svg>
                   </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleSaveWork}
+                  disabled={generatedCards.length === 0 || isSavingWork || Boolean(savedWorkId)}
+                  style={{
+                    padding: '0 16px',
+                    minWidth: '120px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: generatedCards.length === 0 || savedWorkId ? 'var(--gray-200)' : '#2563eb',
+                    color: savedWorkId ? '#0f172a' : '#fff',
+                    cursor: generatedCards.length === 0 || savedWorkId ? 'not-allowed' : 'pointer',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {savedWorkId ? '已保存' : isSavingWork ? '保存中...' : '保存为作品'}
+                </button>
               </div>
               {actionMessage && (
                 <div
@@ -1158,6 +1281,20 @@ export function DesktopCreatePage() {
                   }}
                 >
                   {actionMessage}
+                </div>
+              )}
+              {saveWorkError && (
+                <div
+                  style={{
+                    marginTop: '10px',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    background: 'rgba(248, 113, 113, 0.12)',
+                    color: '#b91c1c',
+                    fontSize: 'var(--font-size-sm)',
+                  }}
+                >
+                  {saveWorkError}
                 </div>
               )}
             </div>

@@ -5,7 +5,10 @@
 
 import { logger } from '@/shared/utils/logger';
 
+import { aliyunTextScan } from './aliyunContentModeration';
 import { ValidationIssue } from './types';
+
+const ALIYUN_ENABLED = Boolean(process.env.ALIYUN_ACCESS_KEY_ID && process.env.ALIYUN_ACCESS_KEY_SECRET);
 
 export interface ThirdPartyFilterConfig {
   provider: 'baidu' | 'tencent' | 'aliyun' | 'custom';
@@ -200,14 +203,29 @@ export class AliyunContentFilter {
   }
 
   async detect(content: string): Promise<ValidationIssue[]> {
-    if (!this.config.enabled) {
+    if (!this.config.enabled || !ALIYUN_ENABLED) {
       return [];
     }
 
     try {
-      // 阿里云内容安全API实现
-      // 这里需要根据阿里云SDK实现具体逻辑
-      logger.info('Aliyun content filter not fully implemented');
+      const result = await aliyunTextScan(content);
+
+      if (!result.isValid && result.suggestion === 'block') {
+        return [{
+          type: 'aliyun_content_security',
+          message: '内容触发阿里云敏感词审核，请修改后再试',
+          severity: 'error',
+        }];
+      }
+
+      if (result.suggestion === 'review') {
+        return [{
+          type: 'aliyun_content_security',
+          message: '内容需人工审核，请调整后再试',
+          severity: 'warning',
+        }];
+      }
+
       return [];
     } catch (error) {
       logger.error('Aliyun content filter error:', error);
