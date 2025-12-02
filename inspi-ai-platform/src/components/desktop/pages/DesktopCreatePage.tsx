@@ -1,5 +1,5 @@
 'use client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 /**
@@ -42,6 +42,9 @@ export function DesktopCreatePage() {
     subject: string;
     gradeLevel: string;
   } | null>(null);
+  const [editingWorkId, setEditingWorkId] = useState<string | null>(null);
+  const [loadingExistingWork, setLoadingExistingWork] = useState(false);
+  const [loadExistingError, setLoadExistingError] = useState<string | null>(null);
   const [retryingCardId, setRetryingCardId] = useState<string | null>(null);
   const [quotaHint, setQuotaHint] = useState<string | null>(null);
   const [quotaErrorCount, setQuotaErrorCount] = useState(0);
@@ -51,6 +54,8 @@ export function DesktopCreatePage() {
   const { showPrompt, LoginPromptComponent } = useLoginPrompt();
   const router = useRouter();
   const shouldCompactForm = isFormCollapsed || isGenerating || generatedCards.length > 0;
+  const searchParams = useSearchParams();
+  const editWorkIdParam = searchParams?.get('edit');
 
   const normalizeCard = (
     incomingCard: TeachingCard,
@@ -177,6 +182,73 @@ export function DesktopCreatePage() {
     [],
   );
 
+  const prefillFromWork = (work: any) => {
+    const workCards = Array.isArray(work?.cards) ? work.cards : [];
+    setFormData({
+      content: work?.knowledgePoint || work?.title || '',
+      subject: work?.subject || '',
+      gradeLevel: work?.gradeLevel || '',
+      cardTypes: Array.from(new Set((workCards as TeachingCard[]).map(card => card.type as CardType))).filter(Boolean) as CardType[],
+    });
+    if (workCards.length > 0) {
+      setGeneratedCards(workCards as TeachingCard[]);
+    }
+    setSavedWorkId(null);
+    setEditingWorkId(work?._id || work?.id || null);
+    setLastRequest({
+      knowledgePoint: work?.knowledgePoint || work?.title || '',
+      subject: work?.subject || '',
+      gradeLevel: work?.gradeLevel || '',
+    });
+  };
+
+  useEffect(() => {
+    if (!editWorkIdParam) {
+      setEditingWorkId(null);
+      return;
+    }
+
+    if (!/^[a-fA-F0-9]{24}$/.test(editWorkIdParam)) {
+      setEditingWorkId(null);
+      setLoadExistingError('作品不存在或已被删除');
+      setErrorMessage('作品不存在或已被删除');
+      return;
+    }
+
+    const controller = new AbortController();
+    const loadWork = async () => {
+      setLoadingExistingWork(true);
+      setLoadExistingError(null);
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+        const response = await fetch(`/api/works/${editWorkIdParam}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          credentials: 'include',
+          signal: controller.signal,
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload?.success || !payload?.work) {
+          throw new Error(payload?.error || '加载作品失败');
+        }
+        prefillFromWork(payload.work);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        const message = error instanceof Error ? error.message : '加载作品失败';
+        setLoadExistingError(message);
+        setErrorMessage(message);
+        setEditingWorkId(null);
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoadingExistingWork(false);
+        }
+      }
+    };
+
+    loadWork();
+
+    return () => controller.abort();
+  }, [editWorkIdParam]);
+
   const applyTemplate = (templateId: string) => {
     const template = templates.find(item => item.id === templateId);
     if (!template) return;
@@ -208,13 +280,30 @@ export function DesktopCreatePage() {
       const meta = cardTypes.find(item => item.id === type);
       return meta ? meta.name : type;
     });
-    const cards = generatedCards.map(card => ({
-      id: card.id,
-      type: card.type,
-      title: card.title,
-      content: card.content || card.explanation,
-      editable: true,
-    }));
+    const cards = generatedCards.map(card => {
+      const visualImage = card.visual?.imageUrl;
+      const structuredStages = (card.visual as any)?.structured?.stages;
+      const structuredImage = Array.isArray(structuredStages)
+        ? structuredStages.find((stage: any) => typeof stage?.imageUrl === 'string' && stage.imageUrl.trim())?.imageUrl
+        : undefined;
+      const coverImage = visualImage || structuredImage || (card.metadata as any)?.coverImageUrl;
+
+      return {
+        id: card.id,
+        type: card.type,
+        title: card.title,
+        content: card.content || card.explanation || '',
+        explanation: card.explanation,
+        metadata: {
+          ...card.metadata,
+          coverImageUrl: coverImage,
+        },
+        visual: card.visual,
+        sop: card.sop,
+        presentation: card.presentation,
+        editable: true,
+      };
+    });
 
     return {
       title,
@@ -340,8 +429,9 @@ export function DesktopCreatePage() {
       }
 
       const payload = buildWorkPayload();
-      const response = await fetch('/api/works', {
-        method: 'POST',
+      const targetUrl = editingWorkId ? `/api/works/${editingWorkId}` : '/api/works';
+      const response = await fetch(targetUrl, {
+        method: editingWorkId ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${authToken}`,
@@ -356,9 +446,12 @@ export function DesktopCreatePage() {
         throw new Error(result?.error || '保存作品失败');
       }
 
-      const workId = result.work._id || result.work.id || null;
+      const workId = result.work._id || result.work.id || editingWorkId || null;
       setSavedWorkId(workId);
-      showActionFeedback('已保存到作品中心');
+      if (!editingWorkId && workId) {
+        setEditingWorkId(workId);
+      }
+      showActionFeedback(editingWorkId ? '作品已更新' : '已保存到作品中心');
     } catch (error) {
       const message = error instanceof Error ? error.message : '保存作品失败';
       setSaveWorkError(message);

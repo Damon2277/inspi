@@ -13,6 +13,19 @@ import { mockSquareWorks } from '@/data/mockSquareWorks';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { useReuseState } from '@/shared/hooks/useReuseState';
 
+type ProfileTeachingCard = {
+  id: string;
+  type: string;
+  title?: string;
+  content?: string;
+  visual?: {
+    imageUrl?: string;
+    structured?: {
+      stages?: Array<{ imageUrl?: string }>;
+    };
+  };
+};
+
 interface UserWork {
   id: string;
   title: string;
@@ -20,6 +33,8 @@ interface UserWork {
   subject: string;
   grade: string;
   thumbnail: string;
+  coverImage?: string | null;
+  cards?: ProfileTeachingCard[];
   likes: number;
   uses: number;
   createdAt: string;
@@ -45,6 +60,30 @@ const SUBJECT_EMOJI_MAP: Record<string, string> = {
 };
 
 const resolveSubjectEmoji = (subject?: string) => SUBJECT_EMOJI_MAP[subject || ''] || '📚';
+
+const readCachedWork = (workId: string): any | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const cached = sessionStorage.getItem(`work-detail-cache-${workId}`);
+    return cached ? JSON.parse(cached) : null;
+  } catch {
+    return null;
+  }
+};
+
+const extractCoverImage = (work: any): string | null => {
+  const cardsSource = Array.isArray(work.cards) ? work.cards : readCachedWork(work._id || work.id)?.cards;
+  const cards: any[] = Array.isArray(cardsSource) ? cardsSource : [];
+  for (const card of cards) {
+    if (card?.visual?.imageUrl) return card.visual.imageUrl;
+    const stages = card?.visual?.structured?.stages;
+    if (Array.isArray(stages)) {
+      const stageWithImage = stages.find((stage: any) => stage?.imageUrl);
+      if (stageWithImage?.imageUrl) return stageWithImage.imageUrl;
+    }
+  }
+  return null;
+};
 
 type TabKey = 'works' | 'subscription' | 'feedback' | 'settings';
 
@@ -75,6 +114,8 @@ function ProfileContent() {
   const [worksLoading, setWorksLoading] = useState(false);
   const [worksError, setWorksError] = useState<string | null>(null);
   const [worksReloadToken, setWorksReloadToken] = useState(0);
+  const [hoveredWorkId, setHoveredWorkId] = useState<string | null>(null);
+  const [coverImages, setCoverImages] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (isTabKey(tabParam) && tabParam !== activeTab) {
@@ -144,6 +185,8 @@ function ProfileContent() {
           subject: work.subject || '通用学科',
           grade: work.gradeLevel || '通用年级',
           thumbnail: resolveSubjectEmoji(work.subject),
+          coverImage: work.coverImageUrl || extractCoverImage(work),
+          cards: work.cards,
           likes: work.likesCount || 0,
           uses: work.reuseCount || 0,
           createdAt: work.createdAt || new Date().toISOString(),
@@ -152,6 +195,26 @@ function ProfileContent() {
           tags: work.tags || [],
         }));
         setServerWorks(mapped);
+        setCoverImages(prev => {
+          const next = { ...prev };
+          mapped.forEach(work => {
+            if (work.coverImage) {
+              next[work.id] = work.coverImage;
+            }
+          });
+          return next;
+        });
+        if (typeof window !== 'undefined') {
+          try {
+            (payload.works || []).forEach((work: any) => {
+              const workId = work._id || work.id;
+              if (!workId) return;
+              sessionStorage.setItem(`work-detail-cache-${workId}`, JSON.stringify(work));
+            });
+          } catch (storageError) {
+            console.warn('缓存作品详情失败', storageError);
+          }
+        }
         setWorksLoading(false);
       })
       .catch(error => {
@@ -195,20 +258,91 @@ function ProfileContent() {
     [combinedWorks],
   );
 
-  const handleWorkClick = (work: UserWork) => {
-    if (work.status === 'reused') {
-      const targetId = work.reuseSourceId ?? work.id;
-      window.location.href = `/square/${targetId}`;
+  useEffect(() => {
+    const missing = displayWorks.filter(work => !coverImages[work.id]);
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+
+    missing.forEach((work) => {
+      fetch(`/api/works/${work.id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        credentials: 'include',
+      })
+        .then(response => response.json())
+        .then(payload => {
+          if (cancelled) return;
+          if (!payload?.success || !payload?.work?.cards) return;
+          const image = extractCoverImage(payload.work);
+          if (image) {
+            setCoverImages(prev => ({ ...prev, [work.id]: image }));
+          }
+        })
+        .catch(() => {});
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [displayWorks, coverImages]);
+
+  const handleDeleteWork = async (event: React.MouseEvent, workId: string) => {
+    event.stopPropagation();
+    if (!window.confirm('确定要删除这条作品吗？此操作不可恢复。')) {
       return;
     }
 
-    if (work.status === 'draft') {
-      window.location.href = `/create?edit=${work.id}`;
-      return;
-    }
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/works/${workId}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        credentials: 'include',
+      });
 
-    window.location.href = `/case/${work.id}`;
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.error || '删除失败，请稍后再试');
+      }
+
+      setServerWorks(prev => prev.filter(work => work.id !== workId));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : '删除失败，请稍后再试');
+    }
   };
+
+  const handleWorkClick = (work: UserWork) => {
+    window.location.href = `/works/${work.id}`;
+  };
+
+  const renderDeleteButton = (workId: string) => (
+    <button
+      type="button"
+      onClick={event => handleDeleteWork(event, workId)}
+      aria-label="删除作品"
+      style={{
+        border: '1px solid rgba(148,163,184,0.4)',
+        background: '#fff',
+        borderRadius: '999px',
+        padding: '4px',
+        cursor: 'pointer',
+        color: '#94a3b8',
+        opacity: hoveredWorkId === workId ? 1 : 0,
+        transition: 'opacity 0.2s ease',
+      }}
+      className="work-card__delete"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M6 7h12" />
+        <path d="M9 7v9" />
+        <path d="M15 7v9" />
+        <path d="M4 7h16" />
+        <path d="M10 3h4" />
+        <path d="M5 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12" />
+      </svg>
+    </button>
+  );
 
   const renderWorkCard = (work: UserWork) => {
     const isReused = work.status === 'reused';
@@ -221,25 +355,38 @@ function ProfileContent() {
         key={work.id}
         className="work-card"
         onClick={() => handleWorkClick(work)}
+        style={{ position: 'relative' }}
+        onMouseEnter={() => setHoveredWorkId(work.id)}
+        onMouseLeave={() => setHoveredWorkId(prev => (prev === work.id ? null : prev))}
       >
-        <div className="work-card__header">
-          <span className="work-card__emoji">{work.thumbnail}</span>
-          <div className="work-card__chips">
+        <div className="work-card__header" style={{ alignItems: 'flex-start', gap: '12px' }}>
+          {coverImages[work.id] ? (
+            <span className="work-card__emoji" style={{ width: '56px', height: '56px', borderRadius: '12px', overflow: 'hidden', padding: 0 }}>
+              <img src={coverImages[work.id]} alt={work.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            </span>
+          ) : work.coverImage ? (
+            <span className="work-card__emoji" style={{ width: '56px', height: '56px', borderRadius: '12px', overflow: 'hidden', padding: 0 }}>
+              <img src={work.coverImage} alt={work.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            </span>
+          ) : (
+            <span className="work-card__emoji">{work.thumbnail}</span>
+          )}
+          <div className="work-card__chips" style={{ flex: 1 }}>
             <span className="work-chip work-chip--subject">{work.subject}</span>
             <span className="work-chip work-chip--grade">{work.grade}</span>
-            {(isReused || isDraft || isPrivate) && (
+            {(isReused || isPrivate) && (
               <div className="work-card__status-group">
                 {isReused && (
                   <span className="work-chip work-chip--status work-chip--status-reused">复用</span>
-                )}
-                {isDraft && (
-                  <span className="work-chip work-chip--status work-chip--status-draft">草稿</span>
                 )}
                 {isPrivate && (
                   <span className="work-chip work-chip--status work-chip--status-private">私有</span>
                 )}
               </div>
             )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            {renderDeleteButton(work.id)}
           </div>
         </div>
         <h3 className="work-card__title">{work.title}</h3>

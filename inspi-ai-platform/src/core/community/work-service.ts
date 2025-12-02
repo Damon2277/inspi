@@ -58,6 +58,19 @@ export interface WorkResponse {
  * 作品服务类
  */
 export class WorkService {
+  private static extractCoverImage(cards?: any[]): string | null {
+    if (!Array.isArray(cards)) return null;
+    for (const card of cards) {
+      if (card?.visual?.imageUrl) return card.visual.imageUrl;
+      if (card?.metadata?.coverImageUrl) return card.metadata.coverImageUrl;
+      const stages = card?.visual?.structured?.stages;
+      if (Array.isArray(stages)) {
+        const stageWithImage = stages.find((stage: any) => stage?.imageUrl);
+        if (stageWithImage?.imageUrl) return stageWithImage.imageUrl;
+      }
+    }
+    return null;
+  }
   /**
    * 创建作品
    */
@@ -84,6 +97,7 @@ export class WorkService {
         isOriginal: true,
         qualityScore: this.calculateInitialQualityScore(data),
         status: 'draft',
+        coverImageUrl: this.extractCoverImage(data.cards),
       });
 
       const savedWork = await work.save();
@@ -139,6 +153,9 @@ export class WorkService {
 
       // 更新作品
       Object.assign(work, data);
+      if (data.cards) {
+        work.coverImageUrl = this.extractCoverImage(data.cards);
+      }
 
       // 重新计算质量评分
       if (data.title || data.description || data.cards || data.tags) {
@@ -158,6 +175,43 @@ export class WorkService {
       return {
         success: false,
         error: '更新作品失败',
+      };
+    }
+  }
+
+  /**
+   * 删除作品
+   */
+  static async deleteWork(
+    workId: string,
+    authorId: string,
+  ): Promise<WorkResponse> {
+    try {
+      await connectDB();
+
+      const work = await (Work.findOne as any)({
+        _id: workId,
+        author: authorId,
+      });
+
+      if (!work) {
+        return {
+          success: false,
+          error: '作品不存在或无权限删除',
+        };
+      }
+
+      await (Work.findByIdAndDelete as any)(workId);
+
+      return {
+        success: true,
+        message: '作品删除成功',
+      };
+    } catch (error) {
+      console.error('Delete work error:', error);
+      return {
+        success: false,
+        error: '删除作品失败',
       };
     }
   }
@@ -468,6 +522,12 @@ export class WorkService {
         .limit(options.limit ?? 50)
         .populate('author', 'name avatar')
         .exec();
+
+      works.forEach((work) => {
+        if (!work.coverImageUrl) {
+          work.coverImageUrl = this.extractCoverImage(work.cards);
+        }
+      });
 
       return {
         success: true,
