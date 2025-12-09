@@ -1,4 +1,4 @@
-import { aiService } from '@/core/ai/aiProvider';
+import { aiProviderOrder, getAIService } from '@/core/ai/aiProvider';
 import { imageService } from '@/core/ai/imageService';
 import { generatePrompt, PromptContext, validateCardContent } from '@/core/ai/promptTemplates';
 import { planVisualizationPrompt } from '@/core/ai/visualPromptPlanner';
@@ -40,6 +40,102 @@ const CARD_TITLES: Record<RawCardType, string> = {
 };
 
 const THEME_ORDER: VisualizationTheme[] = ['ocean', 'sunrise', 'forest', 'galaxy', 'neutral'];
+
+const visualizationPlaceholderThemes: Record<VisualizationTheme, {
+  gradientStart: string;
+  gradientEnd: string;
+  accent: string;
+}> = {
+  ocean: { gradientStart: '#0ea5e9', gradientEnd: '#2563eb', accent: '#e0f2fe' },
+  sunrise: { gradientStart: '#fb923c', gradientEnd: '#f59e0b', accent: '#fff7ed' },
+  forest: { gradientStart: '#22c55e', gradientEnd: '#15803d', accent: '#ecfccb' },
+  galaxy: { gradientStart: '#6366f1', gradientEnd: '#8b5cf6', accent: '#ede9fe' },
+  neutral: { gradientStart: '#0f172a', gradientEnd: '#475569', accent: '#f8fafc' },
+};
+
+function escapeSvgText(value?: string): string {
+  if (!value) {
+    return '';
+  }
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function truncateText(value: string, maxLength: number): string {
+  if (value.length <= maxLength) {
+    return value;
+  }
+  return `${value.slice(0, Math.max(0, maxLength - 3))}...`;
+}
+
+function encodeSvg(svg: string): string {
+  return `data:image/svg+xml,${encodeURIComponent(svg)
+    .replace(/'/g, '%27')
+    .replace(/\(/g, '%28')
+    .replace(/\)/g, '%29')}`;
+}
+
+function createVisualizationPlaceholder(
+  knowledgePoint: string,
+  theme: VisualizationTheme,
+): string {
+  const palette = visualizationPlaceholderThemes[theme] ?? visualizationPlaceholderThemes.neutral;
+  const title = escapeSvgText(truncateText(knowledgePoint || '概念可视化', 18));
+  const subtitle = escapeSvgText('AI 概念可视化卡');
+
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="720" height="460" viewBox="0 0 720 460" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${palette.gradientStart}"/>
+      <stop offset="100%" stop-color="${palette.gradientEnd}"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="460" rx="32" fill="url(#gradient)"/>
+  <g fill="${palette.accent}" opacity="0.15">
+    <circle cx="120" cy="80" r="60"/>
+    <circle cx="580" cy="120" r="40"/>
+    <circle cx="620" cy="360" r="80"/>
+    <circle cx="160" cy="360" r="50"/>
+  </g>
+  <text x="50%" y="52%" text-anchor="middle" dominant-baseline="middle" font-family="'PingFang SC', 'Inter', sans-serif" font-size="38" fill="#f8fafc" font-weight="700">${title}</text>
+  <text x="50%" y="64%" text-anchor="middle" font-family="'PingFang SC', 'Inter', sans-serif" font-size="18" fill="${palette.accent}" opacity="0.95">${subtitle}</text>
+</svg>`;
+
+  return encodeSvg(svg);
+}
+
+function ensureVisualizationPlaceholder(
+  card: TeachingCard,
+  knowledgePoint: string,
+): TeachingCard {
+  if (card.type !== 'visualization' || !card.visual?.theme || card.visual.imageUrl) {
+    return card;
+  }
+
+  const metaKnowledgePoint = typeof card.metadata?.knowledgePoint === 'string'
+    ? card.metadata?.knowledgePoint
+    : knowledgePoint;
+  const imageUrl = createVisualizationPlaceholder(metaKnowledgePoint || knowledgePoint, card.visual.theme ?? 'neutral');
+
+  return {
+    ...card,
+    visual: {
+      ...card.visual,
+      imageUrl,
+      imageMetadata: {
+        provider: 'placeholder',
+        width: 720,
+        height: 460,
+        generatedAt: new Date().toISOString(),
+      },
+    },
+  };
+}
 
 function getHeroFallbackConfig(knowledgePoint: string) {
   const warmKeywords = ['太阳', 'sun', '恒星', '火', '火焰', '火山', '熔岩', '热能'];
@@ -99,26 +195,43 @@ export async function generateTeachingCard(options: GenerateCardOptions): Promis
     const prompt = generatePrompt(cardType, promptContext);
     const cacheVersion = 'v2';
     const cacheKey = `card_${cacheVersion}_${cardType}_${knowledgePoint}_${subject || 'general'}`;
+    const providersToTry = aiProviderOrder;
+    let lastError: unknown = null;
 
-    const result = await aiService.generateContent(prompt, {
-      temperature: cardType === 'concept' ? 0.4 : 0.7,
-      maxTokens: cardType === 'concept' ? 750 : 520,
-      useCache: true,
-      cacheKey,
-      cacheTTL: 3600,
-    });
+    for (const provider of providersToTry) {
+      try {
+        const service = getAIService(provider);
+        const result = await service.generateContent(prompt, {
+          temperature: cardType === 'concept' ? 0.4 : 0.7,
+          maxTokens: cardType === 'concept' ? 750 : 520,
+          useCache: true,
+          cacheKey,
+          cacheTTL: 3600,
+        });
 
-    const processed = await buildCardFromAIResponse({
-      rawContent: result.content,
-      cardType,
-      knowledgePoint,
-      subject,
-      gradeLevel,
-      sessionId,
-      cached: result.cached,
-    });
+        const processed = await buildCardFromAIResponse({
+          rawContent: result.content,
+          cardType,
+          knowledgePoint,
+          subject,
+          gradeLevel,
+          sessionId,
+          cached: result.cached,
+        });
 
-    return attachVisualizationImage(processed, knowledgePoint);
+        return attachVisualizationImage(processed, knowledgePoint);
+      } catch (providerError) {
+        lastError = providerError;
+        logger.warn('AI provider调用失败，尝试下一个候选', {
+          provider,
+          cardType,
+          knowledgePoint,
+          error: providerError instanceof Error ? providerError.message : 'Unknown error',
+        });
+      }
+    }
+
+    throw lastError instanceof Error ? lastError : new Error('All AI providers failed');
   } catch (error) {
     logger.warn('generateTeachingCard failed, fallback used', {
       cardType,
@@ -201,7 +314,7 @@ async function attachVisualizationImage(
   }
 
   if (!imageService.isEnabled()) {
-    return card;
+    return ensureVisualizationPlaceholder(card, knowledgePoint);
   }
 
   try {
@@ -316,16 +429,16 @@ async function attachVisualizationImage(
       };
     }
 
-    return {
+    return ensureVisualizationPlaceholder({
       ...card,
       visual: updatedVisual,
-    };
+    }, knowledgePoint);
   } catch (error) {
     logger.warn('attachVisualizationImage failed', {
       knowledgePoint,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-    return card;
+    return ensureVisualizationPlaceholder(card, knowledgePoint);
   }
 }
 
@@ -798,6 +911,7 @@ async function buildVisualizationFallback(
   const fallbackPrompt = planned?.positivePrompt ?? enhancedPrompt;
   const negativePrompt = planned?.negativePrompt;
   const theme = config.theme ?? 'neutral';
+  const placeholderImageUrl = createVisualizationPlaceholder(knowledgePoint, theme);
 
   const annotations = await Promise.all(
     [
@@ -827,6 +941,13 @@ async function buildVisualizationFallback(
     layout: 'centered',
     imagePrompt: fallbackPrompt,
     negativePrompt,
+    imageUrl: placeholderImageUrl,
+    imageMetadata: {
+      provider: 'placeholder',
+      width: 720,
+      height: 460,
+      generatedAt: new Date().toISOString(),
+    },
     center: {
       title: knowledgePoint,
       subtitle: centerSubtitle,

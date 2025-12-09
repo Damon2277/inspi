@@ -1,0 +1,45 @@
+<svg width="720" height="460" viewBox="0 0 720 460" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop stop-color="#eef2ff" offset="0%"/>
+      <stop stop-color="#e0f7f3" offset="50%"/>
+      <stop stop-color="#fce7f3" offset="100%"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#6366f1" flood-opacity="0.25" />
+    </filter>
+  </defs>
+  <rect width="720" height="460" rx="32" fill="url(#bg)" />
+  <g filter="url(#shadow)">
+    <circle cx="360" cy="210" r="70" fill="#4f46e5" opacity="0.92" />
+    <text x="360" y="205" font-family="'PingFang SC', 'Inter', sans-serif" font-size="22" fill="#fff" text-anchor="middle">光合作用</text>
+    <text x="360" y="235" font-family="'PingFang SC', 'Inter', sans-serif" font-size="14" fill="#c7d2fe" text-anchor="middle">植物的能量工厂</text>
+  </g>
+  <g stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 6" fill="none">
+    <path d="M360 140 L240 80" />
+    <path d="M360 140 L480 80" />
+    <path d="M360 280 L200 340" />
+    <path d="M360 280 L520 340" />
+  </g>
+  <g>
+    <rect x="170" y="50" width="160" height="80" rx="20" fill="#fff" stroke="#c7d2fe" stroke-width="2" />
+    <text x="250" y="82" text-anchor="middle" font-family="'PingFang SC', 'Inter', sans-serif" font-size="16" fill="#0f172a">阶段一：吸收阳光</text>
+    <text x="250" y="104" text-anchor="middle" font-family="'PingFang SC', 'Inter', sans-serif" font-size="13" fill="#64748b">能量输入 · 叶绿素捕光</text>
+  </g>
+  <g>
+    <rect x="390" y="50" width="160" height="80" rx="20" fill="#fff" stroke="#c7d2fe" stroke-width="2" />
+    <text x="470" y="82" text-anchor="middle" font-family="'PingFang SC', 'Inter', sans-serif" font-size="16" fill="#0f172a">阶段二：能量转换</text>
+    <text x="470" y="104" text-anchor="middle" font-family="'PingFang SC', 'Inter', sans-serif" font-size="13" fill="#64748b">叶绿体反应 · ATP</text>
+  </g>
+  <g>
+    <rect x="120" y="310" width="180" height="90" rx="20" fill="#fff" stroke="#c7d2fe" stroke-width="2" />
+    <text x="210" y="344" text-anchor="middle" font-family="'PingFang SC', 'Inter', sans-serif" font-size="16" fill="#0f172a">阶段三：合成葡萄糖</text>
+    <text x="210" y="366" text-anchor="middle" font-family="'PingFang SC', 'Inter', sans-serif" font-size="13" fill="#64748b">产生有机物 · 释放氧气</text>
+  </g>
+  <g>
+    <rect x="420" y="310" width="180" height="90" rx="20" fill="#fff" stroke="#c7d2fe" stroke-width="2" />
+    <text x="510" y="344" text-anchor="middle" font-family="'PingFang SC', 'Inter', sans-serif" font-size="16" fill="#0f172a">课堂延展</text>
+    <text x="510" y="366" text-anchor="middle" font-family="'PingFang SC', 'Inter', sans-serif" font-size="13" fill="#64748b">实验设计 · 生活类比</text>
+  </g>
+  <text x="360" y="430" text-anchor="middle" font-family="'PingFang SC', 'Inter', sans-serif" font-size="13" fill="#475569">案例截图：概念可视化卡 · Inspi.AI</text>
+</svg>

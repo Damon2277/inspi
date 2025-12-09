@@ -1478,20 +1478,17 @@ export function GeneratedCard({
           <div
             ref={moreActionsRef}
             style={{
-              position: 'absolute',
-              top: '20px',
-              right: '20px',
               display: 'flex',
+              justifyContent: 'flex-end',
               gap: '8px',
+              marginBottom: '12px',
             }}
+            onClick={(event) => event.stopPropagation()}
           >
             {card.type !== 'visualization' && (
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleGenerateVisualAssist();
-                }}
+                onClick={handleGenerateVisualAssist}
                 disabled={isGeneratingVisual}
                 style={{
                   display: 'inline-flex',
@@ -1515,8 +1512,8 @@ export function GeneratedCard({
             <button
               type="button"
               onClick={(e) => {
-                e.stopPropagation();
                 handleExport('social');
+                e.stopPropagation();
               }}
               style={{
                 width: '32px',
@@ -1550,8 +1547,8 @@ export function GeneratedCard({
             <button
               type="button"
               onClick={(e) => {
-                e.stopPropagation();
                 setShowMoreActions(!showMoreActions);
+                e.stopPropagation();
               }}
               style={{
                 width: '32px',
@@ -1577,238 +1574,15 @@ export function GeneratedCard({
               }}
               title="更多操作"
             >
-              ⋯
+              ···
             </button>
-            {showMoreActions && (
-              <div
-                ref={moreActionsRef}
-                style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 4px)',
-                  right: 0,
-                  minWidth: '160px',
-                  background: '#ffffff',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                  padding: '4px',
-                  zIndex: 20,
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMoreActions(false);
-                    handleCopyImage();
-                  }}
-                  disabled={isExporting}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    border: 'none',
-                    borderRadius: '6px',
-                    background: 'transparent',
-                    textAlign: 'left',
-                    fontSize: '13px',
-                    color: '#475569',
-                    cursor: 'pointer',
-                    transition: 'background 0.15s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#f1f5f9';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M10 1H3a2 2 0 00-2 2v7h2V3h7V1z" fill="currentColor"/>
-                    <rect x="5" y="5" width="8" height="8" rx="1" fill="currentColor"/>
-                  </svg>
-                  复制图片
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMoreActions(false);
-                    handleShare('wechat');
-                  }}
-                  disabled={isExporting}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    border: 'none',
-                    borderRadius: '6px',
-                    background: 'transparent',
-                    textAlign: 'left',
-                    fontSize: '13px',
-                    color: '#475569',
-                    cursor: isExporting ? 'not-allowed' : 'pointer',
-                    opacity: isExporting ? 0.6 : 1,
-                    transition: 'background 0.15s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isExporting) {
-                      e.currentTarget.style.backgroundColor = '#f1f5f9';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M10.5 9.5a2 2 0 11-1.3-.48l-3.4-2a2 2 0 010-.04l3.4-2a2 2 0 11-.4-.96L5.4 6a2 2 0 100 2l3.4 2a2 2 0 111.7-.5z" fill="currentColor"/>
-                  </svg>
-                  分享微信
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMoreActions(false);
-                    if (onPreview) onPreview();
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    border: 'none',
-                    borderRadius: '6px',
-                    background: 'transparent',
-                    textAlign: 'left',
-                    fontSize: '13px',
-                    color: '#475569',
-                    cursor: 'pointer',
-                    transition: 'background 0.15s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#f1f5f9';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <rect x="2" y="3" width="10" height="8" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-                    <path d="M4 1h6M7 11v2" stroke="currentColor" strokeWidth="1.5"/>
-                  </svg>
-                  全屏预览
-                </button>
-              </div>
-            )}
           </div>
         )}
-
-        <h2 style={titleStyle}>
-          <span style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '4px 10px',
-            backgroundColor: typeConfig.color,
-            color: '#ffffff',
-            borderRadius: '6px',
-            fontSize: '12px',
-            fontWeight: 600,
-            flexShrink: 0,
-          }}>
-            {typeConfig.icon}
-            <span>{typeConfig.name}</span>
-          </span>
-          <span>{card.title}</span>
-        </h2>
-
         {hasVisualization ? (
-          <>
+          <div style={{ marginBottom: isHeroVisualization ? '0' : '20px' }}>
             {renderVisualizationCanvas(forExport)}
-            {visual?.imagePrompt && !forExport && !(isHeroVisualization && hasHeroImage) ? (
-              <div
-                style={{
-                  marginTop: '-12px',
-                  marginBottom: '24px',
-                  padding: '14px 16px',
-                  borderRadius: '12px',
-                  background: '#f8fafc',
-                  border: '1px dashed #cbd5f5',
-                  color: '#334155',
-                  fontSize: '13px',
-                  lineHeight: 1.6,
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '10px',
-                }}
-              >
-                <span style={{ fontSize: '16px' }}>🎨</span>
-                <div>
-                  <div style={{ fontWeight: 600, marginBottom: '4px' }}>图像灵感提示</div>
-                  <div>{visual.imagePrompt}</div>
-                </div>
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <div
-            style={{
-              lineHeight: 1.75,
-              wordBreak: 'break-word',
-              letterSpacing: '0.02em',
-              maxHeight: !forExport && !isContentExpanded && expandable ? '220px' : undefined,
-              overflow: !forExport && !isContentExpanded && expandable ? 'hidden' : undefined,
-              position: 'relative',
-            }}
-          >
-            {structuredSections.length > 0
-              ? renderStructuredSections(structuredSections, {
-                  fontSize: '14px',
-                  color: '#1f2937',
-                  paragraphIndent: '2em',
-                  titleColor: typeConfig.color,
-                })
-              : renderMarkdownContent(formattedCardContent || '暂无内容', {
-                  fontSize: '14px',
-                  color: '#1f2937',
-                  lineHeight: 1.75,
-                  strongColor: typeConfig.color,
-                  textIndent: '2em',
-                })}
           </div>
-        )}
-
-        {shouldShowExplanation ? (
-          <div style={bottomSectionStyle}>
-            <div style={explanationStyle}>{card.explanation}</div>
-            <div style={watermarkStyle}>
-              <span>AI生成</span>
-            </div>
-          </div>
-        ) : (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: effectivePadding,
-              right: effectivePadding,
-              fontSize: '10px',
-              color: '#cbd5e1',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              opacity: 0.7,
-            }}
-          >
-            <span>AI生成</span>
-          </div>
-        )}
-
+        ) : null}
         {!forExport && expandable && !isContentExpanded && (
           <div
             style={{
@@ -1846,6 +1620,16 @@ export function GeneratedCard({
         </div>
       ) : (
         renderCardSurface(false)
+      )}
+
+      {cardContent && (
+        <div className="generated-card__summary">
+          {renderMarkdownContent(cardContent, {
+            fontSize: '15px',
+            color: '#0f172a',
+            lineHeight: 1.7,
+          })}
+        </div>
       )}
 
       {(!allowEditing || !isEditing) && expandable && (
