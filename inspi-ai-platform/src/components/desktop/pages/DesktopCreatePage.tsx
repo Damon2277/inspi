@@ -189,14 +189,14 @@ const cardTypes: Array<{
     },
   ], []);
 
-  const cardGridStyle = useMemo(
-    () => ({
-      display: 'grid',
-      gap: '20px',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-    }),
-    [],
-  );
+const cardGridStyle = useMemo(
+  () => ({
+    display: 'grid',
+    gap: 'var(--layout-card-gap)',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+  }),
+  [],
+);
 
 const shareMenuOptions = useMemo(() => ([
   { platform: 'twitter' as SharePlatform, label: 'X', helper: '分享到 X' },
@@ -792,8 +792,10 @@ const sharePosterContainerStyle: React.CSSProperties = {
 
     const fetchRecentProjects = async () => {
       try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
         const response = await fetch('/api/profile/works?status=all&limit=3', {
           credentials: 'include',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
 
         if (response.status === 401) {
@@ -967,31 +969,105 @@ const sharePosterContainerStyle: React.CSSProperties = {
     return sharePosterImageUrl;
   }, [sharePosterImageUrl]);
 
+  const horizontalPadding = 'var(--layout-page-padding)';
+  const sectionGap = 'var(--layout-section-gap)';
+  const moduleGap = 'var(--layout-panel-gap)';
+  const heroPadding = 'calc(var(--layout-hero-padding-y) * 0.75) var(--layout-hero-padding-x)';
+  const panelRadius = 'var(--layout-panel-radius)';
+  const cardGap = 'var(--layout-card-gap)';
+  const cardPadding = 'var(--layout-card-padding)';
+  const mainPadding = 'var(--layout-main-padding)';
+  const sidebarWidth = 'var(--layout-sidebar-width)';
+
+  const pageBackgroundStyle: React.CSSProperties = {
+    width: '100%',
+    minHeight: 'calc(100vh - 80px)',
+    background: 'linear-gradient(180deg, #f5f3ff 0%, #f0f9ff 35%, #ffffff 100%)',
+    paddingTop: 'calc(var(--layout-section-gap) * 0.4)',
+    paddingBottom: 'calc(var(--layout-section-gap) * 0.7)',
+    paddingLeft: horizontalPadding,
+    paddingRight: horizontalPadding,
+    overflowY: 'auto',
+    boxSizing: 'border-box',
+  };
+
+  const constrainedLayoutStyle: React.CSSProperties = {
+    width: '100%',
+    maxWidth: '100%',
+    boxSizing: 'border-box',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: sectionGap,
+  };
+
+  const contentLayoutStyle: React.CSSProperties = {
+    width: '100%',
+    maxWidth: '100%',
+    display: 'flex',
+    gap: moduleGap,
+    alignItems: 'flex-start',
+    boxSizing: 'border-box',
+  };
+
+  const heroSectionStyle: React.CSSProperties = {
+    width: '100%',
+    padding: heroPadding,
+    borderRadius: 'calc(var(--layout-panel-radius) * 0.4)',
+    background: 'linear-gradient(120deg, rgba(99,102,241,0.12) 0%, rgba(14,165,233,0.08) 40%, rgba(255,255,255,0) 100%)',
+    border: '1px solid rgba(148,163,184,0.25)',
+    boxShadow: 'none',
+    position: 'relative',
+    overflow: 'hidden',
+    boxSizing: 'border-box',
+  };
+
+  const heroTextWrapperStyle: React.CSSProperties = {
+    position: 'relative',
+    zIndex: 1,
+    maxWidth: 'min(960px, 100%)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 'calc(var(--layout-card-gap) / 2)',
+    color: '#0f172a',
+  };
+
   return (
     <React.Fragment>
       <LoginPromptComponent />
-      <div style={{ display: 'flex', height: 'calc(100vh - 80px)', background: 'var(--gray-50)' }}>
-        {/* 侧边栏 - 缩小宽度 */}
-        <aside style={{
-          width: '168px',
-          flexShrink: 0,
-          background: 'white',
-          borderRight: '1px solid var(--gray-200)',
-          padding: '16px 10px',
-          overflowY: 'auto',
-        }}>
+      <div style={pageBackgroundStyle}>
+        <div style={{ ...constrainedLayoutStyle, marginBottom: 0 }}>
+          <div style={{ marginBottom: 'calc(var(--layout-section-gap) * 0.115)' }}>
+          <div style={heroSectionStyle}>
+            <div style={heroTextWrapperStyle}>
+              <h1 style={{ fontSize: '24px', fontWeight: 800, margin: 0 }}>AI教学魔法师工作区</h1>
+              <p style={{ fontSize: 'var(--font-size-lg)', color: '#1f2937', lineHeight: 1.6, margin: 0, maxWidth: '100%' }}>
+                输入一个知识点，即可自动获得图文并茂的教学灵感、课堂互动与 SOP。让 AI 成为你的教学共创伙伴。
+              </p>
+            </div>
+          </div>
+          </div>
+          <div style={{ ...contentLayoutStyle, marginTop: 'calc(var(--layout-section-gap) * 0.075)' }}>
+            {/* 侧边栏 - 信息卡 */}
+          <aside style={{
+            width: sidebarWidth,
+            flexShrink: 0,
+            background: '#ffffff',
+            borderRadius: 'calc(var(--layout-panel-radius) * 0.7)',
+            padding: 'calc(var(--layout-card-padding) * 1.4) var(--layout-card-padding) calc(var(--layout-card-padding) * 1.8)',
+            boxShadow: '0 25px 65px rgba(15, 23, 42, 0.08)',
+          }}>
           {/* 最近项目 */}
           {recentProjects.length > 0 && (
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: 'calc(var(--layout-card-gap) * 0.75)' }}>
               <h3 style={{
-                fontSize: '14px',
-                fontWeight: '600',
+                fontSize: 'var(--font-size-base)',
+                fontWeight: '700',
                 color: 'var(--gray-900)',
-                marginBottom: '12px',
+                marginBottom: 'calc(var(--layout-card-gap) * 0.4)',
               }}>
                 最近项目
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--layout-card-gap) * 0.25)' }}>
                 {recentProjects.map((project) => (
                   <button
                     key={project.id}
@@ -1000,7 +1076,7 @@ const sharePosterContainerStyle: React.CSSProperties = {
                     className="modern-card"
                     style={{
                       width: '100%',
-                      padding: '8px',
+                      padding: 'calc(var(--layout-card-padding) * 0.75)',
                       cursor: 'pointer',
                       transition: 'all var(--transition-base)',
                       textAlign: 'left',
@@ -1017,15 +1093,8 @@ const sharePosterContainerStyle: React.CSSProperties = {
                     }}
                   >
                     <div style={{
-                      fontSize: '12px',
-                      color: 'var(--gray-500)',
-                      marginBottom: '4px',
-                    }}>
-                      {formatRelativeTimeFromNow(project.updatedAt)}
-                    </div>
-                    <div style={{
                       fontWeight: 600,
-                      fontSize: '13px',
+                      fontSize: 'var(--font-size-base)',
                       color: 'var(--gray-900)',
                       display: 'flex',
                       alignItems: 'center',
@@ -1033,10 +1102,10 @@ const sharePosterContainerStyle: React.CSSProperties = {
                     }}>
                       <span>{project.title}</span>
                       {project.subject ? (
-                        <span style={{ fontSize: '11px', color: '#64748b' }}>{project.subject}</span>
+                        <span style={{ fontSize: 'var(--font-size-sm)', color: '#64748b' }}>{project.subject}</span>
                       ) : null}
                     </div>
-                    <div style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
+                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-500)' }}>
                       {project.cardsCount || 0} 张卡片
                     </div>
                   </button>
@@ -1046,16 +1115,16 @@ const sharePosterContainerStyle: React.CSSProperties = {
           )}
 
           {/* 推荐模板 */}
-          <div style={{ marginBottom: '24px' }}>
+          <div style={{ marginBottom: 'calc(var(--layout-card-gap) * 0.75)' }}>
             <h3 style={{
-              fontSize: '14px',
-              fontWeight: '600',
+              fontSize: 'var(--font-size-base)',
+              fontWeight: '700',
               color: 'var(--gray-900)',
-              marginBottom: '12px',
+              marginBottom: 'calc(var(--layout-card-gap) * 0.4)',
             }}>
               推荐模板
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--layout-card-gap) * 0.25)' }}>
               {templates.map((template) => {
                 const isActive = selectedTemplate === template.id;
                 return (
@@ -1065,7 +1134,7 @@ const sharePosterContainerStyle: React.CSSProperties = {
                     onClick={() => applyTemplate(template.id)}
                     className="modern-card"
                     style={{
-                      padding: '8px',
+                      padding: 'calc(var(--layout-card-padding) * 0.75)',
                       textAlign: 'left',
                       cursor: 'pointer',
                       transition: 'all var(--transition-base)',
@@ -1074,17 +1143,17 @@ const sharePosterContainerStyle: React.CSSProperties = {
                     }}
                   >
                     <div style={{
-                      fontSize: '12px',
+                      fontSize: 'var(--font-size-sm)',
                       fontWeight: '600',
                       color: 'var(--gray-900)',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      gap: '8px',
+                      gap: 'calc(var(--layout-card-gap) * 0.3)',
                     }}>
                       <span>{template.name}</span>
                       <span style={{
-                        fontSize: '10px',
+                        fontSize: 'var(--font-size-xs)',
                         color: 'var(--gray-500)',
                         fontWeight: '400',
                       }}>{template.usage}次</span>
@@ -1098,89 +1167,60 @@ const sharePosterContainerStyle: React.CSSProperties = {
           {!shouldCompactForm && (
             <div>
               <h3 style={{
-                fontSize: '14px',
-                fontWeight: '600',
+                fontSize: 'var(--font-size-base)',
+                fontWeight: '700',
                 color: 'var(--gray-900)',
-                marginBottom: '12px',
+                marginBottom: 'calc(var(--layout-card-gap) * 0.4)',
               }}>
                 使用小贴士
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--layout-card-gap) * 0.25)' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
-                  <span style={{ fontSize: '12px' }}>💡</span>
-                  <span style={{ fontSize: '11px', color: 'var(--gray-600)', lineHeight: '1.4' }}>
+                  <span style={{ fontSize: 'var(--font-size-sm)' }}>💡</span>
+                  <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)', lineHeight: '1.5' }}>
                     详细描述知识点，AI会生成更精准的内容
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
-                  <span style={{ fontSize: '12px' }}>🎯</span>
-                  <span style={{ fontSize: '11px', color: 'var(--gray-600)', lineHeight: '1.4' }}>
+                  <span style={{ fontSize: 'var(--font-size-sm)' }}>🎯</span>
+                  <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)', lineHeight: '1.5' }}>
                     选择合适的学科和学段
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
-                  <span style={{ fontSize: '12px' }}>✨</span>
-                  <span style={{ fontSize: '11px', color: 'var(--gray-600)', lineHeight: '1.4' }}>
+                  <span style={{ fontSize: 'var(--font-size-sm)' }}>✨</span>
+                  <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)', lineHeight: '1.5' }}>
                     多选卡片类型，构建完整教学体系
                   </span>
                 </div>
               </div>
             </div>
           )}
-        </aside>
+          </aside>
 
-        {/* 主内容区 - 上下布局 */}
-        <main
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            background: 'var(--gray-50)',
-            overflow: 'hidden',
-          }}
-        >
-          {/* 顶部标题区 */}
-          <div
+          {/* 主内容区 - 居中卡片 */}
+          <main
             style={{
-              padding: '20px 24px',
-              background: 'white',
-              borderBottom: '1px solid var(--gray-200)',
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              background: 'rgba(255,255,255,0.92)',
+              borderRadius: panelRadius,
+              boxShadow: '0 35px 120px rgba(15, 23, 42, 0.15)',
+              overflow: 'hidden',
             }}
           >
-            <div style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              gap: '12px',
-            }}>
-              <h1 style={{
-                fontSize: 'var(--font-size-4xl)',
-                fontWeight: '700',
-                color: 'var(--gray-900)',
-              }}>
-                AI教学魔法师工作区
-              </h1>
-              {!shouldCompactForm && (
-                <p style={{
-                  fontSize: 'var(--font-size-lg)',
-                  color: 'var(--gray-600)',
-                }}>
-                  让抽象知识变得可见，用生活温度点亮学习
-                </p>
-              )}
-            </div>
-          </div>
-
           {/* 上部：输入区域 */}
           {isFormCollapsed ? (
             <div
               style={{
-                padding: '12px 24px',
-                background: 'white',
-                borderBottom: '1px solid var(--gray-200)',
+                padding: 'calc(var(--layout-panel-padding-y) * 0.8) var(--layout-panel-padding-x)',
+                background: 'rgba(255,255,255,0.9)',
+                borderBottom: '1px solid rgba(148,163,184,0.25)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                gap: '12px',
+                gap: 'calc(var(--layout-card-gap) * 0.35)',
                 flexWrap: 'wrap',
               }}
             >
@@ -1191,16 +1231,16 @@ const sharePosterContainerStyle: React.CSSProperties = {
                 type="button"
                 onClick={toggleFormCollapsed}
                 style={{
-                  border: '1px solid var(--gray-200)',
-                  borderRadius: '8px',
+                  border: '1px solid rgba(148,163,184,0.35)',
+                  borderRadius: '999px',
                   background: '#fff',
-                  padding: '6px 10px',
-                  fontSize: '12px',
+                  padding: 'var(--layout-card-padding) calc(var(--layout-card-padding) * 1.3)',
+                  fontSize: 'var(--font-size-xs)',
                   color: '#64748b',
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '4px',
+                  gap: 'calc(var(--layout-card-gap) * 0.2)',
                   transition: 'all 0.2s ease',
                 }}
                 onMouseEnter={(e) => {
@@ -1221,9 +1261,9 @@ const sharePosterContainerStyle: React.CSSProperties = {
           ) : (
             <div
               style={{
-                padding: '20px 24px',
-                background: 'white',
-                borderBottom: '1px solid var(--gray-200)',
+                padding: 'var(--layout-panel-padding-y) var(--layout-panel-padding-x) calc(var(--layout-panel-padding-y) + 12px)',
+                background: 'rgba(255,255,255,0.95)',
+                borderBottom: '1px solid rgba(148,163,184,0.25)',
               }}
             >
               <div
@@ -1231,8 +1271,8 @@ const sharePosterContainerStyle: React.CSSProperties = {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: '16px',
-                  gap: '12px',
+                  marginBottom: 'calc(var(--layout-card-gap) * 0.5)',
+                  gap: 'calc(var(--layout-card-gap) * 0.35)',
                   flexWrap: 'wrap',
                 }}
               >
@@ -1243,16 +1283,16 @@ const sharePosterContainerStyle: React.CSSProperties = {
                   type="button"
                   onClick={toggleFormCollapsed}
                   style={{
-                    border: '1px solid var(--gray-200)',
-                    borderRadius: '8px',
+                    border: '1px solid rgba(148,163,184,0.35)',
+                    borderRadius: '999px',
                     background: '#fff',
-                    padding: '6px 10px',
-                    fontSize: '12px',
+                    padding: 'var(--layout-card-padding) calc(var(--layout-card-padding) * 1.3)',
+                    fontSize: 'var(--font-size-xs)',
                     color: '#64748b',
                     cursor: 'pointer',
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '4px',
+                    gap: 'calc(var(--layout-card-gap) * 0.2)',
                     transition: 'all 0.2s ease',
                   }}
                   onMouseEnter={(e) => {
@@ -1271,14 +1311,15 @@ const sharePosterContainerStyle: React.CSSProperties = {
                 </button>
               </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: '12px', alignItems: 'start' }}>
+              <div style={{ marginBottom: 'calc(var(--layout-card-gap) * 0.65)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: 'calc(var(--layout-card-gap) * 0.35)', alignItems: 'start' }}>
                   <div className="modern-form-group" style={{ marginBottom: 0 }}>
                     <textarea
                       className="modern-input"
                       style={{
                         fontSize: 'var(--font-size-base)',
-                        minHeight: '60px',
+                        minHeight: '104px',
+                        width: 'calc(100% - 10px)',
                         resize: 'none',
                       }}
                       placeholder="请表述你要教授的知识点，比如“光合作用”、“三角形”"
@@ -1287,13 +1328,13 @@ const sharePosterContainerStyle: React.CSSProperties = {
                       required
                     />
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--layout-card-gap) * 0.3)' }}>
                     <div className="modern-form-group" style={{ marginBottom: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'calc(var(--layout-card-gap) * 0.3)' }}>
                         <label className="modern-label" style={{ fontSize: 'var(--font-size-sm)', marginBottom: 0, whiteSpace: 'nowrap' }}>学科</label>
                         <select
                           className="modern-input"
-                          style={{ fontSize: 'var(--font-size-sm)', padding: '4px 8px' }}
+                          style={{ fontSize: 'var(--font-size-sm)', padding: 'calc(var(--layout-card-padding) * 0.4) calc(var(--layout-card-padding) * 0.8)' }}
                           value={formData.subject}
                           onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                         >
@@ -1305,11 +1346,11 @@ const sharePosterContainerStyle: React.CSSProperties = {
                       </div>
                     </div>
                     <div className="modern-form-group" style={{ marginBottom: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'calc(var(--layout-card-gap) * 0.3)' }}>
                         <label className="modern-label" style={{ fontSize: 'var(--font-size-sm)', marginBottom: 0, whiteSpace: 'nowrap' }}>学段</label>
                         <select
                           className="modern-input"
-                          style={{ fontSize: 'var(--font-size-sm)', padding: '4px 8px' }}
+                          style={{ fontSize: 'var(--font-size-sm)', padding: 'calc(var(--layout-card-padding) * 0.4) calc(var(--layout-card-padding) * 0.8)' }}
                           value={formData.gradeLevel}
                           onChange={(e) => setFormData({ ...formData, gradeLevel: e.target.value })}
                         >
@@ -1324,20 +1365,20 @@ const sharePosterContainerStyle: React.CSSProperties = {
                 </div>
               </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ marginBottom: 'calc(var(--layout-card-gap) * 0.65)' }}>
+                <div style={{ display: 'flex', gap: 'calc(var(--layout-card-gap) * 0.4)' }}>
                   {cardTypes.map((type) => (
                     <div
                       key={type.id}
                       onClick={() => toggleCardType(type.id)}
                       style={{
                         flex: 1,
-                        padding: '12px',
+                        padding: cardPadding,
                         cursor: 'pointer',
                         border: formData.cardTypes.includes(type.id)
                           ? '2px solid var(--primary-500)'
                           : '1px solid var(--gray-200)',
-                        borderRadius: '8px',
+                        borderRadius: 'calc(var(--layout-panel-radius) * 0.25)',
                         background: formData.cardTypes.includes(type.id)
                           ? 'var(--primary-50)'
                           : 'white',
@@ -1349,10 +1390,10 @@ const sharePosterContainerStyle: React.CSSProperties = {
                       {formData.cardTypes.includes(type.id) && (
                         <div style={{
                           position: 'absolute',
-                          top: '8px',
-                          right: '8px',
-                          width: '20px',
-                          height: '20px',
+                          top: 'calc(var(--layout-card-padding) * 0.6)',
+                          right: 'calc(var(--layout-card-padding) * 0.6)',
+                          width: 'calc(var(--layout-card-padding) * 1.4)',
+                          height: 'calc(var(--layout-card-padding) * 1.4)',
                           borderRadius: '50%',
                           background: 'var(--primary-500)',
                           display: 'flex',
@@ -1368,17 +1409,17 @@ const sharePosterContainerStyle: React.CSSProperties = {
                         {type.icon}
                       </div>
                       <h4 style={{
-                        fontSize: 'var(--font-size-xs)',
+                        fontSize: 'var(--font-size-base)',
                         fontWeight: '600',
                         color: 'var(--gray-900)',
-                        marginBottom: '2px',
+                        marginBottom: '6px',
                       }}>
                         {type.name}
                       </h4>
                       <p style={{
-                        fontSize: '10px',
+                        fontSize: 'var(--font-size-sm)',
                         color: 'var(--gray-600)',
-                        lineHeight: '1.3',
+                        lineHeight: '1.5',
                       }}>
                         {type.description}
                       </p>
@@ -1509,7 +1550,7 @@ const sharePosterContainerStyle: React.CSSProperties = {
             style={{
               flex: 1,
               overflowY: 'auto',
-              padding: '24px 28px 120px',
+              padding: 'calc(var(--layout-main-padding) + 10px) calc(var(--layout-main-padding) + 16px) calc(var(--layout-main-padding) * 2)',
               position: 'relative',
             }}
           >
@@ -1517,19 +1558,19 @@ const sharePosterContainerStyle: React.CSSProperties = {
               <div
                 style={{
                   position: 'absolute',
-                  top: '20px',
+                  top: 'calc(var(--layout-card-gap) * 0.7)',
                   left: '50%',
                   transform: 'translateX(-50%)',
                   background: 'rgba(13,148,136,0.92)',
                   color: '#fff',
-                  padding: '8px 18px',
+                  padding: 'calc(var(--layout-card-padding) * 0.7) calc(var(--layout-card-padding) * 1.4)',
                   borderRadius: '999px',
                   fontSize: 'var(--font-size-sm)',
                   boxShadow: '0 18px 36px rgba(13,148,136,0.35)',
                   zIndex: 6,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
+                  gap: 'calc(var(--layout-card-gap) * 0.3)',
                 }}
               >
                 <span role="img" aria-label="sparkles">🎉</span>
@@ -1542,8 +1583,8 @@ const sharePosterContainerStyle: React.CSSProperties = {
                 position: 'sticky',
                 top: 0,
                 zIndex: 5,
-                marginBottom: '18px',
-                paddingBottom: '16px',
+                marginBottom: 'calc(var(--layout-card-gap) * 0.55)',
+                paddingBottom: 'calc(var(--layout-card-gap) * 0.45)',
                 background: 'linear-gradient(180deg, rgba(248,250,252,0.96) 0%, rgba(248,250,252,0.86) 70%, rgba(248,250,252,0) 100%)',
                 backdropFilter: 'blur(6px)',
               }}
@@ -1553,25 +1594,25 @@ const sharePosterContainerStyle: React.CSSProperties = {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  gap: '16px',
+                  gap: 'calc(var(--layout-card-gap) * 0.5)',
                   flexWrap: 'wrap',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'calc(var(--layout-card-gap) * 0.35)', flexWrap: 'wrap' }}>
                   <button
                     type="button"
                     onClick={toggleFormCollapsed}
                     style={{
                       border: '1px solid var(--gray-200)',
-                      borderRadius: '8px',
+                      borderRadius: 'calc(var(--layout-panel-radius) * 0.25)',
                       background: '#fff',
-                      padding: '6px 10px',
-                      fontSize: '12px',
+                      padding: 'calc(var(--layout-card-padding) * 0.5) calc(var(--layout-card-padding) * 0.9)',
+                      fontSize: 'var(--font-size-xs)',
                       color: '#64748b',
                       cursor: 'pointer',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '4px',
+                      gap: 'calc(var(--layout-card-gap) * 0.2)',
                       transition: 'all 0.2s ease',
                     }}
                     onMouseEnter={(e) => {
@@ -1593,7 +1634,7 @@ const sharePosterContainerStyle: React.CSSProperties = {
                       )}
                     </svg>
                   </button>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'calc(var(--layout-card-gap) * 0.3)' }}>
                     <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, color: 'var(--gray-900)', margin: 0 }}>
                       生成结果
                     </h2>
@@ -1606,12 +1647,12 @@ const sharePosterContainerStyle: React.CSSProperties = {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px',
+                    gap: 'calc(var(--layout-card-gap) * 0.25)',
                     flexWrap: 'wrap',
                     justifyContent: 'flex-end',
                   }}
                 >
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 'calc(var(--layout-card-gap) * 0.25)', flexWrap: 'wrap' }}>
                     <div
                       ref={shareMenuRef}
                       style={{ position: 'relative', display: 'inline-flex' }}
@@ -1834,6 +1875,8 @@ const sharePosterContainerStyle: React.CSSProperties = {
 
           </div>
         </main>
+      </div>
+      </div>
       </div>
 
       {galleryOpen && generatedCards[galleryIndex] && (

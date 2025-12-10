@@ -9,7 +9,7 @@ import { AppLayout } from '@/components/layout';
 
 export default function CreatePage() {
   return (
-    <AppLayout>
+    <AppLayout maxWidth="full">
       <WeeklyAnnouncement />
       <AuthProviders>
         <DesktopCreatePage />

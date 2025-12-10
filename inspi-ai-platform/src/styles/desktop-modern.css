@@ -136,6 +136,24 @@
   --transition-fast: 150ms ease-in-out;
   --transition-base: 200ms ease-in-out;
   --transition-slow: 300ms ease-in-out;
+
+  /* 自适应布局变量 */
+  --layout-page-padding: clamp(24px, 4vw, 96px);
+  --layout-section-gap: clamp(24px, 3vw, 64px);
+  --layout-panel-gap: clamp(24px, 2.5vw, 56px);
+  --layout-panel-radius: clamp(24px, 2vw, 48px);
+  --layout-panel-padding-y: clamp(28px, 2.2vw, 52px);
+  --layout-panel-padding-x: clamp(32px, 3vw, 68px);
+  --layout-hero-padding-y: clamp(32px, 2.8vw, 60px);
+  --layout-hero-padding-x: clamp(36px, 3.5vw, 80px);
+  --layout-card-gap: clamp(16px, 1.6vw, 40px);
+  --layout-card-padding: clamp(12px, 1.2vw, 28px);
+  --layout-main-padding: clamp(32px, 3vw, 72px);
+  --layout-sidebar-width: clamp(220px, 18vw, 360px);
+}
+
+html {
+  font-size: clamp(15px, 0.85vw, 18px);
 }
 
 /* 全局重置和基础样式 */
@@ -507,6 +525,13 @@ body {
   z-index: 40;
 }
 
+.desktop-nav-enhanced > .desktop-container {
+  width: 100%;
+  max-width: none;
+  padding-left: var(--layout-page-padding);
+  padding-right: var(--layout-page-padding);
+}
+
 .desktop-nav__inner {
   display: flex;
   align-items: center;
@@ -548,7 +573,7 @@ body {
 
 .desktop-nav__links {
   display: flex;
-  gap: var(--space-6);
+  gap: calc(var(--space-6) * 2);
   align-items: center;
 }
 
@@ -564,7 +589,7 @@ body {
   gap: var(--space-2);
   color: var(--gray-700);
   font-weight: 600;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-lg);
   text-decoration: none;
   transition: color var(--transition-base);
   position: relative;
@@ -1711,32 +1736,32 @@ body {
 /* 统一作品卡片系统 */
 .work-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--space-6);
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: calc(var(--layout-card-gap) * 1.1);
 }
 
 .work-card {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(99, 102, 241, 0.14);
-  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  border-radius: calc(var(--layout-panel-radius) * 0.7);
   box-shadow:
-    0 12px 24px rgba(15, 23, 42, 0.08),
-    0 4px 12px rgba(15, 23, 42, 0.04);
-  padding: var(--space-6);
+    0 20px 36px rgba(15, 23, 42, 0.12),
+    0 10px 24px rgba(15, 23, 42, 0.08);
+  padding: calc(var(--layout-card-padding) * 2);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: calc(var(--layout-card-gap) * 0.65);
   height: 100%;
   cursor: pointer;
   transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .work-card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-8px);
   box-shadow:
-    0 16px 32px rgba(15, 23, 42, 0.13),
-    0 8px 20px rgba(15, 23, 42, 0.08);
-  border-color: rgba(99, 102, 241, 0.28);
+    0 28px 48px rgba(15, 23, 42, 0.16),
+    0 12px 28px rgba(15, 23, 42, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
 }
 
 .work-card__header {
@@ -1747,7 +1772,7 @@ body {
 }
 
 .work-card__emoji {
-  font-size: var(--font-size-3xl);
+  font-size: var(--font-size-4xl);
   line-height: 1;
 }
 
@@ -1764,7 +1789,7 @@ body {
   gap: var(--space-1);
   padding: 0.35rem 0.85rem;
   border-radius: var(--radius-full);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -1812,7 +1837,7 @@ body {
 }
 
 .work-card__title {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-2xl);
   font-weight: 700;
   color: var(--gray-900);
   margin: 0;
@@ -1820,7 +1845,7 @@ body {
 }
 
 .work-card__description {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   color: var(--gray-600);
   line-height: 1.65;
 }
@@ -1828,8 +1853,8 @@ body {
 .work-card__tags {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
+  gap: calc(var(--layout-card-gap) * 0.25);
+  margin-bottom: calc(var(--layout-card-gap) * 0.3);
 }
 
 .work-card__footer {
@@ -1837,17 +1862,17 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  padding-top: var(--space-4);
+  gap: calc(var(--layout-card-gap) * 0.6);
+  padding-top: calc(var(--layout-card-gap) * 0.5);
   border-top: 1px solid rgba(148, 163, 184, 0.25);
 }
 
 .work-card__stats {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: calc(var(--layout-card-gap) * 0.35);
   color: var(--gray-500);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
 }
 
 .work-card__stat {
@@ -1883,47 +1908,47 @@ body {
 }
 
 .work-card--profile .work-card__header {
+  flex-direction: column;
+  gap: calc(var(--layout-card-gap) * 0.4);
   align-items: stretch;
-  gap: var(--space-5);
 }
 
 .work-card--profile .work-card__avatar {
-  width: 112px;
-  height: 112px;
-  border-radius: var(--radius-2xl);
+  width: 100%;
+  height: auto;
+  border-radius: calc(var(--layout-panel-radius) * 0.6);
   overflow: hidden;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   background: var(--gray-100);
 }
 
 .work-card--profile .work-card__avatar img {
   width: 100%;
-  height: 100%;
+  height: 240px;
   object-fit: cover;
   display: block;
 }
 
 .work-card--profile .work-card__avatar--emoji {
-  font-size: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-4xl);
+  padding: 40px 0;
 }
 
 .work-card--profile .work-card__info {
   flex: 1;
-  min-height: 112px;
+  min-height: auto;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: var(--space-3);
+  gap: calc(var(--layout-card-gap) * 0.35);
 }
 
 .work-card--profile .work-card__title-row {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
+  flex-direction: column;
+  gap: calc(var(--layout-card-gap) * 0.2);
 }
 
 .work-card--profile .work-card__title {
@@ -1932,9 +1957,10 @@ body {
 
 .work-card--profile .work-card__chips {
   justify-content: flex-start;
-  align-items: flex-start;
-  gap: var(--space-2);
-  margin-top: auto;
+  align-items: center;
+  gap: calc(var(--layout-card-gap) * 0.2);
+  margin-top: 0;
+  flex-wrap: wrap;
 }
 
 /* 作品详情 */

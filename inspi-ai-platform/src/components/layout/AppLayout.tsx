@@ -11,6 +11,7 @@ interface AppLayoutProps {
   children: React.ReactNode;
   showNavigation?: boolean;
   className?: string;
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
 }
 
 /**
@@ -21,6 +22,7 @@ export function AppLayout({
   children,
   showNavigation = true,
   className = '',
+  maxWidth = 'full',
 }: AppLayoutProps) {
   return (
     <AuthProvider>
@@ -29,6 +31,7 @@ export function AppLayout({
           <DesktopLayout
             className={className}
             header={showNavigation ? <DesktopNavigation /> : undefined}
+            maxWidth={maxWidth}
           >
             {children}
           </DesktopLayout>
