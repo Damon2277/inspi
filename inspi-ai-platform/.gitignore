@@ -43,6 +43,7 @@ next-env.d.ts
 # 测试报告和临时文件
 *_TEST_REPORT.json
 *_REPORT.json
+jest-result.json
 test-*.js
 run-*.js
 
@@ -64,3 +65,12 @@ reports/*.json
 *.temp
 .DS_Store
 Thumbs.db
+
+# 分享导出的图片
+public/share-images/*
+!public/share-images/.gitkeep
+
+# 本地安装 MongoDB/Mongosh 时产生的文件
+mongosh-*.zip
+mongodb-macos-*.tgz
+mongodb-macos-*/

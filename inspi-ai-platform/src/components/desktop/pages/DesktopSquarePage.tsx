@@ -177,198 +177,55 @@ export function DesktopSquarePage() {
 
         {/* 作品网格 */}
         <div className="modern-container">
-          <div className="modern-grid modern-grid-3">
-            {filteredWorks.map((work) => (
-              <div
+          <div className="work-card-grid">
+            {filteredWorks.map(work => (
+              <article
                 key={work.id}
-                className="modern-card modern-card-elevated group"
-                style={{
-                  cursor: 'pointer',
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'all 0.3s ease',
-                  border: '1px solid transparent',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.15)';
-                  e.currentTarget.style.borderColor = 'var(--primary-200)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '';
-                  e.currentTarget.style.borderColor = 'transparent';
-                }}
+                className="work-card"
                 onClick={() => handleCardClick(work.id)}
               >
-                <div
-                  className="modern-card-body"
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '100%',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      justifyContent: 'space-between',
-                      marginBottom: '16px',
-                    }}
-                  >
-                    <div style={{ fontSize: 'var(--font-size-3xl)' }}>{work.thumbnail}</div>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                      <span style={{
-                        padding: '5px 10px',
-                        background: '#fef3c7',
-                        borderRadius: 'var(--radius-sm)',
-                        fontSize: 'var(--font-size-xs)',
-                        color: '#92400e',
-                        fontWeight: '500',
-                        lineHeight: '1.2',
-                      }}>
-                        {work.subject}
-                      </span>
-                      <span style={{
-                        padding: '5px 10px',
-                        background: '#e0f2fe',
-                        borderRadius: 'var(--radius-sm)',
-                        fontSize: 'var(--font-size-xs)',
-                        color: '#075985',
-                        fontWeight: '500',
-                        lineHeight: '1.2',
-                      }}>
-                        {work.grade}
-                      </span>
-                    </div>
-                  </div>
-
-                  <h3
-                    style={{
-                      fontSize: 'var(--font-size-lg)',
-                      fontWeight: '600',
-                      color: 'var(--gray-900)',
-                      marginBottom: '8px',
-                      transition: 'color var(--transition-base)',
-                    }}
-                  >
-                    {work.title}
-                  </h3>
-
-                  <p
-                    style={{
-                      color: 'var(--gray-600)',
-                      fontSize: 'var(--font-size-sm)',
-                      marginBottom: '16px',
-                      lineHeight: '1.5',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {work.description}
-                  </p>
-
-                  <div style={{ marginTop: 'auto' }}>
-                    <div style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '4px',
-                      alignItems: 'flex-end',
-                      marginBottom: '12px',
-                    }}>
-                      {work.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          style={{
-                            padding: '4px 10px',
-                            background: 'transparent',
-                            color: 'var(--primary-600)',
-                            fontSize: 'var(--font-size-xs)',
-                            borderRadius: 'var(--radius-sm)',
-                            border: '1px solid var(--primary-300)',
-                            alignSelf: 'flex-end',
-                            lineHeight: '1.2',
-                            transition: 'all 0.2s ease',
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'var(--primary-50)';
-                            e.currentTarget.style.borderColor = 'var(--primary-400)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.borderColor = 'var(--primary-300)';
-                          }}
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr auto',
-                        alignItems: 'center',
-                        gap: '16px',
-                        paddingTop: '16px',
-                        borderTop: '1px solid var(--gray-200)',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '18px',
-                          fontSize: '14px',
-                          color: 'var(--gray-500)',
-                        }}
-                      >
-                        <span
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'color 0.2s ease' }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.color = '#ef4444';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.color = 'var(--gray-500)';
-                          }}
-                        >
-                          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ strokeWidth: '1.5' }}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                          </svg>
-                          <span style={{ fontWeight: '500' }}>{work.likes}</span>
-                        </span>
-                        <span
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'color 0.2s ease' }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.color = 'var(--primary-600)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.color = 'var(--gray-500)';
-                          }}
-                        >
-                          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ strokeWidth: '1.5' }}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                          <span style={{ fontWeight: '500' }}>{work.reuses}</span>
-                        </span>
-                      </div>
-                      <div
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        <SquareQuickReuseButton
-                          themeId={work.id}
-                          themeTitle={work.title}
-                        />
-                      </div>
-                    </div>
+                <div className="work-card__header">
+                  <span className="work-card__emoji">{work.thumbnail}</span>
+                  <div className="work-card__chips">
+                    <span className="work-chip work-chip--subject">{work.subject}</span>
+                    <span className="work-chip work-chip--grade">{work.grade}</span>
                   </div>
                 </div>
-              </div>
+                <h3 className="work-card__title">{work.title}</h3>
+                <p className="work-card__description text-clamp-3">{work.description}</p>
+                <div className="work-card__tags">
+                  {work.tags.map((tag, index) => (
+                    <span key={`${work.id}-tag-${index}`} className="work-chip work-chip--tag">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+                <div className="work-card__footer">
+                  <div className="work-card__stats">
+                    <span className="work-card__stat">
+                      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                      <span>{work.likes}</span>
+                    </span>
+                    <span className="work-card__stat">
+                      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      <span>{work.reuses}</span>
+                    </span>
+                  </div>
+                  <div
+                    className="work-card__actions"
+                    onClick={event => event.stopPropagation()}
+                  >
+                    <SquareQuickReuseButton
+                      themeId={work.id}
+                      themeTitle={work.title}
+                    />
+                  </div>
+                </div>
+              </article>
             ))}
           </div>
 

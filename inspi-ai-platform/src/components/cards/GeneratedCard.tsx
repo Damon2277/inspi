@@ -1,7 +1,11 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import type { Components } from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
+import { LazyImage } from '@/components/performance/LazyImage';
 import {
   copyImageToClipboard,
   DEFAULT_EXPORT_DIMENSIONS,
@@ -103,6 +107,7 @@ const visualizationThemes: Record<VisualizationTheme, {
 };
 
 const visualizationBranchPalette = ['#38bdf8', '#34d399', '#f97316', '#a855f7', '#f472b6', '#facc15'];
+const linearLayouts = ['left-to-right', 'right-to-left'];
 
 export function GeneratedCard({
   card,
@@ -120,14 +125,17 @@ export function GeneratedCard({
   const exportContainerRef = useRef<HTMLDivElement>(null);
   const [isExportPreview, setIsExportPreview] = useState(false);
   const [isContentExpanded, setIsContentExpanded] = useState(false);
-  const [showMoreActions, setShowMoreActions] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const moreActionsRef = useRef<HTMLDivElement>(null);
+  const [generatedVisual, setGeneratedVisual] = useState<VisualizationSpec | null>(null);
+  const [isGeneratingVisual, setIsGeneratingVisual] = useState(false);
 
   const typeConfig = cardTypeConfig[card.type];
   const allowEditing = enableEditing;
   const hasSOP = Boolean(card.sop && card.sop.length > 0);
+  const formattedCardContent = useMemo(() => formatCardContentMarkdown(cardContent), [cardContent]);
+  const structuredSections = useMemo(() => buildStructuredSections(formattedCardContent), [formattedCardContent]);
+  const effectiveVisual = useMemo(() => generatedVisual || card.visual || null, [generatedVisual, card.visual]);
   const headerSummary = useMemo(() => {
     const base = card.metadata?.knowledgePoint || card.explanation || typeConfig.description;
     if (!base) return '';
@@ -146,35 +154,25 @@ export function GeneratedCard({
   }, [card.content]);
 
   useEffect(() => {
+    setGeneratedVisual(null);
+  }, [card.id, card.visual]);
+
+  useEffect(() => {
     if (viewMode !== 'content') {
       setIsEditing(false);
     }
   }, [viewMode]);
 
-  useEffect(() => {
-    if (!showMoreActions) return;
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!moreActionsRef.current) return;
-      if (!moreActionsRef.current.contains(event.target as Node)) {
-        setShowMoreActions(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showMoreActions]);
-
   const handleContentChange = (newContent: string) => {
     setCardContent(newContent);
   };
 
-  const showFeedback = (type: 'success' | 'error', message: string) => {
+  const showFeedback = useCallback((type: 'success' | 'error', message: string) => {
     setFeedback({ type, message });
     setTimeout(() => setFeedback(null), 3000);
-  };
+  }, []);
 
   const handleExport = async (presetKey: keyof typeof exportPresets) => {
-    setShowMoreActions(false);
     setIsExporting(true);
     let prepared = false;
 
@@ -260,6 +258,55 @@ export function GeneratedCard({
     return { target: cardRef.current, prepared: false };
   };
 
+  const handleGenerateVisualAssist = useCallback(async () => {
+    if (isGeneratingVisual) {
+      return;
+    }
+
+    const knowledgePoint = card.metadata?.knowledgePoint || card.title || card.explanation;
+    if (!knowledgePoint) {
+      showFeedback('error', '缺少知识点，无法生成辅助图示');
+      return;
+    }
+
+    setIsGeneratingVisual(true);
+    try {
+      const response = await fetch('/api/magic/visualize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          knowledgePoint,
+          subject: card.metadata?.subject,
+          gradeLevel: card.metadata?.gradeLevel,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || '辅助图示生成失败');
+      }
+
+      if (!data?.visual) {
+        throw new Error('AI 未返回可用的图示');
+      }
+
+      setGeneratedVisual(data.visual);
+      showFeedback('success', '已生成辅助图示');
+    } catch (error) {
+      showFeedback('error', error instanceof Error ? error.message : '辅助图示生成失败');
+    } finally {
+      setIsGeneratingVisual(false);
+    }
+  }, [
+    card.metadata?.gradeLevel,
+    card.metadata?.knowledgePoint,
+    card.metadata?.subject,
+    card.title,
+    card.explanation,
+    isGeneratingVisual,
+    showFeedback,
+  ]);
+
 
   const viewTabs: Array<{ key: ViewMode; label: string; disabled?: boolean }> = [
     { key: 'content', label: '卡片内容' },
@@ -268,17 +315,688 @@ export function GeneratedCard({
   ];
 
   const renderVisualizationCanvas = (forExport: boolean = false) => {
-    if (!card.visual) {
+    if (!effectiveVisual) {
       return null;
     }
 
-    const visual: VisualizationSpec = card.visual;
+    const visual: VisualizationSpec = effectiveVisual;
     const theme = visualizationThemes[visual.theme] ?? visualizationThemes.neutral;
     const branches = Array.isArray(visual.branches) ? visual.branches.slice(0, 6) : [];
+    const layout = typeof visual.layout === 'string' ? visual.layout.toLowerCase() : undefined;
+
+    const renderStructuredDiagram = () => {
+      if (!visual?.structured) {
+        return null;
+      }
+
+      const { header, stages, outcomes, notes, highlight } = visual.structured;
+      const stageList = Array.isArray(stages) ? stages.slice(0, 5) : [];
+      const outcomesList = Array.isArray(outcomes) ? outcomes.slice(0, 4) : [];
+      const notesList = Array.isArray(notes) ? notes.slice(0, 4) : [];
+
+      return (
+        <div
+          style={{
+            background: theme.background,
+            borderRadius: '32px',
+            padding: forExport ? '48px' : '34px',
+            margin: '0 auto 24px',
+            boxShadow: '0 32px 72px rgba(15, 23, 42, 0.18)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '24px',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              background: 'rgba(255,255,255,0.78)',
+              borderRadius: '20px',
+              padding: forExport ? '24px 28px' : '20px 24px',
+              boxShadow: '0 14px 28px rgba(15,23,42,0.12)',
+            }}
+          >
+            {header.conceptTagline ? (
+              <span
+                style={{
+                  alignSelf: 'flex-start',
+                  padding: '6px 14px',
+                  borderRadius: '999px',
+                  background: `${theme.accent}1f`,
+                  color: theme.branchText,
+                  fontSize: '12px',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {header.conceptTagline}
+              </span>
+            ) : null}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ fontSize: forExport ? '30px' : '26px', fontWeight: 700, color: '#0f172a' }}>
+                {header.title || visual.center?.title || card.title}
+              </div>
+              {header.subtitle ? (
+                <div style={{ fontSize: '14px', color: '#1e293b', opacity: 0.85, lineHeight: 1.6 }}>
+                  {header.subtitle}
+                </div>
+              ) : null}
+              {header.summary ? (
+                <div style={{ fontSize: '13px', color: '#475569', lineHeight: 1.7 }}>
+                  {header.summary}
+                </div>
+              ) : null}
+            </div>
+
+            {header.formula && header.formula !== '无公式' ? (
+              <div
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '12px',
+                  background: 'rgba(15,23,42,0.08)',
+                  fontFamily: 'Menlo, SFMono-Regular, Consolas, monospace',
+                  fontSize: '13px',
+                  color: '#0f172a',
+                  alignSelf: 'flex-start',
+                }}
+              >
+                {header.formula}
+              </div>
+            ) : null}
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              gap: '16px',
+              alignItems: 'stretch',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+            }}
+          >
+            {stageList.map((stage, index) => {
+              const accent = visualizationBranchPalette[index % visualizationBranchPalette.length];
+              return (
+                <React.Fragment key={stage.id || `stage-${index}`}
+                >
+                  <div
+                    style={{
+                      flex: `1 1 ${Math.max(220, 100 / stageList.length)}%`,
+                      minWidth: forExport ? 200 : 220,
+                      background: '#ffffff',
+                      borderRadius: '20px',
+                      padding: forExport ? '22px' : '18px',
+                      boxShadow: '0 18px 32px rgba(15, 23, 42, 0.12)',
+                      borderTop: `6px solid ${accent}`,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px',
+                    }}
+                  >
+                    {stage.imageUrl ? (
+                      <div
+                        style={{
+                          width: '100%',
+                          borderRadius: '14px',
+                          overflow: 'hidden',
+                          height: forExport ? '120px' : '140px',
+                          boxShadow: '0 12px 18px rgba(15, 23, 42, 0.15)',
+                        }}
+                      >
+                        <LazyImage
+                          src={stage.imageUrl}
+                          alt={`${stage.title} 插图`}
+                          forceLoad={forExport}
+                          preferProxy={forExport}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                          }}
+                        />
+                      </div>
+                    ) : null}
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#0f172a' }}>
+                      <span style={{ fontSize: '22px' }}>{stage.icon || '✨'}</span>
+                      <div>
+                        <div style={{ fontSize: '15px', fontWeight: 700 }}>{stage.title}</div>
+                        <div style={{ fontSize: '12px', opacity: 0.7 }}>{stage.summary}</div>
+                      </div>
+                    </div>
+
+                    {Array.isArray(stage.details) && stage.details.length > 0 ? (
+                      <ul style={{ margin: 0, padding: '0 0 0 18px', color: '#334155', fontSize: '12px', lineHeight: 1.6 }}>
+                        {stage.details.map((detail, detailIndex) => (
+                          <li key={`${stage.id}-detail-${detailIndex}`}>{detail}</li>
+                        ))}
+                      </ul>
+                    ) : null}
+
+                    {stage.outcome ? (
+                      <div
+                        style={{
+                          marginTop: 'auto',
+                          padding: '10px 12px',
+                          borderRadius: '12px',
+                          background: `${accent}1d`,
+                          color: '#0f172a',
+                          fontSize: '12px',
+                        }}
+                      >
+                        产出：{stage.outcome}
+                      </div>
+                    ) : null}
+
+                    {stage.imagePrompt && !forExport ? (
+                      <div
+                        style={{
+                          fontSize: '11px',
+                          color: '#64748b',
+                          background: '#f8fafc',
+                          padding: '8px 10px',
+                          borderRadius: '8px',
+                        }}
+                      >
+                        图像提示：{stage.imagePrompt}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {index < stageList.length - 1 ? (
+                    <div
+                      style={{
+                        alignSelf: 'center',
+                        color: '#1e293b',
+                        fontSize: '18px',
+                        opacity: 0.55,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minWidth: '24px',
+                      }}
+                    >
+                      →
+                    </div>
+                  ) : null}
+                </React.Fragment>
+              );
+            })}
+          </div>
+
+          {outcomesList.length > 0 ? (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '12px',
+              }}
+            >
+              {outcomesList.map((outcome, index) => (
+                <div
+                  key={`outcome-${index}-${outcome.title}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    background: '#ffffff',
+                    borderRadius: '999px',
+                    padding: '10px 16px',
+                    boxShadow: '0 12px 24px rgba(15, 23, 42, 0.12)',
+                    fontSize: '12px',
+                    color: '#0f172a',
+                  }}
+                >
+                  <span>{outcome.icon || '⭐️'}</span>
+                  <span>
+                    <strong style={{ marginRight: '6px' }}>{outcome.title}</strong>
+                    {outcome.description ? (
+                      <span style={{ opacity: 0.75 }}>{outcome.description}</span>
+                    ) : null}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {notesList.length > 0 ? (
+            <div
+              style={{
+                background: '#ffffff',
+                borderRadius: '18px',
+                padding: '16px 20px',
+                boxShadow: '0 10px 22px rgba(15, 23, 42, 0.1)',
+              }}
+            >
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' }}>教师提示</div>
+              <ul style={{ margin: 0, padding: '0 0 0 18px', fontSize: '12px', color: '#334155', lineHeight: 1.6 }}>
+                {notesList.map((note, index) => (
+                  <li key={`note-${index}`}>{note}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {highlight ? (
+            <div
+              style={{
+                padding: '14px 18px',
+                borderRadius: '16px',
+                background: `${theme.accent}1c`,
+                color: '#0f172a',
+                fontSize: '13px',
+                letterSpacing: '0.03em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {highlight}
+            </div>
+          ) : null}
+        </div>
+      );
+    };
+
+    const renderHeroIllustration = () => {
+      if (visual.type === 'structured-diagram') {
+        return renderStructuredDiagram();
+      }
+
+      const annotations = Array.isArray(visual.annotations) ? visual.annotations.slice(0, 4) : [];
+      const composition = visual.composition ?? {};
+      const palette = Array.isArray(composition.colorPalette)
+        ? composition.colorPalette.filter(color => typeof color === 'string' && color.trim().length > 0)
+        : [];
+
+      const hasImage = Boolean(typeof visual.imageUrl === 'string' && visual.imageUrl.trim().length > 0);
+      const imageMetadata = visual.imageMetadata;
+
+      const renderGeneratedHero = () => (
+        <div
+          style={{
+            background: theme.background,
+            borderRadius: '32px',
+            padding: forExport ? '48px' : '32px',
+            margin: '0 auto 24px',
+            boxShadow: '0 32px 72px rgba(15, 23, 42, 0.2)',
+            maxWidth: forExport ? 720 : 560,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: forExport ? '28px' : '20px',
+          }}
+        >
+          <div
+            style={{
+              borderRadius: '30px',
+              overflow: 'hidden',
+              aspectRatio: forExport ? '4 / 3' : '16 / 11',
+              boxShadow: '0 26px 50px rgba(15, 23, 42, 0.22)',
+            }}
+          >
+            <LazyImage
+              src={visual.imageUrl!}
+              alt={`${visual.center.title} 可视化插画`}
+              forceLoad={forExport}
+              preferProxy={forExport}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                borderRadius: '30px',
+              }}
+            />
+          </div>
+
+          {imageMetadata?.provider ? (
+            <div style={{ fontSize: '12px', color: '#64748b', textAlign: 'right' }}>
+              图像提供：{imageMetadata.provider}
+            </div>
+          ) : null}
+
+          {(visual.center.title || visual.center.subtitle) ? (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                textAlign: 'center',
+                color: '#0f172a',
+              }}
+            >
+              {visual.center.title ? (
+                <div style={{ fontSize: forExport ? '28px' : '22px', fontWeight: 700 }}>
+                  {visual.center.title}
+                </div>
+              ) : null}
+              {visual.center.subtitle ? (
+                <div style={{ fontSize: '14px', lineHeight: 1.6, color: '#475569' }}>
+                  {visual.center.subtitle}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          {annotations.length > 0 ? (
+            <div
+              style={{
+                display: 'grid',
+                gap: '12px',
+                gridTemplateColumns: forExport ? 'repeat(2, minmax(0, 1fr))' : '1fr',
+              }}
+            >
+              {annotations.map((annotation, index) => (
+                <div
+                  key={`annotation-hero-${index}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '12px',
+                    background: 'rgba(255,255,255,0.9)',
+                    borderRadius: '18px',
+                    padding: '14px 16px',
+                    boxShadow: '0 12px 24px rgba(15, 23, 42, 0.12)',
+                  }}
+                >
+                  {annotation.icon ? <span style={{ fontSize: '20px' }}>{annotation.icon}</span> : null}
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{annotation.title}</div>
+                    {annotation.description ? (
+                      <p style={{ margin: '6px 0 0', fontSize: '12px', lineHeight: 1.6, color: '#334155' }}>
+                        {annotation.description}
+                      </p>
+                    ) : null}
+                    {annotation.placement ? (
+                      <span style={{ fontSize: '11px', color: '#64748b', opacity: 0.6 }}>位置：{annotation.placement}</span>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {(composition.metaphor || composition.visualFocus) ? (
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.82)',
+                borderRadius: '24px',
+                padding: '20px',
+                boxShadow: '0 18px 36px rgba(15,23,42,0.12)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+              }}
+            >
+              {composition.metaphor ? (
+                <div>
+                  <div style={{ fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#64748b' }}>隐喻</div>
+                  <div style={{ marginTop: '6px', fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>{composition.metaphor}</div>
+                </div>
+              ) : null}
+              {composition.visualFocus ? (
+                <div>
+                  <div style={{ fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#64748b' }}>视觉焦点</div>
+                  <p style={{ marginTop: '6px', fontSize: '13px', lineHeight: 1.6, color: '#334155' }}>{composition.visualFocus}</p>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          {(composition.backgroundMood || palette.length > 0) && (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '12px',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              {composition.backgroundMood ? (
+                <div
+                  style={{
+                    fontSize: '13px',
+                    color: '#1e293b',
+                    background: 'rgba(255,255,255,0.82)',
+                    padding: '10px 14px',
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 16px rgba(15,23,42,0.12)',
+                  }}
+                >
+                  {composition.backgroundMood}
+                </div>
+              ) : null}
+
+              {palette.length > 0 ? (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {palette.slice(0, 4).map((color, index) => (
+                    <span
+                      key={`palette-chip-${color}-${index}`}
+                      style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '999px',
+                        background: color,
+                        border: '2px solid rgba(255,255,255,0.9)',
+                        boxShadow: '0 8px 14px rgba(15,23,42,0.18)',
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
+      );
+
+      const renderConceptBlueprint = () => (
+        <div
+          style={{
+            background: theme.background,
+            borderRadius: '32px',
+            padding: forExport ? '48px' : '32px',
+            margin: '0 auto 24px',
+            boxShadow: '0 28px 60px rgba(15, 23, 42, 0.16)',
+            maxWidth: forExport ? 720 : 560,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+          }}
+        >
+          <div
+            style={{
+              alignSelf: 'flex-start',
+              borderRadius: '999px',
+              padding: '8px 16px',
+              fontSize: '12px',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: '#1e293b',
+              background: 'rgba(255,255,255,0.5)',
+              backdropFilter: 'blur(4px)',
+            }}
+          >
+            概念可视化插画草稿
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gap: '20px',
+              gridTemplateColumns: forExport ? 'repeat(2, minmax(0,1fr))' : '1fr',
+            }}
+          >
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.75)',
+                borderRadius: '24px',
+                padding: forExport ? '32px' : '24px',
+                boxShadow: '0 18px 36px rgba(15, 23, 42, 0.12)',
+              }}
+            >
+              <div style={{ fontSize: forExport ? '26px' : '22px', fontWeight: 700, color: '#0f172a' }}>
+                {visual.center.title}
+              </div>
+              {visual.center.subtitle ? (
+                <div style={{ marginTop: '10px', fontSize: '14px', lineHeight: 1.6, color: '#1e293b', opacity: 0.8 }}>
+                  {visual.center.subtitle}
+                </div>
+              ) : null}
+              {structuredSections.length > 0 ? (
+                <div style={{ marginTop: '16px' }}>
+                  {renderStructuredSections(structuredSections, {
+                    fontSize: '13px',
+                    color: '#475569',
+                    paragraphIndent: '2em',
+                  })}
+                </div>
+              ) : formattedCardContent ? (
+                <div style={{ marginTop: '16px' }}>
+                  {renderMarkdownContent(formattedCardContent, {
+                    fontSize: '13px',
+                    color: '#475569',
+                    lineHeight: 1.7,
+                    textIndent: '2em',
+                  })}
+                </div>
+              ) : null}
+            </div>
+
+            <div
+              style={{
+                background: 'rgba(15, 23, 42, 0.85)',
+                borderRadius: '24px',
+                padding: forExport ? '32px' : '24px',
+                color: '#f8fafc',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+              }}
+            >
+              {composition.metaphor ? (
+                <div>
+                  <div style={{ fontSize: '13px', letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.6 }}>隐喻</div>
+                  <div style={{ marginTop: '6px', fontSize: '16px', fontWeight: 600 }}>{composition.metaphor}</div>
+                </div>
+              ) : null}
+              {composition.visualFocus ? (
+                <div>
+                  <div style={{ fontSize: '13px', letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.6 }}>视觉焦点</div>
+                  <p style={{ marginTop: '6px', fontSize: '13px', lineHeight: 1.6, opacity: 0.85 }}>{composition.visualFocus}</p>
+                </div>
+              ) : null}
+              {composition.backgroundMood ? (
+                <div>
+                  <div style={{ fontSize: '13px', letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.6 }}>氛围</div>
+                  <p style={{ marginTop: '6px', fontSize: '13px', lineHeight: 1.6, opacity: 0.85 }}>{composition.backgroundMood}</p>
+                </div>
+              ) : null}
+              {palette.length > 0 ? (
+                <div>
+                  <div style={{ fontSize: '13px', letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.6 }}>色板</div>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
+                    {palette.slice(0, 4).map((color, index) => (
+                      <span
+                        key={`${color}-${index}`}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          background: 'rgba(255,255,255,0.1)',
+                          borderRadius: '999px',
+                          padding: '6px 12px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: '12px',
+                            height: '12px',
+                            borderRadius: '999px',
+                            background: color,
+                            border: '1px solid rgba(255,255,255,0.4)',
+                          }}
+                        />
+                        {color}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          {annotations.length > 0 ? (
+            <div
+              style={{
+                display: 'grid',
+                gap: '14px',
+                gridTemplateColumns: forExport ? 'repeat(2, minmax(0, 1fr))' : '1fr',
+              }}
+            >
+              {annotations.map((annotation, index) => (
+                <div
+                  key={`annotation-fallback-${index}`}
+                  style={{
+                    background: 'rgba(255,255,255,0.85)',
+                    borderRadius: '18px',
+                    padding: '14px 16px',
+                    boxShadow: '0 12px 24px rgba(15, 23, 42, 0.12)',
+                    display: 'flex',
+                    gap: '12px',
+                    alignItems: 'flex-start',
+                  }}
+                >
+                  <span style={{ fontSize: '20px' }}>{annotation.icon || '✨'}</span>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{annotation.title}</div>
+                    {annotation.description ? (
+                      <p style={{ margin: '6px 0 0', fontSize: '12px', lineHeight: 1.6, color: '#334155' }}>
+                        {annotation.description}
+                      </p>
+                    ) : null}
+                    {annotation.placement ? (
+                      <span style={{ fontSize: '11px', color: '#64748b', opacity: 0.6 }}>位置：{annotation.placement}</span>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      );
+
+      return hasImage ? renderGeneratedHero() : renderConceptBlueprint();
+    };
+    if (visual.type === 'hero-illustration') {
+      return renderHeroIllustration();
+    }
 
     if (branches.length === 0) {
       return null;
     }
+
+    const preferredOrder = ['input', 'process', 'output', 'insight'];
+    const shouldApplyPreferredOrder = linearLayouts.includes(layout ?? '') || visual.type === 'process-flow';
+    const prioritizedBranches = shouldApplyPreferredOrder
+      ? [...branches].sort((a, b) => {
+          const idA = typeof a.id === 'string' ? a.id.toLowerCase() : '';
+          const idB = typeof b.id === 'string' ? b.id.toLowerCase() : '';
+          const indexA = preferredOrder.indexOf(idA);
+          const indexB = preferredOrder.indexOf(idB);
+
+          if (indexA === -1 && indexB === -1) {
+            return 0;
+          }
+          if (indexA === -1) {
+            return 1;
+          }
+          if (indexB === -1) {
+            return -1;
+          }
+          return indexA - indexB;
+        })
+      : branches;
 
     const renderConceptMap = () => {
       const size = forExport ? 520 : 360;
@@ -449,7 +1167,7 @@ export function GeneratedCard({
       );
     };
 
-    const renderProcessFlow = () => (
+    const renderProcessFlow = (direction: 'left-to-right' | 'right-to-left' | string = 'left-to-right') => (
       <div
         style={{
           background: theme.background,
@@ -470,6 +1188,7 @@ export function GeneratedCard({
         <div
           style={{
             display: 'flex',
+            flexDirection: direction === 'right-to-left' ? 'row-reverse' : 'row',
             gap: forExport ? '24px' : '20px',
             alignItems: 'stretch',
             justifyContent: 'space-between',
@@ -477,7 +1196,7 @@ export function GeneratedCard({
             flexWrap: 'wrap',
           }}
         >
-          {branches.map((branch, index) => (
+          {prioritizedBranches.map((branch, index) => (
             <React.Fragment key={branch.id}>
               <div
                 style={{
@@ -516,7 +1235,7 @@ export function GeneratedCard({
                   </div>
                 ) : null}
               </div>
-              {index < branches.length - 1 ? (
+              {index < prioritizedBranches.length - 1 ? (
                 <div
                   aria-hidden
                   style={{
@@ -525,7 +1244,7 @@ export function GeneratedCard({
                     fontSize: '24px',
                   }}
                 >
-                  ➔
+                  {direction === 'right-to-left' ? '⬅' : '➔'}
                 </div>
               ) : null}
             </React.Fragment>
@@ -614,30 +1333,40 @@ export function GeneratedCard({
       );
     };
 
+    const isLinearFlow = visual.type === 'process-flow'
+      || linearLayouts.includes(layout ?? '');
+
     switch (visual.type) {
       case 'process-flow':
-        return renderProcessFlow();
+        return renderProcessFlow(layout === 'right-to-left' ? 'right-to-left' : 'left-to-right');
       case 'matrix':
         return renderMatrix();
       case 'concept-map':
       default:
+        if (isLinearFlow) {
+          return renderProcessFlow(layout === 'right-to-left' ? 'right-to-left' : 'left-to-right');
+        }
         return renderConceptMap();
     }
   };
 
   const expandable = useMemo(() => {
-    if (card.visual) {
+    if (effectiveVisual) {
       return false;
     }
     const textLength = cardContent.replace(/<[^>]+>/g, '').length;
     return textLength > 320;
-  }, [card.visual, cardContent]);
+  }, [effectiveVisual, cardContent]);
 
   const renderCardSurface = (forExport: boolean = false) => {
     const effectivePadding = 32;
     const backgroundColor = '#ffffff';
     const borderColor = typeConfig.color;
-    const hasVisualization = Boolean(card.visual);
+    const visual = effectiveVisual;
+    const hasVisualization = Boolean(visual);
+    const isHeroVisualization = hasVisualization && visual?.type === 'hero-illustration';
+    const hasHeroImage = Boolean(visual?.imageUrl);
+    const shouldShowExplanation = Boolean(card.explanation) && !(isHeroVisualization && hasHeroImage);
 
     const titleStyle: React.CSSProperties = {
       margin: '0 0 16px 0',
@@ -679,35 +1408,39 @@ export function GeneratedCard({
     };
 
     const surfaceStyle: React.CSSProperties = {
-      backgroundColor,
+      backgroundColor: isHeroVisualization ? 'transparent' : backgroundColor,
       color: '#1f2937',
       fontSize: '16px',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
-      padding: `${effectivePadding}px`,
-      paddingBottom: `${Math.max(effectivePadding, 48)}px`,
-      borderRadius: '12px',
-      border: `2px solid ${borderColor}`,
-      minHeight: forExport ? `${DEFAULT_EXPORT_DIMENSIONS.height}px` : '520px',
+      padding: isHeroVisualization ? (forExport ? '0' : '12px') : `${effectivePadding}px`,
+      paddingBottom: isHeroVisualization ? (forExport ? '0' : '12px') : `${Math.max(effectivePadding, 48)}px`,
+      borderRadius: isHeroVisualization ? '20px' : '12px',
+      border: isHeroVisualization ? 'none' : `2px solid ${borderColor}`,
+      minHeight: isHeroVisualization ? 'auto' : forExport ? `${DEFAULT_EXPORT_DIMENSIONS.height}px` : '520px',
       position: 'relative',
       marginBottom: forExport ? 0 : '16px',
-      boxShadow: forExport
-        ? '0 24px 48px rgba(15, 23, 42, 0.18)'
-        : '0 2px 8px rgba(0, 0, 0, 0.08)',
+      boxShadow: isHeroVisualization
+        ? 'none'
+        : forExport
+          ? '0 24px 48px rgba(15, 23, 42, 0.18)'
+          : '0 2px 8px rgba(0, 0, 0, 0.08)',
       width: '100%',
-      overflow: 'hidden',
+      overflow: 'visible',
       transition: forExport ? 'none' : 'all 0.2s ease',
-      cursor: allowEditing && !forExport && !isEditing && viewMode === 'content' ? 'pointer' : 'default',
+      cursor: allowEditing && !forExport && !isEditing && viewMode === 'content' && !isHeroVisualization
+        ? 'pointer'
+        : 'default',
     };
 
     return (
       <div
-        ref={forExport ? exportContainerRef : cardRef}
+        ref={forExport ? undefined : cardRef}
         className="card-export-area"
         style={surfaceStyle}
         onClick={() => allowEditing && !forExport && !isEditing && viewMode === 'content' && setIsEditing(true)}
         title={allowEditing && !forExport && !isEditing && viewMode === 'content' ? '点击编辑卡片' : undefined}
       >
-        {retrying && !forExport && (
+        {(retrying || isGeneratingVisual) && !forExport && (
           <div
             style={{
               position: 'absolute',
@@ -722,25 +1455,50 @@ export function GeneratedCard({
             }}
           >
             <div className="modern-spinner" style={{ width: '20px', height: '20px' }} />
-            <span style={{ fontSize: '12px', color: '#334155' }}>重新生成中...</span>
+            <span style={{ fontSize: '12px', color: '#334155' }}>
+              {retrying ? '重新生成中...' : '生成辅助图示中...'}
+            </span>
           </div>
         )}
         {!forExport && (
           <div
-            ref={moreActionsRef}
             style={{
-              position: 'absolute',
-              top: '20px',
-              right: '20px',
               display: 'flex',
+              justifyContent: 'flex-end',
               gap: '8px',
+              marginBottom: '12px',
             }}
+            onClick={(event) => event.stopPropagation()}
           >
+            {card.type !== 'visualization' && (
+              <button
+                type="button"
+                onClick={handleGenerateVisualAssist}
+                disabled={isGeneratingVisual}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0 12px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  border: '1px solid #0ea5e9',
+                  backgroundColor: isGeneratingVisual ? '#bae6fd' : '#e0f2fe',
+                  color: '#0369a1',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: isGeneratingVisual ? 'not-allowed' : 'pointer',
+                }}
+                title={generatedVisual ? '重新生成辅助图示' : '生成辅助图示'}
+              >
+                {isGeneratingVisual ? '生成中...' : '生成辅助图示'}
+              </button>
+            )}
             <button
               type="button"
               onClick={(e) => {
-                e.stopPropagation();
                 handleExport('social');
+                e.stopPropagation();
               }}
               style={{
                 width: '32px',
@@ -771,228 +1529,13 @@ export function GeneratedCard({
                 <path d="M3 12h10v2H3v-2z" fill="currentColor"/>
               </svg>
             </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowMoreActions(!showMoreActions);
-              }}
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                backgroundColor: '#ffffff',
-                color: '#64748b',
-                fontSize: '16px',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#f8fafc';
-                e.currentTarget.style.borderColor = '#cbd5e1';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#ffffff';
-                e.currentTarget.style.borderColor = '#e2e8f0';
-              }}
-              title="更多操作"
-            >
-              ⋯
-            </button>
-            {showMoreActions && (
-              <div
-                ref={moreActionsRef}
-                style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 4px)',
-                  right: 0,
-                  minWidth: '160px',
-                  background: '#ffffff',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                  padding: '4px',
-                  zIndex: 20,
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMoreActions(false);
-                    handleCopyImage();
-                  }}
-                  disabled={isExporting}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    border: 'none',
-                    borderRadius: '6px',
-                    background: 'transparent',
-                    textAlign: 'left',
-                    fontSize: '13px',
-                    color: '#475569',
-                    cursor: 'pointer',
-                    transition: 'background 0.15s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#f1f5f9';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M10 1H3a2 2 0 00-2 2v7h2V3h7V1z" fill="currentColor"/>
-                    <rect x="5" y="5" width="8" height="8" rx="1" fill="currentColor"/>
-                  </svg>
-                  复制图片
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMoreActions(false);
-                    handleShare('wechat');
-                  }}
-                  disabled={isExporting}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    border: 'none',
-                    borderRadius: '6px',
-                    background: 'transparent',
-                    textAlign: 'left',
-                    fontSize: '13px',
-                    color: '#475569',
-                    cursor: isExporting ? 'not-allowed' : 'pointer',
-                    opacity: isExporting ? 0.6 : 1,
-                    transition: 'background 0.15s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isExporting) {
-                      e.currentTarget.style.backgroundColor = '#f1f5f9';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M10.5 9.5a2 2 0 11-1.3-.48l-3.4-2a2 2 0 010-.04l3.4-2a2 2 0 11-.4-.96L5.4 6a2 2 0 100 2l3.4 2a2 2 0 111.7-.5z" fill="currentColor"/>
-                  </svg>
-                  分享微信
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMoreActions(false);
-                    if (onPreview) onPreview();
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    border: 'none',
-                    borderRadius: '6px',
-                    background: 'transparent',
-                    textAlign: 'left',
-                    fontSize: '13px',
-                    color: '#475569',
-                    cursor: 'pointer',
-                    transition: 'background 0.15s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#f1f5f9';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <rect x="2" y="3" width="10" height="8" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-                    <path d="M4 1h6M7 11v2" stroke="currentColor" strokeWidth="1.5"/>
-                  </svg>
-                  全屏预览
-                </button>
-              </div>
-            )}
           </div>
         )}
-
-        <h2 style={titleStyle}>
-          <span style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '4px 10px',
-            backgroundColor: typeConfig.color,
-            color: '#ffffff',
-            borderRadius: '6px',
-            fontSize: '12px',
-            fontWeight: 600,
-            flexShrink: 0,
-          }}>
-            {typeConfig.icon}
-            <span>{typeConfig.name}</span>
-          </span>
-          <span>{card.title}</span>
-        </h2>
-
         {hasVisualization ? (
-          renderVisualizationCanvas(forExport)
-        ) : (
-          <div
-            dangerouslySetInnerHTML={{ __html: cardContent }}
-            style={{
-              lineHeight: 1.75,
-              wordBreak: 'break-word',
-              letterSpacing: '0.02em',
-              maxHeight: !forExport && !isContentExpanded && expandable ? '220px' : undefined,
-              overflow: !forExport && !isContentExpanded && expandable ? 'hidden' : undefined,
-              position: 'relative',
-            }}
-          />
-        )}
-
-        {card.explanation ? (
-          <div style={bottomSectionStyle}>
-            <div style={explanationStyle}>{card.explanation}</div>
-            <div style={watermarkStyle}>
-              <span>AI生成</span>
-            </div>
+          <div style={{ marginBottom: isHeroVisualization ? '0' : '20px' }}>
+            {renderVisualizationCanvas(forExport)}
           </div>
-        ) : (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: effectivePadding,
-              right: effectivePadding,
-              fontSize: '10px',
-              color: '#cbd5e1',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              opacity: 0.7,
-            }}
-          >
-            <span>AI生成</span>
-          </div>
-        )}
-
+        ) : null}
         {!forExport && expandable && !isContentExpanded && (
           <div
             style={{
@@ -1010,9 +1553,9 @@ export function GeneratedCard({
     );
   };
 
-  const renderContentView = () => (
+  const renderContentView = (forExport: boolean = false) => (
     <>
-      {allowEditing && isEditing ? (
+      {allowEditing && isEditing && !forExport ? (
         <div
           className="card-export-area"
           style={{
@@ -1029,10 +1572,30 @@ export function GeneratedCard({
           />
         </div>
       ) : (
-        renderCardSurface(false)
+        renderCardSurface(forExport)
       )}
 
-      {(!allowEditing || !isEditing) && expandable && (
+      {cardContent && (
+        <div
+          className="generated-card__summary"
+          style={{
+            textAlign: 'center',
+            ...(forExport ? {
+              background: '#ffffff',
+              border: '1px dashed #e2e8f0',
+              boxShadow: '0 8px 24px rgba(15,23,42,0.08)',
+            } : {}),
+          }}
+        >
+          {renderMarkdownContent(cardContent, {
+            fontSize: '15px',
+            color: '#0f172a',
+            lineHeight: 1.7,
+          })}
+        </div>
+      )}
+
+      {(!allowEditing || !isEditing) && expandable && !forExport && (
         <div style={{ textAlign: 'right', marginBottom: '16px' }}>
           <button
             type="button"
@@ -1048,6 +1611,13 @@ export function GeneratedCard({
             {isContentExpanded ? '收起详情' : '展开详情'}
           </button>
         </div>
+      )}
+
+      {forExport && (
+        <>
+          {renderSOPView({ hidePlaceholder: true })}
+          {renderPresentationView({ hidePlaceholder: true })}
+        </>
       )}
     </>
   );
@@ -1079,10 +1649,21 @@ export function GeneratedCard({
     opacity: isExportPreview ? 1 : 0,
     zIndex: -1,
   };
+  const exportContentStyle: React.CSSProperties = {
+    padding: '24px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+    backgroundColor: '#ffffff',
+    boxSizing: 'border-box',
+  };
 
-  const renderSOPView = () => {
+  const renderSOPView = (options?: { hidePlaceholder?: boolean }) => {
     const sopSections = card.sop ?? [];
     if (!sopSections.length) {
+      if (options?.hidePlaceholder) {
+        return null;
+      }
       return (
         <div style={{
           backgroundColor: '#ffffff',
@@ -1181,9 +1762,12 @@ export function GeneratedCard({
     );
   };
 
-  const renderPresentationView = () => {
+  const renderPresentationView = (options?: { hidePlaceholder?: boolean }) => {
     const presentation = card.presentation;
     if (!presentation) {
+      if (options?.hidePlaceholder) {
+        return null;
+      }
       return (
         <div style={{
           backgroundColor: '#ffffff',
@@ -1362,10 +1946,362 @@ export function GeneratedCard({
       />
       </div>
       <div aria-hidden style={offscreenWrapperStyle}>
-        {renderCardSurface(true)}
+        <div ref={exportContainerRef} style={exportContentStyle}>
+          {renderContentView(true)}
+        </div>
       </div>
     </React.Fragment>
   );
+}
+
+interface MarkdownStyleOptions {
+  fontSize?: string;
+  color?: string;
+  lineHeight?: number;
+  strongColor?: string;
+  textIndent?: string;
+  paragraphTag?: 'p' | 'span';
+}
+
+interface StructuredSection {
+  title: string;
+  icon?: string;
+  blocks: Array<
+    | { type: 'paragraph'; text: string }
+    | { type: 'orderedList'; items: string[] }
+    | { type: 'unorderedList'; items: string[] }
+  >;
+}
+
+interface StructuredRenderOptions {
+  fontSize?: string;
+  color?: string;
+  paragraphIndent?: string;
+  titleColor?: string;
+}
+
+function renderMarkdownContent(content: string, options?: MarkdownStyleOptions) {
+  if (!content) {
+    return null;
+  }
+
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={createMarkdownComponents(options)}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+}
+
+function renderStructuredSections(sections: StructuredSection[], options: StructuredRenderOptions = {}) {
+  if (!sections || sections.length === 0) {
+    return null;
+  }
+
+  return sections.map((section, index) => (
+    <div key={`${section.title}-${index}`} style={{ marginBottom: '18px' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontWeight: 700,
+          fontSize: '15px',
+          color: options.titleColor ?? '#0f172a',
+        }}
+      >
+        {section.icon && <span style={{ fontSize: '18px' }}>{section.icon}</span>}
+        <span>{section.title}</span>
+      </div>
+      <div style={{ marginLeft: options.paragraphIndent ?? '2em', marginTop: '8px' }}>
+        {section.blocks.map((block, blockIndex) => {
+          if (block.type === 'paragraph') {
+            return (
+              <div key={`p-${blockIndex}`} style={{ marginBottom: '10px' }}>
+                {renderMarkdownContent(block.text, {
+                  fontSize: options.fontSize ?? '14px',
+                  color: options.color ?? '#1f2937',
+                  lineHeight: 1.75,
+                  textIndent: options.paragraphIndent ?? '2em',
+                })}
+              </div>
+            );
+          }
+
+          if (block.type === 'orderedList') {
+            return (
+              <ol
+                key={`ol-${blockIndex}`}
+                style={{
+                  margin: '4px 0 12px 1.5rem',
+                  color: options.color ?? '#1f2937',
+                  fontSize: options.fontSize ?? '14px',
+                  lineHeight: 1.65,
+                }}
+              >
+                {block.items.map((item, itemIndex) => (
+                  <li key={`ol-item-${itemIndex}`} style={{ marginBottom: '6px' }}>
+                    {renderMarkdownContent(item, {
+                      fontSize: options.fontSize ?? '14px',
+                      color: options.color ?? '#1f2937',
+                      paragraphTag: 'span',
+                      lineHeight: 1.65,
+                    })}
+                  </li>
+                ))}
+              </ol>
+            );
+          }
+
+          if (block.type === 'unorderedList') {
+            return (
+              <ul
+                key={`ul-${blockIndex}`}
+                style={{
+                  margin: '4px 0 12px 1.5rem',
+                  color: options.color ?? '#1f2937',
+                  fontSize: options.fontSize ?? '14px',
+                  lineHeight: 1.65,
+                }}
+              >
+                {block.items.map((item, itemIndex) => (
+                  <li key={`ul-item-${itemIndex}`} style={{ marginBottom: '6px' }}>
+                    {renderMarkdownContent(item, {
+                      fontSize: options.fontSize ?? '14px',
+                      color: options.color ?? '#1f2937',
+                      paragraphTag: 'span',
+                      lineHeight: 1.65,
+                    })}
+                  </li>
+                ))}
+              </ul>
+            );
+          }
+
+          return null;
+        })}
+      </div>
+    </div>
+  ));
+}
+
+function createMarkdownComponents(options: MarkdownStyleOptions = {}) {
+  const paragraphStyle: React.CSSProperties = {
+    margin: '0 0 12px 0',
+    fontSize: options.fontSize ?? '14px',
+    color: options.color ?? '#0f172a',
+    lineHeight: options.lineHeight ?? 1.7,
+    textIndent: options.textIndent,
+  };
+
+  const inlineParagraphStyle: React.CSSProperties = {
+    fontSize: options.fontSize ?? '14px',
+    color: options.color ?? '#0f172a',
+    lineHeight: options.lineHeight ?? 1.6,
+  };
+
+  const listStyle: React.CSSProperties = {
+    margin: '0 0 12px 1.25rem',
+    padding: 0,
+    color: paragraphStyle.color,
+    fontSize: paragraphStyle.fontSize,
+    lineHeight: paragraphStyle.lineHeight,
+  };
+
+  const listItemStyle: React.CSSProperties = {
+    margin: '0 0 6px 0',
+  };
+
+  const components: Components = {
+    p({ children }) {
+      if (options.paragraphTag === 'span') {
+        return <span style={inlineParagraphStyle}>{children}</span>;
+      }
+      return <p style={paragraphStyle}>{children}</p>;
+    },
+    ul({ children }) {
+      return <ul style={listStyle}>{children}</ul>;
+    },
+    ol({ children }) {
+      return <ol style={listStyle}>{children}</ol>;
+    },
+    li({ children }) {
+      return <li style={listItemStyle}>{children}</li>;
+    },
+    strong({ children }) {
+      return <strong style={{ color: options.strongColor ?? '#0f172a' }}>{children}</strong>;
+    },
+    br() {
+      return <br />;
+    },
+  };
+
+  return components;
+}
+
+function formatCardContentMarkdown(content: string): string {
+  if (!content) {
+    return '';
+  }
+
+  let text = stripHtmlTags(content)
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\r\n/g, '\n')
+    .replace(/\u3000/g, ' ');
+
+  text = text.replace(/\s+\n/g, '\n');
+
+  const emphasisPatterns = [
+    '举一反三',
+    '思考启发',
+    '延伸提醒',
+    '案例',
+    '典型例子',
+    '拓展建议',
+    '详细分析',
+    '背景提示',
+  ];
+
+  emphasisPatterns.forEach((pattern) => {
+    const regex = new RegExp(`(${pattern})`, 'g');
+    text = text.replace(regex, '\n\n$1');
+  });
+
+  const emojiMarkers = ['📌', '📍', '🎯', '📝', '✏️', '✅', '⚠️', '📘', '📗', '📙', '📕', '⭐', '🌟', '🔍', '💡'];
+  emojiMarkers.forEach((marker) => {
+    const regex = new RegExp(`${marker}\s*([^\n：:]{0,12})`, 'g');
+    text = text.replace(regex, (_match, label) => {
+      const cleanedLabel = label ? ` ${label.trim()}` : '';
+      return `\n${marker}${cleanedLabel}\n`;
+    });
+  });
+
+  text = text
+    .replace(/([。！？!?])(?=[^\n\s])/g, '$1\n')
+    .replace(/(?<!\n)(\d+\.)/g, '\n\n$1')
+    .replace(/(?<!\n)([-–—]\s)/g, '\n$1')
+    .replace(/(\*\*[^*]+\*\*)/g, '\n$1\n')
+    .replace(/\n{3,}/g, '\n\n');
+
+  text = text.replace(/(\n\n)(\d+\.)/g, '\n\n$2');
+
+  return text.trim();
+}
+
+function stripHtmlTags(value: string): string {
+  return value.replace(/<[^>]+>/g, '');
+}
+
+const HEADING_KEYWORDS = [
+  '典型例子',
+  '详细分析',
+  '举一反三',
+  '思考启发',
+  '延伸提醒',
+  '案例',
+  '背景相似',
+  '严密立法',
+  '应用建议',
+  '步骤提示',
+];
+
+const HEADING_ICONS = '📌📍🎯📝✏️✅⚠️📘📗📙📕⭐🌟🔍💡';
+
+function buildStructuredSections(markdown: string): StructuredSection[] {
+  if (!markdown) {
+    return [];
+  }
+
+  const lines = markdown
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const sections: StructuredSection[] = [];
+  let currentSection: StructuredSection | null = null;
+
+  const ensureSection = () => {
+    if (!currentSection) {
+      currentSection = { title: '内容要点', blocks: [] };
+      sections.push(currentSection);
+    }
+    return currentSection;
+  };
+
+  const startSection = (title: string, icon?: string) => {
+    currentSection = { title, icon, blocks: [] };
+    sections.push(currentSection);
+  };
+
+  lines.forEach((line) => {
+    const heading = detectStructuredHeading(line);
+    if (heading) {
+      startSection(heading.title, heading.icon);
+      if (heading.remainder) {
+        currentSection!.blocks.push({ type: 'paragraph', text: heading.remainder });
+      }
+      return;
+    }
+
+    const orderedMatch = line.match(/^(\d+)\.\s*(.+)$/);
+    if (orderedMatch) {
+      const itemText = orderedMatch[2].trim();
+      if (itemText) {
+        const section = ensureSection();
+        const lastBlock = section.blocks[section.blocks.length - 1];
+        if (!lastBlock || lastBlock.type !== 'orderedList') {
+          section.blocks.push({ type: 'orderedList', items: [itemText] });
+        } else {
+          lastBlock.items.push(itemText);
+        }
+      }
+      return;
+    }
+
+    const unorderedMatch = line.match(/^(?:[-•●]|·)\s*(.+)$/);
+    if (unorderedMatch) {
+      const itemText = unorderedMatch[1].trim();
+      if (itemText) {
+        const section = ensureSection();
+        const lastBlock = section.blocks[section.blocks.length - 1];
+        if (!lastBlock || lastBlock.type !== 'unorderedList') {
+          section.blocks.push({ type: 'unorderedList', items: [itemText] });
+        } else {
+          lastBlock.items.push(itemText);
+        }
+      }
+      return;
+    }
+
+    ensureSection().blocks.push({ type: 'paragraph', text: line });
+  });
+
+  return sections;
+}
+
+function detectStructuredHeading(line: string): { icon?: string; title: string; remainder?: string } | null {
+  const iconRegex = new RegExp(`^([${HEADING_ICONS}])\s*([^：:]+)(?:[:：]+)?(.*)$`);
+  const iconMatch = line.match(iconRegex);
+  if (iconMatch) {
+    return {
+      icon: iconMatch[1],
+      title: iconMatch[2].trim(),
+      remainder: iconMatch[3]?.trim(),
+    };
+  }
+
+  const keyword = HEADING_KEYWORDS.find((key) => line.startsWith(key));
+  if (keyword) {
+    const remainder = line.slice(keyword.length).replace(/^[:：\s]+/, '');
+    return {
+      title: keyword,
+      remainder: remainder || undefined,
+    };
+  }
+
+  return null;
 }
 
 interface CardPresentationModalProps {

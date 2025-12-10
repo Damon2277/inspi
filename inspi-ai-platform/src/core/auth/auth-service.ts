@@ -11,8 +11,8 @@ import ContributionLog from '@/lib/models/ContributionLog';
 import User, { UserDocument } from '@/lib/models/User';
 import connectDB from '@/lib/mongodb';
 
+import { DEMO_USER_ID } from './constants';
 import { generateToken, generateRefreshToken, verifyToken, verifyRefreshToken } from './jwt';
-
 
 export interface AuthResponse {
   success: boolean
@@ -74,7 +74,7 @@ export class AuthService {
         return {
           success: true,
           user: {
-            _id: 'demo-user-id',
+            _id: DEMO_USER_ID,
             email: data.email,
             name: data.name,
             emailVerified: false,
@@ -183,7 +183,7 @@ export class AuthService {
         return {
           success: true,
           user: {
-            _id: 'demo-user-id',
+            _id: DEMO_USER_ID,
             email: demoEmail,
             name: '体验用户',
             emailVerified: true,

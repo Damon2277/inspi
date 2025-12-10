@@ -19,15 +19,79 @@ export interface VisualizationBranch {
   color?: string;
 }
 
+export interface VisualizationAnnotation {
+  title: string;
+  description: string;
+  icon?: string;
+  placement?: 'left' | 'right' | 'top' | 'bottom' | 'center';
+}
+
+export interface StructuredDiagramHeader {
+  title: string;
+  subtitle?: string;
+  formula?: string;
+  summary?: string;
+  conceptTagline?: string;
+}
+
+export interface StructuredDiagramStage {
+  id: string;
+  title: string;
+  summary: string;
+  details?: string[];
+  icon?: string;
+  outcome?: string;
+  imagePrompt?: string;
+  imageUrl?: string;
+  imageMetadata?: {
+    provider?: string;
+    width?: number;
+    height?: number;
+    generatedAt?: string;
+  };
+}
+
+export interface StructuredDiagramOutcome {
+  title: string;
+  description?: string;
+  icon?: string;
+}
+
+export interface StructuredDiagramSpec {
+  header: StructuredDiagramHeader;
+  stages: StructuredDiagramStage[];
+  outcomes?: StructuredDiagramOutcome[];
+  notes?: string[];
+  highlight?: string;
+}
+
 export interface VisualizationSpec {
-  type: 'concept-map' | 'process-flow' | 'matrix';
+  type: 'concept-map' | 'process-flow' | 'matrix' | 'hero-illustration' | 'structured-diagram';
   theme: VisualizationTheme;
+  layout?: 'left-to-right' | 'right-to-left' | 'radial' | 'grid' | 'hierarchical' | string;
+  imagePrompt?: string;
+  negativePrompt?: string;
+  imageUrl?: string;
+  imageMetadata?: {
+    provider?: string;
+    width?: number;
+    height?: number;
+    generatedAt?: string;
+  };
   center: {
     title: string;
     subtitle?: string;
   };
   branches: VisualizationBranch[];
   footerNote?: string;
+  composition?: {
+    metaphor?: string;
+    visualFocus?: string;
+    backgroundMood?: string;
+    colorPalette?: string[];
+  };
+  annotations?: VisualizationAnnotation[];
+  structured?: StructuredDiagramSpec;
 }
 
 export interface TeachingCard {
@@ -93,6 +157,7 @@ export interface GenerateCardsRequest {
   gradeLevel?: string;
   difficulty?: string;
   additionalContext?: string;
+  cardTypes?: (CardType | RawCardType)[];
 }
 
 export interface GenerateCardsResponse {

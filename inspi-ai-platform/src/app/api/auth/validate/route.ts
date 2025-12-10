@@ -3,12 +3,13 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 
+import { DEMO_USER_ID } from '@/core/auth/constants';
 import { verifyToken } from '@/core/auth/jwt';
 
 // 模拟用户数据（用于开发测试）
 const DEMO_USER = {
-  id: 'demo-user-id',
-  _id: 'demo-user-id',
+  id: DEMO_USER_ID,
+  _id: DEMO_USER_ID,
   email: 'demo@example.com',
   name: 'Demo User',
   username: 'demouser',

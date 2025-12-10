@@ -44,142 +44,88 @@ export default async function SquareDetailPage(props: SquareDetailPageProps) {
 
   return (
     <AppLayout>
-      <div className="modern-layout">
-      <div className="modern-container" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
-        <Link
-          href="/square"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontSize: '14px',
-            color: 'var(--primary-600)',
-            textDecoration: 'none',
-            marginBottom: '16px',
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          返回广场
-        </Link>
+      <div className="modern-layout work-detail-layout">
+        <div className="modern-container">
+          <Link href="/square" className="work-detail__back">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            返回广场
+          </Link>
 
-        <div className="modern-card modern-card-elevated" style={{ padding: '32px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <header style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
-              <div style={{
-                width: '72px',
-                height: '72px',
-                  borderRadius: '24px',
-                  background: 'var(--gray-100)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '32px' }}>
-                  {work.thumbnail}
+          <article className="work-detail-card">
+            <header className="work-detail__hero">
+              <div className="work-detail__emoji">{work.thumbnail}</div>
+              <div className="work-detail__headline">
+                <div className="work-detail__chips">
+                  <span className="work-chip work-chip--subject">{work.subject}</span>
+                  <span className="work-chip work-chip--grade">{work.grade}</span>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <h1 style={{
-                    fontSize: '32px',
-                    fontWeight: '700',
-                    color: 'var(--gray-900)',
-                    marginBottom: '12px' }}>
-                    {work.title}
-                  </h1>
-                  <div style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '12px',
-                    fontSize: '14px',
-                    color: 'var(--gray-500)' }}>
-                    <span>by {work.author}</span>
-                    <span>•</span>
-                    <span>{work.subject}</span>
-                    <span>•</span>
-                    <span>{work.grade}</span>
-                    <span>•</span>
-                    <span>{work.createdAt}</span>
-                  </div>
+                <h1 className="work-detail__title">{work.title}</h1>
+                <div className="work-detail__meta">
+                  <span>by {work.author}</span>
+                  <span>•</span>
+                  <span>{work.createdAt}</span>
                 </div>
-              </header>
+              </div>
+            </header>
 
-              <section>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '16px',
-                    marginBottom: '12px',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <h2 style={{
-                    fontSize: '18px',
-                    fontWeight: '600',
-                    color: 'var(--gray-900)',
-                    margin: 0,
-                  }}>
-                    作品简介
-                  </h2>
-                  <SquareReuseActions
-                    cards={cards}
-                    initialReuseCount={work.reuses}
-                    themeId={work.id}
-                    themeTitle={work.title}
-                  />
-                </div>
-                <p style={{
-                  fontSize: '16px',
-                  color: 'var(--gray-600)',
-                  lineHeight: '1.8' }}>
-                  {work.description}
-                </p>
-              </section>
+            <div className="work-detail__stats">
+              <div className="work-detail__stat">
+                <small>喜欢</small>
+                <strong>{work.likes}</strong>
+              </div>
+              <div className="work-detail__stat">
+                <small>复用</small>
+                <strong>{work.reuses}</strong>
+              </div>
+              <div className="work-detail__stat">
+                <small>评分</small>
+                <strong>{work.rating}</strong>
+              </div>
+            </div>
 
-              <section>
-                <h2 style={{
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: 'var(--gray-900)',
-                  marginBottom: '12px' }}>
-                  教学卡片
-                </h2>
-                <p style={{
-                  fontSize: '14px',
-                  color: 'var(--gray-500)',
-                  marginBottom: '20px',
-                }}>
-                  点击任意卡片可导出、致敬复用或进入演示模式，快速带走这套教学设计。
-                </p>
-                <SquareCardShowcase cards={cards} />
-              </section>
+            <div className="work-detail__actions">
+              <SquareReuseActions
+                cards={cards}
+                initialReuseCount={work.reuses}
+                themeId={work.id}
+                themeTitle={work.title}
+              />
+            </div>
 
-              <section>
-                <h2 style={{
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: 'var(--gray-900)',
-                  marginBottom: '12px' }}>
-                  相关标签
-                </h2>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {work.tags.map((tag, index) => (
-                    <span key={index} style={{
-                      padding: '6px 12px',
-                      background: 'var(--primary-100)',
-                      color: 'var(--primary-700)',
-                      borderRadius: 'var(--radius-full)',
-                      fontSize: '14px' }}>
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              </section>
-          </div>
+            <section className="work-detail__section">
+              <h2 className="desktop-section__title" style={{ fontSize: 'var(--font-size-2xl)', margin: 0 }}>
+                作品简介
+              </h2>
+              <p className="work-detail__description">{work.description}</p>
+            </section>
+
+            <section className="work-detail__section">
+              <h2 className="desktop-section__title" style={{ fontSize: 'var(--font-size-2xl)', margin: 0 }}>
+                教学卡片
+              </h2>
+              <p style={{ color: 'var(--gray-500)', fontSize: 'var(--font-size-sm)' }}>
+                点击任意卡片可导出、致敬复用或进入演示模式，快速带走这套教学设计。
+              </p>
+              <SquareCardShowcase cards={cards} />
+            </section>
+
+            <section className="work-detail__section">
+              <h2 className="desktop-section__title" style={{ fontSize: 'var(--font-size-2xl)', margin: 0 }}>
+                相关标签
+              </h2>
+              <div className="work-detail__tags">
+                {work.tags.map((tag, index) => (
+                  <span key={`${work.id}-tag-${index}`} className="work-chip work-chip--tag">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            </section>
+          </article>
         </div>
       </div>
-    </div>
     </AppLayout>
   );
 }

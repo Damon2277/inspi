@@ -1,11 +1,11 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useAuthStore } from '@/shared/stores/authStore';
 import { CARD_TYPE_CONFIG } from '@/shared/types/teaching';
-import type { TeachingCard, GenerateCardsRequest } from '@/shared/types/teaching';
+import type { TeachingCard, GenerateCardsRequest, CardType } from '@/shared/types/teaching';
 
 interface CardGeneratorProps {
   request: GenerateCardsRequest;
@@ -18,6 +18,32 @@ export default function CardGenerator({ request, onCardsGenerated, onError }: Ca
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState('');
   const { token } = useAuthStore();
+  const selectedCardTypes = useMemo<CardType[]>(() => {
+    if (!Array.isArray(request.cardTypes) || request.cardTypes.length === 0) {
+      return Object.keys(CARD_TYPE_CONFIG) as CardType[];
+    }
+
+    const validTypes = request.cardTypes.filter(
+      (type): type is CardType => typeof type === 'string' && type in CARD_TYPE_CONFIG,
+    );
+    return validTypes.length > 0 ? validTypes : (Object.keys(CARD_TYPE_CONFIG) as CardType[]);
+  }, [request.cardTypes]);
+
+  const progressTimeline = useMemo(() => {
+    const typeSteps = selectedCardTypes.map((type, index) => ({
+      type,
+      progress: 40 + Math.round(((index + 1) / selectedCardTypes.length) * 50),
+      step: `生成${CARD_TYPE_CONFIG[type].title}...`,
+    }));
+
+    const steps = [
+      { progress: 20, step: '分析知识点内容...' },
+      ...typeSteps.map(({ progress, step }) => ({ progress, step })),
+      { progress: 100, step: '完成生成！' },
+    ];
+
+    return { steps, typeSteps };
+  }, [selectedCardTypes]);
 
   const generateCards = async () => {
     setLoading(true);
@@ -51,14 +77,10 @@ export default function CardGenerator({ request, onCardsGenerated, onError }: Ca
       }
 
       // 模拟进度更新
-      const progressSteps = [
-        { progress: 20, step: '分析知识点内容...' },
-        { progress: 40, step: '生成可视化卡片...' },
-        { progress: 60, step: '生成类比延展卡片...' },
-        { progress: 80, step: '生成启发思考卡片...' },
-        { progress: 90, step: '生成互动氛围卡片...' },
-        { progress: 100, step: '完成生成！' },
-      ];
+      const payload: GenerateCardsRequest = {
+        ...request,
+        cardTypes: selectedCardTypes,
+      };
 
       // 发起API请求
       const response = await fetch('/api/magic/generate', {
@@ -67,11 +89,11 @@ export default function CardGenerator({ request, onCardsGenerated, onError }: Ca
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`,
         },
-        body: JSON.stringify(request),
+        body: JSON.stringify(payload),
       });
 
       // 模拟进度更新
-      for (const { progress: prog, step } of progressSteps) {
+      for (const { progress: prog, step } of progressTimeline.steps) {
         setProgress(prog);
         setCurrentStep(step);
         await new Promise(resolve => setTimeout(resolve, 300));
@@ -149,20 +171,25 @@ export default function CardGenerator({ request, onCardsGenerated, onError }: Ca
 
             {/* 卡片类型预览 */}
             <div className="mt-6 grid grid-cols-2 gap-3">
-              {Object.entries(CARD_TYPE_CONFIG).map(([type, config], index) => (
+              {selectedCardTypes.map((type, index) => {
+                const config = CARD_TYPE_CONFIG[type];
+                const threshold = progressTimeline.typeSteps[index]?.progress ?? 0;
+
+                return (
                 <motion.div
                   key={type}
                   initial={{ opacity: 0.3, scale: 0.9 }}
                   animate={{
-                    opacity: progress > (index + 1) * 20 ? 1 : 0.3,
-                    scale: progress > (index + 1) * 20 ? 1 : 0.9,
+                    opacity: progress >= threshold ? 1 : 0.3,
+                    scale: progress >= threshold ? 1 : 0.9,
                   }}
                   className={`p-3 rounded-lg border-2 ${config.color} text-center`}
                 >
                   <div className="text-lg mb-1">{config.icon}</div>
                   <div className="text-xs font-medium">{config.title}</div>
                 </motion.div>
-              ))}
+                );
+              })}
             </div>
 
             {/* 取消按钮 */}

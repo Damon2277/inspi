@@ -6,6 +6,8 @@
 import domtoimage from 'dom-to-image';
 import html2canvas from 'html2canvas';
 
+import { buildProxiedImageUrl, needsProxying } from '@/lib/export/image-proxy';
+
 export const DEFAULT_EXPORT_DIMENSIONS = {
   width: 944,
   height: 600,
@@ -42,9 +44,20 @@ export async function exportElementToImage(
     height,
   } = options;
 
+  let cleanupImages: (() => void) | undefined;
+  let cleanupBlockedStyles: (() => void) | undefined;
+
   try {
+    cleanupBlockedStyles = suppressBlockedStylesheets();
+    cleanupImages = prepareImagesForExport(element);
     let blob: Blob;
     let dataUrl: string;
+
+    const elementWidth = Math.max(element.scrollWidth, element.offsetWidth);
+    const elementHeight = Math.max(element.scrollHeight, element.offsetHeight);
+
+    const targetWidth = Math.max(width ?? elementWidth, elementWidth);
+    const targetHeight = Math.max(height ?? elementHeight, elementHeight);
 
     // 准备导出选项
     const exportOptions = {
@@ -52,8 +65,8 @@ export async function exportElementToImage(
       scale,
       useCORS: true,
       allowTaint: true,
-      width: width || element.offsetWidth,
-      height: height || element.offsetHeight,
+      width: targetWidth,
+      height: targetHeight,
       style: {
         transform: 'scale(1)',
         transformOrigin: 'top left',
@@ -67,6 +80,7 @@ export async function exportElementToImage(
           const canvas = await html2canvas(element, {
             ...exportOptions,
             scale,
+            onclone: sanitizeClonedDocument,
           });
           dataUrl = canvas.toDataURL('image/png');
         } else {
@@ -81,6 +95,7 @@ export async function exportElementToImage(
           const canvas = await html2canvas(element, {
             ...exportOptions,
             scale,
+            onclone: sanitizeClonedDocument,
           });
           dataUrl = canvas.toDataURL('image/jpeg', quality);
         } else {
@@ -113,6 +128,9 @@ export async function exportElementToImage(
   } catch (error) {
     console.error('导出图片失败:', error);
     throw new Error(`导出${format.toUpperCase()}格式失败: ${error instanceof Error ? error.message : '未知错误'}`);
+  } finally {
+    cleanupImages?.();
+    cleanupBlockedStyles?.();
   }
 }
 
@@ -259,6 +277,108 @@ export function prepareElementForExport(element: HTMLElement): () => void {
       el.style.cssText = cssText;
     });
   };
+}
+
+function prepareImagesForExport(element: HTMLElement): () => void {
+  if (typeof window === 'undefined') {
+    return () => undefined;
+  }
+
+  const currentOrigin = window.location.origin;
+  const cleanups: Array<() => void> = [];
+  const images = Array.from(element.querySelectorAll('img')) as HTMLImageElement[];
+
+  images.forEach((img) => {
+    const originalSrcAttribute = img.getAttribute('src');
+    if (!originalSrcAttribute) {
+      return;
+    }
+
+    const previousCrossOrigin = img.getAttribute('crossorigin');
+    const { shouldProxy, targetUrl } = needsProxying(originalSrcAttribute, currentOrigin);
+
+    if (shouldProxy && targetUrl) {
+      const proxiedUrl = buildProxiedImageUrl(targetUrl);
+      img.setAttribute('src', proxiedUrl);
+      img.src = proxiedUrl;
+      img.setAttribute('crossorigin', 'anonymous');
+      img.crossOrigin = 'anonymous';
+
+      cleanups.push(() => {
+        img.setAttribute('src', originalSrcAttribute);
+        img.src = originalSrcAttribute;
+        if (previousCrossOrigin === null) {
+          img.removeAttribute('crossorigin');
+          img.crossOrigin = '';
+        } else {
+          img.setAttribute('crossorigin', previousCrossOrigin);
+          img.crossOrigin = previousCrossOrigin;
+        }
+      });
+    } else if (!previousCrossOrigin) {
+      img.setAttribute('crossorigin', 'anonymous');
+      img.crossOrigin = 'anonymous';
+      cleanups.push(() => {
+        img.removeAttribute('crossorigin');
+        img.crossOrigin = '';
+      });
+    }
+  });
+
+  return () => {
+    cleanups.forEach((cleanup) => {
+      try {
+        cleanup();
+      } catch (error) {
+        console.error('恢复图片导出状态失败:', error);
+      }
+    });
+  };
+}
+
+const BLOCKED_STYLESHEET_PATTERNS = ['/_next/static/css/app/layout.css'];
+
+function suppressBlockedStylesheets(): () => void {
+  if (typeof document === 'undefined') {
+    return () => undefined;
+  }
+
+  const suppressedLinks: HTMLLinkElement[] = [];
+  const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]')) as HTMLLinkElement[];
+
+  links.forEach((link) => {
+    const href = link.getAttribute('href') || link.href || '';
+    if (!href) {
+      return;
+    }
+
+    if (BLOCKED_STYLESHEET_PATTERNS.some(pattern => href.includes(pattern))) {
+      if (!link.hasAttribute('data-html2canvas-ignore')) {
+        link.setAttribute('data-html2canvas-ignore', 'true');
+        suppressedLinks.push(link);
+      }
+    }
+  });
+
+  return () => {
+    suppressedLinks.forEach((link) => {
+      link.removeAttribute('data-html2canvas-ignore');
+    });
+  };
+}
+
+function sanitizeClonedDocument(clonedDoc: Document): void {
+  try {
+    const links = Array.from(clonedDoc.querySelectorAll('link[rel="stylesheet"]')) as HTMLLinkElement[];
+    links.forEach((link) => {
+      const href = link.href || link.getAttribute('href') || '';
+      if (href && BLOCKED_STYLESHEET_PATTERNS.some(pattern => href.includes(pattern))) {
+        link.parentNode?.removeChild(link);
+      }
+    });
+  } catch (error) {
+    console.warn('清理导出样式表时出错:', error);
+  }
 }
 
 /**

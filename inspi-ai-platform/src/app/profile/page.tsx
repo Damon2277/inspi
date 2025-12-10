@@ -1,22 +1,33 @@
 'use client';
 
 import Image from 'next/image';
-import React, { useMemo, useState, lazy, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import React, { useEffect, useMemo, useState, Suspense } from 'react';
 
 import { AppLayout } from '@/components/layout';
 import { AccountSettingsPanel } from '@/components/profile/AccountSettingsPanel';
 import { SquareQuickReuseButton } from '@/components/square/SquareQuickReuseButton';
+import { SubscriptionManagement } from '@/components/subscription/SubscriptionManagement';
 import { useUser } from '@/contexts/UserContext';
 import { mockSquareWorks } from '@/data/mockSquareWorks';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { useReuseState } from '@/shared/hooks/useReuseState';
 
-// Lazy load the subscription component for better performance
-const SubscriptionManagement = lazy(() =>
-  import('@/components/subscription/SubscriptionManagementOptimized').then((module) => ({
-    default: module.SubscriptionManagementOptimized,
-  })),
-);
+type ProfileTeachingCard = {
+  id: string;
+  type: string;
+  title?: string;
+  content?: string;
+  visual?: {
+    imageUrl?: string;
+    structured?: {
+      stages?: Array<{ imageUrl?: string }>;
+    };
+  };
+  metadata?: {
+    coverImageUrl?: string;
+  };
+};
 
 interface UserWork {
   id: string;
@@ -25,72 +36,207 @@ interface UserWork {
   subject: string;
   grade: string;
   thumbnail: string;
+  coverImage?: string | null;
+  cards?: ProfileTeachingCard[];
   likes: number;
   uses: number;
   createdAt: string;
-  status: 'published' | 'draft' | 'private' | 'reused';
+  status: 'published' | 'draft' | 'private' | 'reused' | 'archived';
   description?: string;
   tags?: string[];
   reuseSourceId?: number;
 }
 
+const SUBJECT_EMOJI_MAP: Record<string, string> = {
+  数学: '📐',
+  语文: '📖',
+  英语: '🗣️',
+  物理: '⚙️',
+  化学: '⚗️',
+  生物: '🧬',
+  历史: '🏺',
+  地理: '🗺️',
+  政治: '🏛️',
+  音乐: '🎵',
+  美术: '🎨',
+  体育: '🏀',
+};
+
+const resolveSubjectEmoji = (subject?: string) => SUBJECT_EMOJI_MAP[subject || ''] || '📚';
+
+const readCachedWork = (workId: string): any | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const cached = sessionStorage.getItem(`work-detail-cache-${workId}`);
+    return cached ? JSON.parse(cached) : null;
+  } catch {
+    return null;
+  }
+};
+
+const extractCoverImage = (work: any): string | null => {
+  const cardsSource = Array.isArray(work.cards) ? work.cards : readCachedWork(work._id || work.id)?.cards;
+  const cards: any[] = Array.isArray(cardsSource) ? cardsSource : [];
+  for (const card of cards) {
+    if (card?.visual?.imageUrl) return card.visual.imageUrl;
+    if (card?.metadata?.coverImageUrl) return card.metadata.coverImageUrl;
+    const stages = card?.visual?.structured?.stages;
+    if (Array.isArray(stages)) {
+      const stageWithImage = stages.find((stage: any) => stage?.imageUrl);
+      if (stageWithImage?.imageUrl) return stageWithImage.imageUrl;
+    }
+  }
+  return null;
+};
+
 type TabKey = 'works' | 'subscription' | 'feedback' | 'settings';
+
+const TAB_KEYS: TabKey[] = ['works', 'subscription', 'feedback', 'settings'];
+
+const isTabKey = (value: string | null): value is TabKey => {
+  return value !== null && TAB_KEYS.includes(value as TabKey);
+};
 
 function ProfileContent() {
   const { user } = useUser();
   const { user: authUser } = useAuth();
   const { reusedThemes } = useReuseState(authUser?._id);
 
-  const [activeTab, setActiveTab] = useState<TabKey>('works');
-  const [hoveredTab, setHoveredTab] = useState<TabKey | null>(null);
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const upgradeParam = searchParams.get('upgrade');
 
-  const baseWorks = useMemo<UserWork[]>(
-    () => [
-      {
-        id: '1',
-        title: '二次函数的图像与性质',
-        type: '可视化卡',
-        subject: '数学',
-        grade: '高中',
-        thumbnail: '📊',
-        likes: 45,
-        uses: 23,
-        createdAt: '2024-01-15',
-        status: 'published',
-        description: '通过动态图像展示二次函数的变化规律，帮助学生掌握抛物线的重要特征。',
-        tags: ['函数', '图像', '性质'],
+  const [activeTab, setActiveTab] = useState<TabKey>(() => (
+    isTabKey(tabParam) ? tabParam : 'works'
+  ));
+  const [hoveredTab, setHoveredTab] = useState<TabKey | null>(null);
+  const shouldAutoUpgrade = upgradeParam === '1' || upgradeParam?.toLowerCase() === 'true';
+  const [autoOpenModal, setAutoOpenModal] = useState<boolean>(() => (
+    shouldAutoUpgrade && (!isTabKey(tabParam) || tabParam === 'subscription')
+  ));
+  const [serverWorks, setServerWorks] = useState<UserWork[]>([]);
+  const [worksLoading, setWorksLoading] = useState(false);
+  const [worksError, setWorksError] = useState<string | null>(null);
+  const [worksReloadToken, setWorksReloadToken] = useState(0);
+  const [hoveredWorkId, setHoveredWorkId] = useState<string | null>(null);
+  const [coverImages, setCoverImages] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (isTabKey(tabParam) && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam, activeTab]);
+
+  useEffect(() => {
+    if (shouldAutoUpgrade && activeTab !== 'subscription') {
+      setActiveTab('subscription');
+    }
+  }, [shouldAutoUpgrade, activeTab]);
+
+  useEffect(() => {
+    if (shouldAutoUpgrade) {
+      setAutoOpenModal(true);
+    } else {
+      setAutoOpenModal(false);
+    }
+  }, [shouldAutoUpgrade]);
+
+  useEffect(() => {
+    if (autoOpenModal) {
+      const timer = window.setTimeout(() => setAutoOpenModal(false), 0);
+      return () => window.clearTimeout(timer);
+    }
+    return undefined;
+  }, [autoOpenModal]);
+
+  useEffect(() => {
+    if (!authUser?._id) {
+      setServerWorks([]);
+      return;
+    }
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    if (!token) {
+      setServerWorks([]);
+      setWorksError('登录状态已失效，请重新登录后重试');
+      return;
+    }
+
+    const controller = new AbortController();
+    setWorksLoading(true);
+    setWorksError(null);
+
+    fetch('/api/profile/works?status=all', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-      {
-        id: '2',
-        title: '三角函数的应用',
-        type: '类比延展卡',
-        subject: '数学',
-        grade: '高中',
-        thumbnail: '📐',
-        likes: 32,
-        uses: 18,
-        createdAt: '2024-01-12',
-        status: 'published',
-        description: '结合实际案例梳理三角函数的核心公式与求解思路，强化解题直觉。',
-        tags: ['三角函数', '应用', '建模'],
-      },
-      {
-        id: '3',
-        title: '立体几何入门',
-        type: '互动氛围卡',
-        subject: '数学',
-        grade: '高中',
-        thumbnail: '🔺',
-        likes: 28,
-        uses: 15,
-        createdAt: '2024-01-10',
-        status: 'draft',
-        description: '以模型拆解和小组讨论带学生走进立体几何世界，掌握空间想象技巧。',
-        tags: ['立体几何', '空间思维'],
-      },
-    ],
-    [],
-  );
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const payload = await response.json();
+        if (response.status === 401) {
+          throw new Error('登录状态已过期，请重新登录');
+        }
+        if (!response.ok || !payload?.success) {
+          throw new Error(payload?.error || '加载作品失败');
+        }
+        const mapped: UserWork[] = (payload.works || []).map((work: any) => {
+          const subjectLabel = work.subject || '通用学科';
+          const gradeLabel = work.gradeLevel || '通用年级';
+          const autoDescription = `${subjectLabel} · ${gradeLabel} · Inspi.AI 自动生成`;
+          const normalizedDescription = typeof work.description === 'string'
+            && work.description.trim() === autoDescription ? '' : (work.description || '');
+
+          return {
+            id: work._id || work.id,
+            title: work.title || '未命名作品',
+            type: '教学作品',
+            subject: work.subject || '通用学科',
+            grade: work.gradeLevel || '通用年级',
+            thumbnail: resolveSubjectEmoji(work.subject),
+            coverImage: work.coverImageUrl || extractCoverImage(work),
+            cards: work.cards,
+            likes: work.likesCount || 0,
+            uses: work.reuseCount || 0,
+            createdAt: work.createdAt || new Date().toISOString(),
+            status: (work.status || 'draft') as UserWork['status'],
+            description: normalizedDescription,
+            tags: work.tags || [],
+          };
+        });
+        setServerWorks(mapped);
+        setCoverImages(prev => {
+          const next = { ...prev };
+          mapped.forEach(work => {
+            if (work.coverImage) {
+              next[work.id] = work.coverImage;
+            }
+          });
+          return next;
+        });
+        if (typeof window !== 'undefined') {
+          try {
+            (payload.works || []).forEach((work: any) => {
+              const workId = work._id || work.id;
+              if (!workId) return;
+              sessionStorage.setItem(`work-detail-cache-${workId}`, JSON.stringify(work));
+            });
+          } catch (storageError) {
+            console.warn('缓存作品详情失败', storageError);
+          }
+        }
+        setWorksLoading(false);
+      })
+      .catch(error => {
+        if (controller.signal.aborted) return;
+        setWorksError(error instanceof Error ? error.message : '加载作品失败');
+        setWorksLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [authUser?._id, worksReloadToken]);
 
   const reusedThemeWorks = useMemo<UserWork[]>(
     () => reusedThemes
@@ -115,200 +261,185 @@ function ProfileContent() {
   );
 
   const combinedWorks = useMemo(
-    () => [...reusedThemeWorks, ...baseWorks],
-    [baseWorks, reusedThemeWorks],
+    () => [...reusedThemeWorks, ...serverWorks],
+    [reusedThemeWorks, serverWorks],
   );
 
   const displayWorks = useMemo(
-    () => combinedWorks.filter(work => work.status === 'published' || work.status === 'reused'),
+    () => combinedWorks.filter(work => work.status !== 'archived'),
     [combinedWorks],
   );
 
-  const handleWorkClick = (work: UserWork) => {
-    if (work.status === 'reused') {
-      const targetId = work.reuseSourceId ?? work.id;
-      window.location.href = `/square/${targetId}`;
+  useEffect(() => {
+    const missing = displayWorks.filter(work => !coverImages[work.id]);
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+
+    missing.forEach((work) => {
+      fetch(`/api/works/${work.id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        credentials: 'include',
+      })
+        .then(response => response.json())
+        .then(payload => {
+          if (cancelled) return;
+          if (!payload?.success || !payload?.work?.cards) return;
+          const image = extractCoverImage(payload.work);
+          if (image) {
+            setCoverImages(prev => ({ ...prev, [work.id]: image }));
+          }
+        })
+        .catch(() => {});
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [displayWorks, coverImages]);
+
+  const handleDeleteWork = async (event: React.MouseEvent, workId: string) => {
+    event.stopPropagation();
+    if (!window.confirm('确定要删除这条作品吗？此操作不可恢复。')) {
       return;
     }
 
-    if (work.status === 'draft') {
-      window.location.href = `/create?edit=${work.id}`;
-      return;
-    }
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/works/${workId}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        credentials: 'include',
+      });
 
-    window.location.href = `/case/${work.id}`;
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.error || '删除失败，请稍后再试');
+      }
+
+      setServerWorks(prev => prev.filter(work => work.id !== workId));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : '删除失败，请稍后再试');
+    }
   };
 
-  const renderWorkCard = (work: UserWork) => {
+  const handleWorkClick = (work: UserWork) => {
+    window.location.href = `/works/${work.id}`;
+  };
+
+  const renderDeleteButton = (workId: string) => (
+    <button
+      type="button"
+      onClick={event => handleDeleteWork(event, workId)}
+      aria-label="删除作品"
+      style={{
+        border: '1px solid rgba(148,163,184,0.4)',
+        background: '#fff',
+        borderRadius: '999px',
+        padding: '4px',
+        cursor: 'pointer',
+        color: '#94a3b8',
+        opacity: hoveredWorkId === workId ? 1 : 0,
+        transition: 'opacity 0.2s ease',
+      }}
+      className="work-card__delete"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M6 7h12" />
+        <path d="M9 7v9" />
+        <path d="M15 7v9" />
+        <path d="M4 7h16" />
+        <path d="M10 3h4" />
+        <path d="M5 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12" />
+      </svg>
+    </button>
+  );
+
+  function renderWorkCard(work: UserWork) {
     const isReused = work.status === 'reused';
+    const isDraft = work.status === 'draft';
+    const isPrivate = work.status === 'private';
     const sourceThemeId = work.reuseSourceId ?? parseInt(work.id.replace('reused-', ''), 10);
+    const renderAvatar = () => {
+      const imageSrc = coverImages[work.id] || work.coverImage;
+      if (imageSrc) {
+        return (
+          <span className="work-card__avatar">
+            <img src={imageSrc} alt={work.title} />
+          </span>
+        );
+      }
+      return (
+        <span className="work-card__avatar work-card__avatar--emoji">{work.thumbnail}</span>
+      );
+    };
 
     return (
-      <div
+      <article
         key={work.id}
-        className="modern-card modern-card-elevated group"
-        style={{
-          cursor: 'pointer',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          transition: 'all 0.3s ease',
-          border: '1px solid transparent',
-        }}
-        onMouseEnter={(event) => {
-          event.currentTarget.style.transform = 'translateY(-4px)';
-          event.currentTarget.style.boxShadow = '0 12px 24px rgba(15, 23, 42, 0.12)';
-          event.currentTarget.style.borderColor = 'var(--primary-200)';
-        }}
-        onMouseLeave={(event) => {
-          event.currentTarget.style.transform = 'translateY(0)';
-          event.currentTarget.style.boxShadow = '';
-          event.currentTarget.style.borderColor = 'transparent';
-        }}
+        className="work-card work-card--profile"
         onClick={() => handleWorkClick(work)}
+        style={{ position: 'relative' }}
+        onMouseEnter={() => setHoveredWorkId(work.id)}
+        onMouseLeave={() => setHoveredWorkId(prev => (prev === work.id ? null : prev))}
       >
-        <div className="modern-card-body" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              marginBottom: '16px',
-              gap: '12px',
-            }}
-          >
-            <div style={{ fontSize: 'var(--font-size-3xl)', lineHeight: 1 }}>{work.thumbnail}</div>
-            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
-              <span style={{
-                padding: '5px 10px',
-                background: '#fef3c7',
-                borderRadius: 'var(--radius-sm)',
-                fontSize: '12px',
-                color: '#92400e',
-                fontWeight: 500,
-              }}>
-                {work.subject}
-              </span>
-              <span style={{
-                padding: '5px 10px',
-                background: '#e0f2fe',
-                borderRadius: 'var(--radius-sm)',
-                fontSize: '12px',
-                color: '#075985',
-                fontWeight: 500,
-              }}>
-                {work.grade}
-              </span>
-              {isReused ? (
-                <span
-                  title="复用自其他教师"
-                  style={{
-                    padding: '5px 10px',
-                    background: 'var(--primary-100)',
-                    color: 'var(--primary-700)',
-                    borderRadius: 'var(--radius-sm)',
-                    fontSize: '12px',
-                    fontWeight: 500,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                  }}
-                >
-                  ↺ 复用
-                </span>
-              ) : null}
-            </div>
-          </div>
-
-          <h3 style={{
-            fontSize: '18px',
-            fontWeight: 600,
-            color: 'var(--gray-900)',
-            marginBottom: '8px',
-            lineHeight: 1.3,
-          }}>
-            {work.title}
-          </h3>
-
-          {work.description ? (
-            <p
-              style={{
-                color: 'var(--gray-600)',
-                fontSize: '14px',
-                marginBottom: '16px',
-                lineHeight: 1.6,
-                display: '-webkit-box',
-                WebkitLineClamp: 3,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-              }}
-            >
-              {work.description}
-            </p>
-          ) : null}
-
-          {work.tags && work.tags.length > 0 ? (
-            <div style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '6px',
-              marginBottom: '16px',
-            }}>
-              {work.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  style={{
-                    padding: '4px 10px',
-                    background: 'transparent',
-                    color: 'var(--primary-600)',
-                    fontSize: '12px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--primary-300)',
-                  }}
-                >
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          ) : null}
-
-          <div style={{ marginTop: 'auto' }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '16px',
-              paddingTop: '16px',
-              borderTop: '1px solid var(--gray-200)',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '18px', color: 'var(--gray-500)', fontSize: '14px' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ strokeWidth: 1.5 }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                  <span style={{ fontWeight: 500 }}>{work.likes}</span>
-                </span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ strokeWidth: 1.5 }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  <span style={{ fontWeight: 500 }}>{work.uses}</span>
-                </span>
+        <div className="work-card__header">
+          {renderAvatar()}
+          <div className="work-card__info">
+            <div className="work-card__title-row">
+              <h3 className="work-card__title" style={{ margin: 0 }}>{work.title}</h3>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                {renderDeleteButton(work.id)}
               </div>
-
-              {isReused && !Number.isNaN(sourceThemeId) ? (
-                <SquareQuickReuseButton
-                  themeId={sourceThemeId}
-                  themeTitle={work.title}
-                  reusedLabel="来自复用"
-                />
-              ) : null}
+            </div>
+            <div className="work-card__chips">
+              <span className="work-chip work-chip--subject">{work.subject}</span>
+              {(isReused || isPrivate) && (
+                <div className="work-card__status-group">
+                  {isReused && (
+                    <span className="work-chip work-chip--status work-chip--status-reused">复用</span>
+                  )}
+                  {isPrivate && (
+                    <span className="work-chip work-chip--status work-chip--status-private">私有</span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
-      </div>
+        {work.description ? (
+          <p className="work-card__description text-clamp-3">{work.description}</p>
+        ) : null}
+        {work.tags && work.tags.length > 0 ? (
+          <div className="work-card__tags">
+            {work.tags.map((tag, index) => (
+              <span key={`${work.id}-tag-${index}`} className="work-chip work-chip--tag">
+                #{tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
+        <div className="work-card__footer" onClick={event => event.stopPropagation()}>
+          {isReused && !Number.isNaN(sourceThemeId) ? (
+            <div className="work-card__actions">
+              <SquareQuickReuseButton
+                themeId={sourceThemeId}
+                themeTitle={work.title}
+                reusedLabel="来自复用"
+              />
+            </div>
+          ) : <span />}
+          <a
+            href={`/works/${work.id}`}
+            className="work-card__cta"
+          >
+            查看内容
+          </a>
+        </div>
+      </article>
     );
-  };
+  }
 
   const worksTabCount = displayWorks.length;
 
@@ -341,7 +472,7 @@ function ProfileContent() {
           </div>
         )}
       >
-        <SubscriptionManagement variant="embedded" />
+        <SubscriptionManagement variant="embedded" autoOpenModal={autoOpenModal} />
       </Suspense>
     </div>
   );
@@ -407,14 +538,14 @@ function ProfileContent() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--gray-50)' }}>
       <section style={{ padding: '40px 0 80px', background: 'var(--gray-50)' }}>
-        <div className="modern-container" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+        <div className="modern-container" style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '0 32px' }}>
           <div
             style={{
               display: 'flex',
-              gap: '32px',
-              borderBottom: '2px solid var(--gray-200)',
+              gap: '16px',
+              borderBottom: '1px solid var(--gray-200)',
               background: '#fff',
-              padding: '0 24px',
+              padding: '0 12px',
               borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
             }}
           >
@@ -474,10 +605,25 @@ function ProfileContent() {
             if (activeTab === 'works') {
               return (
                 <>
-                  <div className="modern-grid modern-grid-3" style={{ gap: '20px' }}>
-                    {displayWorks.map(renderWorkCard)}
-                  </div>
-                  {displayWorks.length === 0 ? (
+                  {worksLoading ? (
+                    <div className="modern-card" style={{ padding: '40px', textAlign: 'center' }}>
+                      <div className="modern-spinner" style={{ margin: '0 auto 12px' }} />
+                      <p style={{ color: 'var(--gray-600)' }}>正在加载作品...</p>
+                    </div>
+                  ) : worksError ? (
+                    <div className="modern-card" style={{ padding: '32px', textAlign: 'center', border: '1px solid rgba(248,113,113,0.4)' }}>
+                      <p style={{ color: '#b91c1c', marginBottom: '12px' }}>{worksError}</p>
+                      <button
+                        type="button"
+                        className="modern-btn modern-btn-primary"
+                        onClick={() => {
+                          setWorksReloadToken(prev => prev + 1);
+                        }}
+                      >
+                        重试
+                      </button>
+                    </div>
+                  ) : displayWorks.length === 0 ? (
                     <div style={{
                       textAlign: 'center',
                       padding: '80px 20px',
@@ -487,13 +633,17 @@ function ProfileContent() {
                       border: '1px dashed var(--gray-200)',
                     }}>
                       <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
-                      <h3 style={{ fontSize: '18px', marginBottom: '8px', color: 'var(--gray-800)' }}>还没有发布的作品</h3>
-                      <p style={{ marginBottom: '24px' }}>开始创作你的第一个教学魔法吧！</p>
+                      <h3 style={{ fontSize: '18px', marginBottom: '8px', color: 'var(--gray-800)' }}>还没有作品</h3>
+                      <p style={{ marginBottom: '24px' }}>生成教学卡片后，可一键保存到这里。</p>
                       <a href="/create" className="modern-btn modern-btn-primary">
-                        开始创作
+                        立即创作
                       </a>
                     </div>
-                  ) : null}
+                  ) : (
+                    <div className="work-card-grid">
+                      {displayWorks.map(renderWorkCard)}
+                    </div>
+                  )}
                 </>
               );
             }

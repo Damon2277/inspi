@@ -34,6 +34,8 @@ export class GeminiService {
   private genAI: GoogleGenerativeAI;
   private model: GenerativeModel;
   private defaultConfig: GenerationConfig;
+  private lastHealthyAt = 0;
+  private readonly healthCheckCacheMs = 60_000;
 
   constructor() {
     if (!env.AI.GEMINI_API_KEY) {
@@ -289,6 +291,11 @@ export class GeminiService {
         return false;
       }
 
+      const now = Date.now();
+      if (now - this.lastHealthyAt < this.healthCheckCacheMs) {
+        return true;
+      }
+
       // 使用更短的超时时间进行健康检查
       const result = await Promise.race([
         this.generateContent('Test', {
@@ -298,7 +305,11 @@ export class GeminiService {
         this.createTimeoutPromise(5000), // 5秒超时
       ]);
 
-      return result.content.length > 0;
+      const healthy = result.content.length > 0;
+      if (healthy) {
+        this.lastHealthyAt = Date.now();
+      }
+      return healthy;
     } catch (error) {
       logger.warn('AI service health check failed', {
         error: error instanceof Error ? error.message : 'Unknown error',

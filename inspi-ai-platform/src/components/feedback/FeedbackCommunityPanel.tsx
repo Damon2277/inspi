@@ -118,7 +118,7 @@ export function FeedbackCommunityPanel() {
         <div style={{
           display: 'grid',
           gap: '24px',
-          gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)',
+          gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 0.6fr)',
         }}>
           <div>
             <CommentSystem

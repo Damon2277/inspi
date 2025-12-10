@@ -7,6 +7,11 @@ export interface TeachingCard {
   title: string;
   content: string;
   editable: boolean;
+  explanation?: string;
+  metadata?: Record<string, any>;
+  visual?: Record<string, any>;
+  sop?: Record<string, any>;
+  presentation?: Record<string, any>;
 }
 
 export interface WorkAuthor {
@@ -21,7 +26,11 @@ export function isWorkAuthorPopulated(author: WorkAuthorReference): author is Wo
   return typeof author === 'object' && author !== null && 'name' in author && '_id' in author;
 }
 
-export function getWorkAuthorId(author: WorkAuthorReference): string {
+export function getWorkAuthorId(author: WorkAuthorReference | null | undefined): string {
+  if (!author) {
+    return '';
+  }
+
   const idValue = isWorkAuthorPopulated(author) ? author._id : author;
   return typeof idValue === 'string' ? idValue : idValue.toString();
 }
@@ -83,6 +92,7 @@ export interface IWork {
   category: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   estimatedTime: number; // 预计学习时间（分钟）
+  coverImageUrl?: string | null;
 
   // 社交功能
   likes: mongoose.Types.ObjectId[]; // 点赞用户列表
@@ -128,6 +138,11 @@ const TeachingCardSchema = new Schema({
   title: { type: String, required: true },
   content: { type: String, required: true },
   editable: { type: Boolean, default: true },
+  explanation: { type: String },
+  metadata: { type: Schema.Types.Mixed },
+  visual: { type: Schema.Types.Mixed },
+  sop: { type: Schema.Types.Mixed },
+  presentation: { type: Schema.Types.Mixed },
 });
 
 // 归属信息Schema
@@ -157,6 +172,7 @@ const WorkSchema = new Schema<WorkDocument>({
     default: 'beginner',
   },
   estimatedTime: { type: Number, default: 30, min: 5, max: 300 },
+  coverImageUrl: { type: String },
 
   // 社交功能
   likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],

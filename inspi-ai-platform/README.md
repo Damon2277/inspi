@@ -29,6 +29,37 @@ cp .env.example .env.local   # 根据下表填写变量
 npm run dev                   # 浏览器访问 http://localhost:3007
 ```
 
+### 使用 Docker Compose 一键拉起 Mongo + 前端
+
+如果希望由容器同时托管 Mongo 与前端（避免本机手动安装），可使用新增的开发编排：
+
+1. 安装 Docker Desktop，并启用 `docker compose`。
+2. 在 `inspi-ai-platform` 目录复制环境变量：
+
+   ```bash
+   cp .env.example .env.local
+   # 如果暂时没有真实 AI Key，可设置 USE_MOCK_GEMINI=true
+   # 本地调试常用：DISABLE_QUOTA_CHECK=true
+   ```
+
+3. 执行脚本启动服务（默认暴露 `http://localhost:3007`）：
+
+   ```bash
+   ./scripts/dev-stack.sh start
+   ```
+
+   - `frontend` 服务会自动 `npm install` 并运行 `npm run dev`，代码通过 volume 挂载支持热更新。
+   - `mongo` 服务使用官方 `mongo:6.0`，数据保存在命名卷 `mongo-data` 中。
+
+4. 停止与查看日志：
+
+   ```bash
+   ./scripts/dev-stack.sh stop   # 停止并清理容器
+   ./scripts/dev-stack.sh logs   # 实时查看 Mongo/前端日志
+   ```
+
+如果更习惯直接使用 `docker compose`，也可以执行 `docker compose -f docker-compose.dev.yml up --build`。
+
 ### 关键环境变量
 
 | 类别 | 变量 | 说明 |
@@ -37,8 +68,8 @@ npm run dev                   # 浏览器访问 http://localhost:3007
 | 认证 | `NEXTAUTH_SECRET` / `NEXTAUTH_URL` | NextAuth 鉴权所需密钥与回调地址 |
 | 邮件 | `SMTP_HOST` / `SMTP_USER` / ... | 若需发送订阅通知，可配置 SMTP |
 | Google 登录 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | 可选，支持 Google 登录 |
-| AI | `GEMINI_API_KEY` | 卡片生成所需的 Gemini API Key |
-| 微信支付 | `WECHAT_APP_ID`<br>`WECHAT_MCH_ID`<br>`WECHAT_API_KEY`<br>`WECHAT_NOTIFY_URL` | 正式接入微信支付时必填（需微信商户号） |
+| AI | `AI_PROVIDER`（可选）<br>`GEMINI_API_KEY`<br>`DEEPSEEK_API_KEY` | `AI_PROVIDER` 默认 `gemini`；若指定 provider 的 key 缺失，系统会自动按“Gemini→DeepSeek”顺序回退到可用 key，若两个 key 都为空则进入 mock 模式 |
+| 微信支付 | `WECHAT_APP_ID`<br>`WECHAT_MCH_ID`<br>`WECHAT_API_KEY`<br>`WECHAT_API_V3_KEY`<br>`WECHAT_MCH_SERIAL_NO`<br>`WECHAT_PRIVATE_KEY`<br>`WECHAT_PLATFORM_CERT`<br>`WECHAT_PLATFORM_SERIAL_NO`<br>`WECHAT_NOTIFY_URL` | 正式接入微信支付（Native 扫码）时必填，需配置商户证书、V2/V3 密钥与回调地址 |
 | 本地模拟 | `WECHAT_PAY_MOCK=true` | **开发默认开启**，生成本地二维码并模拟回调 |
 
 > 若未配置微信商户参数，系统会自动启用 Mock 模式；也可显式设置 `WECHAT_PAY_MOCK=false` 在测试环境使用真实接口。

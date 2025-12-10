@@ -36,11 +36,27 @@ export const env = {
   AI: {
     GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
     OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
-    SERVICE_TIMEOUT: parseInt(process.env.AI_SERVICE_TIMEOUT || '30000', 10),
+    DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY || '',
+    PROVIDER: process.env.AI_PROVIDER || 'gemini',
+    DEEPSEEK_MODEL: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
+    DEEPSEEK_BASE_URL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com',
+    SERVICE_TIMEOUT: parseInt(process.env.AI_SERVICE_TIMEOUT || '60000', 10),
     MAX_RETRIES: 3,
     RETRY_DELAY: 1000,
     DEFAULT_MODEL: 'gemini-1.5-flash',
     FALLBACK_MODEL: 'gpt-3.5-turbo',
+    IMAGE_PROVIDER: process.env.AI_IMAGE_PROVIDER || 'none',
+    IMAGE_API_KEY: process.env.AI_IMAGE_API_KEY || '',
+    IMAGE_BASE_URL: process.env.AI_IMAGE_BASE_URL || '',
+    IMAGE_MODEL: process.env.AI_IMAGE_MODEL || 'dall-e-3',
+    IMAGE_DEFAULT_SIZE: process.env.AI_IMAGE_DEFAULT_SIZE || '1024x1024',
+    IMAGE_ENABLE_CACHE: process.env.AI_IMAGE_ENABLE_CACHE !== 'false',
+    IMAGE_STAGE_SIZE: process.env.AI_IMAGE_STAGE_SIZE || '512x512',
+    IMAGE_API_KEY_HEADER: process.env.AI_IMAGE_API_KEY_HEADER || 'Authorization',
+    IMAGE_RESPONSE_FORMAT: (process.env.AI_IMAGE_RESPONSE_FORMAT || 'b64_json').toLowerCase(),
+    IMAGE_WATERMARK: process.env.AI_IMAGE_WATERMARK === undefined
+      ? true
+      : process.env.AI_IMAGE_WATERMARK === 'true',
   },
 
   // 邮件服务配置
@@ -99,10 +115,18 @@ export function validateEnvironment() {
 
   // 在生产环境中需要的变量
   const productionRequiredVars = [
-    'AI.GEMINI_API_KEY',
     'EMAIL.SMTP_HOST',
     'EMAIL.SMTP_USER',
   ];
+
+  const configuredProvider = (env.AI.PROVIDER || 'gemini').toLowerCase();
+  if (configuredProvider === 'deepseek') {
+    productionRequiredVars.push('AI.DEEPSEEK_API_KEY');
+  } else if (configuredProvider === 'gemini') {
+    productionRequiredVars.push('AI.GEMINI_API_KEY');
+  } else if (!env.AI.GEMINI_API_KEY && !env.AI.DEEPSEEK_API_KEY) {
+    productionRequiredVars.push('AI.GEMINI_API_KEY or AI.DEEPSEEK_API_KEY');
+  }
 
   const missing = requiredVars.filter(varName => {
     const keys = varName.split('.');

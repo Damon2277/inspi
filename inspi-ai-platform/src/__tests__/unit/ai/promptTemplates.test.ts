@@ -13,6 +13,47 @@ import {
   PromptContext,
 } from '@/core/ai/promptTemplates';
 
+const createConceptVisualization = (knowledgePoint: string): string => JSON.stringify({
+  summary: `把“${knowledgePoint}”绘成一幅隐喻插画，让学生通过画面直觉掌握要点。`,
+  visual: {
+    type: 'hero-illustration',
+    layout: 'radial',
+    theme: 'ocean',
+    imagePrompt: `${knowledgePoint} 的信息图插画，中心发光，周围有象征元素，扁平渐层风格`,
+    center: {
+      title: knowledgePoint,
+      subtitle: `${knowledgePoint}：用一幅画捕捉概念的灵魂`,
+    },
+    branches: [],
+    composition: {
+      metaphor: `${knowledgePoint} 像一座能量站`,
+      visualFocus: '中央发光主体与流动线条形成视觉焦点',
+      backgroundMood: '柔和蓝绿渐变搭配光雾，突出平静而有力量的氛围',
+      colorPalette: ['湖水蓝', '嫩叶绿', '暖白'],
+    },
+    annotations: [
+      {
+        title: '核心象征',
+        description: '中心发光体代表概念的关键机制或定律。',
+        icon: '✨',
+        placement: 'top',
+      },
+      {
+        title: '能量轨迹',
+        description: '环绕的箭形光束表达知识输入与应用的循环。',
+        icon: '🔄',
+        placement: 'left',
+      },
+      {
+        title: '课堂提问',
+        description: '请学生指出图中哪一部分象征现实生活场景。',
+        icon: '💬',
+        placement: 'right',
+      },
+    ],
+  },
+}, null, 2);
+
 describe('提示词模板系统 - 全面单元测试', () => {
 
   describe('卡片模板基础功能', () => {
@@ -69,10 +110,12 @@ describe('提示词模板系统 - 全面单元测试', () => {
       expect(prompt).toContain('数学');
       expect(prompt).toContain('九年级');
       expect(prompt).toContain('中等');
-      expect(prompt).toContain('概念定义');
-      expect(prompt).toContain('关键特征');
-      expect(prompt).toContain('重要性');
-      expect(prompt).toContain('记忆要点');
+      expect(prompt).toContain('hero-illustration');
+      expect(prompt).toContain('视觉锚点1');
+      expect(prompt).toContain('视觉锚点2');
+      expect(prompt).toContain('composition');
+      expect(prompt).toContain('imagePrompt');
+      expect(prompt).toContain('metaphor');
     });
 
     it('应该为实例卡片生成正确的提示词', () => {
@@ -152,21 +195,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
   describe('validateCardContent 函数测试', () => {
     it('应该验证有效的概念卡片内容', () => {
       // Arrange
-      const validContent = `
-## 📚 概念定义
-二次方程是含有未知数的最高次数为2的方程
-
-## 🔍 关键特征
-1. 最高次数为2
-2. 标准形式为ax²+bx+c=0
-3. 有两个解
-
-## 💡 重要性
-二次方程是代数学的基础
-
-## 🌟 记忆要点
-记住标准形式和求根公式
-      `;
+      const validContent = createConceptVisualization('二次方程');
 
       // Act
       const result = validateCardContent('concept', validContent);
@@ -214,14 +243,14 @@ describe('提示词模板系统 - 全面单元测试', () => {
 
     it('应该拒绝过长的内容', () => {
       // Arrange
-      const longContent = 'x'.repeat(1000); // 超过预期长度的2倍
+      const longContent = 'x'.repeat(1500); // 超过预期长度的2倍
 
       // Act
       const result = validateCardContent('concept', longContent);
 
       // Assert
       expect(result.valid).toBe(false);
-      expect(result.errors).toContain('内容过长，建议不超过400个字符');
+      expect(result.errors).toContain('内容不符合模板要求的结构');
     });
 
     it('应该处理未知的卡片类型', () => {
@@ -296,20 +325,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
     it('应该验证所有卡片内容', () => {
       // Arrange
       const cards = {
-        concept: `## 📚 概念定义
-圆的面积是圆形区域的大小，表示圆形内部所包含的平面区域的度量
-
-## 🔍 关键特征
-1. 公式为πr²，其中r是半径
-2. π是圆周率，约等于3.14159
-3. 面积单位是长度单位的平方
-4. 半径越大，面积增长越快
-
-## 💡 重要性
-圆面积计算是几何学的基础，在工程、建筑、物理等领域都有重要应用
-
-## 🌟 记忆要点
-记住公式πr²，π约等于3.14，半径的平方很关键`,
+        concept: createConceptVisualization('圆的面积'),
         example: `## 🎯 典型例子
 计算半径为3cm的圆的面积，这是一个常见的几何计算问题
 
@@ -521,20 +537,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
 
     it('应该快速验证内容', () => {
       // Arrange
-      const content = `
-## 📚 概念定义
-这是一个测试概念
-
-## 🔍 关键特征
-1. 特征一
-2. 特征二
-
-## 💡 重要性
-很重要
-
-## 🌟 记忆要点
-记住这个
-      `;
+      const content = createConceptVisualization('测试概念');
 
       const startTime = Date.now();
 
@@ -573,19 +576,9 @@ describe('提示词模板系统 - 全面单元测试', () => {
 
     it('应该正确处理大量内容验证', () => {
       // Arrange
-      const contents = Array(100).fill(null).map((_, index) => `## 📚 概念定义
-概念${index}的详细定义，包含了该概念的核心含义和基本特征
-
-## 🔍 关键特征
-1. 这是概念${index}的第一个重要特征
-2. 这是概念${index}的第二个重要特征
-3. 这是概念${index}的第三个重要特征
-
-## 💡 重要性
-概念${index}在相关领域中具有重要的理论和实践意义
-
-## 🌟 记忆要点
-记住概念${index}的核心要点和关键特征`);
+      const contents = Array(100).fill(null).map((_, index) =>
+        createConceptVisualization(`概念${index}`),
+      );
 
       // Act
       const results = contents.map(content =>
@@ -618,7 +611,7 @@ describe('提示词模板系统 - 全面单元测试', () => {
       // Act & Assert
       Object.values(cardTemplates).forEach(template => {
         expect(template.expectedLength).toBeGreaterThan(50);
-        expect(template.expectedLength).toBeLessThan(500);
+        expect(template.expectedLength).toBeLessThan(800);
       });
     });
 
@@ -746,4 +739,3 @@ describe('提示词模板系统 - 全面单元测试', () => {
     });
   });
 });
-

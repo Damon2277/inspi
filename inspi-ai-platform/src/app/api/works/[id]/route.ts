@@ -4,23 +4,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import WorkService from '@/core/community/work-service';
+import { authenticateToken } from '@/core/auth/middleware';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: { id: string } },
 ) {
   try {
-    const { id } = await params;
-    // TODO: 实现用户认证检查
-    const userId = 'temp-user-id'; // 临时用户ID
+    const { id } = params;
+    const authResult = await authenticateToken(request);
+    const userId = authResult.success ? authResult.user?.userId : undefined;
 
     const result = await WorkService.getWork(id, userId);
 
     if (result.success) {
       return NextResponse.json(result, { status: 200 });
-    } else {
-      return NextResponse.json(result, { status: 404 });
     }
+
+    const statusCode = result.error === '无权限访问此作品' ? 403 : 404;
+    return NextResponse.json(result, { status: statusCode });
   } catch (error) {
     console.error('获取作品详情失败:', error);
     return NextResponse.json(
@@ -32,28 +34,28 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: { id: string } },
 ) {
   try {
-    const { id } = await params;
+    const { id } = params;
     const body = await request.json();
-    // TODO: 实现用户认证检查
-    const userId = 'temp-user-id'; // 临时用户ID
+    const authResult = await authenticateToken(request);
 
-    if (!userId) {
+    if (!authResult.success || !authResult.user?.userId) {
       return NextResponse.json(
-        { success: false, error: '用户未认证' },
+        { success: false, error: authResult.error || '用户未认证' },
         { status: 401 },
       );
     }
 
+    const userId = authResult.user.userId;
     const result = await WorkService.updateWork(id, userId, body);
 
     if (result.success) {
       return NextResponse.json(result, { status: 200 });
-    } else {
-      return NextResponse.json(result, { status: 400 });
     }
+
+    return NextResponse.json(result, { status: 400 });
   } catch (error) {
     console.error('更新作品失败:', error);
     return NextResponse.json(
@@ -65,29 +67,37 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: { id: string } },
 ) {
   try {
-    const { id } = await params;
-    // TODO: 实现用户认证检查
-    const userId = 'temp-user-id'; // 临时用户ID
+    const { id } = params;
+    const authResult = await authenticateToken(request);
 
-    if (!userId) {
+    if (!authResult.success || !authResult.user?.userId) {
       return NextResponse.json(
-        { success: false, error: '用户未认证' },
+        { success: false, error: authResult.error || '用户未认证' },
         { status: 401 },
       );
     }
 
-    // TODO: 实现删除功能
+    const userId = authResult.user.userId;
+    const result = await WorkService.deleteWork(id, userId);
+
+    if (result.success) {
+      return NextResponse.json(
+        { success: true, message: result.message || '删除成功' },
+        { status: 200 },
+      );
+    }
+
     return NextResponse.json(
-      { success: false, error: '删除功能暂未实现' },
-      { status: 501 },
+      { success: false, error: result.error || '删除作品失败' },
+      { status: 400 },
     );
   } catch (error) {
     console.error('删除作品失败:', error);
     return NextResponse.json(
-      { success: false, error: '删除作品失败' },
+      { success: false, error: error instanceof Error ? error.message : '删除作品失败' },
       { status: 500 },
     );
   }

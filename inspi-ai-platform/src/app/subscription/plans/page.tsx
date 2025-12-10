@@ -2,14 +2,15 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 
+import { AppLayout } from '@/components/layout';
 import { PlanConfig } from '@/core/subscription/plan-model';
 import { planService } from '@/core/subscription/plan-service';
 import { subscriptionService } from '@/core/subscription/subscription-service';
-import { useAuthContext } from '@/shared/contexts/AuthContext';
+import { useAuth } from '@/shared/hooks/useAuth';
 import { UserTier, Subscription } from '@/shared/types/subscription';
 
-export default function PricingPage() {
-  const { user } = useAuthContext();
+function PricingPageContent() {
+  const { user } = useAuth();
   const [plans, setPlans] = useState<PlanConfig[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -366,5 +367,13 @@ export default function PricingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <AppLayout>
+      <PricingPageContent />
+    </AppLayout>
   );
 }

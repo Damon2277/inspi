@@ -58,6 +58,19 @@ export interface WorkResponse {
  * 作品服务类
  */
 export class WorkService {
+  private static extractCoverImage(cards?: any[]): string | null {
+    if (!Array.isArray(cards)) return null;
+    for (const card of cards) {
+      if (card?.visual?.imageUrl) return card.visual.imageUrl;
+      if (card?.metadata?.coverImageUrl) return card.metadata.coverImageUrl;
+      const stages = card?.visual?.structured?.stages;
+      if (Array.isArray(stages)) {
+        const stageWithImage = stages.find((stage: any) => stage?.imageUrl);
+        if (stageWithImage?.imageUrl) return stageWithImage.imageUrl;
+      }
+    }
+    return null;
+  }
   /**
    * 创建作品
    */
@@ -84,6 +97,7 @@ export class WorkService {
         isOriginal: true,
         qualityScore: this.calculateInitialQualityScore(data),
         status: 'draft',
+        coverImageUrl: this.extractCoverImage(data.cards),
       });
 
       const savedWork = await work.save();
@@ -139,6 +153,9 @@ export class WorkService {
 
       // 更新作品
       Object.assign(work, data);
+      if (data.cards) {
+        work.coverImageUrl = this.extractCoverImage(data.cards);
+      }
 
       // 重新计算质量评分
       if (data.title || data.description || data.cards || data.tags) {
@@ -158,6 +175,43 @@ export class WorkService {
       return {
         success: false,
         error: '更新作品失败',
+      };
+    }
+  }
+
+  /**
+   * 删除作品
+   */
+  static async deleteWork(
+    workId: string,
+    authorId: string,
+  ): Promise<WorkResponse> {
+    try {
+      await connectDB();
+
+      const work = await (Work.findOne as any)({
+        _id: workId,
+        author: authorId,
+      });
+
+      if (!work) {
+        return {
+          success: false,
+          error: '作品不存在或无权限删除',
+        };
+      }
+
+      await (Work.findByIdAndDelete as any)(workId);
+
+      return {
+        success: true,
+        message: '作品删除成功',
+      };
+    } catch (error) {
+      console.error('Delete work error:', error);
+      return {
+        success: false,
+        error: '删除作品失败',
       };
     }
   }
@@ -421,6 +475,70 @@ export class WorkService {
       return {
         success: false,
         error: '获取推荐作品失败',
+      };
+    }
+  }
+
+  /**
+   * 获取用户自己的作品
+   */
+  static async getUserWorks(
+    authorId: string,
+    options: {
+      status?: 'draft' | 'published' | 'private' | 'archived' | 'all';
+      limit?: number;
+    } = {},
+  ): Promise<{ success: boolean; works: WorkDocument[]; error?: string }> {
+    try {
+      const isValidObjectId = mongoose.Types.ObjectId.isValid(authorId);
+      if (!isValidObjectId) {
+        // Demo 登录使用的虚拟 ID，此时直接返回空结果以避免 400
+        if (process.env.NODE_ENV !== 'production') {
+          return {
+            success: true,
+            works: [],
+          };
+        }
+
+        return {
+          success: false,
+          error: '无效的用户标识',
+          works: [],
+        };
+      }
+
+      await connectDB();
+
+      const query: Record<string, any> = {
+        author: new mongoose.Types.ObjectId(authorId),
+      };
+
+      if (options.status && options.status !== 'all') {
+        query.status = options.status;
+      }
+
+      const works = await (Work.find as any)(query)
+        .sort({ updatedAt: -1 })
+        .limit(options.limit ?? 50)
+        .populate('author', 'name avatar')
+        .exec();
+
+      works.forEach((work) => {
+        if (!work.coverImageUrl) {
+          work.coverImageUrl = this.extractCoverImage(work.cards);
+        }
+      });
+
+      return {
+        success: true,
+        works,
+      };
+    } catch (error) {
+      console.error('Get user works error:', error);
+      return {
+        success: false,
+        error: '获取作品失败',
+        works: [],
       };
     }
   }

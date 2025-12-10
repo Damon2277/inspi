@@ -179,8 +179,8 @@ export class PlanModel {
         name: '专业版',
         tier: 'pro',
         status: 'active',
-        monthlyPrice: 199,
-        yearlyPrice: 1990,
+        monthlyPrice: 0.1,
+        yearlyPrice: 1,
         currency: 'CNY',
         quotas: {
           dailyCreateQuota: 100,

@@ -193,7 +193,6 @@ const UserSchema = new Schema<UserDocument>({
   timestamps: true,
 });
 
-UserSchema.index({ email: 1 });
 UserSchema.index({ googleId: 1 });
 UserSchema.index({ contributionScore: -1 });
 UserSchema.index({ roles: 1 });
