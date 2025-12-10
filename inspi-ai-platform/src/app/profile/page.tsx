@@ -24,6 +24,9 @@ type ProfileTeachingCard = {
       stages?: Array<{ imageUrl?: string }>;
     };
   };
+  metadata?: {
+    coverImageUrl?: string;
+  };
 };
 
 interface UserWork {
@@ -76,6 +79,7 @@ const extractCoverImage = (work: any): string | null => {
   const cards: any[] = Array.isArray(cardsSource) ? cardsSource : [];
   for (const card of cards) {
     if (card?.visual?.imageUrl) return card.visual.imageUrl;
+    if (card?.metadata?.coverImageUrl) return card.metadata.coverImageUrl;
     const stages = card?.visual?.structured?.stages;
     if (Array.isArray(stages)) {
       const stageWithImage = stages.find((stage: any) => stage?.imageUrl);
@@ -178,22 +182,30 @@ function ProfileContent() {
         if (!response.ok || !payload?.success) {
           throw new Error(payload?.error || '加载作品失败');
         }
-        const mapped: UserWork[] = (payload.works || []).map((work: any) => ({
-          id: work._id || work.id,
-          title: work.title || '未命名作品',
-          type: '教学作品',
-          subject: work.subject || '通用学科',
-          grade: work.gradeLevel || '通用年级',
-          thumbnail: resolveSubjectEmoji(work.subject),
-          coverImage: work.coverImageUrl || extractCoverImage(work),
-          cards: work.cards,
-          likes: work.likesCount || 0,
-          uses: work.reuseCount || 0,
-          createdAt: work.createdAt || new Date().toISOString(),
-          status: (work.status || 'draft') as UserWork['status'],
-          description: work.description,
-          tags: work.tags || [],
-        }));
+        const mapped: UserWork[] = (payload.works || []).map((work: any) => {
+          const subjectLabel = work.subject || '通用学科';
+          const gradeLabel = work.gradeLevel || '通用年级';
+          const autoDescription = `${subjectLabel} · ${gradeLabel} · Inspi.AI 自动生成`;
+          const normalizedDescription = typeof work.description === 'string'
+            && work.description.trim() === autoDescription ? '' : (work.description || '');
+
+          return {
+            id: work._id || work.id,
+            title: work.title || '未命名作品',
+            type: '教学作品',
+            subject: work.subject || '通用学科',
+            grade: work.gradeLevel || '通用年级',
+            thumbnail: resolveSubjectEmoji(work.subject),
+            coverImage: work.coverImageUrl || extractCoverImage(work),
+            cards: work.cards,
+            likes: work.likesCount || 0,
+            uses: work.reuseCount || 0,
+            createdAt: work.createdAt || new Date().toISOString(),
+            status: (work.status || 'draft') as UserWork['status'],
+            description: normalizedDescription,
+            tags: work.tags || [],
+          };
+        });
         setServerWorks(mapped);
         setCoverImages(prev => {
           const next = { ...prev };
@@ -344,52 +356,58 @@ function ProfileContent() {
     </button>
   );
 
-  const renderWorkCard = (work: UserWork) => {
+  function renderWorkCard(work: UserWork) {
     const isReused = work.status === 'reused';
     const isDraft = work.status === 'draft';
     const isPrivate = work.status === 'private';
     const sourceThemeId = work.reuseSourceId ?? parseInt(work.id.replace('reused-', ''), 10);
+    const renderAvatar = () => {
+      const imageSrc = coverImages[work.id] || work.coverImage;
+      if (imageSrc) {
+        return (
+          <span className="work-card__avatar">
+            <img src={imageSrc} alt={work.title} />
+          </span>
+        );
+      }
+      return (
+        <span className="work-card__avatar work-card__avatar--emoji">{work.thumbnail}</span>
+      );
+    };
 
     return (
       <article
         key={work.id}
-        className="work-card"
+        className="work-card work-card--profile"
         onClick={() => handleWorkClick(work)}
         style={{ position: 'relative' }}
         onMouseEnter={() => setHoveredWorkId(work.id)}
         onMouseLeave={() => setHoveredWorkId(prev => (prev === work.id ? null : prev))}
       >
-        <div className="work-card__header" style={{ alignItems: 'flex-start', gap: '12px' }}>
-          {coverImages[work.id] ? (
-            <span className="work-card__emoji" style={{ width: '56px', height: '56px', borderRadius: '12px', overflow: 'hidden', padding: 0 }}>
-              <img src={coverImages[work.id]} alt={work.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            </span>
-          ) : work.coverImage ? (
-            <span className="work-card__emoji" style={{ width: '56px', height: '56px', borderRadius: '12px', overflow: 'hidden', padding: 0 }}>
-              <img src={work.coverImage} alt={work.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            </span>
-          ) : (
-            <span className="work-card__emoji">{work.thumbnail}</span>
-          )}
-          <div className="work-card__chips" style={{ flex: 1 }}>
-            <span className="work-chip work-chip--subject">{work.subject}</span>
-            <span className="work-chip work-chip--grade">{work.grade}</span>
-            {(isReused || isPrivate) && (
-              <div className="work-card__status-group">
-                {isReused && (
-                  <span className="work-chip work-chip--status work-chip--status-reused">复用</span>
-                )}
-                {isPrivate && (
-                  <span className="work-chip work-chip--status work-chip--status-private">私有</span>
-                )}
+        <div className="work-card__header">
+          {renderAvatar()}
+          <div className="work-card__info">
+            <div className="work-card__title-row">
+              <h3 className="work-card__title" style={{ margin: 0 }}>{work.title}</h3>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                {renderDeleteButton(work.id)}
               </div>
-            )}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            {renderDeleteButton(work.id)}
+            </div>
+            <div className="work-card__chips">
+              <span className="work-chip work-chip--subject">{work.subject}</span>
+              {(isReused || isPrivate) && (
+                <div className="work-card__status-group">
+                  {isReused && (
+                    <span className="work-chip work-chip--status work-chip--status-reused">复用</span>
+                  )}
+                  {isPrivate && (
+                    <span className="work-chip work-chip--status work-chip--status-private">私有</span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-        <h3 className="work-card__title">{work.title}</h3>
         {work.description ? (
           <p className="work-card__description text-clamp-3">{work.description}</p>
         ) : null}
@@ -402,34 +420,26 @@ function ProfileContent() {
             ))}
           </div>
         ) : null}
-        <div className="work-card__footer">
-          <div className="work-card__stats">
-            <span className="work-card__stat">
-              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              <span>{work.likes}</span>
-            </span>
-            <span className="work-card__stat">
-              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              <span>{work.uses}</span>
-            </span>
-          </div>
+        <div className="work-card__footer" onClick={event => event.stopPropagation()}>
           {isReused && !Number.isNaN(sourceThemeId) ? (
-            <div className="work-card__actions" onClick={event => event.stopPropagation()}>
+            <div className="work-card__actions">
               <SquareQuickReuseButton
                 themeId={sourceThemeId}
                 themeTitle={work.title}
                 reusedLabel="来自复用"
               />
             </div>
-          ) : null}
+          ) : <span />}
+          <a
+            href={`/works/${work.id}`}
+            className="work-card__cta"
+          >
+            查看内容
+          </a>
         </div>
       </article>
     );
-  };
+  }
 
   const worksTabCount = displayWorks.length;
 

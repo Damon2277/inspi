@@ -22,12 +22,21 @@ interface CardType {
   icon: string;
 }
 
-interface FeatureHighlight {
+interface FeatureSpotlight {
   id: string;
+  eyebrow: string;
   title: string;
   description: string;
-  icon: string;
+  bullets: string[];
   href: string;
+  mock: {
+    label: string;
+    pill: string;
+    color: string;
+    imageUrl?: string;
+    lines?: Array<{ title: string; meta: string }>;
+    chips?: string[];
+  };
 }
 
 const highlightCopy = [
@@ -99,34 +108,59 @@ const stats = [
   { label: '致敬复用', value: '5,000+', icon: '🤝' },
 ];
 
-const featureHighlights: FeatureHighlight[] = [
+const featureSpotlights: FeatureSpotlight[] = [
   {
-    id: 'magic',
-    title: 'AI教学魔法师',
-    description: '用自然语言描述教学目标，即可生成四种教学灵感卡，快速搭建课堂结构。',
-    icon: '🪄',
-    href: '/create',
+    id: 'visualization-card',
+    eyebrow: '概念可视化卡',
+    title: '复杂知识点，也能一图看懂',
+    description: '输入知识点后，Inspi.AI 会自动生成多阶段的可视化分镜和关键词，帮助学生在几十秒内构建直观印象。',
+    bullets: ['分镜式结构自动生成', '高清图像可下载分享', '同步保留图像灵感提示，方便二次创作'],
+    href: '/create?card=visualization',
+    mock: {
+      label: '概念可视化 · 光合作用案例',
+      pill: '案例截图',
+      color: '#6366f1',
+      imageUrl: '/demo/concepts/photosynthesis-map.svg',
+      chips: ['阶段一：吸收阳光', '阶段二：能量转换', '阶段三：合成葡萄糖'],
+    },
   },
   {
-    id: 'square',
-    title: '智慧广场',
-    description: '浏览优质教学作品，复用同行创作，并将灵感沉淀进自己的教学库。',
-    icon: '🌟',
-    href: '/square',
+    id: 'thinking-card',
+    eyebrow: '启发思考卡',
+    title: '好问题引导课堂对话',
+    description: '依托大模型对课堂节奏的理解，自动生成循序渐进的问题阶梯，并给出课堂提示，让学生在互动中探索答案。',
+    bullets: ['可设定学段/学科语气', '提供追问提示，降低上课压力', '支持导出课堂讲义/练习'],
+    href: '/create?card=thinking',
+    mock: {
+      label: '课堂提问 · “时间”概念',
+      pill: '启发思考',
+      color: '#ea580c',
+      lines: [
+        { title: '问题 1：如果没有钟表，我们如何感知时间？', meta: '热身' },
+        { title: '问题 2：时间能被“保存”吗？', meta: '探究' },
+        { title: '问题 3：不同文化如何描述时间？', meta: '延展' },
+      ],
+      chips: ['课堂提示', '追问建议', '生成讲义'],
+    },
   },
   {
-    id: 'graph',
-    title: '知识图谱',
-    description: '把课程结构、重难点与拓展案例串联成图谱，帮助学生构建体系化认知。',
-    icon: '🧠',
-    href: '/profile/knowledge-graph',
-  },
-  {
-    id: 'contribution',
-    title: '贡献度系统',
-    description: '记录创作、复用与分享的每一次价值，见证教学影响力的持续增长。',
-    icon: '🏆',
-    href: '/profile',
+    id: 'analogy-card',
+    eyebrow: '类比延展卡',
+    title: '把抽象概念映射到真实场景',
+    description: '自动挖掘贴近日常体验的类比故事，配合教学目标提供“为什么要学”的动机铺垫。',
+    bullets: ['一键输出动机故事', '提供“双语/多学科”表述', '支持为不同难度生成多个版本'],
+    href: '/create?card=analogy',
+    mock: {
+      label: '类比 · 电流像水流',
+      pill: '类比延展',
+      color: '#0ea5e9',
+      lines: [
+        { title: '水压越大 → 电压越高', meta: '直觉映射' },
+        { title: '水管粗细 → 导线电阻', meta: '概念迁移' },
+        { title: '阀门调节 → 开关控制', meta: '课堂互动' },
+      ],
+      chips: ['学生共鸣', '动机引入', '跨学科表达'],
+    },
   },
 ];
 
@@ -185,7 +219,7 @@ export function DesktopHomePage() {
               <h1 className="modern-hero-title desktop-hero__title">别让备课的深夜，磨灭您教学的热情</h1>
               <p className="modern-hero-subtitle desktop-hero__subtitle">
                 <span className="text-gradient">Inspi.AI</span> —— 老师的好搭子，更是您教学创意的放大器。
-                只需描述教学目标，AI 即刻为您生成灵感，帮助课堂闪光。
+                描述知识点、选择卡片类型，课堂需要的概念可视化、启发思考、互动任务即可一站式生成。
               </p>
               <ul className="desktop-hero__highlights">
                 {highlightCopy.map((highlight, index) => (
@@ -198,13 +232,24 @@ export function DesktopHomePage() {
                 ))}
               </ul>
               <div className="desktop-hero__actions">
-                <Link href="/square" className="modern-btn modern-btn-secondary modern-btn-lg">
+                <button
+                  type="button"
+                  className="modern-btn modern-btn-primary modern-btn-xl"
+                  onClick={() => handleCreateClick(HERO_CREATE_PROMPT_MESSAGE)}
+                >
+                  立即开启创作
+                </button>
+                <Link href="/square" className="modern-btn modern-btn-secondary modern-btn-xl">
                   浏览灵感案例
                 </Link>
               </div>
             </div>
+          </div>
+        </section>
 
-            <aside className="desktop-hero__panel">
+        <section className="desktop-section desktop-input-section">
+          <div className="modern-container">
+            <div className="desktop-input-panel">
               <div className="desktop-creation-panel">
                 <div className="desktop-creation-panel__header">
                   <span className="desktop-creation-panel__title">描述您要教授的知识点</span>
@@ -215,7 +260,7 @@ export function DesktopHomePage() {
                   placeholder="例如：二次函数的图像与性质，包括开口方向、对称轴、顶点坐标等..."
                   value={inputContent}
                   onChange={handleInputChange}
-                  rows={2}
+                  rows={3}
                 />
                 <p className="desktop-creation-panel__helper">
                   <span className="desktop-creation-panel__helper-icon" aria-hidden="true">💡</span>
@@ -245,33 +290,137 @@ export function DesktopHomePage() {
                   </button>
                 </div>
               </div>
-            </aside>
+            </div>
+          </div>
+        </section>
+
+        <section className="desktop-section desktop-section--muted desktop-stats-section">
+          <div className="modern-container">
+            <div className="desktop-section__header">
+              <h2 className="desktop-section__title">被老师们信赖的 AI 课堂助手</h2>
+              <p className="desktop-section__subtitle">
+                Inspi.AI 已帮助上千位教师释放创作时间，坚持打磨更有趣的课堂体验。
+              </p>
+            </div>
+
+            <div className="modern-grid modern-grid-4 desktop-stats-grid">
+              {stats.map(stat => (
+                <div key={stat.label} className="desktop-stat-card">
+                  <span className="desktop-stat-card__icon">{stat.icon}</span>
+                  <span className="desktop-stat-card__value">{stat.value}</span>
+                  <span className="desktop-stat-card__label">{stat.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
         <section className="desktop-section">
           <div className="modern-container">
             <div className="desktop-section__header">
-              <h2 className="desktop-section__title">用 AI 与数据，连接教学创意的完整链路</h2>
+              <h2 className="desktop-section__title">将创意和课堂流程一次打包</h2>
               <p className="desktop-section__subtitle">
-                从灵感产生到课堂呈现，再到复盘沉淀，每一个环节都有工具帮您完成闭环。
+                不止是生成文字，Inspi.AI 会把视觉、问题、故事与课堂提示同步呈现，保持创作与展示一致。
               </p>
             </div>
 
-            <div className="desktop-feature-grid">
-              {featureHighlights.map(feature => (
-                <article key={feature.id} className="desktop-feature-card">
-                  <span className="desktop-feature-card__icon" aria-hidden="true">
-                    {feature.icon}
-                  </span>
-                  <h3 className="desktop-feature-card__title">{feature.title}</h3>
-                  <p className="desktop-feature-card__desc">{feature.description}</p>
-                  <Link href={feature.href} className="desktop-feature-card__link">
-                    了解功能详情
-                    <span aria-hidden="true">→</span>
-                  </Link>
-                </article>
-              ))}
+            <div className="desktop-feature-showcase">
+              {featureSpotlights.map((feature, index) => {
+                const isReversed = index % 2 === 1;
+                return (
+                  <article
+                    key={feature.id}
+                    className={`desktop-feature-showcase__row ${isReversed ? 'desktop-feature-showcase__row--reverse' : ''}`}
+                  >
+                    <div className="desktop-feature-showcase__content">
+                      <span className="desktop-feature-showcase__eyebrow">{feature.eyebrow}</span>
+                      <h3 className="desktop-feature-showcase__title">{feature.title}</h3>
+                      <p className="desktop-feature-showcase__desc">{feature.description}</p>
+                      <ul className="desktop-feature-showcase__list">
+                        {feature.bullets.map(bullet => (
+                          <li key={`${feature.id}-${bullet}`}>{bullet}</li>
+                        ))}
+                      </ul>
+                      <Link href={feature.href} className="desktop-feature-showcase__link">
+                        了解功能详情 →
+                      </Link>
+                    </div>
+                    <div className="desktop-feature-showcase__visual">
+                      {feature.mock.imageUrl ? (
+                        <div
+                          className="desktop-feature-mock desktop-feature-mock--image"
+                          style={{ borderColor: feature.mock.color, boxShadow: `0 24px 60px ${feature.mock.color}33` }}
+                        >
+                          <img src={feature.mock.imageUrl} alt={feature.mock.label} loading="lazy" />
+                          <div className="desktop-feature-mock__overlay">
+                            <div className="desktop-feature-mock__header">
+                              <span>{feature.mock.label}</span>
+                              <span className="desktop-feature-mock__pill" style={{ backgroundColor: feature.mock.color }}>
+                                {feature.mock.pill}
+                              </span>
+                            </div>
+                            {feature.mock.chips && feature.mock.chips.length > 0 ? (
+                              <div className="desktop-feature-mock__chips">
+                                {feature.mock.chips.map(chip => (
+                                  <span
+                                    key={`${feature.id}-${chip}`}
+                                    style={{
+                                      color: '#f8fafc',
+                                      backgroundColor: 'rgba(15,23,42,0.55)',
+                                    }}
+                                  >
+                                    {chip}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          className="desktop-feature-mock"
+                          style={{
+                            borderColor: feature.mock.color,
+                            boxShadow: `0 24px 60px ${feature.mock.color}33`,
+                          }}
+                        >
+                          <div className="desktop-feature-mock__header">
+                            <span>{feature.mock.label}</span>
+                            <span className="desktop-feature-mock__pill" style={{ backgroundColor: feature.mock.color }}>
+                              {feature.mock.pill}
+                            </span>
+                          </div>
+                          {feature.mock.lines && feature.mock.lines.length > 0 ? (
+                            <div className="desktop-feature-mock__body">
+                              {feature.mock.lines.map(line => (
+                                <div key={`${feature.id}-${line.title}`} className="desktop-feature-mock__line">
+                                  <span>{line.title}</span>
+                                  <span>{line.meta}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : null}
+                          {feature.mock.chips && feature.mock.chips.length > 0 ? (
+                            <div className="desktop-feature-mock__chips">
+                              {feature.mock.chips.map(chip => (
+                                <span
+                                  key={`${feature.id}-${chip}`}
+                                  style={{
+                                    color: feature.mock.color,
+                                    backgroundColor: `${feature.mock.color}1A`,
+                                  }}
+                                >
+                                  {chip}
+                                </span>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -320,25 +469,6 @@ export function DesktopHomePage() {
                 </div>
               </>
             )}
-          </div>
-        </section>
-
-        <section className="desktop-section desktop-section--muted">
-          <div className="modern-container">
-            <div className="desktop-section__header">
-              <h2 className="desktop-section__title">智慧贡献榜</h2>
-              <p className="desktop-section__subtitle">每一份贡献，都让教育变得更美好。</p>
-            </div>
-
-            <div className="modern-grid modern-grid-4 desktop-stats-grid">
-              {stats.map(stat => (
-                <div key={stat.label} className="desktop-stat-card">
-                  <span className="desktop-stat-card__icon">{stat.icon}</span>
-                  <span className="desktop-stat-card__value">{stat.value}</span>
-                  <span className="desktop-stat-card__label">{stat.label}</span>
-                </div>
-              ))}
-            </div>
           </div>
         </section>
 

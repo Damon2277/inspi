@@ -66,6 +66,10 @@ reports/*.json
 .DS_Store
 Thumbs.db
 
+# 分享导出的图片
+public/share-images/*
+!public/share-images/.gitkeep
+
 # 本地安装 MongoDB/Mongosh 时产生的文件
 mongosh-*.zip
 mongodb-macos-*.tgz

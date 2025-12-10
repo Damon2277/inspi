@@ -51,7 +51,7 @@ describe('DesktopCreatePage interactions', () => {
     const templateButton = screen.getByRole('button', { name: /数学概念模板/ });
     fireEvent.click(templateButton);
 
-    const contentArea = screen.getByPlaceholderText('请详细描述你要教授的知识点，例如：二次函数的图像与性质...') as HTMLTextAreaElement;
+    const contentArea = screen.getByPlaceholderText('请表述你要教授的知识点，比如“光合作用”、“三角形”') as HTMLTextAreaElement;
     expect(contentArea.value).toContain('教学目标：帮助学生掌握二次函数的图像特征');
 
     const [subjectSelect, gradeSelect] = screen.getAllByRole('combobox') as HTMLSelectElement[];

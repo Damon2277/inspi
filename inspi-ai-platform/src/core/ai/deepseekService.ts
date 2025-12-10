@@ -16,15 +16,20 @@ export class DeepSeekService {
 
   private defaultModel: string;
 
+  private lastHealthyAt = 0;
+
+  private readonly healthCheckCacheMs = 60_000;
+
   constructor() {
     this.baseUrl = `${env.AI.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com'}/v1`;
     this.apiKey = env.AI.DEEPSEEK_API_KEY;
     this.defaultModel = env.AI.DEEPSEEK_MODEL ?? 'deepseek-chat';
 
     if (!this.apiKey) {
-      logger.warn('DEEPSEEK_API_KEY not configured, AI service will be unavailable');
-      if (env.NODE_ENV !== 'development') {
-        throw new Error('DEEPSEEK_API_KEY is required when AI provider is DeepSeek');
+      const preferred = (env.AI.PROVIDER || '').toLowerCase();
+      logger.warn('DEEPSEEK_API_KEY not configured, DeepSeek-specific features will be disabled');
+      if (preferred === 'deepseek') {
+        logger.warn('AI_PROVIDER is set to DeepSeek but no API key is configured; the system will fall back to other providers or mock mode.');
       }
     }
   }
@@ -131,6 +136,10 @@ export class DeepSeekService {
           error: error instanceof Error ? error.message : 'Unknown error',
         });
 
+        if (error instanceof Error && error.name === 'AbortError') {
+          throw error;
+        }
+
         if (attempt === retries) {
           throw error;
         }
@@ -206,9 +215,18 @@ export class DeepSeekService {
       return false;
     }
 
+    const now = Date.now();
+    if (now - this.lastHealthyAt < this.healthCheckCacheMs) {
+      return true;
+    }
+
     try {
       const result = await this.generateWithRetry('Health check', { useCache: false, maxTokens: 16 }, 1);
-      return result.content.length > 0;
+      if (result.content.length > 0) {
+        this.lastHealthyAt = Date.now();
+        return true;
+      }
+      return false;
     } catch (error) {
       logger.warn('DeepSeek health check failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -229,4 +247,3 @@ export class DeepSeekService {
 }
 
 export const deepSeekService = new DeepSeekService();
-

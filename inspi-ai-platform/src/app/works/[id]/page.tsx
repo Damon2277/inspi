@@ -4,25 +4,13 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { GeneratedCard } from '@/components/cards/GeneratedCard';
 import { AppLayout } from '@/components/layout';
-
-type CardType = 'visualization' | 'analogy' | 'thinking' | 'interaction';
+import type { TeachingCard } from '@/shared/types/teaching';
 
 type WorkStatus = 'draft' | 'published' | 'archived' | 'private';
 
 type WorkVisibility = 'public' | 'unlisted' | 'private';
-
-interface TeachingCard {
-  id: string;
-  type: CardType;
-  title: string;
-  content: string;
-  explanation?: string;
-  metadata?: Record<string, unknown>;
-  visual?: Record<string, unknown>;
-  sop?: Record<string, unknown>;
-  presentation?: Record<string, unknown>;
-}
 
 interface WorkAuthorSummary {
   _id?: string;
@@ -52,36 +40,12 @@ interface WorkDetailData {
   coverImageUrl?: string | null;
 }
 
-const SUBJECT_EMOJI_MAP: Record<string, string> = {
-  数学: '📐',
-  语文: '📖',
-  英语: '🗣️',
-  物理: '⚙️',
-  化学: '⚗️',
-  生物: '🧬',
-  历史: '🏺',
-  地理: '🗺️',
-  政治: '🏛️',
-  音乐: '🎵',
-  美术: '🎨',
-  体育: '🏀',
-};
-
-const CARD_TYPE_META: Record<CardType, { label: string; color: string; icon: string }> = {
-  visualization: { label: '可视化卡', color: '#7c3aed', icon: '👁️' },
-  analogy: { label: '类比延展卡', color: '#059669', icon: '🌟' },
-  thinking: { label: '启发思考卡', color: '#ea580c', icon: '💭' },
-  interaction: { label: '互动氛围卡', color: '#2563eb', icon: '🎭' },
-};
-
 const STATUS_LABELS: Record<WorkStatus, string> = {
   draft: '草稿',
   published: '已发布',
   archived: '已归档',
   private: '私有',
 };
-
-const resolveSubjectEmoji = (subject?: string) => SUBJECT_EMOJI_MAP[subject || ''] || '📚';
 
 const formatDate = (value?: string) => {
   if (!value) {
@@ -211,68 +175,6 @@ export default function WorkDetailPage() {
   }, [workId, reloadToken]);
 
   const cardList = work?.cards ?? [];
-  const emoji = resolveSubjectEmoji(work?.subject);
-
-  const resolveCardImage = (card: TeachingCard): string | null => {
-    const directImage = (card.visual as any)?.imageUrl
-      || (card.metadata as any)?.coverImageUrl
-      || (card.metadata as any)?.imageUrl;
-    if (typeof directImage === 'string' && directImage.trim()) {
-      return directImage;
-    }
-
-    const structuredStages = (card.visual as any)?.structured?.stages;
-    if (Array.isArray(structuredStages)) {
-      const stageWithImage = structuredStages.find((stage: any) => typeof stage?.imageUrl === 'string' && stage.imageUrl.trim());
-      if (stageWithImage?.imageUrl) {
-        return stageWithImage.imageUrl;
-      }
-    }
-
-    if (typeof work?.coverImageUrl === 'string' && work.coverImageUrl.trim()) {
-      return work.coverImageUrl;
-    }
-
-    return null;
-  };
-
-  const renderCardVisual = (card: TeachingCard) => {
-    const imageUrl = resolveCardImage(card);
-    if (imageUrl) {
-      return (
-        <div
-          style={{
-            width: '100%',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            border: '1px solid rgba(15,23,42,0.08)',
-            background: '#fafafa',
-          }}
-        >
-          <img
-            src={imageUrl}
-            alt={`${card.title} 卡片视觉`}
-            style={{ display: 'block', width: '100%', height: 'auto' }}
-          />
-        </div>
-      );
-    }
-
-    return (
-      <div
-        style={{
-          borderRadius: '16px',
-          border: '1px dashed rgba(148,163,184,0.6)',
-          padding: '24px',
-          background: 'rgba(248,250,252,0.8)',
-          color: '#475569',
-          fontSize: '14px',
-        }}
-      >
-        {card.content}
-      </div>
-    );
-  };
 
   return (
     <AppLayout>
@@ -329,29 +231,26 @@ export default function WorkDetailPage() {
             </div>
           ) : (
             <section>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                <div>
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                    <span className="work-chip work-chip--subject">{work?.subject}</span>
-                    <span className="work-chip work-chip--grade">{work?.gradeLevel}</span>
-                    {work?.knowledgePoint ? (
-                      <span className="work-chip" style={{ background: '#e0f2fe', color: '#0369a1' }}>
-                        知识点 {work.knowledgePoint}
-                      </span>
-                    ) : null}
-                    {work?.tags?.map(tag => (
-                      <span key={`${work?._id}-tag-${tag}`} className="work-chip work-chip--tag">
-                        #{tag}
-                      </span>
-                    ))}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                <div style={{ flex: 1, minWidth: '0' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: '12px' }}>
+                    <h1 style={{ fontSize: '30px', fontWeight: 700, color: '#0f172a', margin: 0 }}>{work?.title}</h1>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      <span className="work-chip work-chip--subject">{work?.subject}</span>
+                      <span className="work-chip work-chip--grade">{work?.gradeLevel}</span>
+                      {work?.tags?.map(tag => (
+                        <span key={`${work?._id}-tag-${tag}`} className="work-chip work-chip--tag">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <h1 style={{ fontSize: '30px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>{work?.title}</h1>
                 </div>
                 {work?._id ? (
                   <Link
                     href={`/create?edit=${work._id}`}
                     className="modern-btn modern-btn-secondary"
-                    style={{ whiteSpace: 'nowrap', alignSelf: 'flex-start' }}
+                    style={{ whiteSpace: 'nowrap', alignSelf: 'flex-end' }}
                   >
                     继续编辑
                   </Link>
@@ -374,54 +273,9 @@ export default function WorkDetailPage() {
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                  {cardList.map(card => {
-                    const meta = CARD_TYPE_META[card.type] ?? CARD_TYPE_META.visualization;
-                    return (
-                      <article
-                        key={card.id}
-                        style={{
-                          borderRadius: '32px',
-                          background: '#fff',
-                          padding: '32px',
-                          boxShadow: '0 22px 60px rgba(15,23,42,0.08)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '20px',
-                        }}
-                      >
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              padding: '6px 14px',
-                              borderRadius: '999px',
-                              background: `${meta.color}15`,
-                              color: meta.color,
-                              fontSize: '13px',
-                              fontWeight: 500,
-                            }}
-                          >
-                            {meta.icon} {meta.label}
-                          </span>
-                          {card.metadata?.knowledgePoint ? (
-                            <span style={{ color: '#94a3b8', fontSize: '13px' }}>{card.metadata.knowledgePoint}</span>
-                          ) : null}
-                        </div>
-
-                        {renderCardVisual(card)}
-
-                        <div>
-                          <h3 style={{ fontSize: '22px', fontWeight: 600, marginBottom: '12px', color: '#0f172a' }}>{card.title}</h3>
-                          <p style={{ color: '#475569', whiteSpace: 'pre-line', lineHeight: 1.8 }}>{card.content}</p>
-                          {card.explanation ? (
-                            <p style={{ marginTop: '12px', color: '#4f46e5', whiteSpace: 'pre-line' }}>{card.explanation}</p>
-                          ) : null}
-                        </div>
-                      </article>
-                    );
-                  })}
+                  {cardList.map(card => (
+                    <GeneratedCard key={card.id} card={card} enableEditing={false} />
+                  ))}
                 </div>
               )}
             </section>

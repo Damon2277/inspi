@@ -125,10 +125,8 @@ export function GeneratedCard({
   const exportContainerRef = useRef<HTMLDivElement>(null);
   const [isExportPreview, setIsExportPreview] = useState(false);
   const [isContentExpanded, setIsContentExpanded] = useState(false);
-  const [showMoreActions, setShowMoreActions] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const moreActionsRef = useRef<HTMLDivElement>(null);
   const [generatedVisual, setGeneratedVisual] = useState<VisualizationSpec | null>(null);
   const [isGeneratingVisual, setIsGeneratingVisual] = useState(false);
 
@@ -165,19 +163,6 @@ export function GeneratedCard({
     }
   }, [viewMode]);
 
-  useEffect(() => {
-    if (!showMoreActions) return;
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!moreActionsRef.current) return;
-      if (!moreActionsRef.current.contains(event.target as Node)) {
-        setShowMoreActions(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showMoreActions]);
-
   const handleContentChange = (newContent: string) => {
     setCardContent(newContent);
   };
@@ -188,7 +173,6 @@ export function GeneratedCard({
   }, []);
 
   const handleExport = async (presetKey: keyof typeof exportPresets) => {
-    setShowMoreActions(false);
     setIsExporting(true);
     let prepared = false;
 
@@ -466,6 +450,7 @@ export function GeneratedCard({
                           src={stage.imageUrl}
                           alt={`${stage.title} 插图`}
                           forceLoad={forExport}
+                          preferProxy={forExport}
                           style={{
                             width: '100%',
                             height: '100%',
@@ -654,6 +639,7 @@ export function GeneratedCard({
               src={visual.imageUrl!}
               alt={`${visual.center.title} 可视化插画`}
               forceLoad={forExport}
+              preferProxy={forExport}
               style={{
                 width: '100%',
                 height: '100%',
@@ -1448,7 +1434,7 @@ export function GeneratedCard({
 
     return (
       <div
-        ref={forExport ? exportContainerRef : cardRef}
+        ref={forExport ? undefined : cardRef}
         className="card-export-area"
         style={surfaceStyle}
         onClick={() => allowEditing && !forExport && !isEditing && viewMode === 'content' && setIsEditing(true)}
@@ -1476,7 +1462,6 @@ export function GeneratedCard({
         )}
         {!forExport && (
           <div
-            ref={moreActionsRef}
             style={{
               display: 'flex',
               justifyContent: 'flex-end',
@@ -1544,38 +1529,6 @@ export function GeneratedCard({
                 <path d="M3 12h10v2H3v-2z" fill="currentColor"/>
               </svg>
             </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                setShowMoreActions(!showMoreActions);
-                e.stopPropagation();
-              }}
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                backgroundColor: '#ffffff',
-                color: '#64748b',
-                fontSize: '16px',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#f8fafc';
-                e.currentTarget.style.borderColor = '#cbd5e1';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#ffffff';
-                e.currentTarget.style.borderColor = '#e2e8f0';
-              }}
-              title="更多操作"
-            >
-              ···
-            </button>
           </div>
         )}
         {hasVisualization ? (
@@ -1600,9 +1553,9 @@ export function GeneratedCard({
     );
   };
 
-  const renderContentView = () => (
+  const renderContentView = (forExport: boolean = false) => (
     <>
-      {allowEditing && isEditing ? (
+      {allowEditing && isEditing && !forExport ? (
         <div
           className="card-export-area"
           style={{
@@ -1619,11 +1572,21 @@ export function GeneratedCard({
           />
         </div>
       ) : (
-        renderCardSurface(false)
+        renderCardSurface(forExport)
       )}
 
       {cardContent && (
-        <div className="generated-card__summary">
+        <div
+          className="generated-card__summary"
+          style={{
+            textAlign: 'center',
+            ...(forExport ? {
+              background: '#ffffff',
+              border: '1px dashed #e2e8f0',
+              boxShadow: '0 8px 24px rgba(15,23,42,0.08)',
+            } : {}),
+          }}
+        >
           {renderMarkdownContent(cardContent, {
             fontSize: '15px',
             color: '#0f172a',
@@ -1632,7 +1595,7 @@ export function GeneratedCard({
         </div>
       )}
 
-      {(!allowEditing || !isEditing) && expandable && (
+      {(!allowEditing || !isEditing) && expandable && !forExport && (
         <div style={{ textAlign: 'right', marginBottom: '16px' }}>
           <button
             type="button"
@@ -1648,6 +1611,13 @@ export function GeneratedCard({
             {isContentExpanded ? '收起详情' : '展开详情'}
           </button>
         </div>
+      )}
+
+      {forExport && (
+        <>
+          {renderSOPView({ hidePlaceholder: true })}
+          {renderPresentationView({ hidePlaceholder: true })}
+        </>
       )}
     </>
   );
@@ -1679,10 +1649,21 @@ export function GeneratedCard({
     opacity: isExportPreview ? 1 : 0,
     zIndex: -1,
   };
+  const exportContentStyle: React.CSSProperties = {
+    padding: '24px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+    backgroundColor: '#ffffff',
+    boxSizing: 'border-box',
+  };
 
-  const renderSOPView = () => {
+  const renderSOPView = (options?: { hidePlaceholder?: boolean }) => {
     const sopSections = card.sop ?? [];
     if (!sopSections.length) {
+      if (options?.hidePlaceholder) {
+        return null;
+      }
       return (
         <div style={{
           backgroundColor: '#ffffff',
@@ -1781,9 +1762,12 @@ export function GeneratedCard({
     );
   };
 
-  const renderPresentationView = () => {
+  const renderPresentationView = (options?: { hidePlaceholder?: boolean }) => {
     const presentation = card.presentation;
     if (!presentation) {
+      if (options?.hidePlaceholder) {
+        return null;
+      }
       return (
         <div style={{
           backgroundColor: '#ffffff',
@@ -1962,7 +1946,9 @@ export function GeneratedCard({
       />
       </div>
       <div aria-hidden style={offscreenWrapperStyle}>
-        {renderCardSurface(true)}
+        <div ref={exportContainerRef} style={exportContentStyle}>
+          {renderContentView(true)}
+        </div>
       </div>
     </React.Fragment>
   );

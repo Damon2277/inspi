@@ -9,31 +9,43 @@ const hasDeepseek = Boolean(env.AI.DEEPSEEK_API_KEY);
 const hasGemini = Boolean(env.AI.GEMINI_API_KEY);
 const preferred = (env.AI.PROVIDER || '').toLowerCase() as Provider | '';
 
-const pickProvider = (): Provider => {
-  const preferenceOrder: Provider[] = preferred === 'deepseek'
-    ? ['deepseek', 'gemini']
-    : preferred === 'gemini'
-      ? ['gemini', 'deepseek']
-      : ['gemini', 'deepseek'];
-
-  for (const candidate of preferenceOrder) {
-    if (candidate === 'deepseek' && hasDeepseek) {
-      return 'deepseek';
-    }
-    if (candidate === 'gemini' && hasGemini) {
-      return 'gemini';
-    }
+const buildPreferenceOrder = (): Provider[] => {
+  if (preferred === 'deepseek') {
+    return ['deepseek', 'gemini'];
   }
-
-  if (!hasDeepseek && !hasGemini) {
-    logger.warn('AI provider keys are missing: please configure GEMINI_API_KEY or DEEPSEEK_API_KEY. Falling back to Gemini.');
-    return 'gemini';
+  if (preferred === 'gemini') {
+    return ['gemini', 'deepseek'];
   }
-
-  const fallback = hasDeepseek ? 'deepseek' : 'gemini';
-  logger.warn(`Preferred AI provider "${preferred || 'gemini'}"缺少可用 key，已自动切换到 ${fallback}.`);
-  return fallback;
+  return ['gemini', 'deepseek'];
 };
 
-export const aiProvider: Provider = pickProvider();
-export const aiService = aiProvider === 'deepseek' ? deepSeekService : geminiService;
+const determineProviders = (): Provider[] => {
+  const preferenceOrder = buildPreferenceOrder();
+  const available = preferenceOrder.filter((candidate) => (
+    candidate === 'deepseek' ? hasDeepseek : hasGemini
+  ));
+
+  if (available.length > 0) {
+    if (available.length < preferenceOrder.length) {
+      const fallback = available[0];
+      logger.warn(`Preferred AI provider "${preferred || preferenceOrder[0]}"缺少可用 key，已自动切换到 ${fallback}.`);
+    }
+    return available;
+  }
+
+  logger.warn('AI provider keys are missing: please配置 GEMINI_API_KEY 或 DEEPSEEK_API_KEY，将使用 Gemini 进入 mock/降级模式。');
+  return ['gemini'];
+};
+
+const providerServices: Record<Provider, typeof deepSeekService | typeof geminiService> = {
+  deepseek: deepSeekService,
+  gemini: geminiService,
+};
+
+const providerOrder = determineProviders();
+
+export const aiProviderOrder: Provider[] = providerOrder;
+export const aiProvider: Provider = providerOrder[0];
+export const aiService = providerServices[aiProvider];
+
+export const getAIService = (provider: Provider) => providerServices[provider];

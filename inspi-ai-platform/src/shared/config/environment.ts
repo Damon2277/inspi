@@ -40,7 +40,7 @@ export const env = {
     PROVIDER: process.env.AI_PROVIDER || 'gemini',
     DEEPSEEK_MODEL: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
     DEEPSEEK_BASE_URL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com',
-    SERVICE_TIMEOUT: parseInt(process.env.AI_SERVICE_TIMEOUT || '30000', 10),
+    SERVICE_TIMEOUT: parseInt(process.env.AI_SERVICE_TIMEOUT || '60000', 10),
     MAX_RETRIES: 3,
     RETRY_DELAY: 1000,
     DEFAULT_MODEL: 'gemini-1.5-flash',
@@ -115,10 +115,18 @@ export function validateEnvironment() {
 
   // 在生产环境中需要的变量
   const productionRequiredVars = [
-    'AI.GEMINI_API_KEY',
     'EMAIL.SMTP_HOST',
     'EMAIL.SMTP_USER',
   ];
+
+  const configuredProvider = (env.AI.PROVIDER || 'gemini').toLowerCase();
+  if (configuredProvider === 'deepseek') {
+    productionRequiredVars.push('AI.DEEPSEEK_API_KEY');
+  } else if (configuredProvider === 'gemini') {
+    productionRequiredVars.push('AI.GEMINI_API_KEY');
+  } else if (!env.AI.GEMINI_API_KEY && !env.AI.DEEPSEEK_API_KEY) {
+    productionRequiredVars.push('AI.GEMINI_API_KEY or AI.DEEPSEEK_API_KEY');
+  }
 
   const missing = requiredVars.filter(varName => {
     const keys = varName.split('.');

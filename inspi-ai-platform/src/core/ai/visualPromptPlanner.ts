@@ -53,6 +53,9 @@ interface PlannerJSON {
 export async function planVisualizationPrompt(
   input: VisualPromptPlannerInput,
 ): Promise<VisualPromptPlan | null> {
+  if (!deepSeekService.getStatus().configured) {
+    return null;
+  }
   const plannerPrompt = buildPlannerPrompt(input);
 
   try {
@@ -70,7 +73,10 @@ export async function planVisualizationPrompt(
       throw new Error('Planner response missing JSON');
     }
 
-    const data = JSON.parse(payload) as PlannerJSON;
+    const data = parsePlannerJSON(payload);
+    if (!data) {
+      throw new Error('Planner JSON parse failed');
+    }
     const rawPositiveSegments = dedupeSegments([
       input.basePrompt,
       ...normalizeArray(data.prompts?.positive),
@@ -199,6 +205,45 @@ function normalizeArray(values?: string[]): string[] {
     .map((item) => (typeof item === 'string' ? item.trim() : ''))
     .filter((item) => item.length > 0)
     .slice(0, 8);
+}
+
+function parsePlannerJSON(payload: string): PlannerJSON | null {
+  try {
+    return JSON.parse(payload) as PlannerJSON;
+  } catch (error) {
+    const sanitized = sanitizePlannerPayload(payload);
+    if (sanitized !== payload) {
+      try {
+        return JSON.parse(sanitized) as PlannerJSON;
+      } catch (innerError) {
+        logger.debug('Planner JSON parse failed after repair', {
+          error: innerError instanceof Error ? innerError.message : innerError,
+        });
+      }
+    } else {
+      logger.debug('Planner JSON parse failed', {
+        error: error instanceof Error ? error.message : error,
+      });
+    }
+    return null;
+  }
+}
+
+function sanitizePlannerPayload(payload: string): string {
+  let sanitized = payload
+    .replace(/\s*\/\/.*$/gm, '')
+    .replace(/,\s*(\}|\])/g, '$1')
+    .replace(/,\s*$/gm, '')
+    .trim();
+
+  if (sanitized.startsWith('```')) {
+    sanitized = sanitized
+      .replace(/^```(?:json)?/i, '')
+      .replace(/```$/, '')
+      .trim();
+  }
+
+  return sanitized;
 }
 
 function dedupeSegments(segments: Array<string | undefined | null>): string[] {

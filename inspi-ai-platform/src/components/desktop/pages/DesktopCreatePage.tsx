@@ -1,12 +1,18 @@
 'use client';
 import { useRouter, useSearchParams } from 'next/navigation';
+import QRCode from 'qrcode';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 /**
  * 现代化桌面端创作页面组件
  */
+
 import { useLoginPrompt } from '@/components/auth/LoginPrompt';
 import { GeneratedCard } from '@/components/cards/GeneratedCard';
+import { exportElementToImage, DEFAULT_EXPORT_DIMENSIONS } from '@/lib/export/html-to-image';
+import { buildProxiedImageUrl, needsProxying } from '@/lib/export/image-proxy';
+import { shareToSocial, generateShareLink, trackShareEvent, type SharePlatform } from '@/lib/share/share-service';
+import { env } from '@/shared/config/environment';
 import { useAuth } from '@/shared/hooks/useAuth';
 import type { CardType, TeachingCard, GenerateCardsResponse } from '@/shared/types/teaching';
 
@@ -17,12 +23,22 @@ const CARD_TYPE_TO_RAW: Record<CardType, 'concept' | 'example' | 'practice' | 'e
   interaction: 'extension',
 };
 
+interface RecentProjectSummary {
+  id: string;
+  title: string;
+  updatedAt?: string;
+  cardsCount: number;
+  knowledgePoint?: string;
+  subject?: string;
+  gradeLevel?: string;
+}
+
 export function DesktopCreatePage() {
   const [formData, setFormData] = useState({
     content: '',
     subject: '',
     gradeLevel: '',
-    cardTypes: ['visualization', 'analogy', 'thinking', 'interaction'] as CardType[],
+    cardTypes: ['visualization'] as CardType[],
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCards, setGeneratedCards] = useState<TeachingCard[]>([]);
@@ -48,8 +64,14 @@ export function DesktopCreatePage() {
   const [retryingCardId, setRetryingCardId] = useState<string | null>(null);
   const [quotaHint, setQuotaHint] = useState<string | null>(null);
   const [quotaErrorCount, setQuotaErrorCount] = useState(0);
+  const [isShareMenuOpen, setShareMenuOpen] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareQrCode, setShareQrCode] = useState('');
+  const [recentProjects, setRecentProjects] = useState<RecentProjectSummary[]>([]);
   const actionMessageTimeoutRef = useRef<number | null>(null);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
+  const shareMenuRef = useRef<HTMLDivElement>(null);
+  const sharePosterRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated } = useAuth();
   const { showPrompt, LoginPromptComponent } = useLoginPrompt();
   const router = useRouter();
@@ -96,11 +118,11 @@ export function DesktopCreatePage() {
 
   const gradeLevels = useMemo(() => ['小学', '初中', '高中', '大学'], []);
 
-  const cardTypes: Array<{
-    id: CardType;
-    name: string;
-    description: string;
-    icon: string;
+const cardTypes: Array<{
+  id: CardType;
+  name: string;
+  description: string;
+  icon: string;
   }> = useMemo(() => [
     {
       id: 'visualization',
@@ -127,12 +149,6 @@ export function DesktopCreatePage() {
       icon: '🎭',
     },
   ], []);
-
-  const recentProjects = useMemo(() => [
-    { name: '二次函数教学', time: '2小时前', cards: 4 },
-    { name: '古诗词赏析', time: '1天前', cards: 6 },
-    { name: '化学反应原理', time: '3天前', cards: 5 },
-  ].slice(0, 3), []);
 
   const templates = useMemo(() => [
     {
@@ -182,13 +198,130 @@ export function DesktopCreatePage() {
     [],
   );
 
+const shareMenuOptions = useMemo(() => ([
+  { platform: 'twitter' as SharePlatform, label: 'X', helper: '分享到 X' },
+  { platform: 'weibo' as SharePlatform, label: '微博', helper: '发布到微博' },
+  { platform: 'wechat' as SharePlatform, label: '朋友圈', helper: '生成二维码' },
+]), []);
+
+const shareBaseUrl = useMemo(() => {
+  const configured = process.env.NEXT_PUBLIC_SHARE_BASE_URL || env.APP_URL || '';
+  if (configured) {
+    return configured.replace(/\/$/, '');
+  }
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  return 'http://localhost:3000';
+}, []);
+
+const shareJoinUrl = `${shareBaseUrl}/signup`;
+const sharePosterOffscreenStyle: React.CSSProperties = {
+  position: 'fixed',
+  top: '-200vh',
+  left: '-200vw',
+  pointerEvents: 'none',
+  opacity: 0,
+  zIndex: -1,
+};
+const sharePosterContainerStyle: React.CSSProperties = {
+  width: `${DEFAULT_EXPORT_DIMENSIONS.width}px`,
+  minHeight: '1200px',
+  padding: '48px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '24px',
+  background: 'linear-gradient(180deg, #fefaf5 0%, #ffffff 60%, #f5f3ff 100%)',
+  color: '#0f172a',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif',
+  borderRadius: '32px',
+  boxShadow: '0 40px 120px rgba(15, 23, 42, 0.18)',
+};
+
+  const copyTextToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (error) {
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.focus();
+      area.select();
+      try {
+        document.execCommand('copy');
+        document.body.removeChild(area);
+        return true;
+      } catch (err) {
+        document.body.removeChild(area);
+        console.error('复制到剪贴板失败', err);
+        return false;
+      }
+    }
+  };
+
+  const uploadShareImage = async (imageData: string, cardId: string) => {
+    const response = await fetch('/api/share/upload-image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ imageData, cardId }),
+    });
+
+    if (!response.ok) {
+      throw new Error('分享图片上传失败');
+    }
+
+    return response.json() as Promise<{ success: boolean; imageUrl: string; filename: string }>;
+  };
+
+  const openSharePopup = (platform: SharePlatform): Window | null => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    if (platform === 'wechat' || platform === 'qr-code' || platform === 'copy-link') {
+      return null;
+    }
+
+    const width = 600;
+    const height = 500;
+    const dualScreenLeft = window.screenLeft ?? window.screenX ?? 0;
+    const dualScreenTop = window.screenTop ?? window.screenY ?? 0;
+    const left = dualScreenLeft + Math.max((window.outerWidth - width) / 2, 0);
+    const top = dualScreenTop + Math.max((window.outerHeight - height) / 2, 0);
+
+    return window.open('about:blank', '_blank', `width=${width},height=${height},left=${left},top=${top},noopener,noreferrer`);
+  };
+
+  const exportSharePosterImage = async () => {
+    if (!sharePosterRef.current) {
+      throw new Error('未准备分享海报');
+    }
+
+    return exportElementToImage(sharePosterRef.current, {
+      format: 'png',
+      scale: 2,
+      backgroundColor: '#fdfaf5',
+      width: sharePosterRef.current.scrollWidth || DEFAULT_EXPORT_DIMENSIONS.width,
+      height: sharePosterRef.current.scrollHeight || DEFAULT_EXPORT_DIMENSIONS.height * 1.4,
+    });
+  };
+
   const prefillFromWork = (work: any) => {
     const workCards = Array.isArray(work?.cards) ? work.cards : [];
     setFormData({
       content: work?.knowledgePoint || work?.title || '',
       subject: work?.subject || '',
       gradeLevel: work?.gradeLevel || '',
-      cardTypes: Array.from(new Set((workCards as TeachingCard[]).map(card => card.type as CardType))).filter(Boolean) as CardType[],
+      cardTypes: Array.from(
+        new Set(
+          (workCards as TeachingCard[]).map(card => card.type as CardType),
+        ),
+      ).filter(Boolean) as CardType[],
     });
     if (workCards.length > 0) {
       setGeneratedCards(workCards as TeachingCard[]);
@@ -385,6 +518,19 @@ export function DesktopCreatePage() {
         normalizeCard(card as TeachingCard, index, fallbackContext),
       );
 
+      const hasContent = normalizedCards.some(card => (
+        (typeof card.content === 'string' && card.content.trim().length > 0)
+        || (typeof card.explanation === 'string' && card.explanation.trim().length > 0)
+      ));
+
+      if (!hasContent) {
+        setGeneratedCards([]);
+        setIsFormCollapsed(false);
+        setErrorMessage('生成失败：AI 未返回内容，请重试');
+        setIsGenerating(false);
+        return;
+      }
+
       setGeneratedCards(normalizedCards);
       setLastRequest(fallbackContext);
       setQuotaHint(null);
@@ -528,16 +674,59 @@ export function DesktopCreatePage() {
     }, 2200);
   };
 
-  const handleBatchExport = () => {
-    showActionFeedback('已准备批量导出，请在卡片内完成最终导出操作');
+  const handleShareButtonClick = () => {
+    if (generatedCards.length === 0) {
+      return;
+    }
+    setShareMenuOpen(prev => !prev);
   };
 
-  const handleBatchFavorite = () => {
-    showActionFeedback('已收藏全部教学卡片');
-  };
+  const handleShareOptionClick = async (platform: SharePlatform) => {
+    if (generatedCards.length === 0) {
+      return;
+    }
 
-  const handleBatchShare = () => {
-    showActionFeedback('分享链接已准备，可在下方卡片中获取导出信息');
+    const targetCard = generatedCards[0];
+    setIsSharing(true);
+    const sharePopup = openSharePopup(platform);
+
+    try {
+      const posterImage = await exportSharePosterImage();
+      const uploaded = await uploadShareImage(posterImage.dataUrl, targetCard.id);
+      const shareUrl = await generateShareLink(targetCard.id, targetCard);
+      const fallbackText = targetCard.content || targetCard.explanation || '';
+
+      const shareContent = {
+        title: targetCard.title || '我用AI创建了一张教学卡片',
+        description: fallbackText.substring(0, 80) || '快来看我生成的教学灵感卡片',
+        url: shareUrl,
+        imageUrl: uploaded?.imageUrl,
+        hashtags: ['AI教学', '教育创新', 'InspiAI'],
+      };
+
+      const shareHost = shareUrl ? new URL(shareUrl).hostname : '';
+      const isLocalShareHost = ['localhost', '127.0.0.1'].includes(shareHost);
+
+      if (isLocalShareHost) {
+        await copyTextToClipboard(shareUrl);
+        showActionFeedback('当前分享链接指向本地环境，外部设备可能无法访问');
+      }
+
+      await shareToSocial({ platform, content: shareContent, shareWindow: sharePopup });
+      await trackShareEvent(targetCard.id, platform);
+      if (!isLocalShareHost) {
+        showActionFeedback('分享链接已生成');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '网络异常';
+      if (sharePopup && !sharePopup.closed) {
+        sharePopup.close();
+      }
+      showActionFeedback(`分享失败：${message}`);
+    } finally {
+      setIsSharing(false);
+      setShareMenuOpen(false);
+    }
   };
 
   const openGalleryAt = (index: number) => {
@@ -566,6 +755,132 @@ export function DesktopCreatePage() {
       window.clearTimeout(actionMessageTimeoutRef.current);
     }
   }, []);
+
+  useEffect(() => {
+    if (!isShareMenuOpen) {
+      return undefined;
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!shareMenuRef.current) {
+        return;
+      }
+      if (!shareMenuRef.current.contains(event.target as Node)) {
+        setShareMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isShareMenuOpen]);
+
+  useEffect(() => {
+    if (generatedCards.length === 0 && isShareMenuOpen) {
+      setShareMenuOpen(false);
+    }
+  }, [generatedCards.length, isShareMenuOpen]);
+
+  useEffect(() => {
+    let aborted = false;
+
+    if (!isAuthenticated) {
+      setRecentProjects([]);
+      return () => {
+        aborted = true;
+      };
+    }
+
+    const fetchRecentProjects = async () => {
+      try {
+        const response = await fetch('/api/profile/works?status=all&limit=3', {
+          credentials: 'include',
+        });
+
+        if (response.status === 401) {
+          if (!aborted) {
+            setRecentProjects([]);
+          }
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error('最近项目加载失败');
+        }
+
+        const data = await response.json();
+
+        if (!data?.success || !Array.isArray(data.works)) {
+          if (!aborted) {
+            setRecentProjects([]);
+          }
+          return;
+        }
+
+        const projects: RecentProjectSummary[] = data.works
+          .map((work: any) => ({
+            id: work._id || work.id || '',
+            title: work.title || work.knowledgePoint || '未命名作品',
+            updatedAt: work.updatedAt || work.createdAt,
+            cardsCount: Array.isArray(work.cards)
+              ? work.cards.length
+              : typeof work.cardsCount === 'number'
+                ? work.cardsCount
+                : 0,
+            knowledgePoint: work.knowledgePoint,
+            subject: work.subject,
+            gradeLevel: work.gradeLevel,
+          }))
+          .filter(project => project.id && project.title);
+
+        if (!aborted) {
+          setRecentProjects(projects);
+        }
+      } catch (error) {
+        if (!aborted) {
+          setRecentProjects([]);
+        }
+      }
+    };
+
+    fetchRecentProjects();
+
+    return () => {
+      aborted = true;
+    };
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (generatedCards.length === 0) {
+      setShareQrCode('');
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    QRCode.toDataURL(shareJoinUrl, {
+      width: 160,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF',
+      },
+    })
+      .then((dataUrl) => {
+        if (!cancelled) {
+          setShareQrCode(dataUrl);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setShareQrCode('');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [generatedCards.length, shareJoinUrl]);
 
   useEffect(() => {
     if (generatedCards.length === 0) {
@@ -616,8 +931,41 @@ export function DesktopCreatePage() {
     });
   };
 
+  const handleApplyRecentProject = (project: RecentProjectSummary) => {
+    setFormData((prev) => ({
+      ...prev,
+      content: project.knowledgePoint || project.title || prev.content,
+      subject: project.subject || '',
+      gradeLevel: project.gradeLevel || '',
+    }));
+    setIsFormCollapsed(false);
+  };
+
   const isGenerateDisabled =
     !formData.content || formData.cardTypes.length === 0 || isGenerating;
+
+  const sharePosterCard = generatedCards[0];
+  const sharePosterExcerpt = sharePosterCard?.content
+    ? sharePosterCard.content.replace(/[#*>\-]/g, '').replace(/\n+/g, ' ').trim().slice(0, 160)
+    : sharePosterCard?.explanation?.slice(0, 160) ?? '';
+  const sharePosterImageUrl = (sharePosterCard as any)?.visual?.imageUrl || (sharePosterCard as any)?.coverImage || '';
+  const sharePosterImageSrc = useMemo(() => {
+    if (!sharePosterImageUrl) {
+      return '';
+    }
+
+    try {
+      const currentOrigin = typeof window !== 'undefined' ? window.location.origin : undefined;
+      const { shouldProxy, targetUrl } = needsProxying(sharePosterImageUrl, currentOrigin);
+      if (shouldProxy && targetUrl) {
+        return buildProxiedImageUrl(targetUrl);
+      }
+    } catch (error) {
+      // 忽略解析错误，直接返回原始图片地址
+    }
+
+    return sharePosterImageUrl;
+  }, [sharePosterImageUrl]);
 
   return (
     <React.Fragment>
@@ -633,66 +981,69 @@ export function DesktopCreatePage() {
           overflowY: 'auto',
         }}>
           {/* 最近项目 */}
-          <div style={{ marginBottom: '24px' }}>
-            <h3 style={{
-              fontSize: '14px',
-              fontWeight: '600',
-              color: 'var(--gray-900)',
-              marginBottom: '12px',
-            }}>
-              最近项目
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {recentProjects.map((project, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => {
-                    setFormData({
-                      content: project.name,
-                      subject: '数学',
-                      gradeLevel: '初中',
-                      cardTypes: ['visualization', 'analogy', 'thinking', 'interaction'] as CardType[],
-                    });
-                  }}
-                  className="modern-card"
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    cursor: 'pointer',
-                    transition: 'all var(--transition-base)',
-                    textAlign: 'left',
-                    border: '1px solid var(--gray-200)',
-                    background: 'white',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'var(--gray-50)';
-                    e.currentTarget.style.borderColor = 'var(--primary-300)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'white';
-                    e.currentTarget.style.borderColor = 'var(--gray-200)';
-                  }}
-                >
-                  <div style={{
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    color: 'var(--gray-900)',
-                    marginBottom: '2px',
-                    lineHeight: 1.35,
-                  }}>
-                    {project.name}
-                  </div>
-                  <div style={{
-                    fontSize: '10px',
-                    color: 'var(--gray-500)',
-                  }}>
-                    {project.time} • {project.cards}张
-                  </div>
-                </button>
-              ))}
+          {recentProjects.length > 0 && (
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: 'var(--gray-900)',
+                marginBottom: '12px',
+              }}>
+                最近项目
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {recentProjects.map((project) => (
+                  <button
+                    key={project.id}
+                    type="button"
+                    onClick={() => handleApplyRecentProject(project)}
+                    className="modern-card"
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      cursor: 'pointer',
+                      transition: 'all var(--transition-base)',
+                      textAlign: 'left',
+                      border: '1px solid var(--gray-200)',
+                      background: 'white',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'var(--gray-50)';
+                      e.currentTarget.style.borderColor = 'var(--primary-300)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'white';
+                      e.currentTarget.style.borderColor = 'var(--gray-200)';
+                    }}
+                  >
+                    <div style={{
+                      fontSize: '12px',
+                      color: 'var(--gray-500)',
+                      marginBottom: '4px',
+                    }}>
+                      {formatRelativeTimeFromNow(project.updatedAt)}
+                    </div>
+                    <div style={{
+                      fontWeight: 600,
+                      fontSize: '13px',
+                      color: 'var(--gray-900)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}>
+                      <span>{project.title}</span>
+                      {project.subject ? (
+                        <span style={{ fontSize: '11px', color: '#64748b' }}>{project.subject}</span>
+                      ) : null}
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
+                      {project.cardsCount || 0} 张卡片
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* 推荐模板 */}
           <div style={{ marginBottom: '24px' }}>
@@ -930,7 +1281,7 @@ export function DesktopCreatePage() {
                         minHeight: '60px',
                         resize: 'none',
                       }}
-                      placeholder="请详细描述你要教授的知识点、课堂目标或学习活动..."
+                      placeholder="请表述你要教授的知识点，比如“光合作用”、“三角形”"
                       value={formData.content}
                       onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                       required
@@ -1038,13 +1389,24 @@ export function DesktopCreatePage() {
 
               <div style={{ textAlign: 'center' }}>
                 {errorMessage && (
-                  <p style={{
-                    color: '#dc2626',
-                    fontSize: '13px',
-                    marginBottom: '12px',
-                  }}>
-                    {errorMessage}
-                  </p>
+                  <div style={{ marginBottom: '12px' }}>
+                    <p style={{
+                      color: '#dc2626',
+                      fontSize: '13px',
+                      marginBottom: '8px',
+                    }}>
+                      {errorMessage}
+                    </p>
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn-secondary"
+                      onClick={handleGenerate}
+                      disabled={isGenerating}
+                      style={{ fontSize: '12px', padding: '6px 16px' }}
+                    >
+                      {isGenerating ? '重新生成中...' : '重试生成'}
+                    </button>
+                  </div>
                 )}
                 {quotaHint && (
                   <div
@@ -1240,127 +1602,142 @@ export function DesktopCreatePage() {
                     </span>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    onClick={handleBatchExport}
-                    disabled={generatedCards.length === 0}
-                    style={{
-                      border: '1px solid var(--gray-200)',
-                      borderRadius: '8px',
-                      background: generatedCards.length === 0 ? 'var(--gray-100)' : '#fff',
-                      padding: '8px',
-                      width: '36px',
-                      height: '36px',
-                      color: generatedCards.length === 0 ? 'var(--gray-400)' : '#2563eb',
-                      cursor: generatedCards.length === 0 ? 'not-allowed' : 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'all 0.2s',
-                    }}
-                    title="批量导出"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <path d="M9 12L5 8h8l-4 4z" fill="currentColor"/>
-                      <path d="M4 14h10v2H4v-2z" fill="currentColor"/>
-                      <rect x="2" y="2" width="14" height="10" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleBatchFavorite}
-                    disabled={generatedCards.length === 0}
-                    style={{
-                      border: '1px solid var(--gray-200)',
-                      borderRadius: '8px',
-                      background: generatedCards.length === 0 ? 'var(--gray-100)' : '#fff',
-                      padding: '8px',
-                      width: '36px',
-                      height: '36px',
-                      color: generatedCards.length === 0 ? 'var(--gray-400)' : '#047857',
-                      cursor: generatedCards.length === 0 ? 'not-allowed' : 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'all 0.2s',
-                    }}
-                    title="收藏全部"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <path d="M9 2l2.163 4.279L16 6.967l-3.5 3.378.826 4.655L9 12.779 4.674 15 5.5 10.345 2 6.967l4.837-.688L9 2z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleBatchShare}
-                    disabled={generatedCards.length === 0}
-                    style={{
-                      border: '1px solid var(--gray-200)',
-                      borderRadius: '8px',
-                      background: generatedCards.length === 0 ? 'var(--gray-100)' : '#fff',
-                      padding: '8px',
-                      width: '36px',
-                      height: '36px',
-                      color: generatedCards.length === 0 ? 'var(--gray-400)' : '#7c3aed',
-                      cursor: generatedCards.length === 0 ? 'not-allowed' : 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'all 0.2s',
-                    }}
-                    title="分享链接"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <path d="M14 6a2 2 0 100-4 2 2 0 000 4zM14 16a2 2 0 100-4 2 2 0 000 4zM4 11a2 2 0 100-4 2 2 0 000 4z" fill="currentColor"/>
-                      <path d="M5.5 9.5l7-3M5.5 8.5l7 3" stroke="currentColor" strokeWidth="1.5"/>
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleOpenGallery}
-                    style={{
-                      border: '1px solid var(--gray-200)',
-                      borderRadius: '8px',
-                      background: generatedCards.length === 0 ? 'var(--gray-100)' : '#fff',
-                      padding: '8px',
-                      width: '36px',
-                      height: '36px',
-                      color: generatedCards.length === 0 ? 'var(--gray-400)' : '#0f172a',
-                      cursor: generatedCards.length === 0 ? 'not-allowed' : 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'all 0.2s',
-                    }}
-                    disabled={generatedCards.length === 0}
-                    title="全屏预览"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <path d="M3 3h4v2H5v2H3V3zM15 3h-4v2h2v2h2V3zM3 15h4v-2H5v-2H3v4zM15 15h-4v-2h2v-2h2v4z" fill="currentColor"/>
-                    </svg>
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleSaveWork}
-                  disabled={generatedCards.length === 0 || isSavingWork || Boolean(savedWorkId)}
+                <div
                   style={{
-                    padding: '0 16px',
-                    minWidth: '120px',
-                    height: '36px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: generatedCards.length === 0 || savedWorkId ? 'var(--gray-200)' : '#2563eb',
-                    color: savedWorkId ? '#0f172a' : '#fff',
-                    cursor: generatedCards.length === 0 || savedWorkId ? 'not-allowed' : 'pointer',
-                    fontWeight: 600,
-                    fontSize: '13px',
-                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    flexWrap: 'wrap',
+                    justifyContent: 'flex-end',
                   }}
                 >
-                  {savedWorkId ? '已保存' : isSavingWork ? '保存中...' : '保存为作品'}
-                </button>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <div
+                      ref={shareMenuRef}
+                      style={{ position: 'relative', display: 'inline-flex' }}
+                    >
+                      <button
+                        type="button"
+                        onClick={handleShareButtonClick}
+                        disabled={generatedCards.length === 0 || isSharing}
+                        style={{
+                          border: '1px solid var(--gray-200)',
+                          borderRadius: '8px',
+                          background: generatedCards.length === 0 ? 'var(--gray-100)' : '#fff',
+                          padding: '8px',
+                          width: '36px',
+                          height: '36px',
+                          color: generatedCards.length === 0 ? 'var(--gray-400)' : '#7c3aed',
+                          cursor: generatedCards.length === 0 ? 'not-allowed' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s',
+                        }}
+                        title="分享到社交媒体"
+                      >
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                          <path d="M14 6a2 2 0 100-4 2 2 0 000 4zM14 16a2 2 0 100-4 2 2 0 000 4zM4 11a2 2 0 100-4 2 2 0 000 4z" fill="currentColor"/>
+                          <path d="M5.5 9.5l7-3M5.5 8.5l7 3" stroke="currentColor" strokeWidth="1.5"/>
+                        </svg>
+                      </button>
+                      {isShareMenuOpen && generatedCards.length > 0 && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: 'calc(100% + 8px)',
+                            right: 0,
+                            background: '#ffffff',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '12px',
+                            boxShadow: '0 20px 40px rgba(15, 23, 42, 0.18)',
+                            padding: '10px',
+                            minWidth: '180px',
+                            zIndex: 20,
+                          }}
+                        >
+                          <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>
+                            选择分享渠道
+                          </div>
+                          {shareMenuOptions.map(option => (
+                            <button
+                              key={option.platform}
+                              type="button"
+                              onClick={() => handleShareOptionClick(option.platform)}
+                              disabled={isSharing}
+                              style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                border: 'none',
+                                background: 'transparent',
+                                padding: '8px 6px',
+                                borderRadius: '8px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '2px',
+                                color: '#0f172a',
+                                cursor: 'pointer',
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = '#f1f5f9';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }}
+                            >
+                              <span style={{ fontWeight: 600 }}>{option.label}</span>
+                              <span style={{ fontSize: '12px', color: '#64748b' }}>{option.helper}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleOpenGallery}
+                      style={{
+                        border: '1px solid var(--gray-200)',
+                        borderRadius: '8px',
+                        background: generatedCards.length === 0 ? 'var(--gray-100)' : '#fff',
+                        padding: '8px',
+                        width: '36px',
+                        height: '36px',
+                        color: generatedCards.length === 0 ? 'var(--gray-400)' : '#0f172a',
+                        cursor: generatedCards.length === 0 ? 'not-allowed' : 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s',
+                      }}
+                      disabled={generatedCards.length === 0}
+                      title="全屏预览"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M3 3h4v2H5v2H3V3zM15 3h-4v2h2v2h2V3zM3 15h4v-2H5v-2H3v4zM15 15h-4v-2h2v-2h2v4z" fill="currentColor"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSaveWork}
+                    disabled={generatedCards.length === 0 || isSavingWork || Boolean(savedWorkId)}
+                    style={{
+                      padding: '0 16px',
+                      minWidth: '120px',
+                      height: '36px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: generatedCards.length === 0 || savedWorkId ? 'var(--gray-200)' : '#2563eb',
+                      color: savedWorkId ? '#0f172a' : '#fff',
+                      cursor: generatedCards.length === 0 || savedWorkId ? 'not-allowed' : 'pointer',
+                      fontWeight: 600,
+                      fontSize: '13px',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {savedWorkId ? '已保存' : isSavingWork ? '保存中...' : '保存为作品'}
+                  </button>
+                </div>
               </div>
               {actionMessage && (
                 <div
@@ -1531,8 +1908,147 @@ export function DesktopCreatePage() {
           </div>
         </div>
       )}
+      {sharePosterCard && (
+        <div aria-hidden style={sharePosterOffscreenStyle}>
+          <div ref={sharePosterRef} style={sharePosterContainerStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: '18px', fontWeight: 600, color: '#6366f1' }}>Inspi.AI 教学灵感</div>
+              <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+                {new Date().toLocaleDateString()} · {sharePosterCard.type === 'visualization' ? '可视化卡' : '教学卡'}
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '24px', marginTop: '16px', alignItems: 'stretch' }}>
+              <div style={{
+                flex: '1 1 65%',
+                background: '#ffffff',
+                borderRadius: '24px',
+                padding: '32px',
+                boxShadow: '0 20px 60px rgba(15,23,42,0.12)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+              }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '12px', color: '#475569' }}>
+                  {sharePosterCard.metadata?.subject && (
+                    <span style={{ padding: '4px 10px', borderRadius: '999px', background: '#eef2ff', color: '#4338ca' }}>
+                      {sharePosterCard.metadata.subject}
+                    </span>
+                  )}
+                  {sharePosterCard.metadata?.gradeLevel && (
+                    <span style={{ padding: '4px 10px', borderRadius: '999px', background: '#ecfdf3', color: '#059669' }}>
+                      {sharePosterCard.metadata.gradeLevel}
+                    </span>
+                  )}
+                  <span style={{ padding: '4px 10px', borderRadius: '999px', background: '#fef3c7', color: '#b45309' }}>
+                    {cardTypes.find(type => type.id === sharePosterCard.type)?.name || 'AI 教学卡'}
+                  </span>
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '28px', margin: '0 0 12px 0' }}>{sharePosterCard.title}</h3>
+                  <p style={{ fontSize: '15px', lineHeight: 1.7, color: '#475569', margin: 0 }}>{sharePosterExcerpt}</p>
+                </div>
+                {sharePosterImageSrc ? (
+                  <div style={{ borderRadius: '20px', overflow: 'hidden', boxShadow: '0 20px 40px rgba(15,23,42,0.12)' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={sharePosterImageSrc}
+                      alt="卡片插图"
+                      style={{ width: '100%', height: '260px', objectFit: 'cover' }}
+                      crossOrigin="anonymous"
+                    />
+                  </div>
+                ) : null}
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '8px' }}>
+                  {(sharePosterCard.metadata?.knowledgePoint || sharePosterCard.explanation) && (
+                    <div style={{
+                      flex: '1 1 60%',
+                      background: '#f8fafc',
+                      borderRadius: '16px',
+                      padding: '16px',
+                      fontSize: '13px',
+                      color: '#475569',
+                      lineHeight: 1.6,
+                    }}>
+                      <strong style={{ display: 'block', marginBottom: '6px', color: '#1e293b' }}>知识点亮点</strong>
+                      {sharePosterCard.metadata?.knowledgePoint || sharePosterCard.explanation}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div style={{
+                width: '240px',
+                background: '#0f172a',
+                color: '#f8fafc',
+                borderRadius: '24px',
+                padding: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '12px',
+              }}>
+                <div style={{ fontSize: '14px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#a5b4fc' }}>扫码加入</div>
+                {shareQrCode ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={shareQrCode} alt="加入平台二维码" style={{ width: '180px', height: '180px' }} />
+                ) : (
+                  <div style={{ width: '180px', height: '180px', borderRadius: '16px', background: '#1e293b' }} />
+                )}
+                <div style={{ fontSize: '13px', color: '#c7d2fe', textAlign: 'center' }}>
+                  Inspi.AI 教学魔法平台
+                </div>
+                <div style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'center', wordBreak: 'break-all' }}>
+                  {shareJoinUrl}
+                </div>
+              </div>
+            </div>
+            <div style={{
+              padding: '18px 24px',
+              borderRadius: '20px',
+              background: '#111827',
+              color: '#e2e8f0',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              gap: '6px',
+            }}>
+              <div>
+                <div style={{ fontSize: '16px', fontWeight: 600 }}>Inspi.AI · AI赋能教学革新</div>
+                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
+                  让灵感即刻变成课堂资源 · 扫码开启你的教学魔法
+                </div>
+              </div>
+              <div style={{ fontSize: '12px', color: '#cbd5f5' }}>{shareBaseUrl.replace(/^https?:\/\//, '')}</div>
+            </div>
+          </div>
+        </div>
+      )}
     </React.Fragment>
   );
+}
+
+function formatRelativeTimeFromNow(input?: string): string {
+  if (!input) {
+    return '';
+  }
+
+  const timestamp = new Date(input).getTime();
+  if (Number.isNaN(timestamp)) {
+    return '';
+  }
+
+  const diffMs = Date.now() - timestamp;
+  const diffMinutes = Math.floor(diffMs / 60000);
+  if (diffMinutes < 1) return '刚刚';
+  if (diffMinutes < 60) return `${diffMinutes} 分钟前`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours} 小时前`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 30) return `${diffDays} 天前`;
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths < 12) return `${diffMonths} 个月前`;
+  const diffYears = Math.floor(diffMonths / 12);
+  return `${diffYears} 年前`;
 }
 
 function safeParseJSON<T = any>(payload: string): T | null {

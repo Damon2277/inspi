@@ -250,7 +250,7 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, currentQuota }: 
             <div className="flex flex-col items-center gap-4">
               <div className="flex w-full flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
                 <span className="text-2xl font-bold text-slate-900">
-                  ¥0.1<span className="ml-1 text-base font-normal">/月</span>
+                  ¥199<span className="ml-1 text-base font-normal">/月</span>
                 </span>
                 <p className="text-sm text-slate-600">自动续费，可随时取消。订阅后每月获得 150 次生成额度。</p>
               </div>
@@ -353,7 +353,7 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, currentQuota }: 
                 {loading ? (
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden />
                 ) : null}
-                立即升级 ¥0.1 / 月
+                立即升级 ¥199 / 月
               </button>
 
               <p className="text-center text-xs text-slate-500">

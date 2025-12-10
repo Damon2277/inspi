@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef, CSSProperties } from 'react';
+import React, { useState, useEffect, useRef, CSSProperties, useCallback } from 'react';
+
+import { buildProxiedImageUrl, needsProxying } from '@/lib/export/image-proxy';
 
 interface LazyImageProps {
   src: string;
@@ -13,6 +15,7 @@ interface LazyImageProps {
   onLoad?: () => void;
   onError?: () => void;
   forceLoad?: boolean;
+  preferProxy?: boolean;
 }
 
 export function LazyImage({
@@ -26,15 +29,32 @@ export function LazyImage({
   onLoad,
   onError,
   forceLoad = false,
+  preferProxy = true,
 }: LazyImageProps) {
   const [imageSrc, setImageSrc] = useState(placeholder);
   const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isError, setIsError] = useState(false);
 
+  const resolveImageSrc = useCallback((inputSrc: string) => {
+    if (!preferProxy) {
+      return inputSrc;
+    }
+
+    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : undefined;
+    const { shouldProxy, targetUrl } = needsProxying(inputSrc, currentOrigin);
+    if (shouldProxy && targetUrl) {
+      return buildProxiedImageUrl(targetUrl);
+    }
+
+    return inputSrc;
+  }, [preferProxy]);
+
   useEffect(() => {
+    const nextSrc = resolveImageSrc(src);
+
     if (forceLoad) {
-      setImageSrc(src);
+      setImageSrc(nextSrc);
       setIsLoaded(true);
       setIsError(false);
       onLoad?.();
@@ -43,7 +63,7 @@ export function LazyImage({
       setIsLoaded(false);
       setIsError(false);
     }
-  }, [forceLoad, src, placeholder, onLoad]);
+  }, [forceLoad, src, placeholder, onLoad, resolveImageSrc]);
 
   useEffect(() => {
     if (forceLoad) {
@@ -60,10 +80,11 @@ export function LazyImage({
             if (entry.isIntersecting) {
               // 开始加载真实图片
               const img = new Image();
-              img.src = src;
+              const nextSrc = resolveImageSrc(src);
+              img.src = nextSrc;
 
               img.onload = () => {
-                setImageSrc(src);
+                setImageSrc(nextSrc);
                 setIsLoaded(true);
                 onLoad?.();
               };
@@ -90,7 +111,7 @@ export function LazyImage({
     return () => {
       observer?.disconnect();
     };
-  }, [imageRef, src, isLoaded, threshold, rootMargin, onLoad, onError, forceLoad]);
+  }, [imageRef, src, isLoaded, threshold, rootMargin, onLoad, onError, forceLoad, resolveImageSrc]);
 
   return (
     // 使用原生 <img> 以便完全掌控懒加载流程
@@ -99,6 +120,7 @@ export function LazyImage({
       ref={setImageRef}
       src={imageSrc}
       alt={alt}
+      crossOrigin={preferProxy ? 'anonymous' : undefined}
       style={{
         ...style,
         transition: 'opacity 0.3s ease-in-out',

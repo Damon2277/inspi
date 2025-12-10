@@ -5,6 +5,12 @@
 
 import * as QRCode from 'qrcode';
 
+import { env } from '@/shared/config/environment';
+
+const LOCAL_SHARE_HOSTS = ['localhost', '127.0.0.1'];
+const SHARE_BASE_URL = (process.env.NEXT_PUBLIC_SHARE_BASE_URL || env.APP_URL || '').replace(/\/$/, '');
+const ALLOW_INLINE_SHARE_PAYLOAD = process.env.NEXT_PUBLIC_SHARE_EMBED_PAYLOAD === 'true';
+
 export interface ShareContent {
   title: string;
   description: string;
@@ -16,6 +22,7 @@ export interface ShareContent {
 export interface ShareOptions {
   platform: SharePlatform;
   content: ShareContent;
+  shareWindow?: Window | null;
 }
 
 export type SharePlatform =
@@ -32,7 +39,7 @@ export type SharePlatform =
  * 分享到社交媒体平台
  */
 export async function shareToSocial(options: ShareOptions): Promise<void> {
-  const { platform, content } = options;
+  const { platform, content, shareWindow } = options;
 
   try {
     switch (platform) {
@@ -40,19 +47,19 @@ export async function shareToSocial(options: ShareOptions): Promise<void> {
         await shareToWeChat(content);
         break;
       case 'weibo':
-        shareToWeibo(content);
+        shareToWeibo(content, shareWindow);
         break;
       case 'qq':
-        shareToQQ(content);
+        shareToQQ(content, shareWindow);
         break;
       case 'twitter':
-        shareToTwitter(content);
+        shareToTwitter(content, shareWindow);
         break;
       case 'facebook':
-        shareToFacebook(content);
+        shareToFacebook(content, shareWindow);
         break;
       case 'linkedin':
-        shareToLinkedIn(content);
+        shareToLinkedIn(content, shareWindow);
         break;
       case 'copy-link':
         await copyLinkToClipboard(content);
@@ -77,6 +84,9 @@ async function shareToWeChat(content: ShareContent): Promise<void> {
     throw new Error('微信分享需要提供链接');
   }
 
+  const shareHost = content.url ? new URL(content.url).hostname : '';
+  const isLocalHost = LOCAL_SHARE_HOSTS.includes(shareHost);
+
   // 生成二维码供用户扫描
   const qrCodeDataUrl = await QRCode.toDataURL(content.url, {
     width: 200,
@@ -90,7 +100,9 @@ async function shareToWeChat(content: ShareContent): Promise<void> {
   // 显示二维码弹窗
   showQRCodeModal({
     title: '微信分享',
-    description: '请使用微信扫描二维码分享',
+    description: isLocalHost
+      ? '当前链接为本地地址，仅能在此设备访问。请部署到可访问域名后再分享。'
+      : '请使用微信扫描二维码分享',
     qrCodeUrl: qrCodeDataUrl,
     content,
   });
@@ -99,7 +111,7 @@ async function shareToWeChat(content: ShareContent): Promise<void> {
 /**
  * 分享到微博
  */
-function shareToWeibo(content: ShareContent): void {
+function shareToWeibo(content: ShareContent, shareWindow?: Window | null): void {
   const text = `${content.title} - ${content.description}`;
   const hashtags = content.hashtags ? content.hashtags.map(tag => `#${tag}#`).join(' ') : '';
   const url = content.url || window.location.href;
@@ -109,13 +121,13 @@ function shareToWeibo(content: ShareContent): void {
     `title=${encodeURIComponent(`${text} ${hashtags}`)}&` +
     `pic=${encodeURIComponent(content.imageUrl || '')}`;
 
-  window.open(shareUrl, '_blank', 'width=600,height=400');
+  openShareWindow(shareUrl, shareWindow);
 }
 
 /**
  * 分享到QQ空间
  */
-function shareToQQ(content: ShareContent): void {
+function shareToQQ(content: ShareContent, shareWindow?: Window | null): void {
   const url = content.url || window.location.href;
   const shareUrl = 'https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?' +
     `url=${encodeURIComponent(url)}&` +
@@ -123,13 +135,13 @@ function shareToQQ(content: ShareContent): void {
     `desc=${encodeURIComponent(content.description)}&` +
     `pics=${encodeURIComponent(content.imageUrl || '')}`;
 
-  window.open(shareUrl, '_blank', 'width=600,height=400');
+  openShareWindow(shareUrl, shareWindow);
 }
 
 /**
  * 分享到Twitter
  */
-function shareToTwitter(content: ShareContent): void {
+function shareToTwitter(content: ShareContent, shareWindow?: Window | null): void {
   const text = `${content.title} - ${content.description}`;
   const hashtags = content.hashtags ? content.hashtags.join(',') : '';
   const url = content.url || window.location.href;
@@ -139,30 +151,45 @@ function shareToTwitter(content: ShareContent): void {
     `url=${encodeURIComponent(url)}&` +
     `hashtags=${encodeURIComponent(hashtags)}`;
 
-  window.open(shareUrl, '_blank', 'width=600,height=400');
+  openShareWindow(shareUrl, shareWindow);
 }
 
 /**
  * 分享到Facebook
  */
-function shareToFacebook(content: ShareContent): void {
+function shareToFacebook(content: ShareContent, shareWindow?: Window | null): void {
   const url = content.url || window.location.href;
   const shareUrl = 'https://www.facebook.com/sharer/sharer.php?' +
     `u=${encodeURIComponent(url)}&` +
     `quote=${encodeURIComponent(`${content.title} - ${content.description}`)}`;
 
-  window.open(shareUrl, '_blank', 'width=600,height=400');
+  openShareWindow(shareUrl, shareWindow);
 }
 
 /**
  * 分享到LinkedIn
  */
-function shareToLinkedIn(content: ShareContent): void {
+function shareToLinkedIn(content: ShareContent, shareWindow?: Window | null): void {
   const url = content.url || window.location.href;
   const shareUrl = 'https://www.linkedin.com/sharing/share-offsite/?' +
     `url=${encodeURIComponent(url)}`;
 
-  window.open(shareUrl, '_blank', 'width=600,height=400');
+  openShareWindow(shareUrl, shareWindow);
+}
+
+function openShareWindow(targetUrl: string, shareWindow?: Window | null) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const features = 'width=600,height=500,noopener,noreferrer';
+  if (shareWindow && !shareWindow.closed) {
+    shareWindow.location.href = targetUrl;
+    shareWindow.focus();
+    return;
+  }
+
+  window.open(targetUrl, '_blank', features);
 }
 
 /**
@@ -218,22 +245,60 @@ async function generateQRCode(content: ShareContent): Promise<void> {
  */
 export async function generateShareLink(cardId: string, cardData?: any): Promise<string> {
   try {
-    // 这里应该调用后端API生成分享链接
-    // 暂时使用前端生成的方式
-    const baseUrl = window.location.origin;
-    const shareUrl = `${baseUrl}/share/card/${cardId}`;
+    const baseUrl = resolveShareBaseUrl();
+    const url = new URL(`/share/card/${cardId}`, baseUrl);
 
-    // 如果有卡片数据，可以考虑将数据编码到URL中（适用于简单数据）
-    if (cardData && typeof cardData === 'object') {
-      const encodedData = btoa(JSON.stringify(cardData));
-      return `${shareUrl}?data=${encodedData}`;
+    if (ALLOW_INLINE_SHARE_PAYLOAD && cardData && typeof cardData === 'object') {
+      const minimalPayload = buildMinimalSharePayload(cardData);
+      const serialized = JSON.stringify(minimalPayload);
+      if (serialized.length <= 512) {
+        const encodedData = safeBase64Encode(serialized);
+        if (encodedData.length <= 512) {
+          url.searchParams.set('data', encodedData);
+        }
+      }
     }
 
-    return shareUrl;
+    return url.toString();
   } catch (error) {
     console.error('生成分享链接失败:', error);
     throw new Error('生成分享链接失败');
   }
+}
+
+function safeBase64Encode(text: string): string {
+  try {
+    if (typeof Buffer !== 'undefined') {
+      return Buffer.from(text, 'utf-8').toString('base64');
+    }
+    if (typeof window !== 'undefined' && typeof window.btoa === 'function') {
+      return window.btoa(unescape(encodeURIComponent(text)));
+    }
+    return text;
+  } catch (error) {
+    console.warn('Base64编码失败，返回原始内容', error);
+    return text;
+  }
+}
+
+function buildMinimalSharePayload(cardData: any) {
+  const contentPreview = typeof cardData.content === 'string'
+    ? cardData.content.slice(0, 160)
+    : undefined;
+
+  return {
+    id: cardData.id,
+    title: cardData.title,
+    type: cardData.type,
+    content: contentPreview,
+    metadata: cardData.metadata
+      ? {
+          knowledgePoint: cardData.metadata.knowledgePoint,
+          subject: cardData.metadata.subject,
+          gradeLevel: cardData.metadata.gradeLevel,
+        }
+      : undefined,
+  };
 }
 
 /**
@@ -330,10 +395,17 @@ function showQRCodeModal(options: {
     width: 90%;
   `;
 
+  const previewHtml = options.content.imageUrl
+    ? `<div style="margin: 0 auto 16px auto; border-radius: 16px; overflow: hidden; box-shadow: 0 12px 24px rgba(15, 23, 42, 0.2); max-width: 320px;">
+        <img src="${options.content.imageUrl}" alt="分享海报预览" style="width: 100%; display: block;" />
+      </div>`
+    : '';
+
   modalContent.innerHTML = `
-    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">${options.title}</h3>
-    <p style="margin: 0 0 16px 0; color: #666; font-size: 14px;">${options.description}</p>
-    <img src="${options.qrCodeUrl}" alt="QR Code" style="width: 200px; height: 200px; margin: 0 auto 16px;" />
+    <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: 600;">${options.title}</h3>
+    <p style="margin: 0 0 12px 0; color: #666; font-size: 14px;">${options.description}</p>
+    ${previewHtml}
+    <img src="${options.qrCodeUrl}" alt="QR Code" style="width: 200px; height: 200px; margin: 0 auto 12px;" />
     <div style="margin-bottom: 16px;">
       <p style="margin: 0; font-size: 14px; font-weight: 500;">${options.content.title}</p>
       <p style="margin: 4px 0 0 0; font-size: 12px; color: #666;">${options.content.description}</p>
@@ -448,3 +520,18 @@ export const sharePlatforms = [
     color: '#374151',
   },
 ] as const;
+function resolveShareBaseUrl(): string {
+  const candidate = SHARE_BASE_URL && SHARE_BASE_URL.trim().length > 0
+    ? SHARE_BASE_URL
+    : undefined;
+
+  if (candidate) {
+    return candidate;
+  }
+
+  if (typeof window !== 'undefined' && window.location.origin) {
+    return window.location.origin;
+  }
+
+  return 'http://localhost:3000';
+}
