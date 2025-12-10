@@ -319,7 +319,7 @@ export function DesktopHomePage() {
           <div className="modern-container">
             <div className="desktop-section__header">
               <h2 className="desktop-section__title">将创意和课堂流程一次打包</h2>
-              <p className="desktop-section__subtitle">
+              <p className="desktop-section__subtitle desktop-section__subtitle--nowrap">
                 不止是生成文字，Inspi.AI 会把视觉、问题、故事与课堂提示同步呈现，保持创作与展示一致。
               </p>
             </div>
