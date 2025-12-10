@@ -115,12 +115,15 @@ export function DesktopNavigation({
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-medium">
                       {user.name?.charAt(0)?.toUpperCase() || 'U'}
                     </div>
-                    <span className="text-gray-700 font-medium">{user.name || user.email}</span>
+                    <span className="text-gray-700 font-medium" style={{ fontSize: 'var(--font-size-lg)' }}>
+                      {user.name || user.email}
+                    </span>
                   </div>
                   <button
                     type="button"
                     className="modern-btn modern-btn-ghost modern-btn-sm"
                     onClick={handleLogout}
+                    style={{ fontSize: 'var(--font-size-lg)' }}
                   >
                     退出
                   </button>
@@ -130,6 +133,7 @@ export function DesktopNavigation({
                   type="button"
                   className="modern-btn modern-btn-ghost modern-btn-sm"
                   onClick={handleLoginClick}
+                  style={{ fontSize: 'var(--font-size-lg)' }}
                 >
                   登录
                 </button>
