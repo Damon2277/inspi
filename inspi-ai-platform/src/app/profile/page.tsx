@@ -324,8 +324,19 @@ function ProfileContent() {
     }
   };
 
-  const handleWorkClick = (work: UserWork) => {
-    window.location.href = `/works/${work.id}`;
+  const resolveWorkHref = (work: UserWork, sourceThemeId?: number) => {
+    if (work.status === 'reused') {
+      const themeId = Number.isFinite(sourceThemeId)
+        ? sourceThemeId
+        : Number.parseInt(work.reuseSourceId ? String(work.reuseSourceId) : '', 10);
+      return Number.isFinite(themeId) ? `/square/${themeId}` : '/square';
+    }
+    return `/works/${work.id}`;
+  };
+
+  const handleWorkClick = (work: UserWork, sourceThemeId?: number) => {
+    const targetHref = resolveWorkHref(work, sourceThemeId);
+    window.location.href = targetHref;
   };
 
   const renderDeleteButton = (workId: string) => (
@@ -366,6 +377,7 @@ function ProfileContent() {
     const isDraft = work.status === 'draft';
     const isPrivate = work.status === 'private';
     const sourceThemeId = work.reuseSourceId ?? parseInt(work.id.replace('reused-', ''), 10);
+    const targetHref = resolveWorkHref(work, sourceThemeId);
     const renderAvatar = () => {
       const imageSrc = coverImages[work.id] || work.coverImage;
       if (imageSrc) {
@@ -384,7 +396,7 @@ function ProfileContent() {
       <article
         key={work.id}
         className="work-card work-card--profile"
-        onClick={() => handleWorkClick(work)}
+        onClick={() => handleWorkClick(work, sourceThemeId)}
         style={{ position: 'relative' }}
         onMouseEnter={() => setHoveredWorkId(work.id)}
         onMouseLeave={() => setHoveredWorkId(prev => (prev === work.id ? null : prev))}
@@ -451,7 +463,7 @@ function ProfileContent() {
               }).replace(/年0/g, '年').replace(/月0/g, '月')}
             </span>
             <a
-              href={`/works/${work.id}`}
+              href={targetHref}
               className="work-card__cta"
             >
               查看内容

@@ -16,6 +16,7 @@ interface SquareReuseActionsProps {
   allowCancel?: boolean;
   onReuseSuccess?: () => void;
   onCancelSuccess?: () => void;
+  hideInlineStat?: boolean;
 }
 
 export function SquareReuseActions({
@@ -26,6 +27,7 @@ export function SquareReuseActions({
   allowCancel = false,
   onReuseSuccess,
   onCancelSuccess,
+  hideInlineStat = false,
 }: SquareReuseActionsProps) {
   const { isAuthenticated, user } = useAuth();
   const { showPrompt, LoginPromptComponent } = useLoginPrompt();
@@ -124,28 +126,30 @@ export function SquareReuseActions({
           justifyContent: 'flex-end',
         }}
       >
-        <span style={{
-          fontSize: '14px',
-          color: 'var(--gray-500)',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '6px',
-          whiteSpace: 'nowrap',
-        }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
-          已被致敬复用
-          <strong style={{ fontSize: '16px', color: 'var(--gray-900)' }}>{displayedReuseCount}</strong>
-          次
-        </span>
+        {!hideInlineStat && (
+          <span style={{
+            fontSize: '14px',
+            color: 'var(--gray-500)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            whiteSpace: 'nowrap',
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            已被致敬复用
+            <strong style={{ fontSize: '16px', color: 'var(--gray-900)' }}>{displayedReuseCount}</strong>
+            次
+          </span>
+        )}
         <button
           type="button"
           className="modern-btn modern-btn-primary"
           style={{
             whiteSpace: 'nowrap',
-            padding: '10px 20px',
-            minWidth: '110px',
+            padding: '10px 28px',
+            minWidth: '140px',
             justifyContent: 'center',
           }}
           onClick={handleReuse}

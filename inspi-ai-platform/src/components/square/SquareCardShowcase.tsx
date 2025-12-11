@@ -36,7 +36,11 @@ export function SquareCardShowcase({ cards }: SquareCardShowcaseProps) {
     <div className={containerClass}>
       {cards.map(card => (
         <div key={card.id} className="card-flow-two-column__item">
-          <GeneratedCard card={card} enableEditing={false} />
+          <GeneratedCard
+            card={card}
+            enableEditing={false}
+            hideVisualGeneration
+          />
         </div>
       ))}
     </div>

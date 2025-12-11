@@ -25,6 +25,7 @@ interface GeneratedCardProps {
   onRetry?: () => void;
   retrying?: boolean;
   enableEditing?: boolean;
+  hideVisualGeneration?: boolean;
 }
 
 type ViewMode = 'content' | 'sop' | 'presentation';
@@ -116,6 +117,7 @@ export function GeneratedCard({
   onRetry,
   retrying = false,
   enableEditing = true,
+  hideVisualGeneration = false,
 }: GeneratedCardProps) {
   const [cardContent, setCardContent] = useState(card.content);
   const [isEditing, setIsEditing] = useState(false);
@@ -1460,17 +1462,16 @@ export function GeneratedCard({
             </span>
           </div>
         )}
-        {!forExport && (
+        {!forExport && card.type !== 'visualization' && (
           <div
             style={{
               display: 'flex',
               justifyContent: 'flex-end',
-              gap: '8px',
               marginBottom: '12px',
             }}
             onClick={(event) => event.stopPropagation()}
           >
-            {card.type !== 'visualization' && (
+            {!hideVisualGeneration && (
               <button
                 type="button"
                 onClick={handleGenerateVisualAssist}
@@ -1494,41 +1495,6 @@ export function GeneratedCard({
                 {isGeneratingVisual ? '生成中...' : '生成辅助图示'}
               </button>
             )}
-            <button
-              type="button"
-              onClick={(e) => {
-                handleExport('social');
-                e.stopPropagation();
-              }}
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                backgroundColor: '#ffffff',
-                color: '#64748b',
-                fontSize: '16px',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#f8fafc';
-                e.currentTarget.style.borderColor = '#cbd5e1';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#ffffff';
-                e.currentTarget.style.borderColor = '#e2e8f0';
-              }}
-              title="下载图片"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
-                <path d="M3 12h10v2H3v-2z" fill="currentColor"/>
-              </svg>
-            </button>
           </div>
         )}
         {hasVisualization ? (
@@ -1866,43 +1832,82 @@ export function GeneratedCard({
   return (
     <React.Fragment>
       <div className={rootClassName} style={{ marginBottom: '24px', position: 'relative' }}>
-        {/* Simplified view mode tabs - only show if there are multiple modes available */}
-        {(hasSOP || card.presentation) && (
         <div
           data-export-hidden
           style={{
             display: 'flex',
-            gap: '4px',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
             marginBottom: '12px',
             ...(exportHiddenStyle ?? {}),
           }}
         >
-          {viewTabs.map((tab) => {
-            if (tab.disabled) return null;
-            const isActive = viewMode === tab.key;
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setViewMode(tab.key)}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: isActive ? typeConfig.color : 'transparent',
-                  color: isActive ? '#ffffff' : '#64748b',
-                  fontSize: '13px',
-                  fontWeight: isActive ? 600 : 400,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
+          {hasSOP || card.presentation ? (
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+              {viewTabs.map((tab) => {
+                if (tab.disabled) return null;
+                const isActive = viewMode === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setViewMode(tab.key)}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: isActive ? typeConfig.color : 'transparent',
+                      color: isActive ? '#ffffff' : '#64748b',
+                      fontSize: '13px',
+                      fontWeight: isActive ? 600 : 400,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : <span />}
+
+          <button
+            type="button"
+            onClick={(e) => {
+              handleExport('social');
+              e.stopPropagation();
+            }}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0',
+              backgroundColor: '#ffffff',
+              color: '#64748b',
+              fontSize: '16px',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f8fafc';
+              e.currentTarget.style.borderColor = '#cbd5e1';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#ffffff';
+              e.currentTarget.style.borderColor = '#e2e8f0';
+            }}
+            title="下载图片"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
+              <path d="M3 12h10v2H3v-2z" fill="currentColor"/>
+            </svg>
+          </button>
         </div>
-      )}
 
       {viewMode === 'content' && renderContentView()}
       {viewMode === 'sop' && renderSOPView()}
