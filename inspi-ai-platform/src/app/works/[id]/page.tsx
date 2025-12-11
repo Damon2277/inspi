@@ -175,6 +175,10 @@ export default function WorkDetailPage() {
   }, [workId, reloadToken]);
 
   const cardList = work?.cards ?? [];
+  const isSingleCard = cardList.length === 1;
+  const cardGridClassName = isSingleCard
+    ? 'card-flow-two-column card-flow-two-column--single'
+    : 'card-flow-two-column';
 
   return (
     <AppLayout>
@@ -272,9 +276,11 @@ export default function WorkDetailPage() {
                   该作品还没有生成教学卡片。
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                <div className={cardGridClassName}>
                   {cardList.map(card => (
-                    <GeneratedCard key={card.id} card={card} enableEditing={false} />
+                    <div key={card.id} className="card-flow-two-column__item">
+                      <GeneratedCard card={card} enableEditing={false} />
+                    </div>
                   ))}
                 </div>
               )}

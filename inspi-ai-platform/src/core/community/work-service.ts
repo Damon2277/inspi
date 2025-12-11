@@ -2,6 +2,9 @@
  * 作品服务
  * 处理作品的发布、编辑、搜索等功能
  */
+import { promises as fs } from 'fs';
+import path from 'path';
+
 import mongoose from 'mongoose';
 
 import Bookmark from '@/lib/models/Bookmark';
@@ -9,6 +12,7 @@ import Comment from '@/lib/models/Comment';
 import User from '@/lib/models/User';
 import Work, { WorkDocument, getWorkAuthorId, getWorkAuthorObjectId } from '@/lib/models/Work';
 import connectDB from '@/lib/mongodb';
+import { env } from '@/shared/config/environment';
 
 export interface CreateWorkRequest {
   title: string
@@ -58,6 +62,156 @@ export interface WorkResponse {
  * 作品服务类
  */
 export class WorkService {
+  private static readonly WORK_IMAGE_DIR = path.join(process.cwd(), 'public', 'work-images');
+  private static readonly EPHEMERAL_HOST_KEYWORDS = [
+    'ark-content-generation',
+    'tos-cn-beijing',
+  ];
+  private static readonly EXPIRATION_QUERY_KEYS = ['X-Tos-Expires', 'X-Amz-Expires'];
+
+  private static getBaseUrl(): string {
+    const base = (env.APP_URL || 'http://localhost:3000').trim();
+    return base.endsWith('/') ? base.slice(0, -1) : base;
+  }
+
+  private static ensureSafeId(id: string, fallback: string): string {
+    const normalized = (id || fallback || 'card')
+      .toLowerCase()
+      .replace(/[^a-z0-9-_]/g, '');
+    return normalized.length > 0 ? normalized : fallback;
+  }
+
+  private static async persistImageIfNeeded(imageUrl?: string, identifier?: string): Promise<string | undefined> {
+    if (!imageUrl || typeof imageUrl !== 'string') {
+      return imageUrl;
+    }
+
+    if (imageUrl.startsWith('data:') || imageUrl.startsWith('/')) {
+      return imageUrl;
+    }
+
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(imageUrl);
+    } catch (error) {
+      return imageUrl;
+    }
+
+    if (!this.isEphemeralUrl(parsedUrl)) {
+      return imageUrl;
+    }
+
+    try {
+      const response = await fetch(parsedUrl, {
+        method: 'GET',
+        headers: { Accept: 'image/*' },
+        cache: 'no-store',
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to persist remote image', parsedUrl.toString(), response.status);
+        return imageUrl;
+      }
+
+      const contentType = response.headers.get('content-type') || 'image/png';
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      await fs.mkdir(this.WORK_IMAGE_DIR, { recursive: true });
+
+      const extension = this.guessExtension(contentType, parsedUrl.pathname);
+      const safeId = this.ensureSafeId(identifier || 'card-image', 'card-image');
+      const filename = `${safeId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extension}`;
+      const filePath = path.join(this.WORK_IMAGE_DIR, filename);
+      await fs.writeFile(filePath, buffer);
+
+      const baseUrl = this.getBaseUrl();
+      return `${baseUrl}/work-images/${filename}`;
+    } catch (error) {
+      console.error('Persist image error:', error);
+      return imageUrl;
+    }
+  }
+
+  private static isEphemeralUrl(url: URL): boolean {
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      return false;
+    }
+
+    if (this.EXPIRATION_QUERY_KEYS.some(key => url.searchParams.has(key))) {
+      return true;
+    }
+
+    return this.EPHEMERAL_HOST_KEYWORDS.some(keyword => url.hostname.includes(keyword));
+  }
+
+  private static guessExtension(contentType: string, pathname: string): string {
+    if (contentType.includes('jpeg') || pathname.endsWith('.jpg') || pathname.endsWith('.jpeg')) {
+      return 'jpg';
+    }
+    if (contentType.includes('png') || pathname.endsWith('.png')) {
+      return 'png';
+    }
+    if (contentType.includes('webp') || pathname.endsWith('.webp')) {
+      return 'webp';
+    }
+    return 'png';
+  }
+
+  private static async normalizeCardImages(cards?: any[]): Promise<any[] | undefined> {
+    if (!Array.isArray(cards) || cards.length === 0) {
+      return cards;
+    }
+
+    return Promise.all(cards.map(async (card, cardIndex) => {
+      const normalizedCard = { ...card };
+      const safeId = this.ensureSafeId(card?.id || '', `card-${cardIndex}`);
+
+      if (normalizedCard.metadata) {
+        normalizedCard.metadata = { ...normalizedCard.metadata };
+        if (normalizedCard.metadata.coverImageUrl) {
+          normalizedCard.metadata.coverImageUrl = await this.persistImageIfNeeded(
+            normalizedCard.metadata.coverImageUrl,
+            `${safeId}-cover`,
+          );
+        }
+      }
+
+      if (normalizedCard.visual) {
+          const normalizedVisual: any = { ...normalizedCard.visual };
+          if (normalizedVisual.imageUrl) {
+            normalizedVisual.imageUrl = await this.persistImageIfNeeded(
+              normalizedVisual.imageUrl,
+              `${safeId}-visual`,
+            );
+          }
+
+          if (normalizedVisual.structured) {
+            const structured = { ...normalizedVisual.structured };
+            if (Array.isArray(structured.stages)) {
+              structured.stages = await Promise.all(structured.stages.map(async (stage: any, stageIndex: number) => {
+                if (!stage) {
+                  return stage;
+                }
+                const normalizedStage = { ...stage };
+                if (normalizedStage.imageUrl) {
+                  normalizedStage.imageUrl = await this.persistImageIfNeeded(
+                    normalizedStage.imageUrl,
+                    `${safeId}-stage-${stageIndex}`,
+                  );
+                }
+                return normalizedStage;
+              }));
+            }
+            normalizedVisual.structured = structured;
+          }
+
+          normalizedCard.visual = normalizedVisual;
+      }
+
+      return normalizedCard;
+    }));
+  }
+
   private static extractCoverImage(cards?: any[]): string | null {
     if (!Array.isArray(cards)) return null;
     for (const card of cards) {
@@ -81,8 +235,14 @@ export class WorkService {
     try {
       await connectDB();
 
+      const normalizedCards = await this.normalizeCardImages(data.cards);
+      const payload = {
+        ...data,
+        cards: normalizedCards ?? [],
+      };
+
       // 验证输入
-      const validation = this.validateWorkData(data);
+      const validation = this.validateWorkData(payload);
       if (!validation.isValid) {
         return {
           success: false,
@@ -92,12 +252,12 @@ export class WorkService {
 
       // 创建作品
       const work = new Work({
-        ...data,
+        ...payload,
         author: new mongoose.Types.ObjectId(authorId),
         isOriginal: true,
         qualityScore: this.calculateInitialQualityScore(data),
         status: 'draft',
-        coverImageUrl: this.extractCoverImage(data.cards),
+        coverImageUrl: this.extractCoverImage(payload.cards),
       });
 
       const savedWork = await work.save();
@@ -152,9 +312,16 @@ export class WorkService {
       }
 
       // 更新作品
-      Object.assign(work, data);
-      if (data.cards) {
-        work.coverImageUrl = this.extractCoverImage(data.cards);
+      const normalizedCards = await this.normalizeCardImages(data.cards);
+
+      const updatePayload: UpdateWorkRequest = {
+        ...data,
+        cards: normalizedCards ?? data.cards,
+      };
+
+      Object.assign(work, updatePayload);
+      if (normalizedCards) {
+        work.coverImageUrl = this.extractCoverImage(normalizedCards);
       }
 
       // 重新计算质量评分

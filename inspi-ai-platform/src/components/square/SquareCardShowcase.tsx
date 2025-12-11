@@ -27,24 +27,15 @@ export function SquareCardShowcase({ cards }: SquareCardShowcaseProps) {
     );
   }
 
+  const isSingleCard = cards.length === 1;
+  const containerClass = isSingleCard
+    ? 'card-flow-two-column card-flow-two-column--single'
+    : 'card-flow-two-column';
+
   return (
-    <div
-      style={{
-        display: 'grid',
-        gap: '24px',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
-        alignItems: 'start',
-      }}
-    >
+    <div className={containerClass}>
       {cards.map(card => (
-        <div
-          key={card.id}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-          }}
-        >
+        <div key={card.id} className="card-flow-two-column__item">
           <GeneratedCard card={card} enableEditing={false} />
         </div>
       ))}

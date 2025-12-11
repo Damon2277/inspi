@@ -342,6 +342,11 @@ function ProfileContent() {
         color: '#94a3b8',
         opacity: hoveredWorkId === workId ? 1 : 0,
         transition: 'opacity 0.2s ease',
+        pointerEvents: hoveredWorkId === workId ? 'auto' : 'none',
+        position: 'absolute',
+        top: 'calc(var(--layout-card-padding) * 1.35)',
+        right: 'calc(var(--layout-card-padding) * 1.35)',
+        zIndex: 2,
       }}
       className="work-card__delete"
     >
@@ -384,37 +389,41 @@ function ProfileContent() {
         onMouseEnter={() => setHoveredWorkId(work.id)}
         onMouseLeave={() => setHoveredWorkId(prev => (prev === work.id ? null : prev))}
       >
+        {renderDeleteButton(work.id)}
         <div className="work-card__header">
-          {renderAvatar()}
           <div className="work-card__info">
             <div className="work-card__title-row">
-              <h3 className="work-card__title" style={{ margin: 0 }}>{work.title}</h3>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                {renderDeleteButton(work.id)}
+              <div className="work-card__title-block">
+                <h3 className="work-card__title" style={{ margin: 0 }}>{work.title}</h3>
               </div>
             </div>
-            <div className="work-card__chips">
-              <span className="work-chip work-chip--subject">{work.subject}</span>
-              {(isReused || isPrivate) && (
-                <div className="work-card__status-group">
-                  {isReused && (
-                    <span className="work-chip work-chip--status work-chip--status-reused">复用</span>
-                  )}
-                  {isPrivate && (
-                    <span className="work-chip work-chip--status work-chip--status-private">私有</span>
-                  )}
-                </div>
+          </div>
+        </div>
+        {renderAvatar()}
+        <div className="work-card__chips work-card__chips--below-image">
+          <span className="work-chip work-chip--subject">{work.subject}</span>
+          <span className="work-chip work-chip--grade">{work.grade}</span>
+          {(isReused || isPrivate) && (
+            <div className="work-card__status-group">
+              {isReused && (
+                <span className="work-chip work-chip--status work-chip--status-reused">复用</span>
+              )}
+              {isPrivate && (
+                <span className="work-chip work-chip--status work-chip--status-private">私有</span>
               )}
             </div>
-          </div>
+          )}
+          {Array.isArray(work.tags) && work.tags.length > 0 && (
+            <span className="work-chip work-chip--tag">#{work.tags[0]}</span>
+          )}
         </div>
         {work.description ? (
           <p className="work-card__description text-clamp-3">{work.description}</p>
         ) : null}
-        {work.tags && work.tags.length > 0 ? (
+        {work.tags && work.tags.length > 1 ? (
           <div className="work-card__tags">
-            {work.tags.map((tag, index) => (
-              <span key={`${work.id}-tag-${index}`} className="work-chip work-chip--tag">
+            {work.tags.slice(1).map((tag, index) => (
+              <span key={`${work.id}-tag-extra-${index}`} className="work-chip work-chip--tag">
                 #{tag}
               </span>
             ))}
@@ -430,12 +439,24 @@ function ProfileContent() {
               />
             </div>
           ) : <span />}
-          <a
-            href={`/works/${work.id}`}
-            className="work-card__cta"
-          >
-            查看内容
-          </a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ color: '#94a3b8', fontSize: '12px' }}>
+              {new Date(work.createdAt).toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+              }).replace(/年0/g, '年').replace(/月0/g, '月')}
+            </span>
+            <a
+              href={`/works/${work.id}`}
+              className="work-card__cta"
+            >
+              查看内容
+            </a>
+          </div>
         </div>
       </article>
     );
@@ -649,7 +670,7 @@ function ProfileContent() {
                       </a>
                     </div>
                   ) : (
-                    <div className="work-card-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 'calc(var(--layout-card-gap) * 1.1)' }}>
+                    <div className="work-card-grid work-card-grid--profile">
                       {displayWorks.map(renderWorkCard)}
                     </div>
                   )}
