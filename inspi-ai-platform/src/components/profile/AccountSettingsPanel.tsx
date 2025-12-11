@@ -75,8 +75,8 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
           </div>
           <div style={{ flex: 1 }}>
             <h2 style={{ fontSize: '22px', fontWeight: 600, color: 'var(--gray-900)', marginBottom: '6px' }}>{user.name}</h2>
-            <p style={{ fontSize: '14px', color: 'var(--gray-600)' }}>{user.email}</p>
-            <div style={{ display: 'flex', gap: '12px', marginTop: '10px', fontSize: '12px', color: 'var(--gray-500)' }}>
+            <p style={{ fontSize: '18px', color: 'var(--gray-600)' }}>{user.email}</p>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '10px', fontSize: '16px', color: 'var(--gray-500)' }}>
               <span>
                 等级：<span style={{ color: 'var(--primary-600)', fontWeight: 600 }}>{user.level}</span>
               </span>
@@ -85,12 +85,12 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
           </div>
         </div>
 
-        <div style={{ marginTop: '12px', fontSize: '14px', color: 'var(--gray-600)', lineHeight: 1.7 }}>
+        <div style={{ marginTop: '12px', fontSize: '18px', color: 'var(--gray-600)', lineHeight: 1.6 }}>
           {user.bio}
         </div>
 
         <div style={{ marginTop: '24px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--gray-900)', marginBottom: '12px' }}>个人概况</h3>
+          <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--gray-900)', marginBottom: '12px' }}>个人概况</h3>
           <div style={{
             display: 'flex',
             justifyContent: 'flex-start',
@@ -114,8 +114,8 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
                   textAlign: 'center',
                 }}
               >
-                <p style={{ fontSize: '12px', color: 'var(--gray-500)', marginBottom: '6px' }}>{item.label}</p>
-                <p style={{ fontSize: '22px', fontWeight: 600, color: 'var(--gray-900)' }}>{item.value}</p>
+                <p style={{ fontSize: '16px', color: 'var(--gray-500)', marginBottom: '6px' }}>{item.label}</p>
+                <p style={{ fontSize: '28px', fontWeight: 600, color: 'var(--gray-900)' }}>{item.value}</p>
               </div>
             ))}
           </div>
@@ -129,15 +129,18 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
           borderRadius: 'var(--radius-lg)',
           padding: '20px 24px',
         }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '600', color: 'var(--gray-900)', marginBottom: '12px' }}>账户安全</h3>
-          <p style={{ fontSize: '13px', color: 'var(--gray-600)', marginBottom: '16px' }}>建议定期更新密码，保障账户安全。</p>
+          <h3 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--gray-900)', marginBottom: '12px' }}>账户安全</h3>
+          <p style={{ fontSize: '18px', color: 'var(--gray-600)', marginBottom: '16px' }}>建议定期更新密码，保障账户安全。</p>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <button className="modern-btn modern-btn-outline" style={{ flex: '1 1 200px', fontSize: '14px', padding: '12px' }}>
+            <button
+              className="modern-btn modern-btn-outline"
+              style={{ flex: '1 1 200px', fontSize: '18px', padding: '14px', minHeight: 'calc(var(--hero-btn-height) * 0.7)' }}
+            >
               修改密码
             </button>
             <button
               className="modern-btn modern-btn-primary"
-              style={{ flex: '1 1 200px', fontSize: '14px', padding: '12px' }}
+              style={{ flex: '1 1 200px', fontSize: '18px', padding: '14px', minHeight: 'calc(var(--hero-btn-height) * 0.7)' }}
               onClick={() => setShowProfileEditor(true)}
             >
               编辑个人资料
@@ -193,7 +196,7 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  fontSize: '14px',
+              fontSize: '18px',
                   color: 'var(--primary-600)',
                   textDecoration: 'none',
                   marginBottom: '16px',
@@ -204,7 +207,7 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
                 </svg>
                 返回个人中心
               </Link>
-              <h1 style={{ fontSize: '32px', fontWeight: '700', color: 'var(--gray-900)' }}>
+              <h1 style={{ fontSize: '42px', fontWeight: '700', color: 'var(--gray-900)' }}>
                 账户设置
               </h1>
             </div>
@@ -275,7 +278,7 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
                 <label style={{
                   display: 'block',
                   marginBottom: '8px',
-                  fontSize: '14px',
+                  fontSize: '18px',
                   fontWeight: '500',
                   color: 'var(--gray-700)',
                 }}>
@@ -293,7 +296,7 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
                     padding: '10px 12px',
                     border: '1px solid var(--gray-300)',
                     borderRadius: 'var(--radius-md)',
-                    fontSize: '14px',
+                    fontSize: '18px',
                   }}
                 />
               </div>
@@ -302,7 +305,7 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
                 <label style={{
                   display: 'block',
                   marginBottom: '8px',
-                  fontSize: '14px',
+                  fontSize: '18px',
                   fontWeight: '500',
                   color: 'var(--gray-700)',
                 }}>
@@ -320,7 +323,7 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
                     padding: '10px 12px',
                     border: '1px solid var(--gray-300)',
                     borderRadius: 'var(--radius-md)',
-                    fontSize: '14px',
+                    fontSize: '18px',
                   }}
                 />
               </div>
@@ -329,7 +332,7 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
                 <label style={{
                   display: 'block',
                   marginBottom: '8px',
-                  fontSize: '14px',
+                  fontSize: '18px',
                   fontWeight: '500',
                   color: 'var(--gray-700)',
                 }}>
@@ -347,7 +350,7 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
                     padding: '10px 12px',
                     border: '1px solid var(--gray-300)',
                     borderRadius: 'var(--radius-md)',
-                    fontSize: '14px',
+                    fontSize: '18px',
                     resize: 'vertical',
                   }}
                 />
@@ -357,7 +360,7 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
                 <label style={{
                   display: 'block',
                   marginBottom: '8px',
-                  fontSize: '14px',
+                  fontSize: '18px',
                   fontWeight: '500',
                   color: 'var(--gray-700)',
                 }}>
@@ -376,7 +379,7 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
                     padding: '10px 12px',
                     border: '1px solid var(--gray-300)',
                     borderRadius: 'var(--radius-md)',
-                    fontSize: '14px',
+                    fontSize: '18px',
                   }}
                 />
               </div>
@@ -385,7 +388,7 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
                 <button
                   type="button"
                   className="modern-btn modern-btn-outline"
-                  style={{ fontSize: '14px' }}
+                  style={{ fontSize: '18px', minHeight: 'calc(var(--hero-btn-height) * 0.7)' }}
                   onClick={() => setShowProfileEditor(false)}
                   disabled={isSaving}
                 >
@@ -394,7 +397,7 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
                 <button
                   type="button"
                   className="modern-btn modern-btn-primary"
-                  style={{ fontSize: '14px' }}
+                  style={{ fontSize: '18px', minHeight: 'calc(var(--hero-btn-height) * 0.7)' }}
                   onClick={handleSave}
                   disabled={isSaving}
                 >
@@ -422,7 +425,7 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
             boxShadow: 'var(--shadow-lg)',
             padding: '12px 24px',
             borderRadius: '9999px',
-            fontSize: '14px',
+            fontSize: '18px',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',

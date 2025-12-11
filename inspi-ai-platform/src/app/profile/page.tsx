@@ -479,12 +479,12 @@ function ProfileContent() {
 
   const renderFeedbackTab = () => (
     <div className="modern-grid modern-grid-2" style={{ gap: '24px' }}>
-      <div className="modern-card" style={{ padding: '28px' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--gray-900)', marginBottom: '12px' }}>产品反馈</h3>
-        <p style={{ fontSize: '14px', color: 'var(--gray-600)', lineHeight: 1.7, marginBottom: '20px' }}>
+      <div className="modern-card" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <h3 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--gray-900)', marginBottom: '12px' }}>产品反馈</h3>
+        <p style={{ fontSize: '18px', color: 'var(--gray-600)', lineHeight: 1.6, marginBottom: '24px' }}>
           在下方留言板填写您的建议、问题或教学灵感，我们会在双周迭代中优先处理高频需求。
         </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
           <textarea
             placeholder="请输入您想反馈的内容（支持 Markdown 简写）"
             rows={6}
@@ -493,30 +493,39 @@ function ProfileContent() {
               padding: '12px',
               borderRadius: 'var(--radius-lg)',
               border: '1px solid var(--gray-200)',
-              fontSize: '14px',
+              fontSize: '18px',
               lineHeight: 1.6,
               resize: 'vertical',
+              minHeight: '180px',
             }}
           />
-          <button className="modern-btn modern-btn-primary" style={{ alignSelf: 'flex-end', fontSize: '14px' }}>
-            提交留言
-          </button>
+          <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
+            <button
+              className="modern-btn modern-btn-primary"
+              style={{ fontSize: '18px', minHeight: 'calc(var(--hero-btn-height) * 0.7)', padding: '0 var(--space-8)' }}
+            >
+              提交留言
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="modern-card" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div>
-          <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--gray-900)', marginBottom: '12px' }}>社群共创</h3>
-          <p style={{ fontSize: '14px', color: 'var(--gray-600)', lineHeight: 1.7 }}>
+          <h3 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--gray-900)', marginBottom: '12px' }}>社群共创</h3>
+          <p style={{ fontSize: '18px', color: 'var(--gray-600)', lineHeight: 1.6 }}>
             扫码加入官方共创社群，提前体验新能力、共建课堂案例，与产品团队持续交流。
           </p>
         </div>
         <div style={{
           borderRadius: 'var(--radius-xl)',
           border: '1px dashed var(--gray-300)',
-          padding: '20px',
           background: 'var(--gray-50)',
+          width: '220px',
+          height: '220px',
+          margin: '0 auto',
           display: 'flex',
+          alignItems: 'center',
           justifyContent: 'center',
         }}>
           <Image
@@ -528,7 +537,7 @@ function ProfileContent() {
             priority
           />
         </div>
-        <p style={{ fontSize: '12px', color: 'var(--gray-500)', textAlign: 'center' }}>
+        <p style={{ fontSize: '16px', color: 'var(--gray-500)', textAlign: 'center' }}>
           长按或扫描上方二维码，添加小助手并备注“共创”
         </p>
       </div>
@@ -565,8 +574,8 @@ function ProfileContent() {
                   onMouseEnter={() => setHoveredTab(tab.key)}
                   onMouseLeave={() => setHoveredTab(null)}
                   style={{
-                    padding: '16px 20px',
-                    fontSize: '15px',
+                    padding: '16px 24px',
+                    fontSize: '20px',
                     fontWeight: isActive ? 600 : 500,
                     color: isActive ? 'var(--primary-600)' : isHovered ? 'var(--gray-900)' : 'var(--gray-600)',
                     borderTop: 'none',
@@ -640,7 +649,7 @@ function ProfileContent() {
                       </a>
                     </div>
                   ) : (
-                    <div className="work-card-grid">
+                    <div className="work-card-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 'calc(var(--layout-card-gap) * 1.1)' }}>
                       {displayWorks.map(renderWorkCard)}
                     </div>
                   )}

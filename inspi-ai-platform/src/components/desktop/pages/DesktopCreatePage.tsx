@@ -970,7 +970,7 @@ const sharePosterContainerStyle: React.CSSProperties = {
   }, [sharePosterImageUrl]);
 
   const horizontalPadding = 'var(--layout-page-padding)';
-  const sectionGap = 'var(--layout-section-gap)';
+  const sectionGap = 'calc(var(--layout-section-gap) * 0.22)';
   const moduleGap = 'var(--layout-panel-gap)';
   const heroPadding = 'calc(var(--layout-hero-padding-y) * 0.75) var(--layout-hero-padding-x)';
   const panelRadius = 'var(--layout-panel-radius)';
@@ -983,8 +983,8 @@ const sharePosterContainerStyle: React.CSSProperties = {
     width: '100%',
     minHeight: 'calc(100vh - 80px)',
     background: 'linear-gradient(180deg, #f5f3ff 0%, #f0f9ff 35%, #ffffff 100%)',
-    paddingTop: 'calc(var(--layout-section-gap) * 0.4)',
-    paddingBottom: 'calc(var(--layout-section-gap) * 0.7)',
+    paddingTop: 'calc(var(--layout-section-gap) * 0.32)',
+    paddingBottom: 'calc(var(--layout-section-gap) * 0.11)',
     paddingLeft: horizontalPadding,
     paddingRight: horizontalPadding,
     overflowY: 'auto',
@@ -1011,23 +1011,28 @@ const sharePosterContainerStyle: React.CSSProperties = {
 
   const heroSectionStyle: React.CSSProperties = {
     width: '100%',
-    padding: heroPadding,
-    borderRadius: 'calc(var(--layout-panel-radius) * 0.4)',
-    background: 'linear-gradient(120deg, rgba(99,102,241,0.12) 0%, rgba(14,165,233,0.08) 40%, rgba(255,255,255,0) 100%)',
-    border: '1px solid rgba(148,163,184,0.25)',
+    padding: 'calc(var(--layout-hero-padding-y) * 0.5) var(--layout-hero-padding-x)',
+    borderRadius: 'calc(var(--layout-panel-radius) * 0.35)',
+    background: 'linear-gradient(120deg, rgba(99,102,241,0.1) 0%, rgba(14,165,233,0.06) 40%, rgba(255,255,255,0) 100%)',
+    border: '1px solid rgba(148,163,184,0.2)',
     boxShadow: 'none',
     position: 'relative',
     overflow: 'hidden',
     boxSizing: 'border-box',
   };
 
+  const resultsPaddingTop = 'calc((var(--layout-main-padding) + 10px) * 0.5)';
+  const resultsPaddingX = 'calc(var(--layout-main-padding) + 16px)';
+  const resultsPaddingBottom = 'calc(var(--layout-main-padding) * 2)';
+
   const heroTextWrapperStyle: React.CSSProperties = {
     position: 'relative',
     zIndex: 1,
-    maxWidth: 'min(960px, 100%)',
+    maxWidth: 'min(1100px, 100%)',
     display: 'flex',
-    flexDirection: 'column',
-    gap: 'calc(var(--layout-card-gap) / 2)',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 'var(--space-3)',
     color: '#0f172a',
   };
 
@@ -1036,17 +1041,29 @@ const sharePosterContainerStyle: React.CSSProperties = {
       <LoginPromptComponent />
       <div style={pageBackgroundStyle}>
         <div style={{ ...constrainedLayoutStyle, marginBottom: 0 }}>
-          <div style={{ marginBottom: 'calc(var(--layout-section-gap) * 0.115)' }}>
+          <div style={{ marginBottom: 'calc(var(--layout-section-gap) * 0.028)' }}>
           <div style={heroSectionStyle}>
             <div style={heroTextWrapperStyle}>
-              <h1 style={{ fontSize: '24px', fontWeight: 800, margin: 0 }}>AI教学魔法师工作区</h1>
-              <p style={{ fontSize: 'var(--font-size-lg)', color: '#1f2937', lineHeight: 1.6, margin: 0, maxWidth: '100%' }}>
-                输入一个知识点，即可自动获得图文并茂的教学灵感、课堂互动与 SOP。让 AI 成为你的教学共创伙伴。
-              </p>
+              <h1
+                style={{
+                  fontSize: '24px',
+                  fontWeight: 800,
+                  margin: 0,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  flexWrap: 'wrap',
+                }}
+              >
+                AI教学魔法师工作区
+                <span style={{ fontSize: 'var(--font-size-lg)', color: '#1f2937', fontWeight: 500 }}>
+                  输入一个知识点，即可自动获得图文并茂的教学灵感、课堂互动与 SOP。
+                </span>
+              </h1>
             </div>
           </div>
           </div>
-          <div style={{ ...contentLayoutStyle, marginTop: 'calc(var(--layout-section-gap) * 0.075)' }}>
+            <div style={{ ...contentLayoutStyle, marginTop: 'calc(var(--layout-section-gap) * 0.012)' }}>
             {/* 侧边栏 - 信息卡 */}
           <aside style={{
             width: sidebarWidth,
@@ -1058,12 +1075,12 @@ const sharePosterContainerStyle: React.CSSProperties = {
           }}>
           {/* 最近项目 */}
           {recentProjects.length > 0 && (
-            <div style={{ marginBottom: 'calc(var(--layout-card-gap) * 0.75)' }}>
+            <div style={{ marginBottom: 'calc(var(--layout-card-gap) * 0.55)' }}>
               <h3 style={{
                 fontSize: 'var(--font-size-base)',
                 fontWeight: '700',
                 color: 'var(--gray-900)',
-                marginBottom: 'calc(var(--layout-card-gap) * 0.4)',
+                marginBottom: 'calc(var(--layout-card-gap) * 0.25)',
               }}>
                 最近项目
               </h3>
@@ -1261,7 +1278,7 @@ const sharePosterContainerStyle: React.CSSProperties = {
           ) : (
             <div
               style={{
-                padding: 'var(--layout-panel-padding-y) var(--layout-panel-padding-x) calc(var(--layout-panel-padding-y) + 12px)',
+                padding: 'calc(var(--layout-panel-padding-y) * 0.5) var(--layout-panel-padding-x) calc(var(--layout-panel-padding-y) * 0.5)',
                 background: 'rgba(255,255,255,0.95)',
                 borderBottom: '1px solid rgba(148,163,184,0.25)',
               }}
@@ -1312,57 +1329,79 @@ const sharePosterContainerStyle: React.CSSProperties = {
               </div>
 
               <div style={{ marginBottom: 'calc(var(--layout-card-gap) * 0.65)' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: 'calc(var(--layout-card-gap) * 0.35)', alignItems: 'start' }}>
-                  <div className="modern-form-group" style={{ marginBottom: 0 }}>
-                    <textarea
-                      className="modern-input"
-                      style={{
-                        fontSize: 'var(--font-size-base)',
-                        minHeight: '104px',
-                        width: 'calc(100% - 10px)',
-                        resize: 'none',
-                      }}
-                      placeholder="请表述你要教授的知识点，比如“光合作用”、“三角形”"
-                      value={formData.content}
-                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--layout-card-gap) * 0.3)' }}>
-                    <div className="modern-form-group" style={{ marginBottom: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 'calc(var(--layout-card-gap) * 0.3)' }}>
-                        <label className="modern-label" style={{ fontSize: 'var(--font-size-sm)', marginBottom: 0, whiteSpace: 'nowrap' }}>学科</label>
-                        <select
+                {(() => {
+                  const lateralGap = 'calc(var(--layout-card-gap) * 0.8)';
+                  const tripleGap = `calc(${lateralGap} * 3)`;
+                  const rightColumnWidth = `calc((100% - ${tripleGap}) / 4)`;
+                  const leftColumnWidth = `calc(100% - (${lateralGap} + ${rightColumnWidth}))`;
+                  const controlGap = 'calc(var(--layout-card-gap) * 0.45)';
+                  const selectStyle = {
+                    fontSize: 'var(--font-size-sm)',
+                    padding: 'calc(var(--layout-card-padding) * 0.4) calc(var(--layout-card-padding) * 0.8)',
+                    width: '220px',
+                    maxWidth: '100%',
+                  } as React.CSSProperties;
+
+                  return (
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: `minmax(0, ${leftColumnWidth}) minmax(280px, ${rightColumnWidth})`,
+                      gap: lateralGap,
+                      alignItems: 'start',
+                      width: '100%',
+                    }}>
+                      <div className="modern-form-group" style={{ marginBottom: 0 }}>
+                        <textarea
                           className="modern-input"
-                          style={{ fontSize: 'var(--font-size-sm)', padding: 'calc(var(--layout-card-padding) * 0.4) calc(var(--layout-card-padding) * 0.8)' }}
-                          value={formData.subject}
-                          onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                        >
-                          <option value="">选择学科</option>
-                          {subjects.map(subject => (
-                            <option key={subject} value={subject}>{subject}</option>
-                          ))}
-                        </select>
+                          style={{
+                            fontSize: 'var(--font-size-base)',
+                            minHeight: '104px',
+                            width: '100%',
+                            resize: 'none',
+                          }}
+                          placeholder="请表述你要教授的知识点，比如“光合作用”、“三角形”"
+                          value={formData.content}
+                          onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--layout-card-gap) * 0.3)' }}>
+                        <div className="modern-form-group" style={{ marginBottom: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: controlGap }}>
+                            <label className="modern-label" style={{ fontSize: 'var(--font-size-sm)', marginBottom: 0, whiteSpace: 'nowrap' }}>学科</label>
+                            <select
+                              className="modern-input"
+                              style={selectStyle}
+                              value={formData.subject}
+                              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                            >
+                              <option value="">选择学科</option>
+                              {subjects.map(subject => (
+                                <option key={subject} value={subject}>{subject}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="modern-form-group" style={{ marginBottom: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: controlGap }}>
+                            <label className="modern-label" style={{ fontSize: 'var(--font-size-sm)', marginBottom: 0, whiteSpace: 'nowrap' }}>学段</label>
+                            <select
+                              className="modern-input"
+                              style={selectStyle}
+                              value={formData.gradeLevel}
+                              onChange={(e) => setFormData({ ...formData, gradeLevel: e.target.value })}
+                            >
+                              <option value="">选择学段</option>
+                              {gradeLevels.map(level => (
+                                <option key={level} value={level}>{level}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="modern-form-group" style={{ marginBottom: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 'calc(var(--layout-card-gap) * 0.3)' }}>
-                        <label className="modern-label" style={{ fontSize: 'var(--font-size-sm)', marginBottom: 0, whiteSpace: 'nowrap' }}>学段</label>
-                        <select
-                          className="modern-input"
-                          style={{ fontSize: 'var(--font-size-sm)', padding: 'calc(var(--layout-card-padding) * 0.4) calc(var(--layout-card-padding) * 0.8)' }}
-                          value={formData.gradeLevel}
-                          onChange={(e) => setFormData({ ...formData, gradeLevel: e.target.value })}
-                        >
-                          <option value="">选择学段</option>
-                          {gradeLevels.map(level => (
-                            <option key={level} value={level}>{level}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })()}
               </div>
 
               <div style={{ marginBottom: 'calc(var(--layout-card-gap) * 0.65)' }}>
@@ -1550,7 +1589,7 @@ const sharePosterContainerStyle: React.CSSProperties = {
             style={{
               flex: 1,
               overflowY: 'auto',
-              padding: 'calc(var(--layout-main-padding) + 10px) calc(var(--layout-main-padding) + 16px) calc(var(--layout-main-padding) * 2)',
+              padding: `${resultsPaddingTop} ${resultsPaddingX} ${resultsPaddingBottom}`,
               position: 'relative',
             }}
           >
@@ -1583,8 +1622,8 @@ const sharePosterContainerStyle: React.CSSProperties = {
                 position: 'sticky',
                 top: 0,
                 zIndex: 5,
-                marginBottom: 'calc(var(--layout-card-gap) * 0.55)',
-                paddingBottom: 'calc(var(--layout-card-gap) * 0.45)',
+                marginBottom: 'calc(var(--layout-card-gap) * 0.275)',
+                paddingBottom: 'calc(var(--layout-card-gap) * 0.225)',
                 background: 'linear-gradient(180deg, rgba(248,250,252,0.96) 0%, rgba(248,250,252,0.86) 70%, rgba(248,250,252,0) 100%)',
                 backdropFilter: 'blur(6px)',
               }}
@@ -1857,19 +1896,19 @@ const sharePosterContainerStyle: React.CSSProperties = {
                 </div>
               </div>
             ) : (
-              <div className="modern-card" style={{ textAlign: 'center', padding: '60px 0' }}>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
-                <h3 style={{
-                  fontSize: 'var(--font-size-xl)',
-                  fontWeight: '600',
-                  color: 'var(--gray-900)',
-                  marginBottom: '8px',
-                }}>
-                  开始创作
-                </h3>
-                <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-base)' }}>
-                  填入教学主题或课堂目标，选择卡片类型，AI将为您生成教学卡片
+              <div className="modern-card" style={{ textAlign: 'center', padding: '32px 0', border: '1px dashed var(--gray-200)', borderRadius: 'var(--radius-lg)', background: 'var(--gray-50)' }}>
+                <div style={{ fontSize: '48px', marginBottom: '12px' }}>📝</div>
+                <h3 style={{ fontSize: '18px', color: 'var(--gray-800)', marginBottom: '6px' }}>请先选择卡片类型</h3>
+                <p style={{ color: 'var(--gray-600)', fontSize: 'var(--font-size-sm)', marginBottom: '16px' }}>
+                  选择 1 种以上卡片类型，即可点击按钮生成教学灵感。
                 </p>
+                <div style={{ display: 'inline-flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {cardTypes.map(type => (
+                    <span key={type.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px', background: '#fff', borderRadius: '999px', fontSize: 'var(--font-size-sm)', color: 'var(--gray-600)' }}>
+                      {type.icon} {type.name}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
 

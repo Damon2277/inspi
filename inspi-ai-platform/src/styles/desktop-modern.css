@@ -150,6 +150,7 @@
   --layout-card-padding: clamp(12px, 1.2vw, 28px);
   --layout-main-padding: clamp(32px, 3vw, 72px);
   --layout-sidebar-width: clamp(220px, 18vw, 360px);
+  --hero-btn-height: clamp(48px, 5vw, 64px);
 }
 
 html {
@@ -386,6 +387,7 @@ body {
   position: relative;
   overflow: hidden;
   letter-spacing: 0.01em;
+  min-height: var(--hero-btn-height);
 }
 
 .modern-btn:disabled {
@@ -743,14 +745,14 @@ body {
 
 .desktop-hero__title {
   margin: 0;
-  font-size: var(--font-size-4xl);
+  font-size: calc(var(--font-size-4xl) * 0.8);
   line-height: 1.12;
   letter-spacing: -0.012em;
 }
 
 @media (min-width: 1280px) {
   .desktop-hero__title {
-    font-size: var(--font-size-5xl);
+    font-size: calc(var(--font-size-5xl) * 0.8);
   }
 }
 
@@ -1290,11 +1292,7 @@ body {
   transform: translateY(-6px);
   box-shadow: var(--shadow-lg);
   border-color: var(--primary-200);
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(255, 245, 235, 1) 100%
-  );
+  background: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(255, 245, 235, 1) 100%);
 }
 
 .desktop-case-card--loading {
