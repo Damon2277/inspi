@@ -16,6 +16,7 @@ export function DesktopSquarePage() {
 
   const baseReuseCountsRef = useRef<Map<number, number>>(new Map(mockSquareWorks.map(work => [work.id, work.reuses])));
   const [works, setWorks] = useState(() => mockSquareWorks.map(work => ({ ...work })));
+  const [visibleCount, setVisibleCount] = useState(6);
 
   useEffect(() => {
     setWorks(mockSquareWorks.map(work => ({
@@ -62,6 +63,16 @@ export function DesktopSquarePage() {
 
   const handleCardClick = (workId: number) => {
     window.location.href = `/square/${workId}`;
+  };
+
+  useEffect(() => {
+    setVisibleCount(Math.min(6, filteredWorks.length));
+  }, [filteredWorks.length]);
+
+  const displayedWorks = filteredWorks.slice(0, visibleCount);
+  const hasMoreWorks = visibleCount < filteredWorks.length;
+  const handleLoadMore = () => {
+    setVisibleCount(prev => Math.min(prev + 6, filteredWorks.length));
   };
 
   return (
@@ -178,7 +189,7 @@ export function DesktopSquarePage() {
         {/* 作品网格 */}
         <div className="modern-container">
           <div className="work-card-grid">
-            {filteredWorks.map(work => (
+            {displayedWorks.map(work => (
               <article
                 key={work.id}
                 className="work-card"
@@ -254,12 +265,18 @@ export function DesktopSquarePage() {
             </div>
           )}
 
-          {/* 加载更多 */}
-          <div style={{ textAlign: 'center', marginTop: '48px' }}>
-            <button className="modern-btn modern-btn-outline modern-btn-lg">
-              发现更多智慧
-            </button>
-          </div>
+          {hasMoreWorks && (
+            <div style={{ textAlign: 'center', marginTop: '48px' }}>
+              <button
+                type="button"
+                className="modern-btn modern-btn-outline modern-btn-lg"
+                onClick={handleLoadMore}
+                style={{ minHeight: 'var(--hero-btn-height)' }}
+              >
+                发现更多智慧
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

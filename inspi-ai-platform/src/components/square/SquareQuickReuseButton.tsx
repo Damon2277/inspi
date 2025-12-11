@@ -104,8 +104,9 @@ export function SquareQuickReuseButton({
             border: isReused ? '1px solid #86efac' : 'none',
             fontWeight: '500',
             fontSize: '13px',
-            padding: '6px 16px',
+            padding: '4px 14px',
             minWidth: '112px',
+            minHeight: 'calc(var(--hero-btn-height) * 0.7)',
             transition: 'all 0.2s ease',
             cursor: status === 'idle' ? 'pointer' : 'not-allowed',
           }}

@@ -103,7 +103,6 @@ const cardTypes: CardType[] = [
 
 const stats = [
   { label: '教师用户', value: '1,000+', icon: '👨‍🏫' },
-  { label: '创意卡片', value: '10,000+', icon: '🎨' },
   { label: '智慧作品', value: '2,000+', icon: '📚' },
   { label: '致敬复用', value: '5,000+', icon: '🤝' },
 ];
@@ -252,7 +251,12 @@ export function DesktopHomePage() {
             <div className="desktop-input-panel">
               <div className="desktop-creation-panel">
                 <div className="desktop-creation-panel__header">
-                  <span className="desktop-creation-panel__title">描述您要教授的知识点</span>
+                  <span
+                    className="desktop-creation-panel__title desktop-section__title"
+                    style={{ fontSize: 'clamp(21px, 1.875vw, 30px)', lineHeight: 1.2 }}
+                  >
+                    描述您要教授的知识点
+                  </span>
                   <span className="desktop-creation-panel__counter">{inputContent.length}/500</span>
                 </div>
                 <textarea
@@ -262,10 +266,6 @@ export function DesktopHomePage() {
                   onChange={handleInputChange}
                   rows={3}
                 />
-                <p className="desktop-creation-panel__helper">
-                  <span className="desktop-creation-panel__helper-icon" aria-hidden="true">💡</span>
-                  登录后即可生成专属教学灵感卡片。
-                </p>
                 <div className="desktop-card-type-grid">
                   {cardTypes.map(type => (
                     <button
@@ -280,14 +280,35 @@ export function DesktopHomePage() {
                     </button>
                   ))}
                 </div>
-                <div className="desktop-card-type-actions">
-                  <button
-                    type="button"
-                    className="modern-btn modern-btn-primary modern-btn-lg desktop-card-type-actions__cta"
-                    onClick={() => handleCreateClick(HERO_CREATE_PROMPT_MESSAGE)}
-                  >
-                    立即开启创作
-                  </button>
+                <div
+                  className="desktop-card-type-actions"
+                  style={{
+                    marginTop: 'var(--space-3)',
+                    marginBottom: 'var(--space-3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 'var(--space-4)',
+                    flexWrap: 'wrap',
+                    width: '100%',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <button
+                      type="button"
+                      className="modern-btn modern-btn-primary modern-btn-lg desktop-card-type-actions__cta"
+                      onClick={() => handleCreateClick(HERO_CREATE_PROMPT_MESSAGE)}
+                    >
+                      立即开启创作
+                    </button>
+                    <p
+                      className="desktop-creation-panel__helper"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', margin: 0, justifyContent: 'flex-end', minWidth: '240px' }}
+                    >
+                      <span className="desktop-creation-panel__helper-icon" aria-hidden="true">💡</span>
+                      登录后即可生成专属教学灵感卡片。
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -295,7 +316,7 @@ export function DesktopHomePage() {
         </section>
 
         <section className="desktop-section desktop-section--muted desktop-stats-section">
-          <div className="modern-container">
+          <div className="modern-container" style={{ maxWidth: 'min(80vw, 1100px)', margin: '0 auto' }}>
             <div className="desktop-section__header">
               <h2 className="desktop-section__title">被老师们信赖的 AI 课堂助手</h2>
               <p className="desktop-section__subtitle">
@@ -303,7 +324,7 @@ export function DesktopHomePage() {
               </p>
             </div>
 
-            <div className="modern-grid modern-grid-4 desktop-stats-grid">
+            <div className="modern-grid modern-grid-3 desktop-stats-grid">
               {stats.map(stat => (
                 <div key={stat.label} className="desktop-stat-card">
                   <span className="desktop-stat-card__icon">{stat.icon}</span>
@@ -426,7 +447,7 @@ export function DesktopHomePage() {
         </section>
 
         <section className="desktop-section desktop-section--light">
-          <div className="modern-container">
+          <div className="modern-container" style={{ maxWidth: 'min(80vw, 1100px)', margin: '0 auto' }}>
             <div className="desktop-section__header">
               <h2 className="desktop-section__title">智慧广场精选</h2>
               <p className="desktop-section__subtitle">
@@ -434,46 +455,51 @@ export function DesktopHomePage() {
               </p>
             </div>
 
-            {isLoading ? (
-              <div className="modern-grid modern-grid-3 desktop-case-grid">
-                {[1, 2, 3].map(item => (
-                  <div key={item} className="desktop-case-card desktop-case-card--loading skeleton" />
-                ))}
-              </div>
-            ) : (
-              <>
-                <div className="modern-grid modern-grid-3 desktop-case-grid">
-                  {popularCases.map(caseItem => (
-                    <article
-                      key={caseItem.id}
-                      className="desktop-case-card"
-                      onClick={() => handleCaseClick(caseItem)}
-                    >
-                      <div className="desktop-case-card__header">
-                        <span className="desktop-case-card__emoji">{caseItem.thumbnail}</span>
-                        <span className="desktop-case-card__tag">{caseItem.subject}</span>
+            <div
+              className="work-card-grid desktop-case-grid"
+              style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', maxWidth: 'min(80vw, 1100px)', margin: '0 auto' }}
+            >
+              {isLoading ? (
+                [1, 2, 3].map(item => (
+                  <article key={item} className="work-card desktop-case-card desktop-case-card--loading skeleton" />
+                ))
+              ) : (
+                popularCases.map(caseItem => (
+                  <article
+                    key={caseItem.id}
+                    className="work-card desktop-case-card"
+                    onClick={() => handleCaseClick(caseItem)}
+                  >
+                    <div className="work-card__header">
+                      <span className="work-card__emoji">{caseItem.thumbnail}</span>
+                      <div className="work-card__chips">
+                        <span className="work-chip work-chip--subject">{caseItem.subject}</span>
+                        <span className="work-chip work-chip--grade">精选</span>
                       </div>
-                      <h3 className="desktop-case-card__title">{caseItem.title}</h3>
-                      <div className="desktop-case-card__footer">
-                        <span>by {caseItem.author}</span>
-                        <span>🔄 {caseItem.uses} 次使用</span>
-                      </div>
-                    </article>
-                  ))}
-                </div>
+                    </div>
+                    <h3 className="work-card__title">{caseItem.title}</h3>
+                    <p className="work-card__description">by {caseItem.author}</p>
+                    <div className="work-card__footer">
+                      <span>🔄 {caseItem.uses} 次使用</span>
+                      <span>立即查看 →</span>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
 
-                <div className="desktop-section__footer">
-                  <Link href="/square" className="modern-btn modern-btn-outline modern-btn-lg">
-                    🌟 探索更多智慧作品
-                  </Link>
-                </div>
-              </>
+            {!isLoading && (
+              <div className="desktop-section__footer">
+                <Link href="/square" className="modern-btn modern-btn-outline modern-btn-lg">
+                  🌟 探索更多智慧作品
+                </Link>
+              </div>
             )}
           </div>
         </section>
 
         <section className="desktop-section">
-          <div className="modern-container">
+          <div className="modern-container" style={{ maxWidth: 'min(80vw, 1100px)', margin: '0 auto' }}>
             <div className="desktop-cta">
               <h2 className="desktop-cta__title">让每一次奇思妙想，都被精彩呈现</h2>
               <p className="desktop-cta__subtitle">

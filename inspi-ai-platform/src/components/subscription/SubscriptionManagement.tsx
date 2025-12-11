@@ -160,6 +160,7 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
               onClick={handleCancelSubscription}
               disabled={cancelLoading}
               className="inline-flex items-center justify-center rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 disabled:cursor-not-allowed disabled:opacity-60"
+              style={{ minHeight: 'var(--hero-btn-height)' }}
             >
               {cancelLoading ? '处理中...' : '确认取消自动续费'}
             </button>
@@ -167,6 +168,7 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
               type="button"
               onClick={() => setShowCancelConfirm(false)}
               className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+              style={{ minHeight: 'var(--hero-btn-height)' }}
             >
               保留订阅
             </button>
@@ -177,6 +179,7 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
           type="button"
           onClick={() => setShowCancelConfirm(true)}
           className="mt-4 inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-400 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          style={{ minHeight: 'var(--hero-btn-height)' }}
         >
           管理自动续费
         </button>
@@ -194,6 +197,7 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
         type="button"
         onClick={() => setShowSubscriptionModal(true)}
         className="mt-4 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+        style={{ minHeight: 'var(--hero-btn-height)' }}
       >
         升级获取更多额度
       </button>
@@ -204,14 +208,15 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
     <>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900">订阅管理</h1>
-          <p className="mt-2 text-sm text-slate-600">查看额度使用情况、管理自动续订配置。</p>
+          <h1 className="text-2xl font-semibold text-slate-900">订阅管理</h1>
+          <p className="mt-2 text-xl text-slate-600">查看额度使用情况、管理自动续订配置。</p>
         </div>
         {!isSubscribed ? (
           <button
             type="button"
             onClick={() => setShowSubscriptionModal(true)}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            style={{ minHeight: 'var(--hero-btn-height)' }}
           >
             立即升级专业版
           </button>
@@ -234,9 +239,9 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">{planSummary.title}</h2>
-                <p className="text-sm text-slate-600">{planSummary.description}</p>
+                <p className="text-lg text-slate-600">{planSummary.description}</p>
               </div>
-              <div className="text-right text-sm text-slate-500">
+              <div className="text-right text-lg text-slate-500">
                 {isSubscribed ? '自动续费中，每月 15 元' : '免费体验中，升级享更多权益'}
               </div>
             </div>
@@ -249,7 +254,7 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
 
         <aside className="space-y-4 rounded-2xl bg-white p-6 shadow-sm">
           <h3 className="text-base font-semibold text-slate-900">订阅权益</h3>
-          <ul className="space-y-4 text-sm text-slate-600">
+          <ul className="space-y-4 text-lg text-slate-600">
             <li>
               <span className="font-medium text-slate-800">高频生成：</span>
               每月最高 150 次生成额度，适配高密度备课场景。
@@ -275,7 +280,7 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
 
       <section className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white p-6 shadow-sm">
         <h3 className="text-base font-semibold text-slate-900">常见问题</h3>
-        <div className="mt-4 space-y-3 text-sm text-slate-600">
+        <div className="mt-4 space-y-3 text-lg text-slate-600">
           <p>• 订阅随时可取消，当前周期结束前仍可使用全部功能。</p>
           <p>• 额度会在每月账单日自动刷新，未使用部分不结转。</p>
           <p>• 如需发票或企业采购，请通过客服渠道联系我们。</p>
