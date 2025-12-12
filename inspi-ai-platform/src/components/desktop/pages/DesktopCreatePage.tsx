@@ -1,7 +1,7 @@
 'use client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import QRCode from 'qrcode';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 /**
  * 现代化桌面端创作页面组件
@@ -14,7 +14,7 @@ import { buildProxiedImageUrl, needsProxying } from '@/lib/export/image-proxy';
 import { shareToSocial, generateShareLink, trackShareEvent, type SharePlatform } from '@/lib/share/share-service';
 import { env } from '@/shared/config/environment';
 import { useAuth } from '@/shared/hooks/useAuth';
-import type { CardType, TeachingCard, GenerateCardsResponse } from '@/shared/types/teaching';
+import type { CardType, TeachingCard, GenerateCardsResponse, VisualizationSpec } from '@/shared/types/teaching';
 
 const CARD_TYPE_TO_RAW: Record<CardType, 'concept' | 'example' | 'practice' | 'extension'> = {
   visualization: 'concept',
@@ -65,6 +65,12 @@ export function DesktopCreatePage() {
   const [quotaHint, setQuotaHint] = useState<string | null>(null);
   const [quotaErrorCount, setQuotaErrorCount] = useState(0);
   const [isShareMenuOpen, setShareMenuOpen] = useState(false);
+
+  const handleCardVisualUpdate = useCallback(({ cardId, visual }: { cardId: string; visual: VisualizationSpec }) => {
+    setGeneratedCards(prev => prev.map(card => (card.id === cardId ? { ...card, visual } : card)));
+  }, []);
+
+  const resolvedWorkId = editingWorkId || savedWorkId || undefined;
   const [isSharing, setIsSharing] = useState(false);
   const [shareQrCode, setShareQrCode] = useState('');
   const [recentProjects, setRecentProjects] = useState<RecentProjectSummary[]>([]);
@@ -1866,6 +1872,8 @@ const sharePosterContainerStyle: React.CSSProperties = {
                     onPreview={() => openGalleryAt(index)}
                     onRetry={() => handleRetryCard(card, index)}
                     retrying={retryingCardId === card.id}
+                    onVisualUpdate={handleCardVisualUpdate}
+                    workId={resolvedWorkId}
                   />
                 ))}
               </div>
@@ -1954,7 +1962,12 @@ const sharePosterContainerStyle: React.CSSProperties = {
 
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 80px 40px' }}>
             <div style={{ width: 'min(960px, 100%)', maxHeight: '90vh', overflowY: 'auto' }}>
-              <GeneratedCard card={generatedCards[galleryIndex]} className="gallery-card" />
+              <GeneratedCard
+                card={generatedCards[galleryIndex]}
+                className="gallery-card"
+                onVisualUpdate={handleCardVisualUpdate}
+                workId={resolvedWorkId}
+              />
             </div>
           </div>
 

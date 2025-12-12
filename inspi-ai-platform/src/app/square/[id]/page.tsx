@@ -9,12 +9,19 @@ import { mockSquareWorks } from '@/data/mockSquareWorks';
 import type { RawCardType } from '@/shared/types/teaching';
 
 
+export const dynamic = 'force-dynamic';
+
 interface SquareDetailPageProps {
   params: Promise<{ id: string }> | { id: string };
+  searchParams?: Promise<{ from?: string }> | { from?: string };
 }
 
 export default async function SquareDetailPage(props: SquareDetailPageProps) {
   const resolvedParams = props.params instanceof Promise ? await props.params : props.params;
+  const resolvedSearchParams = props.searchParams instanceof Promise ? await props.searchParams : props.searchParams ?? {};
+  const fromProfile = resolvedSearchParams?.from === 'profile';
+  const backHref = fromProfile ? '/profile?tab=works' : '/square';
+  const backLabel = fromProfile ? '返回我的作品' : '返回广场';
   const workId = Number(resolvedParams.id);
 
   if (Number.isNaN(workId)) {
@@ -46,11 +53,11 @@ export default async function SquareDetailPage(props: SquareDetailPageProps) {
     <AppLayout>
       <div className="modern-layout work-detail-layout">
         <div className="modern-container">
-          <Link href="/square" className="work-detail__back">
+          <Link href={backHref} className="work-detail__back">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
-            返回广场
+            {backLabel}
           </Link>
 
           <article className="work-detail-card">

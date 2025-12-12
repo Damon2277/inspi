@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useAuth } from '@/shared/hooks/useAuth';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -26,6 +27,8 @@ interface GeneratedCardProps {
   retrying?: boolean;
   enableEditing?: boolean;
   hideVisualGeneration?: boolean;
+  workId?: string;
+  onVisualUpdate?: (payload: { cardId: string; visual: VisualizationSpec }) => void;
 }
 
 type ViewMode = 'content' | 'sop' | 'presentation';
@@ -56,6 +59,8 @@ const cardTypeConfig = {
     description: '让课堂"破冰"',
   },
 };
+
+const OPTIONAL_VISUAL_CARD_TYPES: TeachingCard['type'][] = ['analogy', 'thinking', 'interaction'];
 
 const visualizationThemes: Record<VisualizationTheme, {
   background: string;
@@ -118,6 +123,8 @@ export function GeneratedCard({
   retrying = false,
   enableEditing = true,
   hideVisualGeneration = false,
+  workId,
+  onVisualUpdate,
 }: GeneratedCardProps) {
   const [cardContent, setCardContent] = useState(card.content);
   const [isEditing, setIsEditing] = useState(false);
@@ -132,11 +139,22 @@ export function GeneratedCard({
   const [generatedVisual, setGeneratedVisual] = useState<VisualizationSpec | null>(null);
   const [isGeneratingVisual, setIsGeneratingVisual] = useState(false);
 
+  const { isAuthenticated, checkAuth } = useAuth();
+
+  const getAuthToken = () => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    return localStorage.getItem('auth_token');
+  };
+
   const typeConfig = cardTypeConfig[card.type];
+  const isOptionalVisualCard = OPTIONAL_VISUAL_CARD_TYPES.includes(card.type);
   const allowEditing = enableEditing;
   const hasSOP = Boolean(card.sop && card.sop.length > 0);
   const formattedCardContent = useMemo(() => formatCardContentMarkdown(cardContent), [cardContent]);
   const structuredSections = useMemo(() => buildStructuredSections(formattedCardContent), [formattedCardContent]);
+  const hasStructuredSections = structuredSections.length > 0;
   const effectiveVisual = useMemo(() => generatedVisual || card.visual || null, [generatedVisual, card.visual]);
   const headerSummary = useMemo(() => {
     const base = card.metadata?.knowledgePoint || card.explanation || typeConfig.description;
@@ -173,6 +191,34 @@ export function GeneratedCard({
     setFeedback({ type, message });
     setTimeout(() => setFeedback(null), 3000);
   }, []);
+
+  const persistVisualLocally = useCallback((visual: VisualizationSpec) => {
+    if (!workId || typeof window === 'undefined') {
+      return;
+    }
+    try {
+      const cacheKey = `work-detail-cache-${workId}`;
+      const cachedRaw = sessionStorage.getItem(cacheKey);
+      if (cachedRaw) {
+        try {
+          const cached = JSON.parse(cachedRaw);
+          if (cached && Array.isArray(cached.cards)) {
+            const nextCards = cached.cards.map((item: TeachingCard) =>
+              item && item.id === card.id ? { ...item, visual } : item,
+            );
+            sessionStorage.setItem(cacheKey, JSON.stringify({ ...cached, cards: nextCards }));
+          }
+        } catch (error) {
+          console.warn('解析缓存作品失败', error);
+        }
+      }
+      if (visual?.imageUrl) {
+        sessionStorage.setItem(`work-cover-cache-${workId}`, visual.imageUrl);
+      }
+    } catch (error) {
+      console.warn('缓存辅助图示失败', error);
+    }
+  }, [workId, card.id]);
 
   const handleExport = async (presetKey: keyof typeof exportPresets) => {
     setIsExporting(true);
@@ -265,6 +311,17 @@ export function GeneratedCard({
       return;
     }
 
+    if (!isAuthenticated) {
+      showFeedback('error', '请先登录，才能生成辅助图示');
+      return;
+    }
+
+    const sessionValid = await checkAuth();
+    if (!sessionValid) {
+      showFeedback('error', '登录状态已过期，请重新登录后再试');
+      return;
+    }
+
     const knowledgePoint = card.metadata?.knowledgePoint || card.title || card.explanation;
     if (!knowledgePoint) {
       showFeedback('error', '缺少知识点，无法生成辅助图示');
@@ -273,15 +330,30 @@ export function GeneratedCard({
 
     setIsGeneratingVisual(true);
     try {
+      const token = getAuthToken();
+      if (!token) {
+        showFeedback('error', '登录状态已失效，请重新登录');
+        return;
+      }
+
       const response = await fetch('/api/magic/visualize', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` ,
+        },
+        credentials: 'include',
         body: JSON.stringify({
           knowledgePoint,
           subject: card.metadata?.subject,
           gradeLevel: card.metadata?.gradeLevel,
         }),
       });
+
+      if (response.status === 401) {
+        showFeedback('error', '请先登录，才能生成辅助图示');
+        return;
+      }
 
       const data = await response.json();
       if (!response.ok) {
@@ -293,6 +365,8 @@ export function GeneratedCard({
       }
 
       setGeneratedVisual(data.visual);
+      persistVisualLocally(data.visual);
+      onVisualUpdate?.({ cardId: card.id, visual: data.visual });
       showFeedback('success', '已生成辅助图示');
     } catch (error) {
       showFeedback('error', error instanceof Error ? error.message : '辅助图示生成失败');
@@ -307,7 +381,45 @@ export function GeneratedCard({
     card.explanation,
     isGeneratingVisual,
     showFeedback,
+    isAuthenticated,
+    checkAuth,
+    persistVisualLocally,
+    onVisualUpdate,
+    card.id,
   ]);
+
+  const renderGenerateVisualButton = (options?: { hasVisual?: boolean; style?: React.CSSProperties }) => {
+    const { hasVisual = false, style } = options || {};
+    return (
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          handleGenerateVisualAssist();
+        }}
+        disabled={isGeneratingVisual}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '0 12px',
+          height: '32px',
+          borderRadius: '8px',
+          border: '1px solid #0ea5e9',
+          backgroundColor: isGeneratingVisual ? '#bae6fd' : '#e0f2fe',
+          color: '#0369a1',
+          fontSize: '12px',
+          fontWeight: 600,
+          cursor: isGeneratingVisual ? 'not-allowed' : 'pointer',
+          transition: 'background-color 0.2s ease, color 0.2s ease',
+          ...style,
+        }}
+        title={hasVisual ? '重新生成辅助图示' : '生成辅助图示'}
+      >
+        {isGeneratingVisual ? '生成中...' : hasVisual ? '重新生成辅助图示' : '生成辅助图示'}
+      </button>
+    );
+  };
 
 
   const viewTabs: Array<{ key: ViewMode; label: string; disabled?: boolean }> = [
@@ -1369,6 +1481,7 @@ export function GeneratedCard({
     const isHeroVisualization = hasVisualization && visual?.type === 'hero-illustration';
     const hasHeroImage = Boolean(visual?.imageUrl);
     const shouldShowExplanation = Boolean(card.explanation) && !(isHeroVisualization && hasHeroImage);
+    const showCompactPlaceholder = isOptionalVisualCard && !hasVisualization && !forExport;
 
     const titleStyle: React.CSSProperties = {
       margin: '0 0 16px 0',
@@ -1434,6 +1547,116 @@ export function GeneratedCard({
         : 'default',
     };
 
+    if (showCompactPlaceholder) {
+      const previewSections = structuredSections
+        .slice(0, 2)
+        .map((section) => {
+          const summary = extractSectionPreview(section);
+          if (!summary) {
+            return null;
+          }
+          return { title: section.title, summary: truncateText(summary, 56) };
+        })
+        .filter((item): item is { title: string; summary: string } => Boolean(item));
+
+      if (previewSections.length === 0) {
+        const fallbackSummary = truncateText(
+          headerSummary || typeConfig.description || '辅助图示可以把复杂关系变成清晰的视觉。',
+          56,
+        );
+        previewSections.push(
+          { title: '知识要点', summary: fallbackSummary || '辅助图示让内容更直观。' },
+          { title: '课堂亮点', summary: '生成后可保存、导出，用作课堂互动的视觉锚点。' },
+        );
+      }
+
+      return (
+        <div
+          ref={forExport ? undefined : cardRef}
+          className="card-export-area"
+          style={{
+            position: 'relative',
+            backgroundColor: '#f8fafc',
+            border: `1px dashed ${borderColor}`,
+            borderRadius: '18px',
+            padding: '24px',
+            marginBottom: '16px',
+            minHeight: 'auto',
+            boxShadow: 'none',
+            cursor: allowEditing && !forExport ? 'pointer' : 'default',
+          }}
+          onClick={() => allowEditing && !forExport && !isEditing && viewMode === 'content' && setIsEditing(true)}
+        >
+          {(retrying || isGeneratingVisual) && !forExport && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'rgba(255,255,255,0.85)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                borderRadius: '18px',
+                zIndex: 25,
+              }}
+            >
+              <div className="modern-spinner" style={{ width: '20px', height: '20px' }} />
+              <span style={{ fontSize: '12px', color: '#334155' }}>
+                {retrying ? '重新生成中...' : '生成辅助图示中...'}
+              </span>
+            </div>
+          )}
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '16px',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <div style={{ flex: '1 1 260px' }}>
+              <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>辅助图示尚未生成</div>
+              <p style={{ marginTop: '6px', fontSize: '14px', color: '#475569', lineHeight: 1.6 }}>
+                {(headerSummary ? `基于「${headerSummary}」` : '基于卡片内容')} 即可快速生成视觉草图，
+                让{typeConfig.name}的思路更直观。
+              </p>
+            </div>
+            {!hideVisualGeneration && renderGenerateVisualButton({
+              hasVisual: false,
+              style: { height: '40px', padding: '0 20px', fontSize: '14px' },
+            })}
+          </div>
+          <div style={{ marginTop: '12px', display: 'grid', gap: '10px' }}>
+            {previewSections.map((item) => (
+              <div
+                key={`preview-${item.title}`}
+                style={{
+                  display: 'flex',
+                  gap: '10px',
+                  alignItems: 'flex-start',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: typeConfig.color,
+                    minWidth: '72px',
+                  }}
+                >
+                  {item.title}
+                </span>
+                <p style={{ margin: 0, fontSize: '13px', color: '#475569', lineHeight: 1.6 }}>{item.summary}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div
         ref={forExport ? undefined : cardRef}
@@ -1471,30 +1694,7 @@ export function GeneratedCard({
             }}
             onClick={(event) => event.stopPropagation()}
           >
-            {!hideVisualGeneration && (
-              <button
-                type="button"
-                onClick={handleGenerateVisualAssist}
-                disabled={isGeneratingVisual}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0 12px',
-                  height: '32px',
-                  borderRadius: '8px',
-                  border: '1px solid #0ea5e9',
-                  backgroundColor: isGeneratingVisual ? '#bae6fd' : '#e0f2fe',
-                  color: '#0369a1',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: isGeneratingVisual ? 'not-allowed' : 'pointer',
-                }}
-                title={generatedVisual ? '重新生成辅助图示' : '生成辅助图示'}
-              >
-                {isGeneratingVisual ? '生成中...' : '生成辅助图示'}
-              </button>
-            )}
+            {!hideVisualGeneration && renderGenerateVisualButton({ hasVisual: hasVisualization })}
           </div>
         )}
         {hasVisualization ? (
@@ -1544,7 +1744,16 @@ export function GeneratedCard({
       {cardContent && (
         <div
           className="generated-card__summary"
-          style={{
+          style={hasStructuredSections ? {
+            textAlign: 'left',
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '18px',
+            padding: forExport ? '20px' : '24px',
+            boxShadow: forExport ? 'none' : '0 18px 40px rgba(15,23,42,0.08)',
+            alignItems: 'stretch',
+            gap: '16px',
+          } : {
             textAlign: 'center',
             ...(forExport ? {
               background: '#ffffff',
@@ -1553,11 +1762,18 @@ export function GeneratedCard({
             } : {}),
           }}
         >
-          {renderMarkdownContent(cardContent, {
-            fontSize: '15px',
-            color: '#0f172a',
-            lineHeight: 1.7,
-          })}
+          {hasStructuredSections
+            ? renderStructuredSections(structuredSections, {
+                fontSize: '14px',
+                color: '#0f172a',
+                paragraphIndent: '1.6em',
+                titleColor: typeConfig.color,
+              })
+            : renderMarkdownContent(formattedCardContent || cardContent, {
+                fontSize: '15px',
+                color: '#0f172a',
+                lineHeight: 1.7,
+              })}
         </div>
       )}
 
@@ -1985,6 +2201,23 @@ interface StructuredRenderOptions {
   titleColor?: string;
 }
 
+const HEADING_KEYWORDS = [
+  '典型例子',
+  '详细分析',
+  '举一反三',
+  '思考启发',
+  '延伸提醒',
+  '案例',
+  '背景相似',
+  '严密立法',
+  '应用建议',
+  '步骤提示',
+];
+
+const HEADING_ICONS = '📌📍🎯📝✏️✅⚠️📘📗📙📕⭐🌟🔍💡';
+const ICON_ONLY_LINE_REGEX = new RegExp(`^[${HEADING_ICONS}\s]+$`);
+const ICON_ONLY_LINE_GLOBAL_REGEX = new RegExp(`^[${HEADING_ICONS}\s]+$`, 'gm');
+
 function renderMarkdownContent(content: string, options?: MarkdownStyleOptions) {
   if (!content) {
     return null;
@@ -2099,12 +2332,16 @@ function createMarkdownComponents(options: MarkdownStyleOptions = {}) {
     color: options.color ?? '#0f172a',
     lineHeight: options.lineHeight ?? 1.7,
     textIndent: options.textIndent,
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-word',
   };
 
   const inlineParagraphStyle: React.CSSProperties = {
     fontSize: options.fontSize ?? '14px',
     color: options.color ?? '#0f172a',
     lineHeight: options.lineHeight ?? 1.6,
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-word',
   };
 
   const listStyle: React.CSSProperties = {
@@ -2191,6 +2428,9 @@ function formatCardContentMarkdown(content: string): string {
     .replace(/\n{3,}/g, '\n\n');
 
   text = text.replace(/(\n\n)(\d+\.)/g, '\n\n$2');
+  text = text.replace(/(\d+\.)\s*\n+(?=\S)/g, '$1 ');
+  text = text.replace(/\n\s*([：:])/g, '$1');
+  text = text.replace(ICON_ONLY_LINE_GLOBAL_REGEX, '');
 
   return text.trim();
 }
@@ -2198,21 +2438,6 @@ function formatCardContentMarkdown(content: string): string {
 function stripHtmlTags(value: string): string {
   return value.replace(/<[^>]+>/g, '');
 }
-
-const HEADING_KEYWORDS = [
-  '典型例子',
-  '详细分析',
-  '举一反三',
-  '思考启发',
-  '延伸提醒',
-  '案例',
-  '背景相似',
-  '严密立法',
-  '应用建议',
-  '步骤提示',
-];
-
-const HEADING_ICONS = '📌📍🎯📝✏️✅⚠️📘📗📙📕⭐🌟🔍💡';
 
 function buildStructuredSections(markdown: string): StructuredSection[] {
   if (!markdown) {
@@ -2240,7 +2465,37 @@ function buildStructuredSections(markdown: string): StructuredSection[] {
     sections.push(currentSection);
   };
 
+  const appendToParagraph = (line: string): boolean => {
+    if (!currentSection) {
+      return false;
+    }
+    const section = currentSection;
+    if (section.blocks.length === 0) {
+      return false;
+    }
+    const lastBlock = section.blocks[section.blocks.length - 1];
+    if (!lastBlock || lastBlock.type !== 'paragraph') {
+      return false;
+    }
+    const trimmedLine = line.trim();
+    if (!trimmedLine) {
+      return false;
+    }
+    const lastText = lastBlock.text.trim();
+    if (!lastText || /[。！？!?；;：:,，、]$/.test(lastText)) {
+      return false;
+    }
+    if (!/^[0-9a-zA-Z：:]/.test(trimmedLine)) {
+      return false;
+    }
+    lastBlock.text = `${lastBlock.text}${trimmedLine}`;
+    return true;
+  };
+
   lines.forEach((line) => {
+    if (ICON_ONLY_LINE_REGEX.test(line)) {
+      return;
+    }
     const heading = detectStructuredHeading(line);
     if (heading) {
       startSection(heading.title, heading.icon);
@@ -2280,19 +2535,54 @@ function buildStructuredSections(markdown: string): StructuredSection[] {
       return;
     }
 
+    if (appendToParagraph(line)) {
+      return;
+    }
+
     ensureSection().blocks.push({ type: 'paragraph', text: line });
   });
 
   return sections;
 }
 
+function extractSectionPreview(section: StructuredSection): string | null {
+  for (const block of section.blocks) {
+    if (block.type === 'paragraph') {
+      const plain = stripHtmlTags(block.text).replace(/\s+/g, ' ').trim();
+      if (plain) {
+        return plain;
+      }
+    }
+    if ((block.type === 'orderedList' || block.type === 'unorderedList') && block.items.length > 0) {
+      const plain = stripHtmlTags(block.items[0]).replace(/\s+/g, ' ').trim();
+      if (plain) {
+        return plain;
+      }
+    }
+  }
+  return null;
+}
+
+function truncateText(value: string, maxLength: number = 56): string {
+  const normalized = value.trim();
+  if (!normalized) {
+    return '';
+  }
+  return normalized.length > maxLength ? `${normalized.slice(0, maxLength)}…` : normalized;
+}
+
 function detectStructuredHeading(line: string): { icon?: string; title: string; remainder?: string } | null {
   const iconRegex = new RegExp(`^([${HEADING_ICONS}])\s*([^：:]+)(?:[:：]+)?(.*)$`);
   const iconMatch = line.match(iconRegex);
   if (iconMatch) {
+    const title = iconMatch[2].trim();
+    const iconOnlyPattern = new RegExp(`^[${HEADING_ICONS}\s]+$`);
+    if (!title || iconOnlyPattern.test(title)) {
+      return null;
+    }
     return {
       icon: iconMatch[1],
-      title: iconMatch[2].trim(),
+      title,
       remainder: iconMatch[3]?.trim(),
     };
   }

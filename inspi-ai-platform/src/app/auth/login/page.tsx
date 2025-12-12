@@ -15,6 +15,13 @@ const sanitizeReturnUrl = (raw: string | null): string => {
   return raw.startsWith('/') ? raw : `/${raw}`;
 };
 
+const LOGIN_BENEFITS = [
+  { id: 'daily-quota', hang: '每日', text: '5次免费创建额度' },
+  { id: 'pro-types', hang: '四种', text: '专业卡片类型' },
+  { id: 'smart-content', hang: '智能', text: '内容生成' },
+  { id: 'personal-work', hang: '个人', text: '作品管理' },
+] as const;
+
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -73,22 +80,15 @@ function LoginPageContent() {
             <div className="login-prompt-benefits">
               <p className="login-prompt-benefits-title">登录后您将获得：</p>
               <ul className="login-prompt-benefits-list">
-                <li className="login-prompt-benefit">
-                  <span className="login-prompt-benefit-icon" aria-hidden="true">✔</span>
-                  <span className="login-prompt-benefit-text">每日5次免费创建额度</span>
-                </li>
-                <li className="login-prompt-benefit">
-                  <span className="login-prompt-benefit-icon" aria-hidden="true">✔</span>
-                  <span className="login-prompt-benefit-text">四种专业卡片类型</span>
-                </li>
-                <li className="login-prompt-benefit">
-                  <span className="login-prompt-benefit-icon" aria-hidden="true">✔</span>
-                  <span className="login-prompt-benefit-text">智能内容生成</span>
-                </li>
-                <li className="login-prompt-benefit">
-                  <span className="login-prompt-benefit-icon" aria-hidden="true">✔</span>
-                  <span className="login-prompt-benefit-text">个人作品管理</span>
-                </li>
+                {LOGIN_BENEFITS.map(benefit => (
+                  <li key={benefit.id} className="login-prompt-benefit">
+                    <span className="login-prompt-benefit-icon" aria-hidden="true">✔</span>
+                    <span className="login-prompt-benefit-text">
+                      <span className="login-prompt-benefit-hang">{benefit.hang}</span>
+                      <span className="login-prompt-benefit-body">{benefit.text}</span>
+                    </span>
+                  </li>
+                ))}
               </ul>
             </div>
           </section>

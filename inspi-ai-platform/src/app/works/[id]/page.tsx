@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { GeneratedCard } from '@/components/cards/GeneratedCard';
 import { AppLayout } from '@/components/layout';
-import type { TeachingCard } from '@/shared/types/teaching';
+import type { TeachingCard, VisualizationSpec } from '@/shared/types/teaching';
 
 type WorkStatus = 'draft' | 'published' | 'archived' | 'private';
 
@@ -17,6 +17,18 @@ interface WorkAuthorSummary {
   name?: string;
   avatar?: string | null;
 }
+
+const extractCardImage = (card?: TeachingCard | null): string | null => {
+  if (!card) return null;
+  if (card.visual?.imageUrl) return card.visual.imageUrl;
+  const stageImage = card.visual?.structured?.stages?.find(stage => stage?.imageUrl)?.imageUrl;
+  if (stageImage) return stageImage;
+  const metadataCover = (card.metadata as Record<string, any> | undefined)?.coverImageUrl;
+  if (typeof metadataCover === 'string' && metadataCover.trim()) {
+    return metadataCover;
+  }
+  return null;
+};
 
 interface WorkDetailData {
   _id: string;
@@ -174,7 +186,52 @@ export default function WorkDetailPage() {
     return () => controller.abort();
   }, [workId, reloadToken]);
 
+  const handleCardVisualUpdate = useCallback((params: { cardId: string; visual: VisualizationSpec }) => {
+    setWork(prev => {
+      if (!prev || !Array.isArray(prev.cards)) {
+        return prev;
+      }
+      const nextCards = prev.cards.map(card =>
+        card.id === params.cardId ? { ...card, visual: params.visual } : card,
+      );
+      const updatedCard = nextCards.find(card => card.id === params.cardId);
+      const resolvedCover =
+        params.visual.imageUrl
+        || prev.coverImageUrl
+        || extractCardImage(updatedCard)
+        || nextCards.map(extractCardImage).find(Boolean)
+        || prev.coverImageUrl;
+      return { ...prev, cards: nextCards, coverImageUrl: resolvedCover ?? prev.coverImageUrl } as WorkDetailData;
+    });
+    if (workId && typeof window !== 'undefined' && params.visual?.imageUrl) {
+      try {
+        sessionStorage.setItem(`work-cover-cache-${workId}`, params.visual.imageUrl);
+      } catch (error) {
+        console.warn('缓存作品封面失败', error);
+      }
+    }
+  }, [workId]);
+
   const cardList = work?.cards ?? [];
+  const heroImageUrl = useMemo(() => {
+    if (!work) return null;
+    if (work.coverImageUrl) return work.coverImageUrl;
+    const cards = work.cards ?? [];
+    for (const card of cards) {
+      const image = extractCardImage(card);
+      if (image) return image;
+    }
+    if (workId && typeof window !== 'undefined') {
+      try {
+        const cached = sessionStorage.getItem(`work-cover-cache-${workId}`);
+        if (cached) return cached;
+      } catch (error) {
+        console.warn('读取封面缓存失败', error);
+      }
+    }
+    return null;
+  }, [work, workId]);
+
   const isSingleCard = cardList.length === 1;
   const cardGridClassName = isSingleCard
     ? 'card-flow-two-column card-flow-two-column--single'
@@ -263,6 +320,25 @@ export default function WorkDetailPage() {
 
               <div style={{ color: '#64748b', fontSize: '14px', marginBottom: '24px' }}>教学卡片 · 共 {cardList.length} 张</div>
 
+              {heroImageUrl ? (
+                <div
+                  style={{
+                    marginBottom: '24px',
+                    borderRadius: '24px',
+                    overflow: 'hidden',
+                    boxShadow: '0 20px 50px rgba(15, 23, 42, 0.15)',
+                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={heroImageUrl ?? ''}
+                    alt="作品封面"
+                    style={{ width: '100%', display: 'block', maxHeight: '360px', objectFit: 'cover' }}
+                  />
+                </div>
+              ) : null}
+
               {cardList.length === 0 ? (
                 <div
                   style={{
@@ -279,7 +355,12 @@ export default function WorkDetailPage() {
                 <div className={cardGridClassName}>
                   {cardList.map(card => (
                     <div key={card.id} className="card-flow-two-column__item">
-                      <GeneratedCard card={card} enableEditing={false} />
+                      <GeneratedCard
+                        card={card}
+                        enableEditing={false}
+                        workId={workId}
+                        onVisualUpdate={handleCardVisualUpdate}
+                      />
                     </div>
                   ))}
                 </div>

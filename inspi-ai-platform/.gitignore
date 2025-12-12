@@ -70,6 +70,10 @@ Thumbs.db
 public/share-images/*
 !public/share-images/.gitkeep
 
+# 作品生成的临时图像
+public/work-images/*
+!public/work-images/.gitkeep
+
 # 本地安装 MongoDB/Mongosh 时产生的文件
 mongosh-*.zip
 mongodb-macos-*.tgz

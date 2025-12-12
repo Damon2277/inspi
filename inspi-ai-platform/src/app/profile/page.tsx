@@ -40,7 +40,9 @@ interface UserWork {
   cards?: ProfileTeachingCard[];
   likes: number;
   uses: number;
-  createdAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  collectedAt?: string;
   status: 'published' | 'draft' | 'private' | 'reused' | 'archived';
   description?: string;
   tags?: string[];
@@ -87,6 +89,15 @@ const extractCoverImage = (work: any): string | null => {
     }
   }
   return null;
+};
+
+const getCachedCoverImage = (workId: string): string | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    return sessionStorage.getItem(`work-cover-cache-${workId}`);
+  } catch {
+    return null;
+  }
 };
 
 type TabKey = 'works' | 'subscription' | 'feedback' | 'settings';
@@ -188,19 +199,22 @@ function ProfileContent() {
           const autoDescription = `${subjectLabel} · ${gradeLabel} · Inspi.AI 自动生成`;
           const normalizedDescription = typeof work.description === 'string'
             && work.description.trim() === autoDescription ? '' : (work.description || '');
+          const workId = work._id || work.id;
+          const cachedCover = workId ? getCachedCoverImage(workId) : null;
 
           return {
-            id: work._id || work.id,
+            id: workId,
             title: work.title || '未命名作品',
             type: '教学作品',
             subject: work.subject || '通用学科',
             grade: work.gradeLevel || '通用年级',
             thumbnail: resolveSubjectEmoji(work.subject),
-            coverImage: work.coverImageUrl || extractCoverImage(work),
+            coverImage: cachedCover || work.coverImageUrl || extractCoverImage(work),
             cards: work.cards,
             likes: work.likesCount || 0,
             uses: work.reuseCount || 0,
             createdAt: work.createdAt || new Date().toISOString(),
+            updatedAt: work.updatedAt || work.createdAt || new Date().toISOString(),
             status: (work.status || 'draft') as UserWork['status'],
             description: normalizedDescription,
             tags: work.tags || [],
@@ -242,28 +256,46 @@ function ProfileContent() {
     () => reusedThemes
       .map(themeId => mockSquareWorks.find(work => work.id === themeId))
       .filter((work): work is typeof mockSquareWorks[number] => Boolean(work))
-      .map((work) => ({
-        id: `reused-${work.id}`,
-        title: work.title,
-        type: '致敬复用卡',
-        subject: work.subject,
-        grade: work.grade,
-        thumbnail: work.thumbnail,
-        likes: work.likes,
-        uses: work.reuses + 1,
-        createdAt: new Date().toISOString(),
-        status: 'reused' as const,
-        reuseSourceId: work.id,
-        description: work.description,
-        tags: work.tags,
-      })),
+      .map((work) => {
+        const collectedAt = new Date().toISOString();
+        return {
+          id: `reused-${work.id}`,
+          title: work.title,
+          type: '致敬复用卡',
+          subject: work.subject,
+          grade: work.grade,
+          thumbnail: work.thumbnail,
+          likes: work.likes,
+          uses: work.reuses + 1,
+          createdAt: collectedAt,
+          updatedAt: collectedAt,
+          collectedAt,
+          status: 'reused' as const,
+          reuseSourceId: work.id,
+          description: work.description,
+          tags: work.tags,
+        };
+      }),
     [reusedThemes],
   );
 
-  const combinedWorks = useMemo(
-    () => [...reusedThemeWorks, ...serverWorks],
-    [reusedThemeWorks, serverWorks],
-  );
+  const combinedWorks = useMemo(() => {
+    const normalizeTime = (value?: string) => {
+      if (!value) return 0;
+      const timestamp = Date.parse(value);
+      return Number.isNaN(timestamp) ? 0 : timestamp;
+    };
+    const withTimestamp = [...reusedThemeWorks, ...serverWorks].map(work => ({
+      work,
+      timestamp: Math.max(
+        normalizeTime(work.updatedAt),
+        normalizeTime(work.createdAt),
+        normalizeTime((work as any)?.collectedAt),
+      ),
+    }));
+    withTimestamp.sort((a, b) => b.timestamp - a.timestamp);
+    return withTimestamp.map(item => item.work);
+  }, [reusedThemeWorks, serverWorks]);
 
   const displayWorks = useMemo(
     () => combinedWorks.filter(work => work.status !== 'archived'),
@@ -277,22 +309,29 @@ function ProfileContent() {
     let cancelled = false;
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
 
-    missing.forEach((work) => {
-      fetch(`/api/works/${work.id}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        credentials: 'include',
-      })
-        .then(response => response.json())
-        .then(payload => {
-          if (cancelled) return;
-          if (!payload?.success || !payload?.work?.cards) return;
-          const image = extractCoverImage(payload.work);
-          if (image) {
-            setCoverImages(prev => ({ ...prev, [work.id]: image }));
-          }
+    missing
+      .filter(work => work.status !== 'reused')
+      .forEach((work) => {
+        const cachedCover = work.id ? getCachedCoverImage(work.id) : null;
+        if (cachedCover) {
+          setCoverImages(prev => ({ ...prev, [work.id]: cachedCover }));
+          return;
+        }
+        fetch(`/api/works/${work.id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          credentials: 'include',
         })
-        .catch(() => {});
-    });
+          .then(response => response.json())
+          .then(payload => {
+            if (cancelled) return;
+            if (!payload?.success || !payload?.work?.cards) return;
+            const image = extractCoverImage(payload.work);
+            if (image) {
+              setCoverImages(prev => ({ ...prev, [work.id]: image }));
+            }
+          })
+          .catch(() => {});
+      });
 
     return () => {
       cancelled = true;
@@ -329,7 +368,11 @@ function ProfileContent() {
       const themeId = Number.isFinite(sourceThemeId)
         ? sourceThemeId
         : Number.parseInt(work.reuseSourceId ? String(work.reuseSourceId) : '', 10);
-      return Number.isFinite(themeId) ? `/square/${themeId}` : '/square';
+      if (!Number.isFinite(themeId)) {
+        return '/square';
+      }
+      const query = new URLSearchParams({ from: 'profile' });
+      return `/square/${themeId}?${query.toString()}`;
     }
     return `/works/${work.id}`;
   };

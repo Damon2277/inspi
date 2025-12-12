@@ -12,7 +12,6 @@ import Comment from '@/lib/models/Comment';
 import User from '@/lib/models/User';
 import Work, { WorkDocument, getWorkAuthorId, getWorkAuthorObjectId } from '@/lib/models/Work';
 import connectDB from '@/lib/mongodb';
-import { env } from '@/shared/config/environment';
 
 export interface CreateWorkRequest {
   title: string
@@ -69,11 +68,6 @@ export class WorkService {
   ];
   private static readonly EXPIRATION_QUERY_KEYS = ['X-Tos-Expires', 'X-Amz-Expires'];
 
-  private static getBaseUrl(): string {
-    const base = (env.APP_URL || 'http://localhost:3000').trim();
-    return base.endsWith('/') ? base.slice(0, -1) : base;
-  }
-
   private static ensureSafeId(id: string, fallback: string): string {
     const normalized = (id || fallback || 'card')
       .toLowerCase()
@@ -124,8 +118,7 @@ export class WorkService {
       const filePath = path.join(this.WORK_IMAGE_DIR, filename);
       await fs.writeFile(filePath, buffer);
 
-      const baseUrl = this.getBaseUrl();
-      return `${baseUrl}/work-images/${filename}`;
+      return `/work-images/${filename}`;
     } catch (error) {
       console.error('Persist image error:', error);
       return imageUrl;
