@@ -40,7 +40,9 @@ interface UserWork {
   cards?: ProfileTeachingCard[];
   likes: number;
   uses: number;
-  createdAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  collectedAt?: string;
   status: 'published' | 'draft' | 'private' | 'reused' | 'archived';
   description?: string;
   tags?: string[];
@@ -87,6 +89,15 @@ const extractCoverImage = (work: any): string | null => {
     }
   }
   return null;
+};
+
+const getCachedCoverImage = (workId: string): string | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    return sessionStorage.getItem(`work-cover-cache-${workId}`);
+  } catch {
+    return null;
+  }
 };
 
 type TabKey = 'works' | 'subscription' | 'feedback' | 'settings';
@@ -188,19 +199,22 @@ function ProfileContent() {
           const autoDescription = `${subjectLabel} · ${gradeLabel} · Inspi.AI 自动生成`;
           const normalizedDescription = typeof work.description === 'string'
             && work.description.trim() === autoDescription ? '' : (work.description || '');
+          const workId = work._id || work.id;
+          const cachedCover = workId ? getCachedCoverImage(workId) : null;
 
           return {
-            id: work._id || work.id,
+            id: workId,
             title: work.title || '未命名作品',
             type: '教学作品',
             subject: work.subject || '通用学科',
             grade: work.gradeLevel || '通用年级',
             thumbnail: resolveSubjectEmoji(work.subject),
-            coverImage: work.coverImageUrl || extractCoverImage(work),
+            coverImage: cachedCover || work.coverImageUrl || extractCoverImage(work),
             cards: work.cards,
             likes: work.likesCount || 0,
             uses: work.reuseCount || 0,
             createdAt: work.createdAt || new Date().toISOString(),
+            updatedAt: work.updatedAt || work.createdAt || new Date().toISOString(),
             status: (work.status || 'draft') as UserWork['status'],
             description: normalizedDescription,
             tags: work.tags || [],
@@ -242,28 +256,46 @@ function ProfileContent() {
     () => reusedThemes
       .map(themeId => mockSquareWorks.find(work => work.id === themeId))
       .filter((work): work is typeof mockSquareWorks[number] => Boolean(work))
-      .map((work) => ({
-        id: `reused-${work.id}`,
-        title: work.title,
-        type: '致敬复用卡',
-        subject: work.subject,
-        grade: work.grade,
-        thumbnail: work.thumbnail,
-        likes: work.likes,
-        uses: work.reuses + 1,
-        createdAt: new Date().toISOString(),
-        status: 'reused' as const,
-        reuseSourceId: work.id,
-        description: work.description,
-        tags: work.tags,
-      })),
+      .map((work) => {
+        const collectedAt = new Date().toISOString();
+        return {
+          id: `reused-${work.id}`,
+          title: work.title,
+          type: '致敬复用卡',
+          subject: work.subject,
+          grade: work.grade,
+          thumbnail: work.thumbnail,
+          likes: work.likes,
+          uses: work.reuses + 1,
+          createdAt: collectedAt,
+          updatedAt: collectedAt,
+          collectedAt,
+          status: 'reused' as const,
+          reuseSourceId: work.id,
+          description: work.description,
+          tags: work.tags,
+        };
+      }),
     [reusedThemes],
   );
 
-  const combinedWorks = useMemo(
-    () => [...reusedThemeWorks, ...serverWorks],
-    [reusedThemeWorks, serverWorks],
-  );
+  const combinedWorks = useMemo(() => {
+    const normalizeTime = (value?: string) => {
+      if (!value) return 0;
+      const timestamp = Date.parse(value);
+      return Number.isNaN(timestamp) ? 0 : timestamp;
+    };
+    const withTimestamp = [...reusedThemeWorks, ...serverWorks].map(work => ({
+      work,
+      timestamp: Math.max(
+        normalizeTime(work.updatedAt),
+        normalizeTime(work.createdAt),
+        normalizeTime((work as any)?.collectedAt),
+      ),
+    }));
+    withTimestamp.sort((a, b) => b.timestamp - a.timestamp);
+    return withTimestamp.map(item => item.work);
+  }, [reusedThemeWorks, serverWorks]);
 
   const displayWorks = useMemo(
     () => combinedWorks.filter(work => work.status !== 'archived'),
@@ -277,22 +309,29 @@ function ProfileContent() {
     let cancelled = false;
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
 
-    missing.forEach((work) => {
-      fetch(`/api/works/${work.id}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        credentials: 'include',
-      })
-        .then(response => response.json())
-        .then(payload => {
-          if (cancelled) return;
-          if (!payload?.success || !payload?.work?.cards) return;
-          const image = extractCoverImage(payload.work);
-          if (image) {
-            setCoverImages(prev => ({ ...prev, [work.id]: image }));
-          }
+    missing
+      .filter(work => work.status !== 'reused')
+      .forEach((work) => {
+        const cachedCover = work.id ? getCachedCoverImage(work.id) : null;
+        if (cachedCover) {
+          setCoverImages(prev => ({ ...prev, [work.id]: cachedCover }));
+          return;
+        }
+        fetch(`/api/works/${work.id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          credentials: 'include',
         })
-        .catch(() => {});
-    });
+          .then(response => response.json())
+          .then(payload => {
+            if (cancelled) return;
+            if (!payload?.success || !payload?.work?.cards) return;
+            const image = extractCoverImage(payload.work);
+            if (image) {
+              setCoverImages(prev => ({ ...prev, [work.id]: image }));
+            }
+          })
+          .catch(() => {});
+      });
 
     return () => {
       cancelled = true;
@@ -324,8 +363,23 @@ function ProfileContent() {
     }
   };
 
-  const handleWorkClick = (work: UserWork) => {
-    window.location.href = `/works/${work.id}`;
+  const resolveWorkHref = (work: UserWork, sourceThemeId?: number) => {
+    if (work.status === 'reused') {
+      const themeId = Number.isFinite(sourceThemeId)
+        ? sourceThemeId
+        : Number.parseInt(work.reuseSourceId ? String(work.reuseSourceId) : '', 10);
+      if (!Number.isFinite(themeId)) {
+        return '/square';
+      }
+      const query = new URLSearchParams({ from: 'profile' });
+      return `/square/${themeId}?${query.toString()}`;
+    }
+    return `/works/${work.id}`;
+  };
+
+  const handleWorkClick = (work: UserWork, sourceThemeId?: number) => {
+    const targetHref = resolveWorkHref(work, sourceThemeId);
+    window.location.href = targetHref;
   };
 
   const renderDeleteButton = (workId: string) => (
@@ -342,6 +396,11 @@ function ProfileContent() {
         color: '#94a3b8',
         opacity: hoveredWorkId === workId ? 1 : 0,
         transition: 'opacity 0.2s ease',
+        pointerEvents: hoveredWorkId === workId ? 'auto' : 'none',
+        position: 'absolute',
+        top: 'calc(var(--layout-card-padding) * 1.35)',
+        right: 'calc(var(--layout-card-padding) * 1.35)',
+        zIndex: 2,
       }}
       className="work-card__delete"
     >
@@ -361,6 +420,7 @@ function ProfileContent() {
     const isDraft = work.status === 'draft';
     const isPrivate = work.status === 'private';
     const sourceThemeId = work.reuseSourceId ?? parseInt(work.id.replace('reused-', ''), 10);
+    const targetHref = resolveWorkHref(work, sourceThemeId);
     const renderAvatar = () => {
       const imageSrc = coverImages[work.id] || work.coverImage;
       if (imageSrc) {
@@ -379,42 +439,46 @@ function ProfileContent() {
       <article
         key={work.id}
         className="work-card work-card--profile"
-        onClick={() => handleWorkClick(work)}
+        onClick={() => handleWorkClick(work, sourceThemeId)}
         style={{ position: 'relative' }}
         onMouseEnter={() => setHoveredWorkId(work.id)}
         onMouseLeave={() => setHoveredWorkId(prev => (prev === work.id ? null : prev))}
       >
+        {renderDeleteButton(work.id)}
         <div className="work-card__header">
-          {renderAvatar()}
           <div className="work-card__info">
             <div className="work-card__title-row">
-              <h3 className="work-card__title" style={{ margin: 0 }}>{work.title}</h3>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                {renderDeleteButton(work.id)}
+              <div className="work-card__title-block">
+                <h3 className="work-card__title" style={{ margin: 0 }}>{work.title}</h3>
               </div>
             </div>
-            <div className="work-card__chips">
-              <span className="work-chip work-chip--subject">{work.subject}</span>
-              {(isReused || isPrivate) && (
-                <div className="work-card__status-group">
-                  {isReused && (
-                    <span className="work-chip work-chip--status work-chip--status-reused">复用</span>
-                  )}
-                  {isPrivate && (
-                    <span className="work-chip work-chip--status work-chip--status-private">私有</span>
-                  )}
-                </div>
+          </div>
+        </div>
+        {renderAvatar()}
+        <div className="work-card__chips work-card__chips--below-image">
+          <span className="work-chip work-chip--subject">{work.subject}</span>
+          <span className="work-chip work-chip--grade">{work.grade}</span>
+          {(isReused || isPrivate) && (
+            <div className="work-card__status-group">
+              {isReused && (
+                <span className="work-chip work-chip--status work-chip--status-reused">复用</span>
+              )}
+              {isPrivate && (
+                <span className="work-chip work-chip--status work-chip--status-private">私有</span>
               )}
             </div>
-          </div>
+          )}
+          {Array.isArray(work.tags) && work.tags.length > 0 && (
+            <span className="work-chip work-chip--tag">#{work.tags[0]}</span>
+          )}
         </div>
         {work.description ? (
           <p className="work-card__description text-clamp-3">{work.description}</p>
         ) : null}
-        {work.tags && work.tags.length > 0 ? (
+        {work.tags && work.tags.length > 1 ? (
           <div className="work-card__tags">
-            {work.tags.map((tag, index) => (
-              <span key={`${work.id}-tag-${index}`} className="work-chip work-chip--tag">
+            {work.tags.slice(1).map((tag, index) => (
+              <span key={`${work.id}-tag-extra-${index}`} className="work-chip work-chip--tag">
                 #{tag}
               </span>
             ))}
@@ -430,12 +494,24 @@ function ProfileContent() {
               />
             </div>
           ) : <span />}
-          <a
-            href={`/works/${work.id}`}
-            className="work-card__cta"
-          >
-            查看内容
-          </a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ color: '#94a3b8', fontSize: '12px' }}>
+              {new Date(work.createdAt).toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+              }).replace(/年0/g, '年').replace(/月0/g, '月')}
+            </span>
+            <a
+              href={targetHref}
+              className="work-card__cta"
+            >
+              查看内容
+            </a>
+          </div>
         </div>
       </article>
     );
@@ -649,7 +725,7 @@ function ProfileContent() {
                       </a>
                     </div>
                   ) : (
-                    <div className="work-card-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 'calc(var(--layout-card-gap) * 1.1)' }}>
+                    <div className="work-card-grid work-card-grid--profile">
                       {displayWorks.map(renderWorkCard)}
                     </div>
                   )}

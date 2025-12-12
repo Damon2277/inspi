@@ -9,12 +9,19 @@ import { mockSquareWorks } from '@/data/mockSquareWorks';
 import type { RawCardType } from '@/shared/types/teaching';
 
 
+export const dynamic = 'force-dynamic';
+
 interface SquareDetailPageProps {
   params: Promise<{ id: string }> | { id: string };
+  searchParams?: Promise<{ from?: string }> | { from?: string };
 }
 
 export default async function SquareDetailPage(props: SquareDetailPageProps) {
   const resolvedParams = props.params instanceof Promise ? await props.params : props.params;
+  const resolvedSearchParams = props.searchParams instanceof Promise ? await props.searchParams : props.searchParams ?? {};
+  const fromProfile = resolvedSearchParams?.from === 'profile';
+  const backHref = fromProfile ? '/profile?tab=works' : '/square';
+  const backLabel = fromProfile ? '返回我的作品' : '返回广场';
   const workId = Number(resolvedParams.id);
 
   if (Number.isNaN(workId)) {
@@ -46,53 +53,52 @@ export default async function SquareDetailPage(props: SquareDetailPageProps) {
     <AppLayout>
       <div className="modern-layout work-detail-layout">
         <div className="modern-container">
-          <Link href="/square" className="work-detail__back">
+          <Link href={backHref} className="work-detail__back">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
-            返回广场
+            {backLabel}
           </Link>
 
           <article className="work-detail-card">
             <header className="work-detail__hero">
               <div className="work-detail__emoji">{work.thumbnail}</div>
-              <div className="work-detail__headline">
-                <div className="work-detail__chips">
-                  <span className="work-chip work-chip--subject">{work.subject}</span>
-                  <span className="work-chip work-chip--grade">{work.grade}</span>
+              <div className="work-detail__headline" style={{ gap: 'var(--space-3)' }}>
+                <div className="work-detail__title-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                  <h1 className="work-detail__title" style={{ margin: 0 }}>{work.title}</h1>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '1px', flexShrink: 0, marginLeft: 'auto' }}>
+                    <span style={{ color: 'var(--gray-500)', fontSize: '14px', whiteSpace: 'nowrap' }}>
+                      已被致敬复用 <strong>{work.reuses}</strong> 次
+                    </span>
+                    <SquareReuseActions
+                      cards={cards}
+                      initialReuseCount={work.reuses}
+                      themeId={work.id}
+                      themeTitle={work.title}
+                      hideInlineStat
+                    />
+                  </div>
                 </div>
-                <h1 className="work-detail__title">{work.title}</h1>
-                <div className="work-detail__meta">
+                <div
+                  className="work-detail__meta"
+                  style={{
+                    gap: '10px',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    marginTop: 0,
+                  }}
+                >
+                  <div className="work-detail__chips" style={{ gap: '8px' }}>
+                    <span className="work-chip work-chip--subject">{work.subject}</span>
+                    <span className="work-chip work-chip--grade">{work.grade}</span>
+                  </div>
+                  <span>•</span>
                   <span>by {work.author}</span>
                   <span>•</span>
                   <span>{work.createdAt}</span>
                 </div>
               </div>
             </header>
-
-            <div className="work-detail__stats">
-              <div className="work-detail__stat">
-                <small>喜欢</small>
-                <strong>{work.likes}</strong>
-              </div>
-              <div className="work-detail__stat">
-                <small>复用</small>
-                <strong>{work.reuses}</strong>
-              </div>
-              <div className="work-detail__stat">
-                <small>评分</small>
-                <strong>{work.rating}</strong>
-              </div>
-            </div>
-
-            <div className="work-detail__actions">
-              <SquareReuseActions
-                cards={cards}
-                initialReuseCount={work.reuses}
-                themeId={work.id}
-                themeTitle={work.title}
-              />
-            </div>
 
             <section className="work-detail__section">
               <h2 className="desktop-section__title" style={{ fontSize: 'var(--font-size-2xl)', margin: 0 }}>
@@ -102,27 +108,9 @@ export default async function SquareDetailPage(props: SquareDetailPageProps) {
             </section>
 
             <section className="work-detail__section">
-              <h2 className="desktop-section__title" style={{ fontSize: 'var(--font-size-2xl)', margin: 0 }}>
-                教学卡片
-              </h2>
-              <p style={{ color: 'var(--gray-500)', fontSize: 'var(--font-size-sm)' }}>
-                点击任意卡片可导出、致敬复用或进入演示模式，快速带走这套教学设计。
-              </p>
               <SquareCardShowcase cards={cards} />
             </section>
 
-            <section className="work-detail__section">
-              <h2 className="desktop-section__title" style={{ fontSize: 'var(--font-size-2xl)', margin: 0 }}>
-                相关标签
-              </h2>
-              <div className="work-detail__tags">
-                {work.tags.map((tag, index) => (
-                  <span key={`${work.id}-tag-${index}`} className="work-chip work-chip--tag">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            </section>
           </article>
         </div>
       </div>

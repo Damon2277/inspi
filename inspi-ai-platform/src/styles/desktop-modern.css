@@ -1,5 +1,7 @@
 /* 现代化桌面端设计系统 */
 
+@import url('https://fonts.googleapis.com/css2?family=Long+Cang&display=swap');
+
 /* CSS变量定义 - 设计令牌 */
 :root {
   /* 主色调 */
@@ -748,6 +750,8 @@ body {
   font-size: calc(var(--font-size-4xl) * 0.8);
   line-height: 1.12;
   letter-spacing: -0.012em;
+  font-family: 'Long Cang', 'STKaiti', 'KaiTi', 'FZKai-Z03', 'DFKai-SB', 'Ma Shan Zheng', cursive;
+  font-weight: 500;
 }
 
 @media (min-width: 1280px) {
@@ -1756,6 +1760,20 @@ body {
   gap: calc(var(--layout-card-gap) * 1.1);
 }
 
+.work-card-grid--profile {
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(360px, 100%), min(520px, 100%))
+  );
+  justify-content: flex-start;
+}
+
+@media (max-width: 768px) {
+  .work-card-grid--profile {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .work-card {
   background: rgba(255, 255, 255, 0.97);
   border: 1px solid rgba(99, 102, 241, 0.18);
@@ -1963,8 +1981,19 @@ body {
 
 .work-card--profile .work-card__title-row {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
   gap: calc(var(--layout-card-gap) * 0.2);
+  justify-content: space-between;
+}
+
+.work-card--profile .work-card__title-block {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--layout-card-gap) * 0.3);
 }
 
 .work-card--profile .work-card__title {
@@ -1977,6 +2006,12 @@ body {
   gap: calc(var(--layout-card-gap) * 0.2);
   margin-top: 0;
   flex-wrap: wrap;
+}
+
+.work-card__chips--below-image {
+  margin-top: calc(var(--layout-card-gap) * 0.4);
+  justify-content: flex-start;
+  gap: calc(var(--layout-card-gap) * 0.2);
 }
 
 /* 作品详情 */
@@ -2085,6 +2120,39 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+/* 通用卡片双列布局：宽屏最多两列，保持纵向顺序 */
+.card-flow-two-column {
+  display: grid;
+  gap: clamp(24px, 2vw, 32px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.card-flow-two-column__item {
+  min-width: 0;
+  display: flex;
+}
+
+.card-flow-two-column__item > * {
+  width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .card-flow-two-column {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.card-flow-two-column--single {
+  grid-template-columns: minmax(0, clamp(520px, 72vw, 900px));
+  justify-content: center;
+}
+
+.card-flow-two-column--single .card-flow-two-column__item {
+  max-width: clamp(520px, 72vw, 900px);
+  margin: 0 auto;
 }
 
 .work-detail__content {
@@ -2535,23 +2603,29 @@ body {
   border-radius: calc(var(--radius-xl) + 0.25rem);
   background: rgba(255, 255, 255, 0.82);
   box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.14);
+  justify-content: center;
+  height: 100%;
 }
 
 .login-prompt-header {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--space-3);
+  text-align: center;
 }
 
 .login-prompt-title {
   font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--gray-900);
+  text-align: center;
 }
 
 .login-prompt-message {
   font-size: var(--font-size-sm);
   color: var(--gray-600);
+  text-align: center;
 }
 
 .login-prompt-header h3 {
@@ -2594,9 +2668,9 @@ body {
 }
 
 .login-prompt-benefits-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
   list-style: none;
   margin: 0;
   padding: 0;
@@ -2605,8 +2679,31 @@ body {
 .login-prompt-benefit {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-2);
+  gap: 1em;
   font-size: var(--font-size-sm);
+  color: var(--gray-600);
+}
+
+.login-prompt-benefit-text {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.75em;
+  line-height: 1.6;
+  color: var(--gray-700);
+}
+
+.login-prompt-benefit-hang {
+  display: inline-flex;
+  min-width: 2ch;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--gray-900);
+  white-space: nowrap;
+}
+
+.login-prompt-benefit-body {
+  flex: 1;
+  min-width: 0;
   color: var(--gray-600);
 }
 
@@ -2622,6 +2719,8 @@ body {
   font-size: 0.75rem;
   font-weight: 700;
   margin-top: 2px;
+  flex-shrink: 0;
+  margin-left: 2ch;
 }
 
 .login-prompt-form {
@@ -2634,6 +2733,7 @@ body {
   text-align: center;
   font-size: var(--font-size-xs);
   color: var(--gray-500);
+  padding-bottom: var(--space-3);
 }
 
 .login-prompt-footer a {
@@ -2937,6 +3037,7 @@ body {
   font-size: var(--font-size-sm);
   color: var(--gray-500);
   padding-inline: var(--space-6);
+  padding-bottom: var(--space-4);
 }
 
 .login-card__footer a {
