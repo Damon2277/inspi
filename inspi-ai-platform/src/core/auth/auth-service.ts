@@ -138,8 +138,12 @@ export class AuthService {
 
       await user.save();
 
-      // 发送验证邮件
-      await this.sendVerificationEmail(user.email, user.name ?? '用户', emailVerificationToken);
+      // 发送验证邮件（本地/无 SMTP 配置时允许跳过）
+      try {
+        await this.sendVerificationEmail(user.email, user.name ?? '用户', emailVerificationToken);
+      } catch (mailError) {
+        console.warn('sendVerificationEmail skipped:', mailError);
+      }
 
       // 记录注册贡献
       await (ContributionLog.create as any)({

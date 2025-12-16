@@ -89,10 +89,10 @@ export function formatRewardDescription(type: string, amount?: number, descripti
 export function generateShareText(inviterName: string, platform: string): string {
   const templates = {
     wechat: `${inviterName} 邀请你使用 Inspi.AI - 老师的好搭子！🎓 AI助力教学，让备课更轻松，教学更高效！`,
-    qq: `${inviterName} 推荐你试试 Inspi.AI！专为教师打造的AI教学助手，快来体验吧！`,
+    qq: `${inviterName} 推荐你试试 Inspi.AI！专为教学场景打造的AI助手，快来体验吧！`,
     dingtalk: `${inviterName} 邀请你加入 Inspi.AI 平台，AI赋能教育，提升教学效率！`,
     wework: `${inviterName} 推荐 Inspi.AI - 智能教学助手，让教学工作事半功倍！`,
-    email: `${inviterName} 邀请你体验 Inspi.AI 平台，这是一个专为教师设计的AI教学助手，可以帮助你更高效地备课和教学。`,
+    email: `${inviterName} 邀请你体验 Inspi.AI 平台，这是一个专为教学设计的AI助手，可以帮助你更高效地备课和教学。`,
     default: `${inviterName} 邀请你使用 Inspi.AI - 老师的AI好搭子！`,
   };
 

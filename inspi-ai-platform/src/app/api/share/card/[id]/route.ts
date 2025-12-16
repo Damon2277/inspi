@@ -33,9 +33,9 @@ export async function GET(
       type: 'visualization',
       title: '分享的教学卡片',
       content: '这是一张通过Inspi.AI生成的教学卡片，展示了AI在教育领域的应用潜力。',
-      explanation: '使用AI技术生成的个性化教学内容，帮助教师提升教学效果。',
+      explanation: '使用AI技术生成的个性化教学内容，帮助教学活动提升效果。',
       createdAt: new Date().toISOString(),
-      author: '匿名教师',
+      author: '匿名教学创作者',
       shareCount: Math.floor(Math.random() * 100),
       viewCount: Math.floor(Math.random() * 1000),
     };

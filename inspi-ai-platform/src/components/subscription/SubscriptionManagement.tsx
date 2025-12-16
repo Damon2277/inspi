@@ -1,9 +1,11 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { QuotaDisplay } from './QuotaDisplay';
 import { SubscriptionModal } from './SubscriptionModal';
+import { useAuth } from '@/shared/hooks/useAuth';
 
 interface SubscriptionInfo {
   status: 'free' | 'subscribed';
@@ -27,6 +29,10 @@ interface SubscriptionManagementProps {
 }
 
 export function SubscriptionManagement({ variant = 'page', autoOpenModal = false }: SubscriptionManagementProps) {
+  const router = useRouter();
+  const { user: authUser } = useAuth();
+  const isAuthenticated = Boolean(authUser);
+  const [loginRedirectUrl, setLoginRedirectUrl] = useState('/auth/login');
   const isEmbedded = variant === 'embedded';
   const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,10 +41,28 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const currentPath = window.location.pathname + window.location.search || '/profile?tab=subscription';
+    setLoginRedirectUrl(`/auth/login?returnUrl=${encodeURIComponent(currentPath)}`);
+  }, []);
+
+  const requireLogin = useCallback(() => {
+    router.push(loginRedirectUrl);
+  }, [loginRedirectUrl, router]);
+
   const fetchSubscriptionInfo = useCallback(async () => {
+    if (!isAuthenticated) {
+      setSubscriptionInfo(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await fetch('/api/subscription/status');
+      const response = await fetch('/api/subscription/status', { credentials: 'include' });
       const data = await response.json();
 
       if (data.success) {
@@ -49,24 +73,35 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     fetchSubscriptionInfo();
   }, [fetchSubscriptionInfo]);
 
   useEffect(() => {
-    if (autoOpenModal) {
-      setShowSubscriptionModal(true);
+    if (!autoOpenModal) {
+      return;
     }
-  }, [autoOpenModal]);
+
+    if (isAuthenticated) {
+      setShowSubscriptionModal(true);
+    } else {
+      requireLogin();
+    }
+  }, [autoOpenModal, isAuthenticated, requireLogin]);
 
   const handleCancelSubscription = useCallback(async () => {
+    if (!isAuthenticated) {
+      requireLogin();
+      return;
+    }
+
     setCancelLoading(true);
     setFeedback(null);
 
     try {
-      const response = await fetch('/api/subscription/cancel', { method: 'POST' });
+      const response = await fetch('/api/subscription/cancel', { method: 'POST', credentials: 'include' });
       const data = await response.json();
 
       if (data.success) {
@@ -82,14 +117,23 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
       setCancelLoading(false);
       setShowCancelConfirm(false);
     }
-  }, [fetchSubscriptionInfo]);
+  }, [fetchSubscriptionInfo, isAuthenticated, requireLogin]);
+
+  const handleUpgradeClick = useCallback(() => {
+    if (!isAuthenticated) {
+      requireLogin();
+      return;
+    }
+
+    setShowSubscriptionModal(true);
+  }, [isAuthenticated, requireLogin]);
 
   const isSubscribed = subscriptionInfo?.status === 'subscribed';
 
   const planSummary = useMemo(() => {
     if (isSubscribed) {
       return {
-        title: '教师专业版',
+        title: '教学专业版',
         description: '每月 150 次生成额度，解锁复用与批量导出能力。',
       };
     }
@@ -187,20 +231,42 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
     </div>
   ) : (
     <div className="rounded-xl border border-dashed border-slate-300 bg-white p-5 text-sm text-slate-600">
-      <p>升级后即可解锁：</p>
-      <ul className="mt-3 space-y-2 text-slate-600">
-        <li>· 每月 150 次 AI 生成额度</li>
-        <li>· 复用/导出不限次数</li>
-        <li>· 教学方案批量下载与分享</li>
-      </ul>
-      <button
-        type="button"
-        onClick={() => setShowSubscriptionModal(true)}
-        className="mt-4 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-        style={{ minHeight: 'var(--hero-btn-height)' }}
-      >
-        升级获取更多额度
-      </button>
+      <p className="text-base font-semibold text-slate-900">升级后即可解锁：</p>
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <div className="space-y-3">
+          <div>
+            <span className="font-medium text-slate-800">高频生成</span>
+            <p className="mt-1 text-slate-600">每月最高 150 次 AI 生成额度，适配高密度备课场景。</p>
+          </div>
+          <div>
+            <span className="font-medium text-slate-800">复用/导出</span>
+            <p className="mt-1 text-slate-600">一键复用内容并导出 PPT/讲义，批量操作不限次数。</p>
+          </div>
+        </div>
+        <div className="space-y-3">
+          <div>
+            <span className="font-medium text-slate-800">教学方案</span>
+            <p className="mt-1 text-slate-600">批量下载与分享完整教学方案，课堂展示一键串联。</p>
+          </div>
+          <div>
+            <span className="font-medium text-slate-800">服务支持</span>
+            <p className="mt-1 text-slate-600">专属服务通道，及时响应教学场景反馈与升级需求。</p>
+          </div>
+        </div>
+      </div>
+      <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-[240px] flex-1 rounded-lg bg-slate-50 p-4 text-xs text-slate-500">
+          微信支付仅支持扫码订阅，扣款日前可随时取消，取消后当前周期仍可使用完额度。
+        </div>
+        <button
+          type="button"
+          onClick={handleUpgradeClick}
+          className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          style={{ minHeight: 'var(--hero-btn-height)' }}
+        >
+          升级获取更多额度
+        </button>
+      </div>
     </div>
   );
 
@@ -211,16 +277,6 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
           <h1 className="text-2xl font-semibold text-slate-900">订阅管理</h1>
           <p className="mt-2 text-xl text-slate-600">查看额度使用情况、管理自动续订配置。</p>
         </div>
-        {!isSubscribed ? (
-          <button
-            type="button"
-            onClick={() => setShowSubscriptionModal(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-            style={{ minHeight: 'var(--hero-btn-height)' }}
-          >
-            立即升级专业版
-          </button>
-        ) : null}
       </div>
 
       {feedback ? (
@@ -233,7 +289,7 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
         </div>
       ) : null}
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-3">
+      <div className="mt-8 space-y-6">
         <section className="lg:col-span-2 space-y-6 rounded-2xl bg-white p-6 shadow-sm">
           <header className="rounded-xl bg-slate-900/5 p-5">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -251,31 +307,6 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
 
           {subscriptionActions}
         </section>
-
-        <aside className="space-y-4 rounded-2xl bg-white p-6 shadow-sm">
-          <h3 className="text-base font-semibold text-slate-900">订阅权益</h3>
-          <ul className="space-y-4 text-lg text-slate-600">
-            <li>
-              <span className="font-medium text-slate-800">高频生成：</span>
-              每月最高 150 次生成额度，适配高密度备课场景。
-            </li>
-            <li>
-              <span className="font-medium text-slate-800">复用/导出：</span>
-              一键复用内容，生成 PPT/讲义，更快完成课堂准备。
-            </li>
-            <li>
-              <span className="font-medium text-slate-800">课堂展示：</span>
-              支持卡片串联播放，适配教室投屏与大屏展示。
-            </li>
-            <li>
-              <span className="font-medium text-slate-800">服务支持：</span>
-              专属服务通道，及时响应教学场景反馈。
-            </li>
-          </ul>
-          <div className="rounded-lg bg-slate-50 p-4 text-xs text-slate-500">
-            微信支付仅支持扫码订阅，扣款日前可随时取消，取消后当前周期仍可使用完额度。
-          </div>
-        </aside>
       </div>
 
       <section className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white p-6 shadow-sm">

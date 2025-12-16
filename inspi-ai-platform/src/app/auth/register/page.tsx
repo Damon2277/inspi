@@ -70,7 +70,7 @@ function RegisterPageContent() {
                 </li>
                 <li className="login-prompt-benefit">
                   <span className="login-prompt-benefit-icon" aria-hidden="true">✔</span>
-                  <span className="login-prompt-benefit-text">加入教师社区</span>
+                  <span className="login-prompt-benefit-text">加入教学社区</span>
                 </li>
                 <li className="login-prompt-benefit">
                   <span className="login-prompt-benefit-icon" aria-hidden="true">✔</span>

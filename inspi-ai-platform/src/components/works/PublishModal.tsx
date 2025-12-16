@@ -178,8 +178,8 @@ export default function PublishModal({
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <h4 className="font-medium text-gray-900 mb-2">发布协议</h4>
             <div className="text-sm text-gray-600 space-y-1">
-              <p>• 发布的作品将在智慧广场公开展示，供其他教师学习和复用</p>
-              <p>• 您保留作品的原创权，其他教师复用时会自动标注归属</p>
+              <p>• 发布的作品将在智慧广场公开展示，供其他教学伙伴学习和复用</p>
+              <p>• 您保留作品的原创权，其他教学伙伴复用时会自动标注归属</p>
               <p>• 作品被复用时，您将获得贡献度积分奖励</p>
               <p>• 请确保作品内容健康、积极，符合教育价值观</p>
               <p>• 平台有权对不当内容进行审核和处理</p>

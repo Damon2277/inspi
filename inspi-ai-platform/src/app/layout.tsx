@@ -19,9 +19,9 @@ const notoSansSC = Noto_Sans_SC({
 });
 
 export const metadata: Metadata = {
-  title: 'Inspi.AI - AI驱动的教师智慧平台',
-  description: '用AI激发教学创意，让每一次教学都充满魔法。智能生成教学卡片，构建个人知识图谱，与教师社区共同成长。',
-  keywords: 'AI教学,教学卡片,教师工具,教育科技,智能教学,教学创意',
+  title: 'Inspi.AI - AI驱动的教学智慧平台',
+  description: '用AI激发教学创意，让每一次教学都充满魔法。智能生成教学卡片，构建个人知识图谱，与教学社区共同成长。',
+  keywords: 'AI教学,教学卡片,教学工具,教育科技,智能教学,教学创意',
   authors: [{ name: 'Inspi.AI Team' }],
   creator: 'Inspi.AI',
   publisher: 'Inspi.AI',

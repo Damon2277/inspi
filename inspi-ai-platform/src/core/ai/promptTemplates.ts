@@ -71,7 +71,7 @@ JSON 输出结构（字段名必须一致）：
         "placement": "left | right | top | bottom | center"
       }
     ],
-    "footerNote": "一句提醒教师的使用建议，可为空"
+    "footerNote": "一句提醒教学场景的使用建议，可为空"
   }
 }
 
@@ -125,7 +125,7 @@ const exampleCardTemplate: CardTemplate = {
   name: '实例演示卡片',
   description: '通过具体例子帮助学生理解抽象概念',
   expectedLength: 250,
-  prompt: `作为一名经验丰富的教师，请为以下知识点创建一个实例演示卡片：
+  prompt: `作为一名经验丰富的教学设计者，请为以下知识点创建一个实例演示卡片：
 
 知识点：{knowledgePoint}
 学科：{subject}
@@ -166,7 +166,7 @@ const practiceCardTemplate: CardTemplate = {
   name: '练习巩固卡片',
   description: '提供适当难度的练习题帮助学生巩固知识',
   expectedLength: 200,
-  prompt: `作为一名经验丰富的教师，请为以下知识点创建一个练习巩固卡片：
+  prompt: `作为一名经验丰富的教学设计者，请为以下知识点创建一个练习巩固卡片：
 
 知识点：{knowledgePoint}
 学科：{subject}
@@ -207,7 +207,7 @@ const extensionCardTemplate: CardTemplate = {
   name: '拓展延伸卡片',
   description: '拓展相关知识，激发学生的学习兴趣',
   expectedLength: 220,
-  prompt: `作为一名经验丰富的教师，请为以下知识点创建一个拓展延伸卡片：
+  prompt: `作为一名经验丰富的教学设计者，请为以下知识点创建一个拓展延伸卡片：
 
 知识点：{knowledgePoint}
 学科：{subject}

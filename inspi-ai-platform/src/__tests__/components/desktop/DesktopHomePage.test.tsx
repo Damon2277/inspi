@@ -44,7 +44,7 @@ describe('DesktopHomePage', () => {
 
     expect(screen.getByText('数据说话，效果显著')).toBeInTheDocument();
     expect(screen.getByText('教学卡片')).toBeInTheDocument();
-    expect(screen.getByText('活跃教师')).toBeInTheDocument();
+    expect(screen.getByText('活跃教学创作者')).toBeInTheDocument();
     expect(screen.getByText('学科覆盖')).toBeInTheDocument();
     expect(screen.getByText('学生受益')).toBeInTheDocument();
   });
