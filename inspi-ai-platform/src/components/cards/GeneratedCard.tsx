@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Buffer } from 'buffer';
 import { useAuth } from '@/shared/hooks/useAuth';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
@@ -175,7 +176,7 @@ export function GeneratedCard({
 
   useEffect(() => {
     setGeneratedVisual(null);
-  }, [card.id, card.visual]);
+  }, [card.id]);
 
   useEffect(() => {
     if (viewMode !== 'content') {
@@ -328,6 +329,10 @@ export function GeneratedCard({
       return;
     }
 
+    const trimmedContent = typeof cardContent === 'string'
+      ? cardContent.trim()
+      : '';
+
     setIsGeneratingVisual(true);
     try {
       const token = getAuthToken();
@@ -340,13 +345,16 @@ export function GeneratedCard({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` ,
+          Authorization: `Bearer ${token}`,
         },
         credentials: 'include',
         body: JSON.stringify({
           knowledgePoint,
           subject: card.metadata?.subject,
           gradeLevel: card.metadata?.gradeLevel,
+          cardType: card.type,
+          cardTitle: card.title,
+          cardContent: trimmedContent || undefined,
         }),
       });
 
@@ -378,7 +386,9 @@ export function GeneratedCard({
     card.metadata?.knowledgePoint,
     card.metadata?.subject,
     card.title,
+    card.type,
     card.explanation,
+    cardContent,
     isGeneratingVisual,
     showFeedback,
     isAuthenticated,
@@ -445,6 +455,8 @@ export function GeneratedCard({
 
       const { header, stages, outcomes, notes, highlight } = visual.structured;
       const stageList = Array.isArray(stages) ? stages.slice(0, 5) : [];
+      const structuredImage = typeof visual.imageUrl === 'string' && visual.imageUrl.trim().length > 0 ? visual.imageUrl : null;
+      const structuredSvgMarkup = decodeStructuredSvg(structuredImage);
       const outcomesList = Array.isArray(outcomes) ? outcomes.slice(0, 4) : [];
       const notesList = Array.isArray(notes) ? notes.slice(0, 4) : [];
 
@@ -521,6 +533,30 @@ export function GeneratedCard({
               </div>
             ) : null}
           </div>
+
+          {structuredSvgMarkup ? (
+            <div
+              style={{
+                width: '100%',
+                borderRadius: '24px',
+                overflow: 'hidden',
+                boxShadow: '0 18px 36px rgba(15, 23, 42, 0.18)',
+              }}
+              dangerouslySetInnerHTML={{ __html: structuredSvgMarkup }}
+            />
+          ) : structuredImage ? (
+            <div
+              style={{
+                width: '100%',
+                borderRadius: '24px',
+                overflow: 'hidden',
+                boxShadow: '0 18px 36px rgba(15, 23, 42, 0.18)',
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={structuredImage} alt="辅助图示" style={{ width: '100%', height: 'auto', display: 'block' }} />
+            </div>
+          ) : null}
 
           <div
             style={{
@@ -2745,3 +2781,23 @@ function CardPresentationModal({ card, isOpen, onClose }: CardPresentationModalP
     </div>
   );
 }
+
+function decodeStructuredSvg(dataUrl?: string | null): string | null {
+  if (!dataUrl?.startsWith('data:image/svg+xml;base64,')) {
+    return null;
+  }
+  try {
+    const base64 = dataUrl.split(',')[1];
+    if (!base64) {
+      return null;
+    }
+    if (typeof window !== 'undefined' && window.atob) {
+      return window.atob(base64);
+    }
+    return Buffer.from(base64, 'base64').toString('utf-8');
+  } catch (error) {
+    console.warn('解析辅助图示 SVG 失败', error);
+    return null;
+  }
+}
+

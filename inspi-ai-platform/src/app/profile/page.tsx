@@ -556,41 +556,40 @@ function ProfileContent() {
   const renderFeedbackTab = () => (
     <div className="modern-grid modern-grid-2" style={{ gap: '24px' }}>
       <div className="modern-card" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <h3 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--gray-900)', marginBottom: '12px' }}>产品反馈</h3>
-        <p style={{ fontSize: '18px', color: 'var(--gray-600)', lineHeight: 1.6, marginBottom: '24px' }}>
-          在下方留言板填写您的建议、问题或教学灵感，我们会在双周迭代中优先处理高频需求。
+        <h3 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--gray-900)', marginBottom: '12px' }}>邮件反馈</h3>
+        <p style={{ fontSize: '18px', color: 'var(--gray-600)', lineHeight: 1.6 }}>
+          请直接写邮件给管理员，说明您遇到的问题、希望支持的教学场景或任何灵感建议，我们会在收到邮件后第一时间跟进。
         </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
-          <textarea
-            placeholder="请输入您想反馈的内容（支持 Markdown 简写）"
-            rows={6}
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--gray-200)',
-              fontSize: '18px',
-              lineHeight: 1.6,
-              resize: 'vertical',
-              minHeight: '180px',
-            }}
-          />
-          <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
-            <button
-              className="modern-btn modern-btn-primary"
-              style={{ fontSize: '18px', minHeight: 'calc(var(--hero-btn-height) * 0.7)', padding: '0 var(--space-8)' }}
-            >
-              提交留言
-            </button>
-          </div>
+        <div style={{
+          marginTop: '12px',
+          padding: '16px',
+          borderRadius: 'var(--radius-lg)',
+          border: '1px dashed var(--gray-200)',
+          background: 'var(--gray-50)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+        }}>
+          <div style={{ fontSize: '16px', color: 'var(--gray-600)' }}>收件人邮箱</div>
+          <code style={{
+            fontSize: '22px',
+            fontWeight: 600,
+            color: 'var(--gray-900)',
+            letterSpacing: '0.02em',
+          }}>
+            76111678@qq.com
+          </code>
+          <p style={{ fontSize: '14px', color: 'var(--gray-500)', lineHeight: 1.6 }}>
+            可包含课程背景、使用目标、截图等信息，帮助我们更快理解需求。
+          </p>
         </div>
       </div>
 
       <div className="modern-card" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div>
-          <h3 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--gray-900)', marginBottom: '12px' }}>社群共创</h3>
+          <h3 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--gray-900)', marginBottom: '12px' }}>添加管理员微信</h3>
           <p style={{ fontSize: '18px', color: 'var(--gray-600)', lineHeight: 1.6 }}>
-            扫码加入官方共创社群，提前体验新能力、共建课堂案例，与产品团队持续交流。
+            扫码添加微信小助手，备注「老师 + 学段/学科」，即可与产品团队直接沟通并加入共创社群。
           </p>
         </div>
         <div style={{
@@ -606,7 +605,7 @@ function ProfileContent() {
         }}>
           <Image
             src="/feedback/wechat-community-qrcode.png"
-            alt="加入 Inspi 共创社群"
+            alt="添加管理员微信"
             width={180}
             height={180}
             style={{ borderRadius: 'var(--radius-lg)' }}
@@ -614,7 +613,7 @@ function ProfileContent() {
           />
         </div>
         <p style={{ fontSize: '16px', color: 'var(--gray-500)', textAlign: 'center' }}>
-          长按或扫描上方二维码，添加小助手并备注“共创”
+          长按或扫描上方二维码，添加管理员微信后即可获取最新进展
         </p>
       </div>
     </div>

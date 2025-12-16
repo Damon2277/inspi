@@ -150,7 +150,7 @@ export class WeChatPayService {
           orderId,
           amount,
           userId,
-          description: type === PaymentType.RENEWAL ? 'Inspi AI 教师专业版续费' : 'Inspi AI 教师专业版订阅',
+          description: type === PaymentType.RENEWAL ? 'Inspi AI 教学专业版续费' : 'Inspi AI 教学专业版订阅',
           clientIp,
         });
 

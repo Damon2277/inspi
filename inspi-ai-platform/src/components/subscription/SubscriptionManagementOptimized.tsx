@@ -208,7 +208,7 @@ export function SubscriptionManagementOptimized({
   const planSummary = useMemo(() => {
     if (isSubscribed) {
       return {
-        title: '教师专业版',
+        title: '教学专业版',
         description: '每月 150 次生成额度，解锁复用与批量导出能力。',
       };
     }
@@ -284,19 +284,41 @@ export function SubscriptionManagementOptimized({
     </div>
   ) : (
     <div className="rounded-xl border border-dashed border-slate-300 bg-white p-5 text-sm text-slate-600">
-      <p>升级后即可解锁：</p>
-      <ul className="mt-3 space-y-2 text-slate-600">
-        <li>· 每月 150 次 AI 生成额度</li>
-        <li>· 复用/导出不限次数</li>
-        <li>· 教学方案批量下载与分享</li>
-      </ul>
-      <button
-        type="button"
-        onClick={() => setShowSubscriptionModal(true)}
-        className="mt-4 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-      >
-        升级获取更多额度
-      </button>
+      <p className="text-base font-semibold text-slate-900">升级后即可解锁：</p>
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <div className="space-y-3">
+          <div>
+            <span className="font-medium text-slate-800">高频生成</span>
+            <p className="mt-1 text-slate-600">每月最高 150 次 AI 生成额度，适配高密度备课场景。</p>
+          </div>
+          <div>
+            <span className="font-medium text-slate-800">复用/导出</span>
+            <p className="mt-1 text-slate-600">一键复用内容并导出 PPT/讲义，批量操作不限次数。</p>
+          </div>
+        </div>
+        <div className="space-y-3">
+          <div>
+            <span className="font-medium text-slate-800">教学方案</span>
+            <p className="mt-1 text-slate-600">批量下载与分享完整教学方案，课堂展示一键串联。</p>
+          </div>
+          <div>
+            <span className="font-medium text-slate-800">服务支持</span>
+            <p className="mt-1 text-slate-600">专属服务通道，及时响应教学场景反馈与升级需求。</p>
+          </div>
+        </div>
+      </div>
+      <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-[240px] flex-1 rounded-lg bg-slate-50 p-4 text-xs text-slate-500">
+          微信支付仅支持扫码订阅，扣款日前可随时取消，取消后当前周期仍可使用完额度。
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowSubscriptionModal(true)}
+          className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+        >
+          升级获取更多额度
+        </button>
+      </div>
     </div>
   );
 
@@ -328,7 +350,7 @@ export function SubscriptionManagementOptimized({
         </div>
       ) : null}
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-3">
+      <div className="mt-8 space-y-6">
         <section className="lg:col-span-2 space-y-6 rounded-2xl bg-white p-6 shadow-sm">
           <header className="rounded-xl bg-slate-900/5 p-5">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -348,24 +370,6 @@ export function SubscriptionManagementOptimized({
 
           {subscriptionActions}
         </section>
-
-        <aside className="space-y-4 rounded-2xl bg-white p-6 shadow-sm">
-          <h3 className="text-base font-semibold text-slate-900">订阅权益</h3>
-          <ul className="space-y-4 text-sm text-slate-600">
-            <li>
-              <span className="font-medium text-slate-800">高频生成：</span>
-              每月最高 150 次生成额度，适配高密度备课场景。
-            </li>
-            <li>
-              <span className="font-medium text-slate-800">无限复用：</span>
-              不限次数保存优质教案，打造个人教学资源库。
-            </li>
-            <li>
-              <span className="font-medium text-slate-800">批量导出：</span>
-              支持 Word/PDF 格式导出，满足各类备课需求。
-            </li>
-          </ul>
-        </aside>
       </div>
 
       {showSubscriptionModal ? (

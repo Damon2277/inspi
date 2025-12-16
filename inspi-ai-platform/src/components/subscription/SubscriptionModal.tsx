@@ -171,9 +171,14 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, currentQuota }: 
 
   const handleRetry = useCallback(() => {
     resetState();
-    setPaymentStatus('idle');
-    setTimeout(() => handleSubscribe(), 0);
-  }, [handleSubscribe, resetState]);
+  }, [resetState]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    if (isOpen && paymentStatus === 'idle' && !qrCodeData && !loading) {
+      handleSubscribe();
+    }
+  }, [handleSubscribe, isOpen, loading, mounted, paymentStatus, qrCodeData]);
 
   const formattedCountdown = useMemo(() => {
     if (countdownMs === null || countdownMs <= 0) {
@@ -211,7 +216,7 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, currentQuota }: 
         <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5 text-white">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-semibold">升级教师专业版</h2>
+              <h2 className="text-xl font-semibold">升级教学专业版</h2>
               {currentQuota?.type === 'daily' ? (
                 <p className="mt-1 text-sm text-white/80">
                   今日额度已用尽（{currentQuota.used}/{currentQuota.total}），升级后可解锁更高配额。
@@ -231,8 +236,17 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, currentQuota }: 
 
         <div className="space-y-6 px-6 py-6">
           {errorMessage ? (
-            <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
-              {errorMessage}
+            <div className="flex flex-col gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+              <span>{errorMessage}</span>
+              {!qrCodeData ? (
+                <button
+                  type="button"
+                  onClick={handleRetry}
+                  className="inline-flex items-center justify-center rounded-lg border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-600 transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+                >
+                  重新生成二维码
+                </button>
+              ) : null}
             </div>
           ) : null}
 
@@ -328,37 +342,10 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, currentQuota }: 
           ) : null}
 
           {paymentStatus === 'idle' ? (
-            <div className="space-y-6">
-              <div className="grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-5 sm:grid-cols-3">
-                <div>
-                  <p className="text-sm font-semibold text-slate-800">额度升级</p>
-                  <p className="mt-1 text-sm text-slate-600">每月 150 次生成额度，支持高并发创作。</p>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-800">一键复用</p>
-                  <p className="mt-1 text-sm text-slate-600">复用卡片不限次数，快速搭建课堂节奏。</p>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-800">自动续费</p>
-                  <p className="mt-1 text-sm text-slate-600">微信扫码订阅，次月前随时取消不扣费。</p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleSubscribe}
-                disabled={loading}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {loading ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden />
-                ) : null}
-                立即升级 ¥199 / 月
-              </button>
-
-              <p className="text-center text-xs text-slate-500">
-                支付成功后自动续订，下个月扣款前可在订阅管理中随时取消。
-              </p>
+            <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-slate-600">
+              <span className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600" aria-hidden />
+              <p className="text-sm">正在为您生成微信支付二维码...</p>
+              <p className="text-xs text-slate-500">如长时间未出现二维码，可关闭弹窗重新打开或稍后再试。</p>
             </div>
           ) : null}
         </div>
