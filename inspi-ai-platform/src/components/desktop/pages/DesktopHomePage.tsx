@@ -41,7 +41,7 @@ interface FeatureSpotlight {
 
 const highlightCopy = [
   '四种教学魔法卡一键生成，快速搭建高质量课堂体验。',
-  '结合案例库与教师偏好，自动匹配最适合的表达方式。',
+  '结合案例库与教学偏好，自动匹配最适合的表达方式。',
   '实时追踪复用与反馈，让每次优化都看得见。',
 ];
 
@@ -102,7 +102,7 @@ const cardTypes: CardType[] = [
 ];
 
 const stats = [
-  { label: '教师用户', value: '1,000+', icon: '👨‍🏫' },
+  { label: '教学创作用户', value: '1,000+', icon: '👨‍🏫' },
   { label: '智慧作品', value: '2,000+', icon: '📚' },
   { label: '致敬复用', value: '5,000+', icon: '🤝' },
 ];
@@ -320,7 +320,7 @@ export function DesktopHomePage() {
             <div className="desktop-section__header">
               <h2 className="desktop-section__title">被老师们信赖的 AI 课堂助手</h2>
               <p className="desktop-section__subtitle">
-                Inspi.AI 已帮助上千位教师释放创作时间，坚持打磨更有趣的课堂体验。
+                Inspi.AI 已帮助上千位教学创作者释放创作时间，坚持打磨更有趣的课堂体验。
               </p>
             </div>
 
@@ -503,7 +503,7 @@ export function DesktopHomePage() {
             <div className="desktop-cta">
               <h2 className="desktop-cta__title">让每一次奇思妙想，都被精彩呈现</h2>
               <p className="desktop-cta__subtitle">
-                加入教师智慧生态，与全球同行一起激发创意、分享智慧、传承经验。
+                加入教学智慧生态，与全球同行一起激发创意、分享智慧、传承经验。
               </p>
               <div className="desktop-cta__actions">
                 <Link href="/create" className="modern-btn modern-btn-primary modern-btn-xl">

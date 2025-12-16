@@ -104,7 +104,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
   basic: {
     name: 'basic',
     displayName: '基础版',
-    description: '适合专业教师和内容创作者',
+    description: '适合专业教学和内容创作者',
     monthlyPrice: 69,
     permissions: {
       canCreateCards: true,

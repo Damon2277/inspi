@@ -999,7 +999,7 @@ function buildSOPSections(cardType: TeachingCard['type'], knowledgePoint: string
     title: '即时反馈',
     goal: '确认学生掌握度',
     teacherActions: '以口头问答或小测形式获取反馈，记录主要误区。',
-    studentActions: '快速回答教师抛出的检核问题。',
+    studentActions: '快速回答教学互动中抛出的检核问题。',
     evidence: '80% 学生能够准确回答核心问题。',
     interactionMode: '全班',
     durationSeconds: 90,

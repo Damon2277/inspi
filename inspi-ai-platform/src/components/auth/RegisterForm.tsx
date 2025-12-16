@@ -15,7 +15,7 @@ interface RegisterFormProps {
   className?: string
 }
 
-export function RegisterForm({ onSuccess, redirectTo = '/', className = '' }: RegisterFormProps) {
+export function RegisterForm({ onSuccess, redirectTo = '/auth/login', className = '' }: RegisterFormProps) {
   const router = useRouter();  // @ts-ignore
   const auth = useAuth();
   const { register } = auth;
@@ -95,8 +95,7 @@ export function RegisterForm({ onSuccess, redirectTo = '/', className = '' }: Re
 
       if (result.success) {
         onSuccess && onSuccess();
-        // 注册成功后跳转到验证邮件页面
-        router.push('/auth/verify-email-sent');
+        router.push(redirectTo || '/auth/login');
       } else {
         setErrors({ general: result.error || '注册失败' });
       }
@@ -106,7 +105,7 @@ export function RegisterForm({ onSuccess, redirectTo = '/', className = '' }: Re
   };
 
   const handleGoogleRegister = () => {
-    const returnPath = redirectTo || '/';
+    const returnPath = redirectTo || '/auth/login';
     const target = `/api/auth/google?returnUrl=${encodeURIComponent(returnPath)}`;
     if (typeof window !== 'undefined') {
       window.location.href = target;

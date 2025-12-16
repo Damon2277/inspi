@@ -171,7 +171,7 @@ function buildVisualAssistPrompt(context: VisualAssistContext) {
     '- 以 "structured-diagram" 形式输出，突出步骤、连接和师生动作。',
     '- JSON 中的 visual.type 必须是 "structured-diagram"。',
     '- stages 需要 3-5 个，围绕卡片内容给出标题、摘要、要点。',
-    '- notes、highlight 提供给教师的提醒或连结。',
+    '- notes、highlight 提供给教学场景的提醒或连结。',
     '',
     '【输入】',
     `- 知识点：${context.knowledgePoint}`,

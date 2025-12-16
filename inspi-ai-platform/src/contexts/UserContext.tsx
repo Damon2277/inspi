@@ -24,7 +24,7 @@ interface UserContextType {
 const defaultUser: UserData = {
   name: '张老师',
   email: 'zhang@example.com',
-  bio: '高中数学教师，专注于函数与几何教学，致力于用创新方法让数学变得有趣。',
+  bio: '高中数学教学实践者，专注于函数与几何教学，致力于用创新方法让数学变得有趣。',
   avatar: '👩‍🏫',
   level: 'Pro',
   joinDate: '2024-01-01',

@@ -43,7 +43,7 @@ describe('UserProfile组件测试', () => {
     name: '张老师',
     email: 'zhang@example.com',
     avatar: '/avatar.jpg',
-    bio: '数学教师，专注于函数教学',
+    bio: '数学教学实践者，专注于函数教学',
     school: '北京市第一中学',
     subject: '数学',
     gradeLevel: '高中',
@@ -87,7 +87,7 @@ describe('UserProfile组件测试', () => {
       expect(screen.getByTestId('user-profile')).toBeInTheDocument();
       expect(screen.getByText('张老师')).toBeInTheDocument();
       expect(screen.getByText('zhang@example.com')).toBeInTheDocument();
-      expect(screen.getByText('数学教师，专注于函数教学')).toBeInTheDocument();
+      expect(screen.getByText('数学教学实践者，专注于函数教学')).toBeInTheDocument();
       expect(screen.getByText('北京市第一中学')).toBeInTheDocument();
     });
 
@@ -145,7 +145,7 @@ describe('UserProfile组件测试', () => {
 
       expect(screen.getByTestId('edit-profile-dialog')).toBeInTheDocument();
       expect(screen.getByDisplayValue('张老师')).toBeInTheDocument();
-      expect(screen.getByDisplayValue('数学教师，专注于函数教学')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('数学教学实践者，专注于函数教学')).toBeInTheDocument();
     });
 
     test('应该保存资料修改', async () => {
@@ -161,7 +161,7 @@ describe('UserProfile组件测试', () => {
       await userEvent.click(editButton);
 
       const nameInput = screen.getByDisplayValue('张老师');
-      const bioInput = screen.getByDisplayValue('数学教师，专注于函数教学');
+      const bioInput = screen.getByDisplayValue('数学教学实践者，专注于函数教学');
 
       await userEvent.clear(nameInput);
       await userEvent.type(nameInput, '张教授');
@@ -359,7 +359,7 @@ describe('UserProfile组件测试', () => {
 
       expect(mockShare).toHaveBeenCalledWith({
         title: '张老师的个人资料',
-        text: '数学教师，专注于函数教学',
+        text: '数学教学实践者，专注于函数教学',
         url: expect.stringContaining('/users/user-1'),
       });
     });

@@ -721,7 +721,7 @@ export function GeneratedCard({
                 boxShadow: '0 10px 22px rgba(15, 23, 42, 0.1)',
               }}
             >
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' }}>教师提示</div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' }}>教学提示</div>
               <ul style={{ margin: 0, padding: '0 0 0 18px', fontSize: '12px', color: '#334155', lineHeight: 1.6 }}>
                 {notesList.map((note, index) => (
                   <li key={`note-${index}`}>{note}</li>
@@ -1948,7 +1948,7 @@ export function GeneratedCard({
                   </div>
                   <div style={{ fontSize: '13px', color: '#1f2937', lineHeight: 1.6 }}>
                     <p style={{ margin: '0 0 6px 0', color: '#4b5563' }}>目标：{step.goal}</p>
-                    <p style={{ margin: '0 0 4px 0' }}>教师：{step.teacherActions}</p>
+                    <p style={{ margin: '0 0 4px 0' }}>教学引导：{step.teacherActions}</p>
                     <p style={{ margin: 0 }}>学生：{step.studentActions}</p>
                   </div>
                   {step.interactionMode && (

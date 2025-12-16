@@ -48,7 +48,7 @@ export const DEFAULT_PLANS: SubscriptionPlan[] = [
     id: 'plan-basic',
     name: 'basic',
     displayName: '基础版',
-    description: '适合专业教师和内容创作者',
+    description: '适合专业教学和内容创作者',
     tier: 'basic',
     monthlyPrice: 69,
     yearlyPrice: 690,

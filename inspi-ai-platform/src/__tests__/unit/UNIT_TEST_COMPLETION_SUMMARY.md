@@ -2,7 +2,7 @@
 
 ## 📋 项目概述
 
-**项目**: Inspi.AI - AI驱动的教师智慧与IP孵化平台  
+**项目**: Inspi.AI - AI驱动的教学智慧与IP孵化平台  
 **测试类型**: 单元测试 (Unit Tests)  
 **完成时间**: 2025年9月5日  
 **测试框架**: Jest + React Testing Library

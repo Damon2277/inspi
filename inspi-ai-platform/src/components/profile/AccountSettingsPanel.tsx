@@ -14,7 +14,9 @@ interface AccountSettingsPanelProps {
 
 export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: AccountSettingsPanelProps) {
   const { user, updateUser } = useUser();
-  const { changePassword: changePasswordApi } = useAuth();
+  const { user: authAccountUser, changePassword: changePasswordApi } = useAuth();
+  const isAuthenticated = Boolean(authAccountUser);
+  const [loginRedirectUrl, setLoginRedirectUrl] = useState('/auth/login');
   const [isSaving, setIsSaving] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showProfileEditor, setShowProfileEditor] = useState(false);
@@ -32,6 +34,14 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
   const [passwordForm, setPasswordForm] = useState({ current: '', next: '', confirm: '' });
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [passwordFeedback, setPasswordFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const currentPath = window.location.pathname + window.location.search || '/profile?tab=settings';
+    setLoginRedirectUrl(`/auth/login?returnUrl=${encodeURIComponent(currentPath)}`);
+  }, []);
 
   useEffect(() => {
     setSettings(prev => ({
@@ -308,6 +318,28 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
   const showHeader = variant === 'standalone';
   const panelContent = renderPanel();
 
+  const loginPromptCard = (
+    <div className="modern-card" style={{ padding: '32px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ fontSize: '48px' }}>🔐</div>
+      <h3 style={{ fontSize: '22px', fontWeight: 600, color: 'var(--gray-900)' }}>登录后管理账户设置</h3>
+      <p style={{ fontSize: '16px', color: 'var(--gray-600)', lineHeight: 1.6 }}>为了保护您的数据，账户详情与安全配置仅限登录用户查看。请先登录后继续。</p>
+      <Link
+        href={loginRedirectUrl}
+        className="modern-btn modern-btn-primary"
+        style={{ width: '100%', justifyContent: 'center', minHeight: 'calc(var(--hero-btn-height) * 0.7)' }}
+      >
+        前往登录
+      </Link>
+    </div>
+  );
+
+  const renderedContent = isAuthenticated ? panelContent : (
+    <div style={{ width: '100%', maxWidth: mode === 'profile-only' ? '720px' : '560px', margin: '0 auto' }}>
+      {loginPromptCard}
+    </div>
+  );
+
+
   return (
     <div className={showHeader ? 'modern-layout' : undefined}>
       {showHeader ? (
@@ -335,7 +367,7 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
                 账户设置
               </h1>
             </div>
-            {panelContent}
+            {renderedContent}
           </div>
         </section>
       ) : (
@@ -347,7 +379,7 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
             padding: '24px',
           }}
         >
-          {panelContent}
+          {renderedContent}
         </div>
       )}
 

@@ -164,7 +164,7 @@ export class PlanModel {
         badge: '最受欢迎',
         sortOrder: 2,
         metadata: {
-          targetAudience: ['个人创作者', '小团队', '教师', '培训师'],
+          targetAudience: ['个人创作者', '小团队', '教学从业者', '培训师'],
           useCases: ['日常创作', '教学制作', '内容输出', '知识整理'],
           limitations: ['中等配额', '基础功能'],
           benefits: ['高清导出', '客服支持', '数据安全', '知识图谱'],
