@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
+import { useUser } from '@/contexts/UserContext';
 import { TeachingCard } from '@/shared/types/teaching';
 
 interface PublishModalProps {
@@ -26,6 +27,7 @@ interface PublishData {
   gradeLevel: string;
   cards: TeachingCard[];
   tags: string[];
+  shareEmail: string;
   description?: string;
 }
 
@@ -43,9 +45,17 @@ export default function PublishModal({
   workData,
   isLoading = false,
 }: PublishModalProps) {
+  const { user, updateUser } = useUser();
   const [description, setDescription] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [shareEmail, setShareEmail] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const fallback = user.shareEmail || user.securityEmail || user.email || '';
+    setShareEmail(fallback);
+  }, [isOpen, user]);
 
   if (!isOpen) return null;
 
@@ -55,9 +65,17 @@ export default function PublishModal({
       return;
     }
 
+    const normalizedEmail = shareEmail.trim();
+    if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setFormError('请填写有效的作品通知邮箱');
+      return;
+    }
+
     setFormError(null);
+    updateUser({ shareEmail: normalizedEmail });
     onConfirm({
       ...workData,
+      shareEmail: normalizedEmail,
       description: description.trim(),
     });
   };
@@ -159,19 +177,17 @@ export default function PublishModal({
           {/* 作品描述 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              作品描述 (可选)
+              作品通知邮箱
             </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="简单介绍一下这个作品的特色和使用场景..."
-              rows={3}
+            <input
+              type="email"
+              value={shareEmail}
+              onChange={(e) => setShareEmail(e.target.value)}
+              placeholder="用于生成分享链接的邮箱"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={isLoading}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              {description.length}/200 字符
-            </p>
+            <p className="text-xs text-gray-500 mt-1">我们不会发送邮件，但会在分享流程中引用该邮箱，确保每次作品分享都与真实邮箱绑定。</p>
           </div>
 
           {/* 发布协议 */}

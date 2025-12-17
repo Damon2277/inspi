@@ -104,6 +104,15 @@ export const env = {
     LEVEL: process.env.LOG_LEVEL || 'info',
     SENTRY_DSN: process.env.SENTRY_DSN || '',
   },
+
+  // 管理后台配置
+  ADMIN_PANEL: {
+    ENABLED: process.env.ADMIN_PANEL_ENABLED !== 'false',
+    EMAIL: process.env.ADMIN_PANEL_EMAIL || 'admin@inspi.local',
+    PASSWORD: process.env.ADMIN_PANEL_PASSWORD || 'change-me-now',
+    NAME: process.env.ADMIN_PANEL_NAME || '系统管理员',
+    SESSION_MINUTES: parseInt(process.env.ADMIN_PANEL_SESSION_MINUTES || '720', 10),
+  },
 } as const;
 
 // 验证必需的环境变量

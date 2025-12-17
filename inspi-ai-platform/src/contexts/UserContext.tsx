@@ -9,6 +9,10 @@ interface UserData {
   avatar: string;
   level: string;
   joinDate: string;
+  securityEmail?: string;
+  shareEmail?: string;
+  quotaEmail?: string;
+  quotaReminderThreshold?: number;
   stats: {
     works: number;
     reuses: number;
@@ -28,6 +32,10 @@ const defaultUser: UserData = {
   avatar: '👩‍🏫',
   level: 'Pro',
   joinDate: '2024-01-01',
+  securityEmail: '',
+  shareEmail: '',
+  quotaEmail: '',
+  quotaReminderThreshold: 30,
   stats: {
     works: 12,
     reuses: 39,

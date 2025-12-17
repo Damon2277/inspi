@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 
+import { AdminGuard } from '@/components/admin/AdminGuard';
+
 interface TestResult {
   testName: string;
   success: boolean;
@@ -18,7 +20,7 @@ interface TestSuite {
   successRate?: number;
 }
 
-export default function TestRunnerPage() {
+function TestRunnerContent() {
   const [testSuites, setTestSuites] = useState<TestSuite[]>([
     { name: '单元测试', status: 'pending' },
     { name: '集成测试', status: 'pending' },
@@ -375,3 +377,12 @@ export default function TestRunnerPage() {
     </div>
   );
 }
+
+export default function TestRunnerPage() {
+  return (
+    <AdminGuard>
+      <TestRunnerContent />
+    </AdminGuard>
+  );
+}
+
