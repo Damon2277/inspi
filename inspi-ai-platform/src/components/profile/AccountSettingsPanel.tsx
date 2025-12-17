@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 
 import { SubscriptionManagement } from '@/components/subscription/SubscriptionManagement';
 import { useUser } from '@/contexts/UserContext';
+import { setSecurityEmailForAccount } from '@/lib/security/email-link';
 import { useAuth } from '@/shared/hooks/useAuth';
 
 interface AccountSettingsPanelProps {
@@ -26,6 +27,9 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
       email: '',
       bio: '',
       avatar: '',
+      securityEmail: '',
+      shareEmail: '',
+      quotaEmail: '',
     },
   });
   const [avatarUploadError, setAvatarUploadError] = useState<string | null>(null);
@@ -51,6 +55,9 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
         email: user.email,
         bio: user.bio,
         avatar: user.avatar,
+        securityEmail: user.securityEmail || '',
+        shareEmail: user.shareEmail || '',
+        quotaEmail: user.quotaEmail || '',
       },
     }));
   }, [user]);
@@ -160,7 +167,11 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
       email: settings.profile.email,
       bio: settings.profile.bio,
       avatar: settings.profile.avatar,
+      securityEmail: settings.profile.securityEmail,
+      shareEmail: settings.profile.shareEmail,
+      quotaEmail: settings.profile.quotaEmail,
     });
+    setSecurityEmailForAccount(settings.profile.email, settings.profile.securityEmail);
 
     setTimeout(() => {
       setIsSaving(false);
@@ -474,6 +485,91 @@ export function AccountSettingsPanel({ variant = 'standalone', mode = 'full' }: 
                     ...settings,
                     profile: { ...settings.profile, email: e.target.value },
                   })}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid var(--gray-300)',
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: '18px',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontSize: '18px',
+                  fontWeight: '500',
+                  color: 'var(--gray-700)',
+                }}>
+                  安全邮箱
+                </label>
+                <input
+                  type="email"
+                  value={settings.profile.securityEmail}
+                  onChange={(e) => setSettings({
+                    ...settings,
+                    profile: { ...settings.profile, securityEmail: e.target.value },
+                  })}
+                  placeholder="用于找回密码的安全邮箱"
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid var(--gray-300)',
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: '18px',
+                  }}
+                />
+                <p style={{ fontSize: '14px', color: 'var(--gray-500)', marginTop: '4px' }}>忘记密码、作品分享、额度提醒都会引用该邮箱，不会直接发送邮件。</p>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontSize: '18px',
+                  fontWeight: '500',
+                  color: 'var(--gray-700)',
+                }}>
+                  作品通知邮箱
+                </label>
+                <input
+                  type="email"
+                  value={settings.profile.shareEmail}
+                  onChange={(e) => setSettings({
+                    ...settings,
+                    profile: { ...settings.profile, shareEmail: e.target.value },
+                  })}
+                  placeholder="生成分享链接时使用的邮箱"
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid var(--gray-300)',
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: '18px',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontSize: '18px',
+                  fontWeight: '500',
+                  color: 'var(--gray-700)',
+                }}>
+                  额度提醒邮箱
+                </label>
+                <input
+                  type="email"
+                  value={settings.profile.quotaEmail}
+                  onChange={(e) => setSettings({
+                    ...settings,
+                    profile: { ...settings.profile, quotaEmail: e.target.value },
+                  })}
+                  placeholder="额度提醒关联的邮箱"
                   style={{
                     width: '100%',
                     padding: '10px 12px',

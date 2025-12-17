@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 
+import { AdminGuard } from '@/components/admin/AdminGuard';
+
 interface SystemStatus {
   subscription: {
     totalSubscriptions: number;
@@ -31,7 +33,7 @@ interface SystemStatus {
   };
 }
 
-export default function SystemStatusPage() {
+function SystemStatusContent() {
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [testResults, setTestResults] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -446,3 +448,12 @@ export default function SystemStatusPage() {
     </div>
   );
 }
+
+export default function SystemStatusPage() {
+  return (
+    <AdminGuard>
+      <SystemStatusContent />
+    </AdminGuard>
+  );
+}
+

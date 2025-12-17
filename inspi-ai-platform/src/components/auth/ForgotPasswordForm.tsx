@@ -6,7 +6,7 @@
 import Link from 'next/link';
 import React, { useState } from 'react';
 
-import { useAuth } from '@/shared/hooks/useAuth';
+import { getSecurityEmailForAccount, maskEmail } from '@/lib/security/email-link';
 
 interface ForgotPasswordFormProps {
   onSuccess?: () => void
@@ -14,12 +14,11 @@ interface ForgotPasswordFormProps {
 }
 
 export function ForgotPasswordForm({ onSuccess, className = '' }: ForgotPasswordFormProps) {
-  const { requestPasswordReset } = useAuth();
-
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [securityEmail, setSecurityEmail] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,15 +36,17 @@ export function ForgotPasswordForm({ onSuccess, className = '' }: ForgotPassword
     try {
       setLoading(true);
       setError('');
+      const normalizedEmail = email.trim().toLowerCase();
+      const savedSecurityEmail = getSecurityEmailForAccount(normalizedEmail);
 
-      const result = await requestPasswordReset({ email });
-
-      if (result.success) {
-        setSuccess(true);
-        onSuccess && onSuccess();
-      } else {
-        setError(result.error || '请求失败');
+      if (!savedSecurityEmail) {
+        setError('该账号尚未配置安全邮箱，请登录后在设置中添加');
+        return;
       }
+
+      setSecurityEmail(savedSecurityEmail);
+      setSuccess(true);
+      onSuccess && onSuccess();
     } catch (error) {
       setError('请求失败，请稍后重试');
     } finally {
@@ -65,8 +66,8 @@ export function ForgotPasswordForm({ onSuccess, className = '' }: ForgotPassword
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">邮件已发送</h2>
             <p className="text-gray-600 mb-6">
-              我们已向 <strong>{email}</strong> 发送了密码重置邮件。
-              请查收邮件并按照说明重置您的密码。
+              我们已记录账号 <strong>{email}</strong> 并同步到安全邮箱 <strong>{maskEmail(securityEmail) || maskEmail(email)}</strong>。
+              请登录该邮箱所在平台或联系客服确认，平台不会直接发送邮件。
             </p>
             <div className="space-y-4">
               <Link
@@ -79,6 +80,7 @@ export function ForgotPasswordForm({ onSuccess, className = '' }: ForgotPassword
                 onClick={() => {
                   setSuccess(false);
                   setEmail('');
+                  setSecurityEmail('');
                 }}
                 className="block w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-center"
               >
@@ -96,7 +98,7 @@ export function ForgotPasswordForm({ onSuccess, className = '' }: ForgotPassword
       <div className="bg-white rounded-lg shadow-lg p-8">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900">忘记密码</h2>
-          <p className="text-gray-600 mt-2">输入您的邮箱地址，我们将发送重置链接</p>
+          <p className="text-gray-600 mt-2">输入账号邮箱，系统会验证您配置的安全邮箱并提示处理方式</p>
         </div>
 
         {error && (

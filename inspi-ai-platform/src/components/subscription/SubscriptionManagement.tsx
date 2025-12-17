@@ -3,9 +3,11 @@
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/shared/hooks/useAuth';
+
 import { QuotaDisplay } from './QuotaDisplay';
 import { SubscriptionModal } from './SubscriptionModal';
-import { useAuth } from '@/shared/hooks/useAuth';
 
 interface SubscriptionInfo {
   status: 'free' | 'subscribed';
@@ -31,6 +33,7 @@ interface SubscriptionManagementProps {
 export function SubscriptionManagement({ variant = 'page', autoOpenModal = false }: SubscriptionManagementProps) {
   const router = useRouter();
   const { user: authUser } = useAuth();
+  const { user, updateUser } = useUser();
   const isAuthenticated = Boolean(authUser);
   const [loginRedirectUrl, setLoginRedirectUrl] = useState('/auth/login');
   const isEmbedded = variant === 'embedded';
@@ -40,6 +43,10 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
   const [cancelLoading, setCancelLoading] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [quotaEmail, setQuotaEmail] = useState('');
+  const [quotaReminderEnabled, setQuotaReminderEnabled] = useState(false);
+  const [quotaThreshold, setQuotaThreshold] = useState(30);
+  const [quotaReminderFeedback, setQuotaReminderFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -52,6 +59,13 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
   const requireLogin = useCallback(() => {
     router.push(loginRedirectUrl);
   }, [loginRedirectUrl, router]);
+
+  useEffect(() => {
+    const fallbackEmail = user.quotaEmail || user.securityEmail || user.email || '';
+    setQuotaEmail(fallbackEmail);
+    setQuotaReminderEnabled(Boolean(user.quotaEmail));
+    setQuotaThreshold(user.quotaReminderThreshold ?? 30);
+  }, [user]);
 
   const fetchSubscriptionInfo = useCallback(async () => {
     if (!isAuthenticated) {
@@ -127,6 +141,27 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
 
     setShowSubscriptionModal(true);
   }, [isAuthenticated, requireLogin]);
+
+  const handleQuotaReminderSave = useCallback(() => {
+    setQuotaReminderFeedback(null);
+    const normalizedEmail = quotaEmail.trim();
+    if (quotaReminderEnabled) {
+      if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+        setQuotaReminderFeedback({ type: 'error', message: '请填写有效的额度提醒邮箱' });
+        return;
+      }
+    }
+
+    updateUser({
+      quotaEmail: quotaReminderEnabled ? normalizedEmail : '',
+      quotaReminderThreshold: quotaThreshold,
+    });
+
+    setQuotaReminderFeedback(quotaReminderEnabled
+      ? { type: 'success', message: `当额度低于 ${quotaThreshold}% 时将在站内提醒，并关联 ${normalizedEmail}` }
+      : { type: 'success', message: '已关闭额度提醒' });
+    setTimeout(() => setQuotaReminderFeedback(null), 4000);
+  }, [quotaEmail, quotaReminderEnabled, quotaThreshold, updateUser]);
 
   const isSubscribed = subscriptionInfo?.status === 'subscribed';
 
@@ -306,6 +341,64 @@ export function SubscriptionManagement({ variant = 'page', autoOpenModal = false
           <QuotaDisplay />
 
           {subscriptionActions}
+
+          <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-5 space-y-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-base font-semibold text-slate-900">额度提醒</p>
+                <p className="text-sm text-slate-600">剩余额度低于设定阈值时，会在站内发出提醒并标注下方邮箱。</p>
+              </div>
+              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={quotaReminderEnabled}
+                  onChange={(e) => setQuotaReminderEnabled(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                启用提醒
+              </label>
+            </div>
+            <div className="grid gap-4 md:grid-cols-[1.5fr_1fr]">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-600">提醒邮箱</label>
+                <input
+                  type="email"
+                  value={quotaEmail}
+                  onChange={(e) => setQuotaEmail(e.target.value)}
+                  disabled={!quotaReminderEnabled}
+                  placeholder="请输入可用邮箱"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 disabled:bg-slate-100"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-600">提醒阈值 ({quotaThreshold}%)</label>
+                <input
+                  type="range"
+                  min={10}
+                  max={80}
+                  step={5}
+                  value={quotaThreshold}
+                  onChange={(e) => setQuotaThreshold(parseInt(e.target.value, 10))}
+                  className="w-full"
+                />
+                <p className="text-xs text-slate-500">剩余额度低于该百分比时触发提醒</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={handleQuotaReminderSave}
+                className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-60"
+              >
+                保存提醒设置
+              </button>
+              {quotaReminderFeedback ? (
+                <span className={quotaReminderFeedback.type === 'success' ? 'text-sm text-emerald-600' : 'text-sm text-rose-600'}>
+                  {quotaReminderFeedback.message}
+                </span>
+              ) : null}
+            </div>
+          </div>
         </section>
       </div>
 
