@@ -39,7 +39,6 @@ export function SquareCardShowcase({ cards }: SquareCardShowcaseProps) {
           <GeneratedCard
             card={card}
             enableEditing={false}
-            hideVisualGeneration
           />
         </div>
       ))}

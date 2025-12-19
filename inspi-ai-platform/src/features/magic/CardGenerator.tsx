@@ -7,6 +7,8 @@ import { useAuthStore } from '@/shared/stores/authStore';
 import { CARD_TYPE_CONFIG } from '@/shared/types/teaching';
 import type { TeachingCard, GenerateCardsRequest, CardType } from '@/shared/types/teaching';
 
+const CARD_DISPLAY_ORDER: CardType[] = ['visualization', 'analogy', 'thinking', 'interaction'];
+
 interface CardGeneratorProps {
   request: GenerateCardsRequest;
   onCardsGenerated: (cards: TeachingCard[]) => void;
@@ -19,14 +21,19 @@ export default function CardGenerator({ request, onCardsGenerated, onError }: Ca
   const [currentStep, setCurrentStep] = useState('');
   const { token } = useAuthStore();
   const selectedCardTypes = useMemo<CardType[]>(() => {
+    const defaultOrder = CARD_DISPLAY_ORDER;
     if (!Array.isArray(request.cardTypes) || request.cardTypes.length === 0) {
-      return Object.keys(CARD_TYPE_CONFIG) as CardType[];
+      return defaultOrder;
     }
 
     const validTypes = request.cardTypes.filter(
       (type): type is CardType => typeof type === 'string' && type in CARD_TYPE_CONFIG,
     );
-    return validTypes.length > 0 ? validTypes : (Object.keys(CARD_TYPE_CONFIG) as CardType[]);
+    if (validTypes.length === 0) {
+      return defaultOrder;
+    }
+    const ordered = CARD_DISPLAY_ORDER.filter(type => validTypes.includes(type));
+    return ordered.length > 0 ? ordered : defaultOrder;
   }, [request.cardTypes]);
 
   const progressTimeline = useMemo(() => {

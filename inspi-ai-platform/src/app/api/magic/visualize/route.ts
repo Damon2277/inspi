@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { aiProvider, aiService } from '@/core/ai/aiProvider';
 import { requireAuth, AuthenticatedRequest } from '@/core/auth/middleware';
 import { quotaManager } from '@/lib/quota/quotaManager';
+import WorkService from '@/core/community/work-service';
 import { cleanUserContent, validateContent } from '@/lib/security';
 import { env } from '@/shared/config/environment';
 import type { StructuredDiagramSpec, StructuredDiagramStage, VisualizationSpec } from '@/shared/types/teaching';
@@ -25,6 +26,12 @@ interface VisualAssistContext {
   cardContent?: string;
 }
 
+interface VisualAssistResult {
+  summary: string;
+  visual: VisualizationSpec;
+  fallbackReason?: string;
+}
+
 export const POST = requireAuth(async (request: AuthenticatedRequest) => {
   const startTime = Date.now();
 
@@ -35,7 +42,7 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     }
 
     const body = await request.json();
-    const { knowledgePoint, subject, gradeLevel, cardTitle, cardType, cardContent } = body ?? {};
+    const { knowledgePoint, subject, gradeLevel, cardTitle, cardType, cardContent, cardId, workId } = body ?? {};
 
     if (typeof knowledgePoint !== 'string' || knowledgePoint.trim().length === 0) {
       return NextResponse.json({ error: '请输入知识点' }, { status: 400 });
@@ -43,6 +50,13 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
 
     if (knowledgePoint.length > 100) {
       return NextResponse.json({ error: '知识点长度不能超过100个字符' }, { status: 400 });
+    }
+
+    if (cardId && typeof cardId !== 'string') {
+      return NextResponse.json({ error: '卡片标识不合法' }, { status: 400 });
+    }
+    if (workId && typeof workId !== 'string') {
+      return NextResponse.json({ error: '作品标识不合法' }, { status: 400 });
     }
 
     const validation = await validateContent(knowledgePoint, {
@@ -105,10 +119,39 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
       cardContent: normalizedContent,
     };
 
-    const diagramResult = await generateVisualAssistDiagram(context, isMockMode);
-    const updatedQuota = await quotaManager.checkQuota(userId, userPlan);
 
-    logger.info('AI visual assist generation completed', {
+
+const diagramResult = await generateVisualAssistDiagram(context, isMockMode);
+
+let persistedCard: any = undefined;
+if (workId && cardId) {
+  try {
+    const persistResult = await WorkService.updateCardVisual(workId, userId, cardId, {
+      visual: diagramResult.visual,
+      summary: diagramResult.summary,
+      fallbackReason: diagramResult.fallbackReason,
+    });
+    if (!persistResult.success) {
+      logger.warn('Failed to persist visual assist result', {
+        workId,
+        cardId,
+        error: persistResult.error,
+      });
+    } else {
+      persistedCard = persistResult.card;
+    }
+  } catch (persistError) {
+    logger.error('Unexpected error while persisting visual assist result', {
+      workId,
+      cardId,
+      error: persistError instanceof Error ? persistError.message : 'Unknown error',
+    });
+  }
+}
+
+const updatedQuota = await quotaManager.checkQuota(userId, userPlan);
+
+logger.info('AI visual assist generation completed', {
       userId,
       knowledgePoint: cleanKnowledgePoint,
       duration: Date.now() - startTime,
@@ -117,6 +160,8 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
     return NextResponse.json({
       visual: diagramResult.visual,
       summary: diagramResult.summary,
+      fallbackReason: diagramResult.fallbackReason,
+      persisted: Boolean(persistedCard),
       usage: {
         current: updatedQuota.currentUsage,
         limit: updatedQuota.dailyLimit,
@@ -135,9 +180,9 @@ export const POST = requireAuth(async (request: AuthenticatedRequest) => {
   }
 });
 
-async function generateVisualAssistDiagram(context: VisualAssistContext, isMockMode: boolean) {
+async function generateVisualAssistDiagram(context: VisualAssistContext, isMockMode: boolean): Promise<VisualAssistResult> {
   if (isMockMode) {
-    return buildVisualAssistFallback(context);
+    return buildVisualAssistFallback(context, 'mock-mode');
   }
 
   try {
@@ -152,7 +197,7 @@ async function generateVisualAssistDiagram(context: VisualAssistContext, isMockM
     logger.warn('Visual assist prompt failed, using fallback', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-    return buildVisualAssistFallback(context);
+    return buildVisualAssistFallback(context, 'ai-error');
   }
 }
 
@@ -192,7 +237,7 @@ function buildVisualAssistPrompt(context: VisualAssistContext) {
 async function parseVisualAssistJSON(rawContent: string, context: VisualAssistContext) {
   const payload = extractJSON(rawContent);
   if (!payload) {
-    return buildVisualAssistFallback(context);
+    return buildVisualAssistFallback(context, 'missing-json');
   }
 
   try {
@@ -206,11 +251,11 @@ async function parseVisualAssistJSON(rawContent: string, context: VisualAssistCo
     logger.debug('Failed to parse visual assist payload', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-    return buildVisualAssistFallback(context);
+    return buildVisualAssistFallback(context, 'parse-error');
   }
 }
 
-async function buildStructuredVisualFromPayload(payload: any, context: VisualAssistContext) {
+async function buildStructuredVisualFromPayload(payload: any, context: VisualAssistContext): Promise<VisualAssistResult> {
   const rawVisual = payload.visual ?? {};
   const structuredInput = rawVisual.structured;
   const summary = await sanitizeRequiredText(payload.summary, defaultSummary(context));
@@ -263,6 +308,8 @@ async function buildStructuredVisualFromPayload(payload: any, context: VisualAss
     type: 'structured-diagram',
     theme: normalizeTheme(rawVisual.theme),
     layout: normalizeLayout(rawVisual.layout),
+    source: 'ai',
+    generatedAt: new Date().toISOString(),
     center: {
       title: headerTitle,
       subtitle: headerSubtitle,
@@ -347,8 +394,14 @@ async function buildNotes(notesInput: any) {
   return filtered.length > 0 ? filtered : undefined;
 }
 
-async function buildVisualAssistFallback(context: VisualAssistContext) {
+async function buildVisualAssistFallback(context: VisualAssistContext, reason: string = 'unknown'): Promise<VisualAssistResult> {
   const stageSources = deriveFallbackStageSources(context);
+  const derivedReason = !context.cardContent && reason === 'unknown' ? 'no-content' : reason;
+  const fallbackReason = derivedReason;
+  const fallbackSource: VisualizationSpec['source'] = (derivedReason === 'mock-mode' || derivedReason === 'no-content')
+    ? 'fallback-template'
+    : 'fallback-default';
+  const generatedAt = new Date().toISOString();
   const stages = await Promise.all(stageSources.map(async (source, index) => {
     const title = await sanitizeRequiredText(source.title, `步骤${index + 1}`);
     const summary = await sanitizeRequiredText(source.summary, deriveStageFallbackSummary(context, index));
@@ -387,6 +440,9 @@ async function buildVisualAssistFallback(context: VisualAssistContext) {
     type: 'structured-diagram',
     theme: FALLBACK_THEME,
     layout: FALLBACK_LAYOUT,
+    source: fallbackSource,
+    generatedAt,
+    fallbackReason,
     center: {
       title: header.title,
       subtitle: header.subtitle,
@@ -401,6 +457,7 @@ async function buildVisualAssistFallback(context: VisualAssistContext) {
   return {
     summary: defaultSummary(context),
     visual,
+    fallbackReason,
   };
 }
 
@@ -564,9 +621,22 @@ async function normalizeCardContent(rawContent: string | undefined) {
     return undefined;
   }
   const limited = trimmed.slice(0, MAX_CARD_CONTENT_LENGTH);
-  const withoutHtml = limited.replace(/<[^>]+>/g, ' ');
-  const withoutMarkdown = withoutHtml.replace(/[`*_#>\-]+/g, ' ');
-  const collapsed = withoutMarkdown.replace(/\s+/g, ' ').trim();
+  const withNormalizedBreaks = limited
+    .replace(/\r\n?/g, '\n')
+    .replace(/<\s*br\s*\/?>/gi, '\n')
+    .replace(/<\/\s*(p|div|li|ul|ol|h[1-6])>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ');
+  const withoutMarkdown = withNormalizedBreaks
+    .split('\n')
+    .map(line => line.replace(/^[>\-*#\d\.\)\s·•⋅]+/, '').replace(/[`*_]+/g, '').trim())
+    .filter(Boolean)
+    .join('\n');
+  const collapsed = withoutMarkdown
+    .split('\n')
+    .map(line => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n')
+    .trim();
   if (!collapsed) {
     return undefined;
   }

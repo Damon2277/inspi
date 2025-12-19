@@ -12,6 +12,7 @@ import Comment from '@/lib/models/Comment';
 import User from '@/lib/models/User';
 import Work, { WorkDocument, getWorkAuthorId, getWorkAuthorObjectId } from '@/lib/models/Work';
 import connectDB from '@/lib/mongodb';
+import type { VisualizationSpec } from '@/shared/types/teaching';
 
 export interface CreateWorkRequest {
   title: string
@@ -50,6 +51,7 @@ export interface WorkResponse {
   success: boolean
   work?: WorkDocument
   works?: WorkDocument[]
+  card?: any
   total?: number
   page?: number
   totalPages?: number
@@ -267,6 +269,67 @@ export class WorkService {
         success: false,
         error: '创建作品失败',
       };
+    }
+  }
+
+  /**
+   * 更新指定卡片的可视化信息
+   */
+  static async updateCardVisual(
+    workId: string,
+    authorId: string,
+    cardId: string,
+    payload: {
+      visual: VisualizationSpec;
+      summary?: string;
+      fallbackReason?: string;
+    },
+  ): Promise<WorkResponse> {
+    try {
+      await connectDB();
+
+      if (!payload?.visual) {
+        return { success: false, error: '缺少可保存的图示数据' };
+      }
+
+      const work = await (Work.findOne as any)({ _id: workId, author: authorId });
+      if (!work) {
+        return { success: false, error: '作品不存在或无权限编辑' };
+      }
+
+      const cardIndex = work.cards.findIndex((card: any) => card.id === cardId);
+      if (cardIndex === -1) {
+        return { success: false, error: '未找到目标卡片' };
+      }
+
+      const targetCard: any = work.cards[cardIndex];
+      targetCard.visual = payload.visual;
+
+      const nextMetadata: Record<string, any> = { ...(targetCard.metadata || {}) };
+      if (payload.summary) {
+        nextMetadata.visualSummary = payload.summary;
+      }
+      if (payload.visual.source) {
+        nextMetadata.visualSource = payload.visual.source;
+      }
+      nextMetadata.visualUpdatedAt = new Date().toISOString();
+      if (payload.fallbackReason) {
+        nextMetadata.visualFallbackReason = payload.fallbackReason;
+      } else {
+        delete nextMetadata.visualFallbackReason;
+      }
+      targetCard.metadata = nextMetadata;
+
+      work.cards[cardIndex] = targetCard;
+      work.markModified?.('cards');
+
+      const saved = await work.save();
+      await saved.populate('author', 'name avatar') as any;
+      const updatedCard = typeof targetCard.toObject === 'function' ? targetCard.toObject() : { ...targetCard };
+      return { success: true, work: saved, card: updatedCard, message: '辅助图示已保存' };
+    } catch (error) {
+      console.error('Update card visual error:', error);
+      return { success: false, error: '保存辅助图示失败' };
     }
   }
 

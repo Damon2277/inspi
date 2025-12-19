@@ -17,6 +17,7 @@ import {
 } from '@/lib/export/html-to-image';
 import { shareToSocial, generateShareLink, trackShareEvent } from '@/lib/share/share-service';
 import type { TeachingCard, VisualizationSpec, VisualizationTheme } from '@/shared/types/teaching';
+import { useVisualStore } from '@/shared/store/useVisualStore';
 
 import { SimpleCardEditor } from './SimpleCardEditor';
 
@@ -27,7 +28,6 @@ interface GeneratedCardProps {
   onRetry?: () => void;
   retrying?: boolean;
   enableEditing?: boolean;
-  hideVisualGeneration?: boolean;
   workId?: string;
   onVisualUpdate?: (payload: { cardId: string; visual: VisualizationSpec }) => void;
 }
@@ -123,7 +123,6 @@ export function GeneratedCard({
   onRetry,
   retrying = false,
   enableEditing = true,
-  hideVisualGeneration = false,
   workId,
   onVisualUpdate,
 }: GeneratedCardProps) {
@@ -138,9 +137,16 @@ export function GeneratedCard({
   const [isExporting, setIsExporting] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [generatedVisual, setGeneratedVisual] = useState<VisualizationSpec | null>(null);
+  const [cachedVisual, setCachedVisual] = useState<VisualizationSpec | null>(null);
   const [isGeneratingVisual, setIsGeneratingVisual] = useState(false);
+  const [visualContainer, setVisualContainer] = useState<HTMLDivElement | null>(null);
+  const [visualContainerSize, setVisualContainerSize] = useState({ width: 0, height: 0 });
 
   const { isAuthenticated, checkAuth } = useAuth();
+
+  const visualEntry = useVisualStore((state) => state.cache[card.id]);
+  const setVisualInStore = useVisualStore((state) => state.setVisual);
+  const removeVisualFromStore = useVisualStore((state) => state.removeVisual);
 
   const getAuthToken = () => {
     if (typeof window === 'undefined') {
@@ -156,7 +162,13 @@ export function GeneratedCard({
   const formattedCardContent = useMemo(() => formatCardContentMarkdown(cardContent), [cardContent]);
   const structuredSections = useMemo(() => buildStructuredSections(formattedCardContent), [formattedCardContent]);
   const hasStructuredSections = structuredSections.length > 0;
-  const effectiveVisual = useMemo(() => generatedVisual || card.visual || null, [generatedVisual, card.visual]);
+  const effectiveVisual = useMemo(() => {
+    return generatedVisual
+      || visualEntry?.visual
+      || cachedVisual
+      || card.visual
+      || null;
+  }, [generatedVisual, visualEntry, cachedVisual, card.visual]);
   const headerSummary = useMemo(() => {
     const base = card.metadata?.knowledgePoint || card.explanation || typeConfig.description;
     if (!base) return '';
@@ -179,6 +191,64 @@ export function GeneratedCard({
   }, [card.id]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const localVisual = loadCardVisualCache(card.id);
+    setCachedVisual(localVisual);
+  }, [card.id]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    if (card.visual) {
+      setVisualInStore(card.id, {
+        visual: card.visual,
+        updatedAt: typeof card.metadata?.visualUpdatedAt === 'string' ? card.metadata?.visualUpdatedAt : undefined,
+      });
+      saveCardVisualCache(card.id, card.visual, card.metadata?.visualSummary);
+      setCachedVisual(card.visual);
+      return;
+    }
+    removeVisualFromStore(card.id);
+    clearCardVisualCache(card.id);
+  }, [card.id, card.visual, card.metadata?.visualUpdatedAt, card.metadata?.visualSummary, setVisualInStore, removeVisualFromStore]);
+
+  useEffect(() => {
+    if (!visualContainer) {
+      setVisualContainerSize({ width: 0, height: 0 });
+      return undefined;
+    }
+
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const updateSize = (rect?: DOMRectReadOnly) => {
+      const width = rect?.width ?? visualContainer.clientWidth ?? 0;
+      const height = rect?.height ?? visualContainer.clientHeight ?? 0;
+      setVisualContainerSize(prev => (prev.width === width && prev.height === height ? prev : { width, height }));
+    };
+
+    updateSize();
+
+    if (typeof ResizeObserver === 'undefined') {
+      return undefined;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        updateSize(entry.contentRect);
+      }
+    });
+    observer.observe(visualContainer);
+
+    return () => observer.disconnect();
+  }, [visualContainer]);
+
+  useEffect(() => {
     if (viewMode !== 'content') {
       setIsEditing(false);
     }
@@ -193,33 +263,41 @@ export function GeneratedCard({
     setTimeout(() => setFeedback(null), 3000);
   }, []);
 
-  const persistVisualLocally = useCallback((visual: VisualizationSpec) => {
-    if (!workId || typeof window === 'undefined') {
+  const handleVisualContainerRef = useCallback((node: HTMLDivElement | null) => {
+    setVisualContainer(node);
+  }, []);
+
+  const persistVisualLocally = useCallback((visual: VisualizationSpec, summary?: string) => {
+    if (typeof window === 'undefined') {
       return;
     }
     try {
-      const cacheKey = `work-detail-cache-${workId}`;
-      const cachedRaw = sessionStorage.getItem(cacheKey);
-      if (cachedRaw) {
-        try {
-          const cached = JSON.parse(cachedRaw);
-          if (cached && Array.isArray(cached.cards)) {
-            const nextCards = cached.cards.map((item: TeachingCard) =>
-              item && item.id === card.id ? { ...item, visual } : item,
-            );
-            sessionStorage.setItem(cacheKey, JSON.stringify({ ...cached, cards: nextCards }));
+      saveCardVisualCache(card.id, visual, summary);
+      setCachedVisual(visual);
+      if (workId) {
+        const cacheKey = `work-detail-cache-${workId}`;
+        const cachedRaw = sessionStorage.getItem(cacheKey);
+        if (cachedRaw) {
+          try {
+            const cached = JSON.parse(cachedRaw);
+            if (cached && Array.isArray(cached.cards)) {
+              const nextCards = cached.cards.map((item: TeachingCard) =>
+                item && item.id === card.id ? { ...item, visual } : item,
+              );
+              sessionStorage.setItem(cacheKey, JSON.stringify({ ...cached, cards: nextCards }));
+            }
+          } catch (error) {
+            console.warn('解析缓存作品失败', error);
           }
-        } catch (error) {
-          console.warn('解析缓存作品失败', error);
         }
-      }
-      if (visual?.imageUrl) {
-        sessionStorage.setItem(`work-cover-cache-${workId}`, visual.imageUrl);
+        if (visual?.imageUrl) {
+          sessionStorage.setItem(`work-cover-cache-${workId}`, visual.imageUrl);
+        }
       }
     } catch (error) {
       console.warn('缓存辅助图示失败', error);
     }
-  }, [workId, card.id]);
+  }, [workId, card.id, setCachedVisual]);
 
   const handleExport = async (presetKey: keyof typeof exportPresets) => {
     setIsExporting(true);
@@ -355,6 +433,8 @@ export function GeneratedCard({
           cardType: card.type,
           cardTitle: card.title,
           cardContent: trimmedContent || undefined,
+          cardId: card.id,
+          workId,
         }),
       });
 
@@ -373,9 +453,14 @@ export function GeneratedCard({
       }
 
       setGeneratedVisual(data.visual);
-      persistVisualLocally(data.visual);
+      setVisualInStore(card.id, { visual: data.visual });
+      persistVisualLocally(data.visual, data.summary);
       onVisualUpdate?.({ cardId: card.id, visual: data.visual });
-      showFeedback('success', '已生成辅助图示');
+      if (data.fallbackReason) {
+        showFeedback('error', `AI 暂未生成完整图示：${data.fallbackReason}`);
+      } else {
+        showFeedback('success', '已生成辅助图示');
+      }
     } catch (error) {
       showFeedback('error', error instanceof Error ? error.message : '辅助图示生成失败');
     } finally {
@@ -396,41 +481,9 @@ export function GeneratedCard({
     persistVisualLocally,
     onVisualUpdate,
     card.id,
+    workId,
+    setVisualInStore,
   ]);
-
-  const renderGenerateVisualButton = (options?: { hasVisual?: boolean; style?: React.CSSProperties }) => {
-    const { hasVisual = false, style } = options || {};
-    return (
-      <button
-        type="button"
-        onClick={(event) => {
-          event.stopPropagation();
-          handleGenerateVisualAssist();
-        }}
-        disabled={isGeneratingVisual}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '0 12px',
-          height: '32px',
-          borderRadius: '8px',
-          border: '1px solid #0ea5e9',
-          backgroundColor: isGeneratingVisual ? '#bae6fd' : '#e0f2fe',
-          color: '#0369a1',
-          fontSize: '12px',
-          fontWeight: 600,
-          cursor: isGeneratingVisual ? 'not-allowed' : 'pointer',
-          transition: 'background-color 0.2s ease, color 0.2s ease',
-          ...style,
-        }}
-        title={hasVisual ? '重新生成辅助图示' : '生成辅助图示'}
-      >
-        {isGeneratingVisual ? '生成中...' : hasVisual ? '重新生成辅助图示' : '生成辅助图示'}
-      </button>
-    );
-  };
-
 
   const viewTabs: Array<{ key: ViewMode; label: string; disabled?: boolean }> = [
     { key: 'content', label: '卡片内容' },
@@ -445,20 +498,62 @@ export function GeneratedCard({
 
     const visual: VisualizationSpec = effectiveVisual;
     const theme = visualizationThemes[visual.theme] ?? visualizationThemes.neutral;
-    const branches = Array.isArray(visual.branches) ? visual.branches.slice(0, 6) : [];
+    const branches = Array.isArray(visual.branches) ? visual.branches.slice(0, 8) : [];
     const layout = typeof visual.layout === 'string' ? visual.layout.toLowerCase() : undefined;
+    const branchCount = branches.length;
+    const resolvedWidth = (() => {
+      if (forExport) {
+        return Math.max(360, Math.min(DEFAULT_EXPORT_DIMENSIONS.width - 80, DEFAULT_EXPORT_DIMENSIONS.width));
+      }
+      const measured = visualContainerSize.width || cardRef.current?.clientWidth || 0;
+      const fallback = measured > 0 ? measured : 360;
+      return Math.min(Math.max(fallback, 320), 960);
+    })();
+    const responsivePadding = forExport ? 48 : Math.max(28, Math.round(resolvedWidth * 0.04));
+
+    const shouldUseInteractionColumn = card.type === 'interaction'
+      && branches.length > 0
+      && visual.type !== 'hero-illustration'
+      && !visual.structured;
+
+    const renderStructuredFallback = () => {
+      const fallbackTitle = visual.center?.title || card.title || card.metadata?.knowledgePoint || '辅助图示';
+      const fallbackSubtitle = visual.center?.subtitle || headerSummary || 'AI 暂未生成详细结构';
+      const fallbackNotice = visual.fallbackReason
+        ? `AI 暂未返回完整的辅助图示结构：${visual.fallbackReason}`
+        : 'AI 暂未返回完整的辅助图示结构，可尝试重新生成，或根据当前卡片内容自行设计步骤。';
+      return (
+        <div
+          style={{
+            background: theme.background,
+            borderRadius: '28px',
+            padding: forExport ? '40px' : '28px',
+            margin: '0 auto 24px',
+            boxShadow: '0 24px 60px rgba(15, 23, 42, 0.12)',
+            textAlign: 'left',
+          }}
+        >
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', marginBottom: '10px' }}>{fallbackTitle}</div>
+          <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.7, marginBottom: '12px' }}>{fallbackSubtitle}</p>
+          <p style={{ fontSize: '13px', color: '#475569', lineHeight: 1.6 }}>{fallbackNotice}</p>
+        </div>
+      );
+    };
 
     const renderStructuredDiagram = () => {
       if (!visual?.structured) {
-        return null;
+        return renderStructuredFallback();
       }
 
       const { header, stages, outcomes, notes, highlight } = visual.structured;
       const stageList = Array.isArray(stages) ? stages.slice(0, 5) : [];
+      const hasStages = stageList.length > 0;
       const structuredImage = typeof visual.imageUrl === 'string' && visual.imageUrl.trim().length > 0 ? visual.imageUrl : null;
       const structuredSvgMarkup = decodeStructuredSvg(structuredImage);
       const outcomesList = Array.isArray(outcomes) ? outcomes.slice(0, 4) : [];
       const notesList = Array.isArray(notes) ? notes.slice(0, 4) : [];
+      const isFallbackVisual = (visual.source && visual.source !== 'ai') || Boolean(visual.fallbackReason);
+      const fallbackMessage = visual.fallbackReason || 'AI 暂未返回完整图示，已提供基础模板';
 
       return (
         <div
@@ -473,6 +568,22 @@ export function GeneratedCard({
             gap: '24px',
           }}
         >
+          {isFallbackVisual && !forExport ? (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                background: '#fff6e6',
+                border: '1px solid #fbbf24',
+                color: '#92400e',
+                padding: '10px 14px',
+                borderRadius: '14px',
+              }}
+            >
+              <span style={{ fontSize: '13px', lineHeight: 1.4 }}>{fallbackMessage}</span>
+            </div>
+          ) : null}
           <div
             style={{
               display: 'flex',
@@ -567,114 +678,131 @@ export function GeneratedCard({
               flexWrap: 'wrap',
             }}
           >
-            {stageList.map((stage, index) => {
-              const accent = visualizationBranchPalette[index % visualizationBranchPalette.length];
-              return (
-                <React.Fragment key={stage.id || `stage-${index}`}
-                >
-                  <div
-                    style={{
-                      flex: `1 1 ${Math.max(220, 100 / stageList.length)}%`,
-                      minWidth: forExport ? 200 : 220,
-                      background: '#ffffff',
-                      borderRadius: '20px',
-                      padding: forExport ? '22px' : '18px',
-                      boxShadow: '0 18px 32px rgba(15, 23, 42, 0.12)',
-                      borderTop: `6px solid ${accent}`,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '12px',
-                    }}
-                  >
-                    {stage.imageUrl ? (
-                      <div
-                        style={{
-                          width: '100%',
-                          borderRadius: '14px',
-                          overflow: 'hidden',
-                          height: forExport ? '120px' : '140px',
-                          boxShadow: '0 12px 18px rgba(15, 23, 42, 0.15)',
-                        }}
-                      >
-                        <LazyImage
-                          src={stage.imageUrl}
-                          alt={`${stage.title} 插图`}
-                          forceLoad={forExport}
-                          preferProxy={forExport}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                          }}
-                        />
-                      </div>
-                    ) : null}
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#0f172a' }}>
-                      <span style={{ fontSize: '22px' }}>{stage.icon || '✨'}</span>
-                      <div>
-                        <div style={{ fontSize: '15px', fontWeight: 700 }}>{stage.title}</div>
-                        <div style={{ fontSize: '12px', opacity: 0.7 }}>{stage.summary}</div>
-                      </div>
-                    </div>
-
-                    {Array.isArray(stage.details) && stage.details.length > 0 ? (
-                      <ul style={{ margin: 0, padding: '0 0 0 18px', color: '#334155', fontSize: '12px', lineHeight: 1.6 }}>
-                        {stage.details.map((detail, detailIndex) => (
-                          <li key={`${stage.id}-detail-${detailIndex}`}>{detail}</li>
-                        ))}
-                      </ul>
-                    ) : null}
-
-                    {stage.outcome ? (
-                      <div
-                        style={{
-                          marginTop: 'auto',
-                          padding: '10px 12px',
-                          borderRadius: '12px',
-                          background: `${accent}1d`,
-                          color: '#0f172a',
-                          fontSize: '12px',
-                        }}
-                      >
-                        产出：{stage.outcome}
-                      </div>
-                    ) : null}
-
-                    {stage.imagePrompt && !forExport ? (
-                      <div
-                        style={{
-                          fontSize: '11px',
-                          color: '#64748b',
-                          background: '#f8fafc',
-                          padding: '8px 10px',
-                          borderRadius: '8px',
-                        }}
-                      >
-                        图像提示：{stage.imagePrompt}
-                      </div>
-                    ) : null}
-                  </div>
-
-                  {index < stageList.length - 1 ? (
+            {hasStages ? (
+              stageList.map((stage, index) => {
+                const accent = visualizationBranchPalette[index % visualizationBranchPalette.length];
+                return (
+                  <React.Fragment key={stage.id || `stage-${index}`}>
                     <div
                       style={{
-                        alignSelf: 'center',
-                        color: '#1e293b',
-                        fontSize: '18px',
-                        opacity: 0.55,
+                        flex: `1 1 ${Math.max(220, 100 / stageList.length)}%`,
+                        minWidth: forExport ? 200 : 220,
+                        background: '#ffffff',
+                        borderRadius: '20px',
+                        padding: forExport ? '22px' : '18px',
+                        boxShadow: '0 18px 32px rgba(15, 23, 42, 0.12)',
+                        borderTop: `6px solid ${accent}`,
                         display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        minWidth: '24px',
+                        flexDirection: 'column',
+                        gap: '12px',
                       }}
                     >
-                      →
+                      {stage.imageUrl ? (
+                        <div
+                          style={{
+                            width: '100%',
+                            borderRadius: '14px',
+                            overflow: 'hidden',
+                            height: forExport ? '120px' : '140px',
+                            boxShadow: '0 12px 18px rgba(15, 23, 42, 0.15)',
+                          }}
+                        >
+                          <LazyImage
+                            src={stage.imageUrl}
+                            alt={`${stage.title} 插图`}
+                            forceLoad={forExport}
+                            preferProxy={forExport}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                            }}
+                          />
+                        </div>
+                      ) : null}
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#0f172a' }}>
+                        <span style={{ fontSize: '22px' }}>{stage.icon || '✨'}</span>
+                        <div>
+                          <div style={{ fontSize: '15px', fontWeight: 700 }}>{stage.title}</div>
+                          <div style={{ fontSize: '12px', opacity: 0.7 }}>{stage.summary}</div>
+                        </div>
+                      </div>
+
+                      {Array.isArray(stage.details) && stage.details.length > 0 ? (
+                        <ul style={{ margin: 0, padding: '0 0 0 18px', color: '#334155', fontSize: '12px', lineHeight: 1.6 }}>
+                          {stage.details.map((detail, detailIndex) => (
+                            <li key={`${stage.id}-detail-${detailIndex}`}>{detail}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+
+                      {stage.outcome ? (
+                        <div
+                          style={{
+                            marginTop: 'auto',
+                            padding: '10px 12px',
+                            borderRadius: '12px',
+                            background: `${accent}1d`,
+                            color: '#0f172a',
+                            fontSize: '12px',
+                          }}
+                        >
+                          产出：{stage.outcome}
+                        </div>
+                      ) : null}
+
+                      {stage.imagePrompt && !forExport ? (
+                        <div
+                          style={{
+                            fontSize: '11px',
+                            color: '#64748b',
+                            background: '#f8fafc',
+                            padding: '8px 10px',
+                            borderRadius: '8px',
+                          }}
+                        >
+                          图像提示：{stage.imagePrompt}
+                        </div>
+                      ) : null}
                     </div>
-                  ) : null}
-                </React.Fragment>
-              );
-            })}
+
+                    {index < stageList.length - 1 ? (
+                      <div
+                        style={{
+                          alignSelf: 'center',
+                          color: '#1e293b',
+                          fontSize: '18px',
+                          opacity: 0.55,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minWidth: '24px',
+                        }}
+                      >
+                        →
+                      </div>
+                    ) : null}
+                  </React.Fragment>
+                );
+              })
+            ) : (
+              <div
+                style={{
+                  width: '100%',
+                  padding: '32px',
+                  borderRadius: '20px',
+                  background: '#ffffff',
+                  border: '1px dashed #cbd5f5',
+                  color: '#475569',
+                  textAlign: 'center',
+                  fontSize: '14px',
+                  lineHeight: 1.6,
+                }}
+              >
+                暂无可展示的步骤，可重新生成辅助图示或手动补充教学流程。
+              </div>
+            )}
           </div>
 
           {outcomesList.length > 0 ? (
@@ -762,6 +890,7 @@ export function GeneratedCard({
 
       const hasImage = Boolean(typeof visual.imageUrl === 'string' && visual.imageUrl.trim().length > 0);
       const imageMetadata = visual.imageMetadata;
+      const providerLabel = imageMetadata?.provider === 'placeholder' ? '豆包' : imageMetadata?.provider;
 
       const renderGeneratedHero = () => (
         <div
@@ -799,9 +928,9 @@ export function GeneratedCard({
             />
           </div>
 
-          {imageMetadata?.provider ? (
+          {providerLabel ? (
             <div style={{ fontSize: '12px', color: '#64748b', textAlign: 'right' }}>
-              图像提供：{imageMetadata.provider}
+              图像提供：{providerLabel}
             </div>
           ) : null}
 
@@ -1127,7 +1256,9 @@ export function GeneratedCard({
     }
 
     const preferredOrder = ['input', 'process', 'output', 'insight'];
-    const shouldApplyPreferredOrder = linearLayouts.includes(layout ?? '') || visual.type === 'process-flow';
+    const shouldApplyPreferredOrder = linearLayouts.includes(layout ?? '')
+      || visual.type === 'process-flow'
+      || branchCount <= 3;
     const prioritizedBranches = shouldApplyPreferredOrder
       ? [...branches].sort((a, b) => {
           const idA = typeof a.id === 'string' ? a.id.toLowerCase() : '';
@@ -1148,15 +1279,114 @@ export function GeneratedCard({
         })
       : branches;
 
+    const renderInteractionColumn = () => {
+      const columnWidth = Math.max(Math.min(resolvedWidth, forExport ? DEFAULT_EXPORT_DIMENSIONS.width - 40 : 960), 340);
+      const columnPadding = Math.max(responsivePadding, 24);
+      return (
+        <div
+          style={{
+            background: theme.background,
+            borderRadius: '28px',
+            padding: `${columnPadding}px`,
+            margin: '0 auto 24px',
+            boxShadow: '0 24px 60px rgba(15, 23, 42, 0.16)',
+            width: '100%',
+            maxWidth: `${columnWidth}px`,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+          }}
+        >
+          <div
+            style={{
+              background: 'rgba(255,255,255,0.92)',
+              borderRadius: '20px',
+              padding: '20px',
+              boxShadow: '0 12px 32px rgba(15, 23, 42, 0.12)',
+              textAlign: 'left',
+            }}
+          >
+            <div style={{ fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px' }}>
+              互动任务
+            </div>
+            <div style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>
+              {visual.center.title}
+            </div>
+            {visual.center.subtitle ? (
+              <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.7, color: '#334155' }}>{visual.center.subtitle}</p>
+            ) : null}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {branches.map((branch, index) => {
+              const accent = branch.color || visualizationBranchPalette[index % visualizationBranchPalette.length];
+              return (
+                <div
+                  key={branch.id}
+                  style={{
+                    background: '#ffffff',
+                    borderRadius: '18px',
+                    borderLeft: `6px solid ${accent}`,
+                    padding: '18px 20px',
+                    boxShadow: '0 16px 36px rgba(15, 23, 42, 0.12)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '22px' }}>{branch.icon || '✨'}</span>
+                    <div>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>{branch.title}</div>
+                      {branch.summary ? (
+                        <div style={{ fontSize: '13px', color: '#475569', marginTop: '2px' }}>{branch.summary}</div>
+                      ) : null}
+                    </div>
+                    <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#94a3b8' }}>
+                      {index + 1 < 10 ? `0${index + 1}` : index + 1}
+                    </span>
+                  </div>
+                  {branch.keywords && branch.keywords.length > 0 ? (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {branch.keywords.map((keyword) => (
+                        <span
+                          key={`${branch.id}-${keyword}`}
+                          style={{
+                            fontSize: '12px',
+                            padding: '4px 10px',
+                            borderRadius: '999px',
+                            background: `${accent}1a`,
+                            color: '#0f172a',
+                          }}
+                        >
+                          {keyword}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+
+          {visual.footerNote ? (
+            <div style={{ fontSize: '12px', color: '#475569', textAlign: 'center', opacity: 0.8 }}>
+              {visual.footerNote}
+            </div>
+          ) : null}
+        </div>
+      );
+    };
+
     const renderConceptMap = () => {
-      const size = forExport ? 520 : 360;
+      const conceptPadding = Math.max(responsivePadding, 32);
+      const maxSize = forExport ? Math.min(resolvedWidth, DEFAULT_EXPORT_DIMENSIONS.width - 40) : resolvedWidth;
+      const size = Math.max(Math.min(maxSize, forExport ? 760 : 900), 320);
       const center = size / 2;
-      const radius = size * (forExport ? 0.36 : 0.34);
-      const lineRadius = radius - (forExport ? 28 : 20);
-      const branchBoxWidth = Math.min(220, size * 0.42);
+      const densityFactor = branchCount >= 6 ? 0.42 : branchCount >= 5 ? 0.38 : branchCount >= 4 ? 0.36 : 0.32;
+      const radius = center * densityFactor;
+      const lineRadius = radius - Math.max(24, size * 0.035);
+      const branchBoxWidth = Math.min(300, size * 0.45);
 
       const positions = branches.map((branch, index) => {
-        const angle = -Math.PI / 2 + (index * (2 * Math.PI / branches.length));
+        const angle = -Math.PI / 2 + (index * (2 * Math.PI / Math.max(branchCount, 1)));
         const x = center + radius * Math.cos(angle);
         const y = center + radius * Math.sin(angle);
         const lineX = center + lineRadius * Math.cos(angle);
@@ -1184,9 +1414,9 @@ export function GeneratedCard({
             margin: '0 auto 24px',
             background: theme.background,
             borderRadius: '24px',
-            padding: forExport ? '48px' : '32px',
+            padding: `${conceptPadding}px`,
             boxShadow: '0 30px 60px rgba(15, 23, 42, 0.12)',
-            overflow: 'hidden',
+            overflow: 'visible',
           }}
         >
           <svg
@@ -1322,11 +1552,11 @@ export function GeneratedCard({
         style={{
           background: theme.background,
           borderRadius: '24px',
-          padding: forExport ? '40px' : '28px',
+          padding: `${Math.max(responsivePadding, 28)}px`,
           margin: '0 auto 24px',
           boxShadow: '0 30px 60px rgba(15, 23, 42, 0.12)',
           width: '100%',
-          maxWidth: forExport ? 640 : 520,
+          maxWidth: `${Math.max(Math.min(resolvedWidth, forExport ? DEFAULT_EXPORT_DIMENSIONS.width - 40 : 960), 320)}px`,
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: '24px', color: theme.branchText }}>
@@ -1409,17 +1639,20 @@ export function GeneratedCard({
     );
 
     const renderMatrix = () => {
-      const columnCount = Math.min(3, Math.max(1, branches.length));
+      const gridWidth = Math.max(Math.min(resolvedWidth, forExport ? DEFAULT_EXPORT_DIMENSIONS.width - 40 : 960), 320);
+      const idealColumns = gridWidth >= 720 ? 3 : gridWidth >= 520 ? 2 : 1;
+      const columnCount = Math.max(1, Math.min(idealColumns, branches.length));
+      const gridPadding = Math.max(responsivePadding, 28);
       return (
         <div
           style={{
             background: theme.background,
             borderRadius: '24px',
-            padding: forExport ? '40px' : '28px',
+            padding: `${gridPadding}px`,
             margin: '0 auto 24px',
             boxShadow: '0 30px 60px rgba(15, 23, 42, 0.12)',
             width: '100%',
-            maxWidth: forExport ? 640 : 520,
+            maxWidth: `${gridWidth}px`,
           }}
         >
           <div style={{ textAlign: 'center', marginBottom: '24px', color: theme.branchText }}>
@@ -1484,15 +1717,26 @@ export function GeneratedCard({
     };
 
     const isLinearFlow = visual.type === 'process-flow'
-      || linearLayouts.includes(layout ?? '');
+      || linearLayouts.includes(layout ?? '')
+      || branchCount <= 3;
+
+    const prefersGridLayout = layout === 'grid' || branchCount >= 6;
 
     switch (visual.type) {
+      case 'structured-diagram':
+        return renderStructuredDiagram();
       case 'process-flow':
         return renderProcessFlow(layout === 'right-to-left' ? 'right-to-left' : 'left-to-right');
       case 'matrix':
         return renderMatrix();
       case 'concept-map':
       default:
+        if (shouldUseInteractionColumn) {
+          return renderInteractionColumn();
+        }
+        if (prefersGridLayout && branches.length >= 4) {
+          return renderMatrix();
+        }
         if (isLinearFlow) {
           return renderProcessFlow(layout === 'right-to-left' ? 'right-to-left' : 'left-to-right');
         }
@@ -1660,10 +1904,6 @@ export function GeneratedCard({
                 让{typeConfig.name}的思路更直观。
               </p>
             </div>
-            {!hideVisualGeneration && renderGenerateVisualButton({
-              hasVisual: false,
-              style: { height: '40px', padding: '0 20px', fontSize: '14px' },
-            })}
           </div>
           <div style={{ marginTop: '12px', display: 'grid', gap: '10px' }}>
             {previewSections.map((item) => (
@@ -1721,20 +1961,11 @@ export function GeneratedCard({
             </span>
           </div>
         )}
-        {!forExport && card.type !== 'visualization' && (
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              marginBottom: '12px',
-            }}
-            onClick={(event) => event.stopPropagation()}
-          >
-            {!hideVisualGeneration && renderGenerateVisualButton({ hasVisual: hasVisualization })}
-          </div>
-        )}
         {hasVisualization ? (
-          <div style={{ marginBottom: isHeroVisualization ? '0' : '20px' }}>
+          <div
+            ref={!forExport ? handleVisualContainerRef : undefined}
+            style={{ marginBottom: isHeroVisualization ? '0' : '20px', width: '100%' }}
+          >
             {renderVisualizationCanvas(forExport)}
           </div>
         ) : null}
@@ -2801,3 +3032,48 @@ function decodeStructuredSvg(dataUrl?: string | null): string | null {
   }
 }
 
+const CARD_VISUAL_CACHE_PREFIX = 'card-visual-cache:';
+
+function saveCardVisualCache(cardId: string, visual: VisualizationSpec, summary?: string) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    const payload = {
+      visual,
+      summary,
+      updatedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(`${CARD_VISUAL_CACHE_PREFIX}${cardId}`, JSON.stringify(payload));
+  } catch (error) {
+    console.warn('写入辅助图示缓存失败', error);
+  }
+}
+
+function loadCardVisualCache(cardId: string): VisualizationSpec | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  try {
+    const raw = localStorage.getItem(`${CARD_VISUAL_CACHE_PREFIX}${cardId}`);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw);
+    return parsed?.visual ?? null;
+  } catch (error) {
+    console.warn('读取辅助图示缓存失败', error);
+    return null;
+  }
+}
+
+function clearCardVisualCache(cardId: string) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    localStorage.removeItem(`${CARD_VISUAL_CACHE_PREFIX}${cardId}`);
+  } catch (error) {
+    console.warn('清理辅助图示缓存失败', error);
+  }
+}

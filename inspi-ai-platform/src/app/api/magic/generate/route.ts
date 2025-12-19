@@ -44,22 +44,21 @@ const normalizeRequestedCardTypes = (
     return DEFAULT_CARD_TYPES;
   }
 
-  const normalized: RawCardType[] = [];
+  const normalizedSet = new Set<RawCardType>();
 
   requested.forEach((type) => {
     if (typeof type !== 'string') {
       return;
     }
-
     const key = type.trim().toLowerCase();
     const mapped = CARD_TYPE_ALIASES[key];
-
-    if (mapped && !normalized.includes(mapped)) {
-      normalized.push(mapped);
+    if (mapped) {
+      normalizedSet.add(mapped);
     }
   });
 
-  return normalized.length > 0 ? normalized : DEFAULT_CARD_TYPES;
+  const ordered = DEFAULT_CARD_TYPES.filter(type => normalizedSet.has(type));
+  return ordered.length > 0 ? ordered : DEFAULT_CARD_TYPES;
 };
 
 const isQuotaCheckDisabled = (

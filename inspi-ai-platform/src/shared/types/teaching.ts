@@ -10,6 +10,8 @@ export type RawCardType = 'concept' | 'example' | 'practice' | 'extension';
 
 export type VisualizationTheme = 'ocean' | 'sunrise' | 'forest' | 'galaxy' | 'neutral';
 
+export type VisualizationSource = 'ai' | 'fallback-default' | 'fallback-template';
+
 export interface VisualizationBranch {
   id: string;
   title: string;
@@ -78,6 +80,9 @@ export interface VisualizationSpec {
     height?: number;
     generatedAt?: string;
   };
+  source?: VisualizationSource;
+  generatedAt?: string;
+  fallbackReason?: string;
   center: {
     title: string;
     subtitle?: string;
@@ -106,6 +111,10 @@ export interface TeachingCard {
     gradeLevel?: string;
     knowledgePoint?: string;
     generatedAt?: Date | string;
+    visualSummary?: string;
+    visualSource?: VisualizationSource;
+    visualUpdatedAt?: string;
+    visualFallbackReason?: string;
   };
   visual?: VisualizationSpec;
   sop?: CardSOPSection[];
