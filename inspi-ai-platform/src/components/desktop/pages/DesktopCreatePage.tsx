@@ -23,6 +23,12 @@ const CARD_TYPE_TO_RAW: Record<CardType, 'concept' | 'example' | 'practice' | 'e
   interaction: 'extension',
 };
 
+const CARD_DISPLAY_ORDER: CardType[] = ['visualization', 'analogy', 'thinking', 'interaction'];
+const CARD_DISPLAY_INDEX: Record<CardType, number> = CARD_DISPLAY_ORDER.reduce((acc, type, index) => {
+  acc[type] = index;
+  return acc;
+}, {} as Record<CardType, number>);
+
 interface RecentProjectSummary {
   id: string;
   title: string;
@@ -32,6 +38,10 @@ interface RecentProjectSummary {
   subject?: string;
   gradeLevel?: string;
 }
+
+const ENABLE_RECENT_PROJECTS = false;
+const ENABLE_TEMPLATE_PRESETS = false;
+const ENABLE_USAGE_TIPS = false;
 
 export function DesktopCreatePage() {
   const [formData, setFormData] = useState({
@@ -523,8 +533,13 @@ const sharePosterContainerStyle: React.CSSProperties = {
       const normalizedCards: TeachingCard[] = (result.cards as TeachingCard[]).map((card, index) =>
         normalizeCard(card as TeachingCard, index, fallbackContext),
       );
+      const orderedCards = normalizedCards.slice().sort((a, b) => {
+        const orderA = CARD_DISPLAY_INDEX[a.type] ?? CARD_DISPLAY_ORDER.length;
+        const orderB = CARD_DISPLAY_INDEX[b.type] ?? CARD_DISPLAY_ORDER.length;
+        return orderA - orderB;
+      });
 
-      const hasContent = normalizedCards.some(card => (
+      const hasContent = orderedCards.some(card => (
         (typeof card.content === 'string' && card.content.trim().length > 0)
         || (typeof card.explanation === 'string' && card.explanation.trim().length > 0)
       ));
@@ -537,7 +552,7 @@ const sharePosterContainerStyle: React.CSSProperties = {
         return;
       }
 
-      setGeneratedCards(normalizedCards);
+      setGeneratedCards(orderedCards);
       setLastRequest(fallbackContext);
       setQuotaHint(null);
       setQuotaErrorCount(0);
@@ -787,6 +802,11 @@ const sharePosterContainerStyle: React.CSSProperties = {
   }, [generatedCards.length, isShareMenuOpen]);
 
   useEffect(() => {
+    if (!ENABLE_RECENT_PROJECTS) {
+      setRecentProjects([]);
+      return () => undefined;
+    }
+
     let aborted = false;
 
     if (!isAuthenticated) {
@@ -984,6 +1004,9 @@ const sharePosterContainerStyle: React.CSSProperties = {
   const cardPadding = 'var(--layout-card-padding)';
   const mainPadding = 'var(--layout-main-padding)';
   const sidebarWidth = 'var(--layout-sidebar-width)';
+  const shouldShowSidebar = (ENABLE_RECENT_PROJECTS && recentProjects.length > 0)
+    || ENABLE_TEMPLATE_PRESETS
+    || (ENABLE_USAGE_TIPS && !shouldCompactForm);
 
   const pageBackgroundStyle: React.CSSProperties = {
     width: '100%',
@@ -1043,7 +1066,7 @@ const sharePosterContainerStyle: React.CSSProperties = {
   };
 
   return (
-    <React.Fragment>
+    <>
       <LoginPromptComponent />
       <div style={pageBackgroundStyle}>
         <div style={{ ...constrainedLayoutStyle, marginBottom: 0 }}>
@@ -1071,6 +1094,7 @@ const sharePosterContainerStyle: React.CSSProperties = {
           </div>
             <div style={{ ...contentLayoutStyle, marginTop: 'calc(var(--layout-section-gap) * 0.012)' }}>
             {/* 侧边栏 - 信息卡 */}
+          {shouldShowSidebar && (
           <aside style={{
             width: sidebarWidth,
             flexShrink: 0,
@@ -1080,7 +1104,7 @@ const sharePosterContainerStyle: React.CSSProperties = {
             boxShadow: '0 25px 65px rgba(15, 23, 42, 0.08)',
           }}>
           {/* 最近项目 */}
-          {recentProjects.length > 0 && (
+          {ENABLE_RECENT_PROJECTS && recentProjects.length > 0 && (
             <div style={{ marginBottom: 'calc(var(--layout-card-gap) * 0.55)' }}>
               <h3 style={{
                 fontSize: 'var(--font-size-base)',
@@ -1138,6 +1162,7 @@ const sharePosterContainerStyle: React.CSSProperties = {
           )}
 
           {/* 推荐模板 */}
+          {ENABLE_TEMPLATE_PRESETS && (
           <div style={{ marginBottom: 'calc(var(--layout-card-gap) * 0.75)' }}>
             <h3 style={{
               fontSize: 'var(--font-size-base)',
@@ -1186,8 +1211,9 @@ const sharePosterContainerStyle: React.CSSProperties = {
               })}
             </div>
           </div>
+          )}
 
-          {!shouldCompactForm && (
+          {ENABLE_USAGE_TIPS && !shouldCompactForm && (
             <div>
               <h3 style={{
                 fontSize: 'var(--font-size-base)',
@@ -1220,6 +1246,7 @@ const sharePosterContainerStyle: React.CSSProperties = {
             </div>
           )}
           </aside>
+          )}
 
           {/* 主内容区 - 居中卡片 */}
           <main
@@ -2118,7 +2145,7 @@ const sharePosterContainerStyle: React.CSSProperties = {
           </div>
         </div>
       )}
-    </React.Fragment>
+    </>
   );
 }
 
