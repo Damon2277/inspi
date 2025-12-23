@@ -360,6 +360,7 @@ export default function WorkDetailPage() {
                         enableEditing={false}
                         workId={workId}
                         onVisualUpdate={handleCardVisualUpdate}
+                        relatedCards={cardList}
                       />
                     </div>
                   ))}

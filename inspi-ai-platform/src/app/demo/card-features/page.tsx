@@ -334,7 +334,7 @@ export default function CardFeaturesDemo() {
             gap: '32px',
           }}>
             {filteredCards.map((card) => (
-              <GeneratedCard key={card.id} card={card} />
+              <GeneratedCard key={card.id} card={card} relatedCards={filteredCards} />
             ))}
           </div>
         ) : (

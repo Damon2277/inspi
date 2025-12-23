@@ -6,12 +6,22 @@ const STORAGE_PREFIX = 'inspi_reused_themes_';
 const EVENT_NAME = 'inspi:reuse-change';
 
 type ListenerDetail = { key: string };
+type ReuseEntry = { id: number; collectedAt: string };
 
 function getStorageKey(userId?: string) {
   return `${STORAGE_PREFIX}${userId ?? 'guest'}`;
 }
 
-function readFromStorage(key: string): number[] {
+function isReuseEntry(value: unknown): value is ReuseEntry {
+  return Boolean(
+    value
+    && typeof value === 'object'
+    && typeof (value as ReuseEntry).id === 'number'
+    && typeof (value as ReuseEntry).collectedAt === 'string',
+  );
+}
+
+function readFromStorage(key: string): ReuseEntry[] {
   if (typeof window === 'undefined') return [];
 
   try {
@@ -19,7 +29,15 @@ function readFromStorage(key: string): number[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      return parsed.filter(id => typeof id === 'number');
+      if (parsed.every(isReuseEntry)) {
+        return parsed as ReuseEntry[];
+      }
+      if (parsed.every(item => typeof item === 'number')) {
+        return (parsed as number[]).map((id, index) => ({
+          id,
+          collectedAt: new Date(index * 1000).toISOString(),
+        }));
+      }
     }
     return [];
   } catch (error) {
@@ -28,7 +46,7 @@ function readFromStorage(key: string): number[] {
   }
 }
 
-function writeToStorage(key: string, values: number[]) {
+function writeToStorage(key: string, values: ReuseEntry[]) {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(key, JSON.stringify(values));
   window.dispatchEvent(new CustomEvent<ListenerDetail>(EVENT_NAME, { detail: { key } }));
@@ -37,10 +55,20 @@ function writeToStorage(key: string, values: number[]) {
 export function useReuseState(userId?: string) {
   const storageKey = useMemo(() => getStorageKey(userId), [userId]);
 
-  const [reusedThemes, setReusedThemes] = useState<number[]>(() => readFromStorage(storageKey));
+  const [entries, setEntries] = useState<ReuseEntry[]>(() => readFromStorage(storageKey));
+
+  const reusedThemes = useMemo(() => entries.map(entry => entry.id), [entries]);
+
+  const reuseMetadata = useMemo(() => {
+    const map: Record<number, ReuseEntry> = {};
+    entries.forEach((entry) => {
+      map[entry.id] = entry;
+    });
+    return map;
+  }, [entries]);
 
   const refreshState = useCallback(() => {
-    setReusedThemes(readFromStorage(storageKey));
+    setEntries(readFromStorage(storageKey));
   }, [storageKey]);
 
   useEffect(() => {
@@ -61,24 +89,37 @@ export function useReuseState(userId?: string) {
     return () => window.removeEventListener(EVENT_NAME, handler as EventListener);
   }, [refreshState, storageKey]);
 
-  const hasReusedTheme = useCallback((themeId: number) => reusedThemes.includes(themeId), [reusedThemes]);
+  const hasReusedTheme = useCallback(
+    (themeId: number) => entries.some(entry => entry.id === themeId),
+    [entries],
+  );
 
   const markThemeReused = useCallback((themeId: number) => {
-    if (hasReusedTheme(themeId)) return;
-    const next = [...reusedThemes, themeId];
-    setReusedThemes(next);
-    writeToStorage(storageKey, next);
-  }, [hasReusedTheme, reusedThemes, storageKey]);
+    const now = new Date().toISOString();
+    setEntries((prev) => {
+      const exists = prev.some(entry => entry.id === themeId);
+      const nextEntries = exists
+        ? prev.map(entry => (entry.id === themeId ? { ...entry, collectedAt: now } : entry))
+        : [...prev, { id: themeId, collectedAt: now }];
+      writeToStorage(storageKey, nextEntries);
+      return nextEntries;
+    });
+  }, [storageKey]);
 
   const unmarkThemeReused = useCallback((themeId: number) => {
-    if (!hasReusedTheme(themeId)) return;
-    const next = reusedThemes.filter(id => id !== themeId);
-    setReusedThemes(next);
-    writeToStorage(storageKey, next);
-  }, [hasReusedTheme, reusedThemes, storageKey]);
+    setEntries((prev) => {
+      if (!prev.some(entry => entry.id === themeId)) {
+        return prev;
+      }
+      const next = prev.filter(entry => entry.id !== themeId);
+      writeToStorage(storageKey, next);
+      return next;
+    });
+  }, [storageKey]);
 
   return {
     reusedThemes,
+    reuseMetadata,
     hasReusedTheme,
     markThemeReused,
     unmarkThemeReused,

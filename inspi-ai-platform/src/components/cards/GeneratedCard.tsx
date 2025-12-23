@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Buffer } from 'buffer';
 import { useAuth } from '@/shared/hooks/useAuth';
 import ReactMarkdown from 'react-markdown';
@@ -30,9 +31,12 @@ interface GeneratedCardProps {
   enableEditing?: boolean;
   workId?: string;
   onVisualUpdate?: (payload: { cardId: string; visual: VisualizationSpec }) => void;
+  relatedCards?: TeachingCard[];
 }
 
 type ViewMode = 'content' | 'sop' | 'presentation';
+
+const BRAND_PRIMARY = '#2563eb';
 
 const cardTypeConfig = {
   visualization: {
@@ -56,7 +60,7 @@ const cardTypeConfig = {
   interaction: {
     name: '互动氛围卡',
     icon: '🎭',
-    color: '#2563eb',
+    color: BRAND_PRIMARY,
     description: '让课堂"破冰"',
   },
 };
@@ -125,6 +129,7 @@ export function GeneratedCard({
   enableEditing = true,
   workId,
   onVisualUpdate,
+  relatedCards,
 }: GeneratedCardProps) {
   const [cardContent, setCardContent] = useState(card.content);
   const [isEditing, setIsEditing] = useState(false);
@@ -156,6 +161,31 @@ export function GeneratedCard({
   };
 
   const typeConfig = cardTypeConfig[card.type];
+
+  const presentationSeries = useMemo(() => {
+    const deduped: TeachingCard[] = [];
+    const seen = new Set<string>();
+    const append = (item?: TeachingCard) => {
+      if (!item || !item.id) {
+        return;
+      }
+      const cues = item.presentation?.cues;
+      if (!cues || cues.length === 0) {
+        return;
+      }
+      if (seen.has(item.id)) {
+        return;
+      }
+      seen.add(item.id);
+      deduped.push(item);
+    };
+
+    if (Array.isArray(relatedCards)) {
+      relatedCards.forEach(append);
+    }
+    append(card);
+    return deduped;
+  }, [relatedCards, card]);
   const isOptionalVisualCard = OPTIONAL_VISUAL_CARD_TYPES.includes(card.type);
   const allowEditing = enableEditing;
   const hasSOP = Boolean(card.sop && card.sop.length > 0);
@@ -986,9 +1016,6 @@ export function GeneratedCard({
                         {annotation.description}
                       </p>
                     ) : null}
-                    {annotation.placement ? (
-                      <span style={{ fontSize: '11px', color: '#64748b', opacity: 0.6 }}>位置：{annotation.placement}</span>
-                    ) : null}
                   </div>
                 </div>
               ))}
@@ -1022,50 +1049,7 @@ export function GeneratedCard({
             </div>
           ) : null}
 
-          {(composition.backgroundMood || palette.length > 0) && (
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '12px',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              {composition.backgroundMood ? (
-                <div
-                  style={{
-                    fontSize: '13px',
-                    color: '#1e293b',
-                    background: 'rgba(255,255,255,0.82)',
-                    padding: '10px 14px',
-                    borderRadius: '12px',
-                    boxShadow: '0 8px 16px rgba(15,23,42,0.12)',
-                  }}
-                >
-                  {composition.backgroundMood}
-                </div>
-              ) : null}
 
-              {palette.length > 0 ? (
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {palette.slice(0, 4).map((color, index) => (
-                    <span
-                      key={`palette-chip-${color}-${index}`}
-                      style={{
-                        width: '28px',
-                        height: '28px',
-                        borderRadius: '999px',
-                        background: color,
-                        border: '2px solid rgba(255,255,255,0.9)',
-                        boxShadow: '0 8px 14px rgba(15,23,42,0.18)',
-                      }}
-                    />
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          )}
         </div>
       );
 
@@ -1165,43 +1149,6 @@ export function GeneratedCard({
                   <p style={{ marginTop: '6px', fontSize: '13px', lineHeight: 1.6, opacity: 0.85 }}>{composition.visualFocus}</p>
                 </div>
               ) : null}
-              {composition.backgroundMood ? (
-                <div>
-                  <div style={{ fontSize: '13px', letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.6 }}>氛围</div>
-                  <p style={{ marginTop: '6px', fontSize: '13px', lineHeight: 1.6, opacity: 0.85 }}>{composition.backgroundMood}</p>
-                </div>
-              ) : null}
-              {palette.length > 0 ? (
-                <div>
-                  <div style={{ fontSize: '13px', letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.6 }}>色板</div>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
-                    {palette.slice(0, 4).map((color, index) => (
-                      <span
-                        key={`${color}-${index}`}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          background: 'rgba(255,255,255,0.1)',
-                          borderRadius: '999px',
-                          padding: '6px 12px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: '12px',
-                            height: '12px',
-                            borderRadius: '999px',
-                            background: color,
-                            border: '1px solid rgba(255,255,255,0.4)',
-                          }}
-                        />
-                        {color}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
             </div>
           </div>
 
@@ -1233,9 +1180,6 @@ export function GeneratedCard({
                       <p style={{ margin: '6px 0 0', fontSize: '12px', lineHeight: 1.6, color: '#334155' }}>
                         {annotation.description}
                       </p>
-                    ) : null}
-                    {annotation.placement ? (
-                      <span style={{ fontSize: '11px', color: '#64748b', opacity: 0.6 }}>位置：{annotation.placement}</span>
                     ) : null}
                   </div>
                 </div>
@@ -2293,13 +2237,22 @@ export function GeneratedCard({
           onClick={() => setPresentationOpen(true)}
           style={{
             alignSelf: 'flex-start',
-            padding: '10px 16px',
-            backgroundColor: typeConfig.color,
-            color: 'white',
+            padding: '10px 18px',
+            backgroundColor: BRAND_PRIMARY,
+            color: '#f5f9ff',
             border: 'none',
-            borderRadius: '6px',
+            borderRadius: '999px',
             fontSize: '13px',
+            fontWeight: 600,
             cursor: 'pointer',
+            boxShadow: '0 10px 24px rgba(37, 99, 235, 0.25)',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(event) => {
+            event.currentTarget.style.backgroundColor = '#1d4ed8';
+          }}
+          onMouseLeave={(event) => {
+            event.currentTarget.style.backgroundColor = BRAND_PRIMARY;
           }}
         >
           进入全屏演示
@@ -2331,6 +2284,9 @@ export function GeneratedCard({
               {viewTabs.map((tab) => {
                 if (tab.disabled) return null;
                 const isActive = viewMode === tab.key;
+                const isPresentationTab = tab.key === 'presentation';
+                const activeBg = isPresentationTab ? BRAND_PRIMARY : typeConfig.color;
+                const activeColor = '#f6f9ff';
                 return (
                   <button
                     key={tab.key}
@@ -2338,14 +2294,15 @@ export function GeneratedCard({
                     onClick={() => setViewMode(tab.key)}
                     style={{
                       padding: '6px 14px',
-                      borderRadius: '8px',
+                      borderRadius: '999px',
                       border: 'none',
-                      backgroundColor: isActive ? typeConfig.color : 'transparent',
-                      color: isActive ? '#ffffff' : '#64748b',
+                      backgroundColor: isActive ? activeBg : 'transparent',
+                      color: isActive ? activeColor : '#64748b',
                       fontSize: '13px',
-                      fontWeight: isActive ? 600 : 400,
+                      fontWeight: isActive ? 600 : 500,
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
+                      boxShadow: isActive ? '0 8px 18px rgba(37, 99, 235, 0.25)' : 'none',
                     }}
                   >
                     {tab.label}
@@ -2431,6 +2388,7 @@ export function GeneratedCard({
         card={card}
         isOpen={isPresentationOpen}
         onClose={() => setPresentationOpen(false)}
+        presentationSeries={presentationSeries}
       />
       </div>
       <div aria-hidden style={offscreenWrapperStyle}>
@@ -2479,11 +2437,30 @@ const HEADING_KEYWORDS = [
   '严密立法',
   '应用建议',
   '步骤提示',
+  '基础练习',
+  '提升练习',
+  '解题提示',
+  '参考答案',
+  '知识拓展',
+  '学科联系',
+  '趣味知识',
+  '进一步探索',
+  '活动目标',
+  '活动流程',
+  '评分标准',
+  '奖励机制',
 ];
 
-const HEADING_ICONS = '📌📍🎯📝✏️✅⚠️📘📗📙📕⭐🌟🔍💡';
-const ICON_ONLY_LINE_REGEX = new RegExp(`^[${HEADING_ICONS}\s]+$`);
-const ICON_ONLY_LINE_GLOBAL_REGEX = new RegExp(`^[${HEADING_ICONS}\s]+$`, 'gm');
+const REGEX_SPECIAL_CHARS = /[.*+?^${}()|[\]\\]/g;
+const escapeRegex = (value: string) => value.replace(REGEX_SPECIAL_CHARS, '\\$&');
+
+const HEADING_ICONS = [
+  '📌', '📍', '🎯', '📝', '✏️', '✅', '⚠️', '📘', '📗', '📙', '📕', '⭐', '🌟', '🔍', '💡',
+  '🚀', '🌐', '🔗', '🎨', '🔄', '📋', '🏆', '🎁',
+] as const;
+const HEADING_ICON_PATTERN = HEADING_ICONS.map((icon) => escapeRegex(icon)).join('|');
+const ICON_ONLY_LINE_REGEX = new RegExp(`^(?:${HEADING_ICON_PATTERN}|\s)+$`, 'u');
+const ICON_ONLY_LINE_GLOBAL_REGEX = new RegExp(`^(?:${HEADING_ICON_PATTERN}|\s)+$`, 'gmu');
 
 function renderMarkdownContent(content: string, options?: MarkdownStyleOptions) {
   if (!content) {
@@ -2678,24 +2655,39 @@ function formatCardContentMarkdown(content: string): string {
     text = text.replace(regex, '\n\n$1');
   });
 
-  const emojiMarkers = ['📌', '📍', '🎯', '📝', '✏️', '✅', '⚠️', '📘', '📗', '📙', '📕', '⭐', '🌟', '🔍', '💡'];
+  const emojiMarkers = [...HEADING_ICONS];
   emojiMarkers.forEach((marker) => {
-    const regex = new RegExp(`${marker}\s*([^\n：:]{0,12})`, 'g');
+    const regex = new RegExp(`${escapeRegex(marker)}\s*([^\n：:]{0,12})`, 'g');
     text = text.replace(regex, (_match, label) => {
       const cleanedLabel = label ? ` ${label.trim()}` : '';
       return `\n${marker}${cleanedLabel}\n`;
     });
   });
 
+  text = text.replace(/(\*\*)([\s\S]+?)(\*\*)/g, (_match, start, inner, end) => {
+    const cleaned = inner.replace(/\s*\n+\s*/g, '');
+    return `${start}${cleaned}${end}`;
+  });
+
+  text = text.replace(/(\*\*[\s\S]+?\*\*)\s*([：:])/g, '$1$2');
+
+  text = text.replace(/(\*\*[\s\S]+?\*\*)/g, (match, offset, source) => {
+    const prevChar = offset > 0 ? source[offset - 1] : '';
+    const nextChar = offset + match.length < source.length ? source[offset + match.length] : '';
+    const prefix = prevChar && prevChar !== '\n' ? '\n' : '';
+    const suffix = nextChar && nextChar !== '\n' ? '\n' : '';
+    return `${prefix}${match}${suffix}`;
+  });
+  text = text.replace(/(\*\*[\s\S]+?\*\*)\n([：:])/g, '$1$2\n');
+
   text = text
-    .replace(/([。！？!?])(?=[^\n\s])/g, '$1\n')
-    .replace(/(?<!\n)(\d+\.)/g, '\n\n$1')
+    .replace(/([。！？!?])(?=[^\n\s”’）】》〉』」"'])/g, '$1\n')
+    .replace(/(?<!\n)(\d+\.(?!\d))/g, '\n\n$1')
     .replace(/(?<!\n)([-–—]\s)/g, '\n$1')
-    .replace(/(\*\*[^*]+\*\*)/g, '\n$1\n')
     .replace(/\n{3,}/g, '\n\n');
 
-  text = text.replace(/(\n\n)(\d+\.)/g, '\n\n$2');
-  text = text.replace(/(\d+\.)\s*\n+(?=\S)/g, '$1 ');
+  text = text.replace(/(\n\n)(\d+\.(?!\d))/g, '\n\n$2');
+  text = text.replace(/(\d+\.(?!\d))\s*\n+(?=\S)/g, '$1 ');
   text = text.replace(/\n\s*([：:])/g, '$1');
   text = text.replace(ICON_ONLY_LINE_GLOBAL_REGEX, '');
 
@@ -2732,7 +2724,7 @@ function buildStructuredSections(markdown: string): StructuredSection[] {
     sections.push(currentSection);
   };
 
-  const appendToParagraph = (line: string): boolean => {
+  const appendToParagraph = (rawLine: string, normalizedLine: string): boolean => {
     if (!currentSection) {
       return false;
     }
@@ -2744,26 +2736,33 @@ function buildStructuredSections(markdown: string): StructuredSection[] {
     if (!lastBlock || lastBlock.type !== 'paragraph') {
       return false;
     }
-    const trimmedLine = line.trim();
-    if (!trimmedLine) {
+    const trimmedLine = rawLine.trim();
+    if (!trimmedLine || !normalizedLine) {
       return false;
     }
     const lastText = lastBlock.text.trim();
     if (!lastText || /[。！？!?；;：:,，、]$/.test(lastText)) {
       return false;
     }
-    if (!/^[0-9a-zA-Z：:]/.test(trimmedLine)) {
+    if (!/^[一-龥A-Za-z0-9（(“"《【]/.test(normalizedLine)) {
       return false;
     }
     lastBlock.text = `${lastBlock.text}${trimmedLine}`;
     return true;
   };
 
-  lines.forEach((line) => {
-    if (ICON_ONLY_LINE_REGEX.test(line)) {
+  lines.forEach((rawLine) => {
+    const withoutHeadingMarks = rawLine.replace(/^#{1,6}\s*/, '');
+    const normalizedLine = withoutHeadingMarks.replace(/\*\*/g, '').trim();
+    const line = withoutHeadingMarks.trim();
+    if (!normalizedLine) {
       return;
     }
-    const heading = detectStructuredHeading(line);
+
+    if (ICON_ONLY_LINE_REGEX.test(normalizedLine)) {
+      return;
+    }
+    const heading = detectStructuredHeading(normalizedLine);
     if (heading) {
       startSection(heading.title, heading.icon);
       if (heading.remainder) {
@@ -2772,7 +2771,7 @@ function buildStructuredSections(markdown: string): StructuredSection[] {
       return;
     }
 
-    const orderedMatch = line.match(/^(\d+)\.\s*(.+)$/);
+    const orderedMatch = normalizedLine.match(/^(\d+)\.\s*(.+)$/);
     if (orderedMatch) {
       const itemText = orderedMatch[2].trim();
       if (itemText) {
@@ -2787,7 +2786,7 @@ function buildStructuredSections(markdown: string): StructuredSection[] {
       return;
     }
 
-    const unorderedMatch = line.match(/^(?:[-•●]|·)\s*(.+)$/);
+    const unorderedMatch = normalizedLine.match(/^(?:[-•●]|·)\s*(.+)$/);
     if (unorderedMatch) {
       const itemText = unorderedMatch[1].trim();
       if (itemText) {
@@ -2802,7 +2801,7 @@ function buildStructuredSections(markdown: string): StructuredSection[] {
       return;
     }
 
-    if (appendToParagraph(line)) {
+    if (appendToParagraph(line, normalizedLine)) {
       return;
     }
 
@@ -2839,12 +2838,11 @@ function truncateText(value: string, maxLength: number = 56): string {
 }
 
 function detectStructuredHeading(line: string): { icon?: string; title: string; remainder?: string } | null {
-  const iconRegex = new RegExp(`^([${HEADING_ICONS}])\s*([^：:]+)(?:[:：]+)?(.*)$`);
+  const iconRegex = new RegExp(`^(${HEADING_ICON_PATTERN})\s*([^：:]+)(?:[:：]+)?(.*)$`, 'u');
   const iconMatch = line.match(iconRegex);
   if (iconMatch) {
     const title = iconMatch[2].trim();
-    const iconOnlyPattern = new RegExp(`^[${HEADING_ICONS}\s]+$`);
-    if (!title || iconOnlyPattern.test(title)) {
+    if (!title || ICON_ONLY_LINE_REGEX.test(title)) {
       return null;
     }
     return {
@@ -2870,18 +2868,84 @@ interface CardPresentationModalProps {
   card: TeachingCard;
   isOpen: boolean;
   onClose: () => void;
+  presentationSeries?: TeachingCard[];
 }
 
-function CardPresentationModal({ card, isOpen, onClose }: CardPresentationModalProps) {
-  const presentation = card.presentation;
-  const cues = presentation?.cues ?? [];
-  const [currentIndex, setCurrentIndex] = useState(0);
+function CardPresentationModal({ card, isOpen, onClose, presentationSeries }: CardPresentationModalProps) {
+  const [mounted, setMounted] = useState(false);
+  const [currentCardId, setCurrentCardId] = useState(card.id);
+  const [currentCueIndex, setCurrentCueIndex] = useState(0);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
-      setCurrentIndex(0);
+      setCurrentCardId(card.id);
+      setCurrentCueIndex(0);
     }
-  }, [isOpen]);
+  }, [isOpen, card.id]);
+
+  const series = useMemo(() => {
+    const base = Array.isArray(presentationSeries) && presentationSeries.length > 0
+      ? presentationSeries
+      : [];
+    const seen = new Set<string>();
+    const ordered: TeachingCard[] = [];
+    const append = (item?: TeachingCard) => {
+      if (!item || !item.id) {
+        return;
+      }
+      const cues = item.presentation?.cues;
+      if (!cues || cues.length === 0) {
+        return;
+      }
+      if (seen.has(item.id)) {
+        return;
+      }
+      seen.add(item.id);
+      ordered.push(item);
+    };
+
+    base.forEach(append);
+    append(card);
+    return ordered;
+  }, [presentationSeries, card]);
+
+  const activeIndex = Math.max(0, series.findIndex((item) => item.id === currentCardId));
+  const activeCard = series[activeIndex] ?? series[0];
+  const activePresentation = activeCard?.presentation;
+  const cues = activePresentation?.cues ?? [];
+
+  const prevDisabled = activeIndex === 0 && currentCueIndex === 0;
+  const nextDisabled =
+    activeIndex === Math.max(0, series.length - 1) && currentCueIndex === Math.max(0, cues.length - 1);
+
+  const goPrev = useCallback(() => {
+    if (currentCueIndex > 0) {
+      setCurrentCueIndex((prev) => Math.max(0, prev - 1));
+      return;
+    }
+    if (activeIndex > 0) {
+      const prevCard = series[activeIndex - 1];
+      const prevCues = prevCard?.presentation?.cues ?? [];
+      setCurrentCardId(prevCard.id);
+      setCurrentCueIndex(Math.max(0, prevCues.length - 1));
+    }
+  }, [currentCueIndex, activeIndex, series]);
+
+  const goNext = useCallback(() => {
+    if (currentCueIndex < cues.length - 1) {
+      setCurrentCueIndex((prev) => Math.min(cues.length - 1, prev + 1));
+      return;
+    }
+    if (activeIndex < series.length - 1) {
+      const nextCard = series[activeIndex + 1];
+      setCurrentCardId(nextCard.id);
+      setCurrentCueIndex(0);
+    }
+  }, [currentCueIndex, cues.length, activeIndex, series]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -2893,26 +2957,49 @@ function CardPresentationModal({ card, isOpen, onClose }: CardPresentationModalP
         onClose();
       }
       if (event.key === 'ArrowRight') {
-        setCurrentIndex((prev) => Math.min(cues.length - 1, prev + 1));
+        goNext();
       }
       if (event.key === 'ArrowLeft') {
-        setCurrentIndex((prev) => Math.max(0, prev - 1));
+        goPrev();
       }
     };
 
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [isOpen, cues.length, onClose]);
+  }, [isOpen, onClose, goNext, goPrev]);
 
-  if (!isOpen || !presentation || cues.length === 0) {
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+    if (!isOpen) {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+      return;
+    }
+    const elem = document.documentElement as any;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(() => {});
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    }
+    return () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      } else if ((document as any).webkitFullscreenElement) {
+        (document as any).webkitExitFullscreen?.();
+      }
+    };
+  }, [isOpen]);
+
+  if (!mounted || !isOpen || typeof document === 'undefined' || !activePresentation || cues.length === 0) {
     return null;
   }
 
-  const currentCue = cues[currentIndex];
-  const prevDisabled = currentIndex === 0;
-  const nextDisabled = currentIndex === cues.length - 1;
+  const currentCue = cues[currentCueIndex];
 
-  return (
+  return createPortal(
     <div style={{
       position: 'fixed',
       inset: 0,
@@ -2928,22 +3015,60 @@ function CardPresentationModal({ card, isOpen, onClose }: CardPresentationModalP
         alignItems: 'center',
         padding: '20px 32px',
         fontSize: '14px',
+        gap: '16px',
       }}>
-        <span>{presentation.headline}</span>
         <button
           type="button"
-          onClick={onClose}
+          onClick={goPrev}
+          disabled={prevDisabled}
           style={{
-            background: 'transparent',
-            border: 'none',
-            color: '#e2e8f0',
-            fontSize: '26px',
-            cursor: 'pointer',
+            padding: '8px 16px',
+            borderRadius: '999px',
+            border: '1px solid rgba(203, 213, 225, 0.6)',
+            background: prevDisabled ? 'rgba(148, 163, 184, 0.2)' : 'rgba(14, 165, 233, 0.25)',
+            color: prevDisabled ? '#94a3b8' : '#e0f2fe',
+            cursor: prevDisabled ? 'not-allowed' : 'pointer',
           }}
-          aria-label="关闭演示"
         >
-          ×
+          ← 上一步
         </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'center', flex: 1 }}>
+          <span>{activePresentation.headline || activeCard.title}</span>
+          <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+            卡片 {activeIndex + 1} / {Math.max(1, series.length)} · 片段 {currentCueIndex + 1} / {cues.length}
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button
+            type="button"
+            onClick={goNext}
+            disabled={nextDisabled}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '999px',
+              border: '1px solid rgba(203, 213, 225, 0.6)',
+              background: nextDisabled ? 'rgba(148, 163, 184, 0.2)' : BRAND_PRIMARY,
+              color: '#f8fafc',
+              cursor: nextDisabled ? 'not-allowed' : 'pointer',
+            }}
+          >
+            下一步 →
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#e2e8f0',
+              fontSize: '26px',
+              cursor: 'pointer',
+            }}
+            aria-label="关闭演示"
+          >
+            ×
+          </button>
+        </div>
       </div>
 
       <div style={{
@@ -2954,62 +3079,21 @@ function CardPresentationModal({ card, isOpen, onClose }: CardPresentationModalP
         padding: '0 80px',
       }}>
         <div style={{ maxWidth: '760px', width: '100%', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '32px', marginBottom: '18px', fontWeight: 600 }}>{currentCue.title}</h2>
-          <p style={{ fontSize: '20px', lineHeight: 1.6, marginBottom: '24px' }}>{currentCue.narrative}</p>
+          <h2 style={{ fontSize: '40px', marginBottom: '20px', fontWeight: 600 }}>{currentCue.title}</h2>
+          <p style={{ fontSize: '24px', lineHeight: 1.75, marginBottom: '28px' }}>{currentCue.narrative}</p>
           {currentCue.emphasis && (
-            <p style={{ fontSize: '16px', color: '#93c5fd', marginBottom: '20px' }}>
+            <p style={{ fontSize: '18px', color: '#93c5fd', marginBottom: '22px' }}>
               提示：{currentCue.emphasis}
             </p>
           )}
-          {presentation.callToAction && nextDisabled && (
-            <p style={{ fontSize: '16px', color: '#bbf7d0' }}>{presentation.callToAction}</p>
+          {activePresentation.callToAction && nextDisabled && (
+            <p style={{ fontSize: '18px', color: '#bbf7d0' }}>{activePresentation.callToAction}</p>
           )}
         </div>
       </div>
 
-      <div style={{
-        padding: '16px 32px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        fontSize: '12px',
-        color: '#cbd5f5',
-      }}>
-        <span>{currentIndex + 1} / {cues.length}</span>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            type="button"
-            onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
-            disabled={prevDisabled}
-            style={{
-              padding: '10px 18px',
-              borderRadius: '9999px',
-              border: '1px solid #cbd5f5',
-              background: prevDisabled ? 'rgba(148, 163, 184, 0.2)' : 'rgba(14, 165, 233, 0.25)',
-              color: prevDisabled ? '#94a3b8' : '#e0f2fe',
-              cursor: prevDisabled ? 'not-allowed' : 'pointer',
-            }}
-          >
-            ← 上一步
-          </button>
-          <button
-            type="button"
-            onClick={() => setCurrentIndex((prev) => Math.min(cues.length - 1, prev + 1))}
-            disabled={nextDisabled}
-            style={{
-              padding: '10px 18px',
-              borderRadius: '9999px',
-              border: '1px solid #cbd5f5',
-              background: nextDisabled ? 'rgba(148, 163, 184, 0.2)' : '#2563eb',
-              color: '#f8fafc',
-              cursor: nextDisabled ? 'not-allowed' : 'pointer',
-            }}
-          >
-            下一步 →
-          </button>
-        </div>
-      </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

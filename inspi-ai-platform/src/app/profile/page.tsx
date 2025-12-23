@@ -111,7 +111,7 @@ const isTabKey = (value: string | null): value is TabKey => {
 function ProfileContent() {
   const { user } = useUser();
   const { user: authUser } = useAuth();
-  const { reusedThemes } = useReuseState(authUser?._id);
+  const { reusedThemes, reuseMetadata } = useReuseState(authUser?._id);
 
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
@@ -254,29 +254,32 @@ function ProfileContent() {
 
   const reusedThemeWorks = useMemo<UserWork[]>(
     () => reusedThemes
-      .map(themeId => mockSquareWorks.find(work => work.id === themeId))
-      .filter((work): work is typeof mockSquareWorks[number] => Boolean(work))
-      .map((work) => {
-        const collectedAt = new Date().toISOString();
+      .map((themeId) => {
+        const themeWork = mockSquareWorks.find(work => work.id === themeId);
+        if (!themeWork) {
+          return null;
+        }
+        const collectedAt = reuseMetadata[themeId]?.collectedAt || new Date(0).toISOString();
         return {
-          id: `reused-${work.id}`,
-          title: work.title,
+          id: `reused-${themeWork.id}`,
+          title: themeWork.title,
           type: '致敬复用卡',
-          subject: work.subject,
-          grade: work.grade,
-          thumbnail: work.thumbnail,
-          likes: work.likes,
-          uses: work.reuses + 1,
+          subject: themeWork.subject,
+          grade: themeWork.grade,
+          thumbnail: themeWork.thumbnail,
+          likes: themeWork.likes,
+          uses: themeWork.reuses + 1,
           createdAt: collectedAt,
           updatedAt: collectedAt,
           collectedAt,
           status: 'reused' as const,
-          reuseSourceId: work.id,
-          description: work.description,
-          tags: work.tags,
+          reuseSourceId: themeWork.id,
+          description: themeWork.description,
+          tags: themeWork.tags,
         };
-      }),
-    [reusedThemes],
+      })
+      .filter((work): work is UserWork => Boolean(work)),
+    [reusedThemes, reuseMetadata],
   );
 
   const combinedWorks = useMemo(() => {

@@ -277,12 +277,13 @@ async function buildCardFromAIResponse(params: BuildCardParams): Promise<Teachin
       ? parsedVisualization
       : await buildVisualizationFallback(knowledgePoint, subject, gradeLevel);
     const { summary, visual } = heroVisualization;
+    const narrativeContent = buildVisualizationNarrative(summary, visual, knowledgePoint);
 
     const baseCard: TeachingCard = {
       id: `card_${sessionId}_${cardType}`,
       type: CARD_TYPE_MAP[cardType],
       title: CARD_TITLES[cardType],
-      content: summary,
+      content: narrativeContent,
       explanation: `围绕“${knowledgePoint}”的概念可视化，帮助学生建立直观模型。`,
       visual,
       cached,
@@ -292,12 +293,13 @@ async function buildCardFromAIResponse(params: BuildCardParams): Promise<Teachin
   }
 
   const sanitizedContent = await cleanUserContent(rawContent);
+  const normalizedContent = normalizeStructuredCardContent(cardType, sanitizedContent);
 
   const baseCard: TeachingCard = {
     id: `card_${sessionId}_${cardType}`,
     type: CARD_TYPE_MAP[cardType],
     title: CARD_TITLES[cardType],
-    content: sanitizedContent,
+    content: normalizedContent,
     explanation: `${CARD_TITLES[cardType]}卡片 - ${knowledgePoint}`,
     cached,
   };
@@ -964,6 +966,149 @@ async function buildVisualizationFallback(
   };
 }
 
+
+function buildVisualizationNarrative(
+  summary: string,
+  visual: VisualizationSpec,
+  knowledgePoint: string,
+): string {
+  const sections: string[] = [];
+  const normalizedSummary = summary?.trim();
+  if (normalizedSummary) {
+    sections.push(`## 图示摘要\n${normalizedSummary}`);
+  }
+
+  if (visual?.structured) {
+    const { header, stages, outcomes, notes, highlight } = visual.structured;
+    const headerLines: string[] = [];
+    if (header?.subtitle) {
+      headerLines.push(`课堂定位：${header.subtitle}`);
+    }
+    if (header?.summary) {
+      headerLines.push(header.summary);
+    }
+    if (headerLines.length) {
+      sections.push(headerLines.join('\n'));
+    }
+
+    if (Array.isArray(stages) && stages.length > 0) {
+      const stageLines = stages.slice(0, 5).map((stage, index) => {
+        const title = stage.title || `阶段${index + 1}`;
+        const stageSummary = stage.summary || '聚焦本阶段核心';
+        const detailLines = Array.isArray(stage.details)
+          ? stage.details.filter(Boolean).map(detail => `- ${detail}`)
+          : [];
+        return [`**${index + 1}. ${title}** — ${stageSummary}`, ...detailLines].join('\n');
+      });
+      sections.push(`### 教学阶段\n${stageLines.join('\n\n')}`);
+    }
+
+    if (Array.isArray(outcomes) && outcomes.length > 0) {
+      const outcomeLines = outcomes.map(outcome => {
+        const info = outcome.description ? `：${outcome.description}` : '';
+        return `- ${outcome.title}${info}`;
+      });
+      sections.push(`### 预期产出\n${outcomeLines.join('\n')}`);
+    }
+
+    if (Array.isArray(notes) && notes.length > 0) {
+      const noteLines = notes.map(note => `- ${note}`);
+      sections.push(`### 课堂提醒\n${noteLines.join('\n')}`);
+    }
+
+    if (highlight) {
+      sections.push(`> ${highlight}`);
+    }
+  } else if (visual?.type === 'hero-illustration') {
+    const annotationLines = Array.isArray(visual.annotations)
+      ? visual.annotations.slice(0, 4).map(annotation => {
+          const placement = annotation.placement ? `（位置：${annotation.placement}）` : '';
+          const description = annotation.description ? `：${annotation.description}` : '';
+          return `- ${annotation.title}${description}${placement}`;
+        })
+      : [];
+
+    if (annotationLines.length > 0) {
+      sections.push(`### 观察要点\n${annotationLines.join('\n')}`);
+    }
+
+    const composition = visual.composition || {};
+    const compositionLines: string[] = [];
+    if (composition.metaphor) {
+      compositionLines.push(`隐喻：${composition.metaphor}`);
+    }
+    if (composition.visualFocus) {
+      compositionLines.push(`视觉焦点：${composition.visualFocus}`);
+    }
+    if (composition.backgroundMood) {
+      compositionLines.push(`氛围：${composition.backgroundMood}`);
+    }
+    if (Array.isArray(composition.colorPalette) && composition.colorPalette.length > 0) {
+      compositionLines.push(`色板：${composition.colorPalette.slice(0, 4).join(' / ')}`);
+    }
+    if (compositionLines.length > 0) {
+      sections.push(`### 插画设计提示\n${compositionLines.join('\n')}`);
+    }
+  }
+
+  if (Array.isArray(visual?.branches) && visual.branches.length > 0) {
+    const branchLines = visual.branches.slice(0, 6).map((branch, index) => {
+      const title = branch.title || `要点${index + 1}`;
+      const summaryLine = branch.summary ? ` — ${branch.summary}` : '';
+      const keywords = Array.isArray(branch.keywords) && branch.keywords.length > 0
+        ? `\n  - 关键词：${branch.keywords.slice(0, 4).join(' / ')}`
+        : '';
+      return `**${title}**${summaryLine}${keywords}`;
+    });
+    sections.push(`### 概念节点\n${branchLines.join('\n\n')}`);
+  }
+
+  if (visual?.footerNote) {
+    sections.push(`> ${visual.footerNote}`);
+  }
+
+  const fallback = normalizedSummary || `围绕“${knowledgePoint}”的概念可视化梳理。`;
+  return sections.join('\n\n').trim() || fallback;
+}
+
+
+const STRUCTURED_CARD_SECTIONS: Partial<Record<RawCardType, string[]>> = {
+  example: ['## 🎯 典型例子', '## 📝 详细分析', '## 🔄 举一反三', '## 💭 思考启发'],
+  practice: ['## 🎯 基础练习', '## 🚀 提升练习', '## 💡 解题提示', '## ✅ 参考答案'],
+  extension: ['## 🌐 知识拓展', '## 🔗 学科联系', '## 🎨 趣味知识', '## 🚀 进一步探索'],
+};
+
+function normalizeStructuredCardContent(cardType: RawCardType, content: string): string {
+  if (!content) {
+    return content;
+  }
+
+  const sections = STRUCTURED_CARD_SECTIONS[cardType];
+  if (!sections) {
+    return content;
+  }
+
+  const bulletMarkers = ['◇', '◆', '❖', '▶', '▸', '▪', '▫', '◾', '◽', '➤', '➔'];
+  let normalized = content;
+  sections.forEach((heading) => {
+    const pattern = new RegExp(`\s*${escapeHeaderForRegex(heading)}`, 'g');
+    normalized = normalized.replace(pattern, `\n\n${heading}\n`);
+  });
+
+  bulletMarkers.forEach((marker) => {
+    const pattern = new RegExp(`${escapeHeaderForRegex(marker)}\s*(?=\S)`, 'g');
+    normalized = normalized.replace(pattern, '\n- ');
+  });
+
+  return normalized
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function escapeHeaderForRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\$&');
+}
+
 function normalizeTheme(theme: unknown): VisualizationTheme {
   if (typeof theme !== 'string') return 'neutral';
   const lowered = theme.toLowerCase();
@@ -1318,13 +1463,8 @@ function generateFallbackCard(cardType: RawCardType, knowledgePoint: string): Te
   };
 
   const fallbackMap: Record<RawCardType, TeachingCard> = {
-    concept: {
-      id: `fallback_concept_${Date.now()}`,
-      type: 'visualization',
-      title: '概念可视化',
-      content: conceptConfig.summary,
-      explanation: `概念解释卡片 - ${knowledgePoint}`,
-      visual: {
+    concept: (() => {
+      const fallbackVisual: VisualizationSpec = {
         type: 'hero-illustration',
         theme: conceptConfig.theme ?? 'neutral',
         layout: 'centered',
@@ -1351,9 +1491,18 @@ function generateFallbackCard(cardType: RawCardType, knowledgePoint: string): Te
             placement: 'right',
           },
         ],
-      },
-      cached: false,
-    },
+      };
+      const fallbackNarrative = buildVisualizationNarrative(conceptConfig.summary, fallbackVisual, knowledgePoint);
+      return {
+        id: `fallback_concept_${Date.now()}`,
+        type: 'visualization',
+        title: '概念可视化',
+        content: fallbackNarrative,
+        explanation: `概念解释卡片 - ${knowledgePoint}`,
+        visual: fallbackVisual,
+        cached: false,
+      };
+    })(),
     example: {
       id: `fallback_example_${Date.now()}`,
       type: 'analogy',

@@ -205,14 +205,17 @@ const cardTypes: Array<{
     },
   ], []);
 
-const cardGridStyle = useMemo(
-  () => ({
+const cardGridStyle = useMemo(() => {
+  const columnCount = generatedCards.length > 1 ? 2 : 1;
+  return {
     display: 'grid',
     gap: 'var(--layout-card-gap)',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-  }),
-  [],
-);
+    gridTemplateColumns: columnCount === 1
+      ? 'minmax(0, 1fr)'
+      : 'repeat(2, minmax(0, 1fr))',
+    alignItems: 'stretch',
+  };
+}, [generatedCards.length]);
 
 const shareMenuOptions = useMemo(() => ([
   { platform: 'twitter' as SharePlatform, label: 'X', helper: '分享到 X' },
@@ -1901,6 +1904,7 @@ const sharePosterContainerStyle: React.CSSProperties = {
                     retrying={retryingCardId === card.id}
                     onVisualUpdate={handleCardVisualUpdate}
                     workId={resolvedWorkId}
+                    relatedCards={generatedCards}
                   />
                 ))}
               </div>
@@ -1964,70 +1968,73 @@ const sharePosterContainerStyle: React.CSSProperties = {
             flexDirection: 'column',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 28px', color: '#e2e8f0' }}>
-            <div>
-              <div style={{ fontSize: '18px', fontWeight: 600 }}>{generatedCards[galleryIndex].title}</div>
-              <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
-                {galleryIndex + 1} / {generatedCards.length}
-              </div>
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 28px', color: '#e2e8f0', gap: '16px' }}>
             <button
               type="button"
-              onClick={closeGallery}
+              onClick={goPrevGallery}
+              disabled={galleryIndex === 0}
               style={{
-                border: 'none',
-                background: 'transparent',
-                color: '#f8fafc',
-                fontSize: '28px',
-                cursor: 'pointer',
+                border: '1px solid rgba(148, 163, 184, 0.4)',
+                background: galleryIndex === 0 ? 'rgba(148, 163, 184, 0.2)' : 'rgba(30, 64, 175, 0.25)',
+                padding: '8px 16px',
+                borderRadius: '999px',
+                color: galleryIndex === 0 ? '#94a3b8' : '#e0f2fe',
+                cursor: galleryIndex === 0 ? 'not-allowed' : 'pointer',
               }}
-              aria-label="关闭预览"
             >
-              ×
+              ← 上一张
             </button>
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: '18px', fontWeight: 600 }}>{generatedCards[galleryIndex].title}</div>
+              <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
+                {galleryIndex + 1} / {Math.max(1, generatedCards.length)}
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={goNextGallery}
+                disabled={galleryIndex >= generatedCards.length - 1}
+                style={{
+                  border: '1px solid rgba(148, 163, 184, 0.4)',
+                  background: galleryIndex >= generatedCards.length - 1 ? 'rgba(148, 163, 184, 0.2)' : 'rgba(37, 99, 235, 0.8)',
+                  padding: '8px 16px',
+                  borderRadius: '999px',
+                  color: '#e0f2fe',
+                  cursor: galleryIndex >= generatedCards.length - 1 ? 'not-allowed' : 'pointer',
+                }}
+              >
+                下一张 →
+              </button>
+              <button
+                type="button"
+                onClick={closeGallery}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  color: '#f8fafc',
+                  fontSize: '28px',
+                  cursor: 'pointer',
+                }}
+                aria-label="关闭预览"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 80px 40px' }}>
-            <div style={{ width: 'min(960px, 100%)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ width: 'min(960px, 100%)', maxHeight: '90vh', overflowY: 'auto', transform: 'scale(1.12)', transformOrigin: 'top center' }}>
               <GeneratedCard
                 card={generatedCards[galleryIndex]}
                 className="gallery-card"
                 onVisualUpdate={handleCardVisualUpdate}
                 workId={resolvedWorkId}
+                relatedCards={generatedCards}
               />
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 40px 32px', color: '#cbd5f5' }}>
-            <button
-              type="button"
-              onClick={goPrevGallery}
-              style={{
-                border: '1px solid rgba(148, 163, 184, 0.4)',
-                background: 'rgba(30, 64, 175, 0.25)',
-                padding: '10px 20px',
-                borderRadius: '999px',
-                color: '#e0f2fe',
-                cursor: 'pointer',
-              }}
-            >
-              ← 上一张
-            </button>
-            <button
-              type="button"
-              onClick={goNextGallery}
-              style={{
-                border: '1px solid rgba(148, 163, 184, 0.4)',
-                background: 'rgba(30, 64, 175, 0.25)',
-                padding: '10px 20px',
-                borderRadius: '999px',
-                color: '#e0f2fe',
-                cursor: 'pointer',
-              }}
-            >
-              下一张 →
-            </button>
-          </div>
         </div>
       )}
       {sharePosterCard && (

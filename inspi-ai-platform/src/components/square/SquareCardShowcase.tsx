@@ -39,6 +39,7 @@ export function SquareCardShowcase({ cards }: SquareCardShowcaseProps) {
           <GeneratedCard
             card={card}
             enableEditing={false}
+            relatedCards={cards}
           />
         </div>
       ))}
